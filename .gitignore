@@ -1,0 +1,10 @@
+package
+bin
+obj
+.vs
+.vscode
+packages/
+*.user
+*.suo
+*.retry
+

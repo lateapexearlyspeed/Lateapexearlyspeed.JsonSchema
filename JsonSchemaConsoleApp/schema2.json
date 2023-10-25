@@ -1,0 +1,35 @@
+{
+  "$id": "http://my2",
+  "type": "object",
+  "properties": {
+    "integer1": {
+      "type": "integer"
+    },
+    "object1": {
+      "$id": "http://inside1",
+      "type": "object",
+      "properties": {
+        "p1": {
+          "$dynamicAnchor": "dynamicA",
+          "$dynamicRef": "#dynamicA"
+        },
+        "p2": {
+          "$ref": "http://inside2"
+        },
+        "p3": {
+          "$id": "http://inside2",
+          "$ref": "http://inside1#/properties/p1",
+          "type": "integer",
+          "properties": {
+            "pa": {
+              "$dynamicAnchor": "dynamicA1"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "name": { "type": "integer" }
+  }
+}

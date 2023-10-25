@@ -1,0 +1,34 @@
+{
+  "$id": "http://my",
+  "type": "object",
+  "properties": {
+    "integer1": {
+      "type": "integer"
+    },
+    "object1": {
+      "$id": "http://inside",
+      "type": "object",
+      "properties": {
+        "p1": {
+          "type": "integer",
+          "allOf": [true]
+        },
+        "p2": {
+          "$id": "http://myp2",
+          "$anchor": "test-anchor",
+          "type": "integer",
+          "$ref": "#/$defs/n1",
+          "$defs": {
+            "n1": { "type": "integer" }
+          }
+        }
+      },
+      "$defs": {
+        "name": { "type": "integer" }
+      }
+    }
+  },
+  "$defs": {
+    "name": { "type": "integer" }
+  }
+}
