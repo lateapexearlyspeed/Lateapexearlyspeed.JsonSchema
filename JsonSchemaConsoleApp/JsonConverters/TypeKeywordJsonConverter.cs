@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using JsonSchemaConsoleApp.Keywords;
 
@@ -6,14 +7,28 @@ namespace JsonSchemaConsoleApp.JsonConverters;
 
 internal class TypeKeywordJsonConverter : JsonConverter<TypeKeyword>
 {
-    public override TypeKeyword? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override TypeKeyword Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType != JsonTokenType.String)
+        InstanceType[] instanceTypes;
+        var newOptions = new JsonSerializerOptions { Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, false) } };
+
+        if (reader.TokenType == JsonTokenType.String)
         {
-            throw new JsonException();
+            instanceTypes = new[] { JsonSerializer.Deserialize<InstanceType>(ref reader, newOptions) };
+        }
+        else if (reader.TokenType == JsonTokenType.StartArray)
+        {
+            InstanceType[]? types = JsonSerializer.Deserialize<InstanceType[]>(ref reader, newOptions);
+            
+            Debug.Assert(types is not null);
+            instanceTypes = types;
+        }
+        else
+        {
+            throw ThrowHelper.CreateKeywordHasInvalidJsonValueKindJsonException<TypeKeyword>(JsonValueKind.String, JsonValueKind.Array);
         }
 
-        return new TypeKeyword { SchemaType = Enum.Parse<SchemaType>(reader.GetString()!, true) };
+        return new TypeKeyword { InstanceTypes = instanceTypes };
     }
 
     public override void Write(Utf8JsonWriter writer, TypeKeyword value, JsonSerializerOptions options)

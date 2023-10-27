@@ -13,6 +13,12 @@ internal class ThrowHelper
     }
 
     [Pure]
+    public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException<TKeyword>(params JsonValueKind[] expectedJsonKinds) where TKeyword : KeywordBase
+    {
+        return new JsonException($"Keyword:{KeywordBase.GetKeywordName<TKeyword>()} expects json kind: \"{string.Join(',', expectedJsonKinds)}\"");
+    }
+
+    [Pure]
     public static JsonException CreateKeywordHasEmptyJsonArrayJsonException<TKeyword>() where TKeyword : KeywordBase
     {
         return new JsonException($"Keyword:{KeywordBase.GetKeywordName<TKeyword>()} expects non-empty json array.");

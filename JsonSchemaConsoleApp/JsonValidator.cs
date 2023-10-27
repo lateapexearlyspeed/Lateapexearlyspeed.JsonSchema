@@ -1,9 +1,8 @@
 ﻿using System.Text.Json;
-using JsonSchemaConsoleApp.Keywords;
 
 namespace JsonSchemaConsoleApp;
 
-internal class JsonValidator
+public class JsonValidator
 {
     private readonly IJsonSchemaDocument _schemaDoc;
 

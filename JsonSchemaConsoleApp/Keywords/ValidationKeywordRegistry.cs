@@ -1,9 +1,6 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿namespace JsonSchemaConsoleApp.Keywords;
 
-namespace JsonSchemaConsoleApp.Keywords;
-
-static class ValidationKeywordRegistry
+public static class ValidationKeywordRegistry
 {
     private static readonly Dictionary<string, Type> KeywordsDictionary;
 
@@ -19,19 +16,13 @@ static class ValidationKeywordRegistry
                 typeof(OneOfKeyword), 
                 typeof(NotKeyword)
             };
-        KeywordsDictionary = builtInKeywordTypes.ToDictionary(GetKeywordName);
+        KeywordsDictionary = builtInKeywordTypes.ToDictionary(KeywordBase.GetKeywordName);
     }
 
-    private static string GetKeywordName(Type keywordType)
+    public static void AddKeyword<TKeyword>() where TKeyword : KeywordBase
     {
-        KeywordAttribute? keywordAttr = keywordType.GetCustomAttribute(typeof(KeywordAttribute)) as KeywordAttribute;
-        Debug.Assert(keywordAttr is not null);
-        return keywordAttr.Name;
-    }
-
-    public static void AddKeyword(Type keywordType)
-    {
-        KeywordsDictionary.Add(GetKeywordName(keywordType), keywordType);
+        Type keywordType = typeof(TKeyword);
+        KeywordsDictionary.Add(KeywordBase.GetKeywordName(keywordType), keywordType);
     }
 
     public static Type? GetKeyword(string keywordName)

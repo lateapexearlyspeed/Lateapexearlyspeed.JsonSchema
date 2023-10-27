@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.Design;
 using System.Security.AccessControl;
-using JsonSchemaConsoleApp.Keywords;
 
 namespace JsonSchemaConsoleApp
 {

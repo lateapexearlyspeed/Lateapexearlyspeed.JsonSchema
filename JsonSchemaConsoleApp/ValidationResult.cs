@@ -1,4 +1,4 @@
-﻿namespace JsonSchemaConsoleApp.Keywords;
+﻿namespace JsonSchemaConsoleApp;
 
 public class ValidationResult
 {
@@ -13,8 +13,8 @@ public class ValidationResult
 
     public bool IsValid => ResultCode == ResultCode.Valid;
 
-    public static ValidationResult ValidResult { get; } = new() {ResultCode = ResultCode.Valid};
-    public static ValidationResult CreateFailedResult(ResultCode failedCode, ValidationPathStack? validationPathStack) 
+    public static ValidationResult ValidResult { get; } = new() { ResultCode = ResultCode.Valid };
+    public static ValidationResult CreateFailedResult(ResultCode failedCode, ValidationPathStack? validationPathStack)
         => new()
         {
             ResultCode = failedCode,
@@ -28,7 +28,7 @@ public enum ResultCode
 {
     Valid,
     FailedToMultiple,
-    NotAnInteger,
+    NotBeInteger,
     InvalidTokenKind,
     MoreThanOnePassedSchemaFound,
     AllSubSchemaFailed,

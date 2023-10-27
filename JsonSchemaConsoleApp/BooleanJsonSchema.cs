@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using JsonSchemaConsoleApp.Keywords;
 using JsonSchemaConsoleApp.Keywords.interfaces;
 
 namespace JsonSchemaConsoleApp;

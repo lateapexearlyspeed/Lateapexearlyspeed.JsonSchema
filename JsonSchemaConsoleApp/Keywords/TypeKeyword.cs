@@ -1,8 +1,8 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using JsonSchemaConsoleApp.JsonConverters;
-using JsonSchemaConsoleApp.Keywords.interfaces;
 
 namespace JsonSchemaConsoleApp.Keywords;
 
@@ -10,13 +10,39 @@ namespace JsonSchemaConsoleApp.Keywords;
 [JsonConverter(typeof(TypeKeywordJsonConverter))]
 internal class TypeKeyword : KeywordBase
 {
-    public SchemaType SchemaType { get; set; }
+    private static readonly Dictionary<InstanceType, JsonValueKind> InstanceTypeJsonKindMap = new()
+    {
+        { InstanceType.Object, JsonValueKind.Object },
+        { InstanceType.Array, JsonValueKind.Array },
+        { InstanceType.Null, JsonValueKind.Null },
+        { InstanceType.Number, JsonValueKind.Number },
+        { InstanceType.String, JsonValueKind.String }
+    };
+
+    public InstanceType[] InstanceTypes { get; init; } = null!;
 
     protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
     {
-        switch (SchemaType)
+        Debug.Assert(InstanceTypes.Length != 0);
+        Unsafe.SkipInit(out ValidationResult validationResult);
+
+        foreach (InstanceType instanceType in InstanceTypes)
         {
-            case SchemaType.Integer:
+            validationResult = ValidateAgainstType(instance, instanceType, options);
+            if (validationResult.IsValid)
+            {
+                return ValidationResult.ValidResult;
+            }
+        }
+
+        return validationResult;
+    }
+
+    private ValidationResult ValidateAgainstType(JsonElement instance, InstanceType schemaType, JsonSchemaOptions options)
+    {
+        switch (schemaType)
+        {
+            case InstanceType.Integer:
                 if (instance.ValueKind != JsonValueKind.Number)
                 {
                     return ValidationResult.CreateFailedResult(ResultCode.InvalidTokenKind, options.ValidationPathStack);
@@ -31,26 +57,40 @@ internal class TypeKeyword : KeywordBase
                     {
                         if (c != '0')
                         {
-                            return ValidationResult.CreateFailedResult(ResultCode.NotAnInteger, options.ValidationPathStack);
+                            return ValidationResult.CreateFailedResult(ResultCode.NotBeInteger, options.ValidationPathStack);
                         }
                     }
                 }
 
                 break;
-            case SchemaType.Object:
-                if (instance.ValueKind != JsonValueKind.Object)
+            case InstanceType.Boolean:
+                if (instance.ValueKind != JsonValueKind.True && instance.ValueKind != JsonValueKind.False)
                 {
                     return ValidationResult.CreateFailedResult(ResultCode.InvalidTokenKind, options.ValidationPathStack);
                 }
                 break;
+            default:
+                return ValidateJsonKind(instance, InstanceTypeJsonKindMap[schemaType], options.ValidationPathStack);
         }
 
         return ValidationResult.ValidResult;
     }
+
+    private ValidationResult ValidateJsonKind(JsonElement instance, JsonValueKind expectedJsonKind, ValidationPathStack validationPathStack)
+    {
+        return instance.ValueKind == expectedJsonKind 
+            ? ValidationResult.ValidResult 
+            : ValidationResult.CreateFailedResult(ResultCode.InvalidTokenKind, validationPathStack);
+    }
 }
 
-internal enum SchemaType
+internal enum InstanceType
 {
-    Integer,
-    Object
+    Null,
+    Boolean,
+    Object,
+    Array,
+    Number,
+    String,
+    Integer
 }

@@ -16,7 +16,6 @@
         "p2": {
           "$id": "http://myp2",
           "$anchor": "test-anchor",
-          "type": "integer",
           "$ref": "#/$defs/n1",
           "$defs": {
             "n1": { "type": "integer" }

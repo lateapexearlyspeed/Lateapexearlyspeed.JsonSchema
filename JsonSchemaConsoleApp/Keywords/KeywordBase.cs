@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace JsonSchemaConsoleApp.Keywords;
@@ -17,8 +18,10 @@ public abstract class KeywordBase : ValidationNode
         Name = GetKeywordName(currentKeywordType);
     }
 
-    private static string GetKeywordName(Type keywordType)
+    internal static string GetKeywordName(Type keywordType)
     {
+        Debug.Assert(keywordType.IsAssignableTo(typeof(KeywordBase)));
+
         return NameForKeywordTypes.GetOrAdd(keywordType, type =>
         {
             Attribute? attr = type.GetCustomAttribute(typeof(KeywordAttribute));
