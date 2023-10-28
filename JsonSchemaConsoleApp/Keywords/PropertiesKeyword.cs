@@ -49,4 +49,9 @@ public class PropertiesKeyword : KeywordBase, ISchemaContainerElement
     {
         throw new InvalidOperationException();
     }
+
+    public bool ContainsPropertyName(string propertyName)
+    {
+        return PropertiesSchemas.ContainsKey(propertyName);
+    }
 }

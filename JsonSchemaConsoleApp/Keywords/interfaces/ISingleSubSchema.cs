@@ -2,5 +2,5 @@
 
 public interface ISingleSubSchema
 {
-    JsonSchema? Schema { get; set; }
+    JsonSchema Schema { get; set; }
 }

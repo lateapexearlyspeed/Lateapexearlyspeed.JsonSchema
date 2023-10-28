@@ -34,6 +34,11 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         reader.Read();
 
         var validationKeywords = new List<ValidationNode>();
+
+        PropertiesKeyword? propertiesKeyword = null;
+        PatternPropertiesKeyword? patternPropertiesKeyword = null;
+        AdditionalPropertiesKeyword? additionalPropertiesKeyword = null;
+
         JsonSchema? predictEvaluator = null;
         JsonSchema? positiveValidator = null;
         JsonSchema? negativeValidator = null;
@@ -57,6 +62,20 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
                 Debug.Assert(keyword != null);
                 validationKeywords.Add(keyword);
+
+                // Store dependent keywords ('properties' and 'patternProperties') for 'additionalProperties'
+                if (keyword is PropertiesKeyword properties)
+                {
+                    propertiesKeyword = properties;
+                }
+                else if (keyword is PatternPropertiesKeyword pattern)
+                {
+                    patternPropertiesKeyword = pattern;
+                }
+                else if (keyword is AdditionalPropertiesKeyword additionalProperties)
+                {
+                    additionalPropertiesKeyword = additionalProperties;
+                }
             }
             else if (keywordName == IfKeyword.Keyword)
             {
@@ -100,6 +119,13 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
 
             reader.Read();
+        }
+
+        // Set dependent keywords ('properties' and 'patternProperties') for 'additionalProperties'
+        if (additionalPropertiesKeyword is not null)
+        {
+            additionalPropertiesKeyword.PropertiesKeyword = propertiesKeyword;
+            additionalPropertiesKeyword.PatternPropertiesKeyword = patternPropertiesKeyword;
         }
 
         JsonSchema schema;

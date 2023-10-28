@@ -65,4 +65,9 @@ public class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
     {
         throw new InvalidOperationException();
     }
+
+    public bool ContainsMatchedPattern(string propertyName)
+    {
+        return _patternSchemas.Values.Any(regexAndSchema => regexAndSchema.regex.IsMatch(propertyName));
+    }
 }
