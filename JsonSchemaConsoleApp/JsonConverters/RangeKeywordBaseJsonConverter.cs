@@ -4,7 +4,7 @@ using JsonSchemaConsoleApp.Keywords;
 
 namespace JsonSchemaConsoleApp.JsonConverters;
 
-public class RangeKeywordBaseJsonConverter : JsonConverter<RangeKeywordBase>
+internal class RangeKeywordBaseJsonConverter : JsonConverter<RangeKeywordBase>
 {
     public override RangeKeywordBase Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

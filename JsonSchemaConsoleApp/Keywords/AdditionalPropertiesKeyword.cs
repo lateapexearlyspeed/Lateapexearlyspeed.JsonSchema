@@ -7,9 +7,9 @@ namespace JsonSchemaConsoleApp.Keywords;
 
 [Keyword("additionalProperties")]
 [JsonConverter(typeof(SingleSchemaJsonConverter<AdditionalPropertiesKeyword>))]
-public class AdditionalPropertiesKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSchema
+internal class AdditionalPropertiesKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSchema
 {
-    public JsonSchema Schema { get; set; } = null!;
+    public JsonSchema Schema { get; init; } = null!;
 
     public PropertiesKeyword? PropertiesKeyword { get; set; }
 

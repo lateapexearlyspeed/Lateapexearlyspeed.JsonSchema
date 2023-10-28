@@ -1,6 +1,6 @@
 ﻿namespace JsonSchemaConsoleApp.Keywords;
 
-public class IfKeyword
+internal class IfKeyword
 {
     public const string Keyword = "if";
 }

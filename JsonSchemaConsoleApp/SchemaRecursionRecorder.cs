@@ -3,7 +3,7 @@ using JsonSchemaConsoleApp.Keywords;
 
 namespace JsonSchemaConsoleApp;
 
-public class SchemaRecursionRecorder
+internal class SchemaRecursionRecorder
 {
     private readonly HashSet<(JsonSchema schema, JsonPath instancePath)> _schemaInstanceCollection = new();
 

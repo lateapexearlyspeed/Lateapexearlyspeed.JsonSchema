@@ -7,7 +7,7 @@ namespace JsonSchemaConsoleApp.Keywords;
 
 [Keyword("properties")]
 [JsonConverter(typeof(PropertiesKeywordJsonConverter))]
-public class PropertiesKeyword : KeywordBase, ISchemaContainerElement
+internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
 {
     public Dictionary<string, JsonSchema> PropertiesSchemas { get; init; } = null!;
 

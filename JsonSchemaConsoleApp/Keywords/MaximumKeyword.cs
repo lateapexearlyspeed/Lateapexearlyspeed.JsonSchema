@@ -5,7 +5,7 @@ namespace JsonSchemaConsoleApp.Keywords;
 
 [Keyword("maximum")]
 [JsonConverter(typeof(RangeKeywordBaseJsonConverter))]
-public class MaximumKeyword : RangeKeywordBase
+internal class MaximumKeyword : RangeKeywordBase
 {
     public MaximumKeyword(double maximum) : base(maximum)
     {

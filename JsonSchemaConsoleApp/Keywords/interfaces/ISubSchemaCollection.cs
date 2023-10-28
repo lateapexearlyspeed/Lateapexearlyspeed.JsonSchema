@@ -1,6 +1,6 @@
 ﻿namespace JsonSchemaConsoleApp.Keywords.interfaces;
 
-public interface ISubSchemaCollection
+internal interface ISubSchemaCollection
 {
     List<JsonSchema> SubSchemas { get; init; }
 }

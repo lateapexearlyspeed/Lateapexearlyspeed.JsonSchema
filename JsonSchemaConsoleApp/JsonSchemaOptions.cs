@@ -1,44 +1,42 @@
 ﻿using System.Collections;
-using JsonSchemaConsoleApp.Keywords;
-using JsonSchemaConsoleApp.Keywords.interfaces;
 
 namespace JsonSchemaConsoleApp;
 
 public class JsonSchemaOptions
 {
-    public SchemaResourceRegistry SchemaResourceRegistry { get; init; }
-    public SchemaRecursionRecorder SchemaRecursionRecorder { get; init; }
+    internal SchemaResourceRegistry SchemaResourceRegistry { get; init; }
+    internal SchemaRecursionRecorder SchemaRecursionRecorder { get; init; }
     public ValidationPathStack ValidationPathStack { get; init; }
 }
 
 public class ValidationPathStack
 {
-    public RelativeKeywordLocationStack RelativeKeywordLocationStack { get; } = new();
+    internal RelativeKeywordLocationStack RelativeKeywordLocationStack { get; } = new();
 
-    public SchemaLocationStack SchemaLocationStack { get; } = new();
+    internal SchemaLocationStack SchemaLocationStack { get; } = new();
 
-    public void PushRelativeLocation(string name)
+    internal void PushRelativeLocation(string name)
     {
         RelativeKeywordLocationStack.Push(name);
     }
 
-    public void PopRelativeLocation()
+    internal void PopRelativeLocation()
     {
         RelativeKeywordLocationStack.Pop();
     }
 
-    public void PushReferencedSchema(JsonSchemaResource referencedResource, Uri subSchemaRefFullUri)
+    internal void PushReferencedSchema(JsonSchemaResource referencedResource, Uri subSchemaRefFullUri)
     {
         SchemaLocationStack.Push(referencedResource, subSchemaRefFullUri);
     }
 
-    public void PopReferencedSchema()
+    internal void PopReferencedSchema()
     {
         SchemaLocationStack.Pop();
     }
 }
 
-public class SchemaLocationStack : IEnumerable<(JsonSchemaResource resource, Uri subSchemaRefFullUri)>
+internal class SchemaLocationStack : IEnumerable<(JsonSchemaResource resource, Uri subSchemaRefFullUri)>
 {
     private readonly Stack<(JsonSchemaResource resource, Uri subSchemaRefFullUri)> _schemaLocationStack = new();
 
@@ -68,7 +66,7 @@ public class SchemaLocationStack : IEnumerable<(JsonSchemaResource resource, Uri
     }
 }
 
-public class RelativeKeywordLocationStack
+internal class RelativeKeywordLocationStack
 {
     private readonly Stack<string> _locationStack = new();
 

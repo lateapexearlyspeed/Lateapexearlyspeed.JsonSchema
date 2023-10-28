@@ -5,7 +5,7 @@ using JsonSchemaConsoleApp.Keywords.interfaces;
 
 namespace JsonSchemaConsoleApp;
 
-public class JsonSchemaResource : BodyJsonSchema
+internal class JsonSchemaResource : BodyJsonSchema
 {
     // Should not contain fragment
     private readonly Uri _id;

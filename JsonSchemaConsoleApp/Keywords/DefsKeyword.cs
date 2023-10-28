@@ -1,6 +1,6 @@
 ﻿namespace JsonSchemaConsoleApp.Keywords;
 
-public class DefsKeyword
+internal class DefsKeyword
 {
     public const string Keyword = "$defs";
 

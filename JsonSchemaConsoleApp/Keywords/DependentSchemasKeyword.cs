@@ -7,7 +7,7 @@ namespace JsonSchemaConsoleApp.Keywords;
 
 [Keyword("dependentSchemas")]
 [JsonConverter(typeof(DependentSchemasKeywordJsonConverter))]
-public class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement
+internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement
 {
     public Dictionary<string, JsonSchema> DependentSchemas { get; init; } = null!;
 

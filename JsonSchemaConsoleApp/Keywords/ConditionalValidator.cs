@@ -2,7 +2,7 @@
 
 namespace JsonSchemaConsoleApp.Keywords;
 
-public class ConditionalValidator
+internal class ConditionalValidator
 {
     public ConditionalValidator(JsonSchema? predictEvaluator, JsonSchema? positiveValidator, JsonSchema? negativeValidator)
     {

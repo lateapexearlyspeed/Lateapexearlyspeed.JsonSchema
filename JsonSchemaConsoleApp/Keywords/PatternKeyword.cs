@@ -7,7 +7,7 @@ namespace JsonSchemaConsoleApp.Keywords;
 
 [Keyword("pattern")]
 [JsonConverter(typeof(PatternKeywordJsonConverter))]
-public class PatternKeyword : KeywordBase
+internal class PatternKeyword : KeywordBase
 {
     private readonly Regex _pattern;
 

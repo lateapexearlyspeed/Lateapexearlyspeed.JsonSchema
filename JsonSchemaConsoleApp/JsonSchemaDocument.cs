@@ -2,7 +2,7 @@
 
 namespace JsonSchemaConsoleApp;
 
-public static class JsonSchemaDocument
+internal static class JsonSchemaDocument
 {
     public static IJsonSchemaDocument Create(string schema, SchemaResourceRegistry globalSchemaResourceRegistry)
     {

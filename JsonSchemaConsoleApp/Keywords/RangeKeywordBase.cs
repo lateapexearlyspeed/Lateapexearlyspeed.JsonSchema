@@ -2,7 +2,7 @@
 
 namespace JsonSchemaConsoleApp.Keywords;
 
-public abstract class RangeKeywordBase : KeywordBase
+internal abstract class RangeKeywordBase : KeywordBase
 {
     protected readonly double BenchmarkValue;
 

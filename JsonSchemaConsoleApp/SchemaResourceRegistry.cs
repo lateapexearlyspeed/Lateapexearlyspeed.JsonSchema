@@ -1,6 +1,6 @@
 ﻿namespace JsonSchemaConsoleApp;
 
-public class SchemaResourceRegistry
+internal class SchemaResourceRegistry
 {
     private readonly Dictionary<Uri, JsonSchemaResource> _schemaResources = new();
 

@@ -1,6 +1,6 @@
 ﻿namespace JsonSchemaConsoleApp.Keywords;
 
-public class ElseKeyword
+internal class ElseKeyword
 {
     public const string Keyword = "else";
 }

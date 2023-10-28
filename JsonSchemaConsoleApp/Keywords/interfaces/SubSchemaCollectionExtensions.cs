@@ -1,6 +1,6 @@
 ﻿namespace JsonSchemaConsoleApp.Keywords.interfaces;
 
-public static class SubSchemaCollectionExtensions
+internal static class SubSchemaCollectionExtensions
 {
     public static ISchemaContainerElement? GetSubElement(this ISubSchemaCollection subSchemaCollection, string name)
     {

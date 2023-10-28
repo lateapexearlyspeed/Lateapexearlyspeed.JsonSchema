@@ -5,7 +5,7 @@ namespace JsonSchemaConsoleApp.Keywords;
 
 [Keyword("exclusiveMinimum")]
 [JsonConverter(typeof(RangeKeywordBaseJsonConverter))]
-public class ExclusiveMinimumKeyword : RangeKeywordBase
+internal class ExclusiveMinimumKeyword : RangeKeywordBase
 {
     public ExclusiveMinimumKeyword(double exclusiveMinimum) : base(exclusiveMinimum)
     {

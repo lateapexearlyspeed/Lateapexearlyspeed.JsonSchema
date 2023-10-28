@@ -1,6 +1,6 @@
 ﻿namespace JsonSchemaConsoleApp.Keywords.interfaces;
 
-public interface ISchemaContainerElement
+internal interface ISchemaContainerElement
 {
     /// <summary>
     /// Find sub container element by name

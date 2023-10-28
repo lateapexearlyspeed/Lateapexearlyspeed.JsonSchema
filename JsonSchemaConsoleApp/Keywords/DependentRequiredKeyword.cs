@@ -6,7 +6,7 @@ namespace JsonSchemaConsoleApp.Keywords;
 
 [Keyword("dependentRequired")]
 [JsonConverter(typeof(DependentRequiredKeywordJsonConverter))]
-public class DependentRequiredKeyword : KeywordBase
+internal class DependentRequiredKeyword : KeywordBase
 {
     public Dictionary<string, string[]> DependentProperties { get; init; } = null!;
 

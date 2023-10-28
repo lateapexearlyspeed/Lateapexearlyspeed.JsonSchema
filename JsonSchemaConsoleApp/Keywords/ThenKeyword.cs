@@ -6,7 +6,7 @@ using JsonSchemaConsoleApp.Keywords.interfaces;
 namespace JsonSchemaConsoleApp.Keywords;
 
 // [JsonConverter(typeof(SingleSchemaJsonConverter<ThenKeyword>))]
-public class ThenKeyword
+internal class ThenKeyword
 {
     public const string Keyword = "then";
 

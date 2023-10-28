@@ -6,7 +6,7 @@ using JsonSchemaConsoleApp.Keywords.interfaces;
 
 namespace JsonSchemaConsoleApp;
 
-public class BodyJsonSchema : JsonSchema
+internal class BodyJsonSchema : JsonSchema
 {
     private readonly List<ValidationNode> _keywords;
 

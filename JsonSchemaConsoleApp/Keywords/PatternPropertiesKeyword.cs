@@ -8,7 +8,7 @@ namespace JsonSchemaConsoleApp.Keywords;
 
 [Keyword("patternProperties")]
 [JsonConverter(typeof(PatternPropertiesKeywordJsonConverter))]
-public class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
+internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
 {
     private readonly Dictionary<string, (Regex regex, JsonSchema schema)> _patternSchemas;
 

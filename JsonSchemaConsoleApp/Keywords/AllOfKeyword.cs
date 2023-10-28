@@ -7,7 +7,7 @@ namespace JsonSchemaConsoleApp.Keywords;
 
 [Keyword("allOf")]
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<AllOfKeyword>))]
-public class AllOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContainerElement
+internal class AllOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContainerElement
 {
     public List<JsonSchema> SubSchemas { get; init; } = null!;
 

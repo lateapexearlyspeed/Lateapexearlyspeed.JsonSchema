@@ -4,7 +4,7 @@ using JsonSchemaConsoleApp.Keywords;
 
 namespace JsonSchemaConsoleApp.JsonConverters;
 
-public class PatternKeywordJsonConverter : JsonConverter<PatternKeyword>
+internal class PatternKeywordJsonConverter : JsonConverter<PatternKeyword>
 {
     public override PatternKeyword Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

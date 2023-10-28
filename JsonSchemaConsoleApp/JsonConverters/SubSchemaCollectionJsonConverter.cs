@@ -6,7 +6,7 @@ using JsonSchemaConsoleApp.Keywords.interfaces;
 
 namespace JsonSchemaConsoleApp.JsonConverters;
 
-public class SubSchemaCollectionJsonConverter<T> : JsonConverter<T> where T : KeywordBase, ISubSchemaCollection, new()
+internal class SubSchemaCollectionJsonConverter<T> : JsonConverter<T> where T : KeywordBase, ISubSchemaCollection, new()
 {
     public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
