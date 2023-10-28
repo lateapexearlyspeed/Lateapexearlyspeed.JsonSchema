@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Text.Json;
 using JsonSchemaConsoleApp.Keywords;
 
@@ -16,6 +17,12 @@ internal class ThrowHelper
     public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException<TKeyword>(params JsonValueKind[] expectedJsonKinds) where TKeyword : KeywordBase
     {
         return new JsonException(CreateKeywordPrefixContent<TKeyword>() + $" expects json kind: \"{string.Join(',', expectedJsonKinds)}\"");
+    }
+
+    [Pure]
+    public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException(Type keywordType, params JsonValueKind[] expectedJsonKinds)
+    {
+        return new JsonException(CreateKeywordPrefixContent(keywordType) + $" expects json kind: \"{string.Join(',', expectedJsonKinds)}\"");
     }
 
     [Pure]
@@ -39,5 +46,10 @@ internal class ThrowHelper
     private static string CreateKeywordPrefixContent<TKeyword>() where TKeyword : KeywordBase
     {
         return $"Keyword:{KeywordBase.GetKeywordName<TKeyword>()}";
+    }
+
+    private static string CreateKeywordPrefixContent(Type keywordType)
+    {
+        return $"Keyword:{KeywordBase.GetKeywordName(keywordType)}";
     }
 }

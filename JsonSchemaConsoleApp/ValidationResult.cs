@@ -35,5 +35,6 @@ public enum ResultCode
     SubSchemaPassed,
     NotFoundRequiredDependentProperty,
     AlwaysFailed,
-    RegexNotMatch
+    RegexNotMatch,
+    NumberOutOfRange
 }
