@@ -14,7 +14,8 @@ public static class ValidationKeywordRegistry
                 typeof(AllOfKeyword), 
                 typeof(AnyOfKeyword), 
                 typeof(OneOfKeyword), 
-                typeof(NotKeyword)
+                typeof(NotKeyword),
+                typeof(MaximumKeyword)
             };
         KeywordsDictionary = builtInKeywordTypes.ToDictionary(KeywordBase.GetKeywordName);
     }

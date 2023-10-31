@@ -1,15 +1,12 @@
-﻿using System.Text.Json;
+﻿using JsonSchemaConsoleApp.JsonConverters;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace JsonSchemaConsoleApp.Keywords;
 
-internal abstract class RangeKeywordBase : KeywordBase
+internal abstract class NumberRangeKeywordBase : KeywordBase
 {
-    protected readonly double BenchmarkValue;
-
-    protected RangeKeywordBase(double benchmarkValue)
-    {
-        BenchmarkValue = benchmarkValue;
-    }
+    public double BenchmarkValue { get; init; }
 
     protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
     {

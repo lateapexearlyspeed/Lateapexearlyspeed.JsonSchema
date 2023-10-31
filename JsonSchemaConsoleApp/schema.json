@@ -11,7 +11,8 @@
       "properties": {
         "p1": {
           "type": "integer",
-          "allOf": [true]
+          "maximum": 1,
+          "allOf": [ true ]
         },
         "p2": {
           "$id": "http://myp2",

@@ -1,16 +1,12 @@
-﻿using System.Text.Json.Serialization;
-using JsonSchemaConsoleApp.JsonConverters;
+﻿using JsonSchemaConsoleApp.JsonConverters;
+using System.Text.Json.Serialization;
 
 namespace JsonSchemaConsoleApp.Keywords;
 
 [Keyword("exclusiveMaximum")]
-[JsonConverter(typeof(RangeKeywordBaseJsonConverter))]
-internal class ExclusiveMaximumKeyword : RangeKeywordBase
+[JsonConverter(typeof(NumberRangeKeywordJsonConverter<ExclusiveMaximumKeyword>))]
+internal class ExclusiveMaximumKeyword : NumberRangeKeywordBase
 {
-    public ExclusiveMaximumKeyword(double exclusiveMaximum) : base(exclusiveMaximum)
-    {
-    }
-
     protected override bool IsInRange(double instanceValue)
     {
         return instanceValue < BenchmarkValue;

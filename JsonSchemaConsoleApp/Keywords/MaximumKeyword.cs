@@ -4,13 +4,9 @@ using JsonSchemaConsoleApp.JsonConverters;
 namespace JsonSchemaConsoleApp.Keywords;
 
 [Keyword("maximum")]
-[JsonConverter(typeof(RangeKeywordBaseJsonConverter))]
-internal class MaximumKeyword : RangeKeywordBase
+[JsonConverter(typeof(NumberRangeKeywordJsonConverter<MaximumKeyword>))]
+internal class MaximumKeyword : NumberRangeKeywordBase
 {
-    public MaximumKeyword(double maximum) : base(maximum)
-    {
-    }
-
     protected override bool IsInRange(double instanceValue)
     {
         return instanceValue <= BenchmarkValue;

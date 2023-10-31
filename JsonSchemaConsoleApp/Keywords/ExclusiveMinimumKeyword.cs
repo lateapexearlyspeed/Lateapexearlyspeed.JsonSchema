@@ -4,13 +4,9 @@ using JsonSchemaConsoleApp.JsonConverters;
 namespace JsonSchemaConsoleApp.Keywords;
 
 [Keyword("exclusiveMinimum")]
-[JsonConverter(typeof(RangeKeywordBaseJsonConverter))]
-internal class ExclusiveMinimumKeyword : RangeKeywordBase
+[JsonConverter(typeof(NumberRangeKeywordJsonConverter<ExclusiveMinimumKeyword>))]
+internal class ExclusiveMinimumKeyword : NumberRangeKeywordBase
 {
-    public ExclusiveMinimumKeyword(double exclusiveMinimum) : base(exclusiveMinimum)
-    {
-    }
-
     protected override bool IsInRange(double instanceValue)
     {
         return instanceValue > BenchmarkValue;

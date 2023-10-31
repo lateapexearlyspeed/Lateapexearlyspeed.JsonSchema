@@ -36,5 +36,7 @@ public enum ResultCode
     NotFoundRequiredDependentProperty,
     AlwaysFailed,
     RegexNotMatch,
-    NumberOutOfRange
+    NumberOutOfRange,
+    NotFoundRequiredProperty,
+    PropertiesOutOfRange
 }

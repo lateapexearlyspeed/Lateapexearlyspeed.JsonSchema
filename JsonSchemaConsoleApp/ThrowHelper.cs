@@ -43,6 +43,12 @@ internal class ThrowHelper
         return new JsonException(CreateKeywordPrefixContent<TKeyword>() + " expects valid regex string.", innerException);
     }
 
+    [Pure]
+    public static JsonException CreateKeywordHasInvalidNonNegativeIntegerJsonException(Type keywordType)
+    {
+        return new JsonException(CreateKeywordPrefixContent(keywordType) + " expects non-negative integer.");
+    }
+
     private static string CreateKeywordPrefixContent<TKeyword>() where TKeyword : KeywordBase
     {
         return $"Keyword:{KeywordBase.GetKeywordName<TKeyword>()}";
