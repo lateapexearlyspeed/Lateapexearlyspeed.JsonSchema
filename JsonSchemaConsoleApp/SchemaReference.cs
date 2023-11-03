@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace JsonSchemaConsoleApp;
 
-internal class SchemaReference : ValidationNode
+internal class SchemaReference : NamedValidationNode
 {
     public const string Keyword = "$ref";
 

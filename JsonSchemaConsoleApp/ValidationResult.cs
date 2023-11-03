@@ -38,5 +38,7 @@ public enum ResultCode
     RegexNotMatch,
     NumberOutOfRange,
     NotFoundRequiredProperty,
-    PropertiesOutOfRange
+    PropertiesOutOfRange,
+    NotFoundValidatedItem,
+    ContainsOutOfRange
 }

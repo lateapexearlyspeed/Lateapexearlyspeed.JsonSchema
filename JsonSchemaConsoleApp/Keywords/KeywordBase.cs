@@ -4,8 +4,8 @@ using System.Reflection;
 
 namespace JsonSchemaConsoleApp.Keywords;
 
-public abstract class KeywordBase : ValidationNode
-// public abstract class KeywordBase<TKeyword> : ValidationNode where TKeyword : KeywordBase<TKeyword>
+public abstract class KeywordBase : NamedValidationNode
+// public abstract class KeywordBase<TKeyword> : NamedValidationNode where TKeyword : KeywordBase<TKeyword>
 {
     // ReSharper disable once StaticMemberInGenericType
     // private static readonly string NameForKeywordType;

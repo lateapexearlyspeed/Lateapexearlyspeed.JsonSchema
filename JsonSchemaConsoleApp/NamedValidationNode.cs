@@ -2,7 +2,7 @@
 
 namespace JsonSchemaConsoleApp;
 
-public abstract class ValidationNode
+public abstract class NamedValidationNode : IValidationNode
 {
     public string? Name { get; set; }
 

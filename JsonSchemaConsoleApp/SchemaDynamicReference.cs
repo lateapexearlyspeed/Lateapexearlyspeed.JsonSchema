@@ -2,7 +2,7 @@
 
 namespace JsonSchemaConsoleApp;
 
-internal class SchemaDynamicReference : ValidationNode
+internal class SchemaDynamicReference : NamedValidationNode
 {
     public const string Keyword = "$dynamicRef";
 

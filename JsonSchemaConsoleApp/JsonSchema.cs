@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 namespace JsonSchemaConsoleApp;
 
 [JsonConverter(typeof(JsonSchemaJsonConverter<JsonSchema>))]
-internal abstract class JsonSchema : ValidationNode, ISchemaContainerElement
+internal abstract class JsonSchema : NamedValidationNode, ISchemaContainerElement
 {
     public bool IsSchemaType => true;
 

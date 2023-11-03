@@ -10,8 +10,8 @@ internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
 {
     private static readonly Uri DefaultDocumentBaseUri = new("http://lateapexearlyspeed");
 
-    internal BodyJsonSchemaDocument(List<ValidationNode> keywords, ConditionalValidator conditionalValidator, SchemaReference? schemaReference, SchemaDynamicReference? schemaDynamicReference, string? anchor, string? dynamicAnchor, Uri? id = null, DefsKeyword? defsKeyword = null) 
-        : base(GetBaseUri(id), keywords, conditionalValidator, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeyword)
+    internal BodyJsonSchemaDocument(List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReference? schemaReference, SchemaDynamicReference? schemaDynamicReference, string? anchor, string? dynamicAnchor, Uri? id = null, DefsKeyword? defsKeyword = null) 
+        : base(GetBaseUri(id), keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeyword)
     {
     }
 

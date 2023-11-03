@@ -8,9 +8,9 @@ namespace JsonSchemaConsoleApp;
 
 internal class BodyJsonSchema : JsonSchema
 {
-    private readonly List<ValidationNode> _keywords;
+    private readonly List<KeywordBase> _keywords;
 
-    private readonly ConditionalValidator _conditionalValidator;
+    private readonly List<ISchemaContainerValidationNode> _schemaContainerValidators;
 
     public SchemaReference? SchemaReference { get; }
     
@@ -20,10 +20,11 @@ internal class BodyJsonSchema : JsonSchema
 
     public string? DynamicAnchor { get; }
 
-    public BodyJsonSchema(List<ValidationNode> keywords, ConditionalValidator conditionalValidator, SchemaReference? schemaReference, SchemaDynamicReference? schemaDynamicReference, string? anchor, string? dynamicAnchor)
+    public BodyJsonSchema(List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReference? schemaReference, SchemaDynamicReference? schemaDynamicReference, string? anchor, string? dynamicAnchor)
     {
         _keywords = keywords;
-        _conditionalValidator = conditionalValidator;
+        _schemaContainerValidators = schemaContainerValidators;
+
         SchemaReference = schemaReference;
         SchemaDynamicReference = schemaDynamicReference;
         Anchor = anchor;
@@ -50,21 +51,21 @@ internal class BodyJsonSchema : JsonSchema
             }
         }
 
-        foreach (ValidationNode keyword in _keywords)
+        foreach (IValidationNode validationNode in _keywords.Concat<IValidationNode>(_schemaContainerValidators))
         {
-            ValidationResult result = keyword.Validate(instance, options);
+            ValidationResult result = validationNode.Validate(instance, options);
             if (!result.IsValid)
             {
                 return result;
             }
         }
 
-        return _conditionalValidator.Validate(instance, options);
+        return ValidationResult.ValidResult;
     }
 
     public override ISchemaContainerElement? GetSubElement(string name)
     {
-        foreach (ValidationNode keyword in _keywords)
+        foreach (KeywordBase keyword in _keywords)
         {
             if (keyword.Name == name && keyword is ISchemaContainerElement schemaContainerElement)
             {
@@ -72,10 +73,13 @@ internal class BodyJsonSchema : JsonSchema
             }
         }
 
-        JsonSchema? element = _conditionalValidator.GetSubElement(name);
-        if (element is not null)
+        foreach (ISchemaContainerValidationNode schemaContainer in _schemaContainerValidators)
         {
-            return element;
+            ISchemaContainerElement? schemaContainerElement = schemaContainer.GetSubElement(name);
+            if (schemaContainerElement is not null)
+            {
+                return schemaContainerElement;
+            }
         }
 
         return null;
@@ -83,7 +87,7 @@ internal class BodyJsonSchema : JsonSchema
 
     public override IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
-        foreach (ValidationNode validationKeyword in _keywords)
+        foreach (KeywordBase validationKeyword in _keywords)
         {
             if (validationKeyword is ISchemaContainerElement element)
             {
@@ -91,19 +95,12 @@ internal class BodyJsonSchema : JsonSchema
             }
         }
 
-        if (_conditionalValidator.PredictEvaluator is not null)
+        foreach (ISchemaContainerValidationNode schemaContainer in _schemaContainerValidators)
         {
-            yield return _conditionalValidator.PredictEvaluator;
-        }
-
-        if (_conditionalValidator.PositiveValidator is not null)
-        {
-            yield return _conditionalValidator.PositiveValidator;
-        }
-
-        if (_conditionalValidator.NegativeValidator is not null)
-        {
-            yield return _conditionalValidator.NegativeValidator;
+            foreach (ISchemaContainerElement element in schemaContainer.EnumerateElements())
+            {
+                yield return element;
+            }
         }
     }
 }

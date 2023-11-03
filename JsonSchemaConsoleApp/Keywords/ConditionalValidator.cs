@@ -1,52 +1,63 @@
 ﻿using System.Text.Json;
+using JsonSchemaConsoleApp.Keywords.interfaces;
 
 namespace JsonSchemaConsoleApp.Keywords;
 
-internal class ConditionalValidator
+internal class ConditionalValidator : ISchemaContainerValidationNode
 {
-    public ConditionalValidator(JsonSchema? predictEvaluator, JsonSchema? positiveValidator, JsonSchema? negativeValidator)
+    public const string IfKeywordName = "if";
+    public const string ThenKeywordName = "then";
+    public const string ElseKeywordName = "else";
+
+    private readonly JsonSchema _predictEvaluator;
+    private readonly JsonSchema _positiveValidator;
+    private readonly JsonSchema _negativeValidator;
+
+    public ConditionalValidator(JsonSchema predictEvaluator, JsonSchema? positiveValidator, JsonSchema? negativeValidator)
     {
-        if (predictEvaluator is not null)
-        {
-            PredictEvaluator = predictEvaluator;
-            PredictEvaluator.Name = IfKeyword.Keyword;
-        }
+        _predictEvaluator = predictEvaluator;
+        _predictEvaluator.Name = IfKeywordName;
 
-        PositiveValidator = positiveValidator ?? BooleanJsonSchema.True;
-        PositiveValidator.Name = ThenKeyword.Keyword;
+        _positiveValidator = positiveValidator ?? BooleanJsonSchema.True;
+        _positiveValidator.Name = ThenKeywordName;
 
-        NegativeValidator = negativeValidator ?? BooleanJsonSchema.True;
-        NegativeValidator.Name = ElseKeyword.Keyword;
+        _negativeValidator = negativeValidator ?? BooleanJsonSchema.True;
+        _negativeValidator.Name = ElseKeywordName;
     }
-
-    public JsonSchema? PredictEvaluator { get; }
-    public JsonSchema PositiveValidator { get; }
-    public JsonSchema NegativeValidator { get; }
 
     public ValidationResult Validate(JsonElement instance, JsonSchemaOptions options)
     {
-        if (PredictEvaluator is null)
-        {
-            return ValidationResult.ValidResult;
-        }
-
-        return PredictEvaluator.Validate(instance, options).IsValid
-            ? PositiveValidator.Validate(instance, options)
-            : NegativeValidator.Validate(instance, options);
+        return _predictEvaluator.Validate(instance, options).IsValid
+            ? _positiveValidator.Validate(instance, options)
+            : _negativeValidator.Validate(instance, options);
     }
 
-    public JsonSchema? GetSubElement(string name)
+    public ISchemaContainerElement? GetSubElement(string name)
     {
         switch (name)
         {
-            case IfKeyword.Keyword:
-                return PredictEvaluator;
-            case ThenKeyword.Keyword:
-                return PositiveValidator;
-            case ElseKeyword.Keyword:
-                return NegativeValidator;
+            case IfKeywordName:
+                return _predictEvaluator;
+            case ThenKeywordName:
+                return _positiveValidator;
+            case ElseKeywordName:
+                return _negativeValidator;
             default:
                 return null;
         }
+    }
+
+    public IEnumerable<ISchemaContainerElement> EnumerateElements()
+    {
+        yield return _predictEvaluator;
+        yield return _positiveValidator;
+        yield return _negativeValidator;
+    }
+
+    public bool IsSchemaType => false;
+
+    public JsonSchema GetSchema()
+    {
+        throw new InvalidOperationException();
     }
 }

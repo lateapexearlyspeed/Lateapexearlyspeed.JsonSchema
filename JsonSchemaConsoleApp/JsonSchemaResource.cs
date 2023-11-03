@@ -10,8 +10,8 @@ internal class JsonSchemaResource : BodyJsonSchema
     // Should not contain fragment
     private readonly Uri _id;
 
-    public JsonSchemaResource(Uri id, List<ValidationNode> keywords, ConditionalValidator conditionalValidator, SchemaReference? schemaReference, SchemaDynamicReference? schemaDynamicReference, string? anchor, string? dynamicAnchor, DefsKeyword? defsKeyword) 
-        : base(keywords, conditionalValidator, schemaReference, schemaDynamicReference, anchor, dynamicAnchor)
+    public JsonSchemaResource(Uri id, List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReference? schemaReference, SchemaDynamicReference? schemaDynamicReference, string? anchor, string? dynamicAnchor, DefsKeyword? defsKeyword) 
+        : base(keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor)
     {
         _id = id;
         if (id.IsAbsoluteUri)

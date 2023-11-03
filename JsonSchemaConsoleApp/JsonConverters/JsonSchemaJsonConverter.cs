@@ -33,15 +33,23 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
         reader.Read();
 
-        var validationKeywords = new List<ValidationNode>();
+        var validationKeywords = new List<KeywordBase>();
 
         PropertiesKeyword? propertiesKeyword = null;
         PatternPropertiesKeyword? patternPropertiesKeyword = null;
         AdditionalPropertiesKeyword? additionalPropertiesKeyword = null;
 
-        JsonSchema? predictEvaluator = null;
-        JsonSchema? positiveValidator = null;
-        JsonSchema? negativeValidator = null;
+        PrefixItemsKeyword? prefixItemsKeyword = null;
+        ItemsKeyword? itemsKeyword = null;
+
+        JsonSchema? predictSchema = null;
+        JsonSchema? positiveSchema = null;
+        JsonSchema? negativeSchema = null;
+
+        JsonSchema? containsSchema = null;
+        uint? maxContains = null;
+        uint? minContains = null;
+
         SchemaReference? schemaReference = null;
         SchemaDynamicReference? schemaDynamicReference = null;
         Dictionary<string, JsonSchema>? defs = null;
@@ -58,12 +66,12 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
             if (keywordType is not null)
             {
-                ValidationNode? keyword = JsonSerializer.Deserialize(ref reader, keywordType) as ValidationNode;
+                KeywordBase? keyword = JsonSerializer.Deserialize(ref reader, keywordType) as KeywordBase;
 
                 Debug.Assert(keyword != null);
                 validationKeywords.Add(keyword);
 
-                // Store dependent keywords ('properties' and 'patternProperties') for 'additionalProperties'
+                // Store dependent keywords
                 if (keyword is PropertiesKeyword properties)
                 {
                     propertiesKeyword = properties;
@@ -76,18 +84,38 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 {
                     additionalPropertiesKeyword = additionalProperties;
                 }
+                else if (keyword is PrefixItemsKeyword prefixItems)
+                {
+                    prefixItemsKeyword = prefixItems;
+                }
+                else if (keyword is ItemsKeyword items)
+                {
+                    itemsKeyword = items;
+                }
             }
-            else if (keywordName == IfKeyword.Keyword)
+            else if (keywordName == ConditionalValidator.IfKeywordName)
             {
-                predictEvaluator = JsonSerializer.Deserialize<JsonSchema>(ref reader);
+                predictSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader);
             }
-            else if (keywordName == ThenKeyword.Keyword)
+            else if (keywordName == ConditionalValidator.ThenKeywordName)
             {
-                positiveValidator = JsonSerializer.Deserialize<JsonSchema>(ref reader);
+                positiveSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader);
             }
-            else if (keywordName == ElseKeyword.Keyword)
+            else if (keywordName == ConditionalValidator.ElseKeywordName)
             {
-                negativeValidator = JsonSerializer.Deserialize<JsonSchema>(ref reader);
+                negativeSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader);
+            }
+            else if (keywordName == ArrayContainsValidator.ContainsKeywordName)
+            {
+                containsSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader);
+            }
+            else if (keywordName == ArrayContainsValidator.MaxContainsKeywordName)
+            {
+                maxContains = JsonSerializer.Deserialize<uint>(ref reader);
+            }
+            else if (keywordName == ArrayContainsValidator.MinContainsKeywordName)
+            {
+                minContains = JsonSerializer.Deserialize<uint>(ref reader);
             }
             else if (keywordName == SchemaReference.Keyword)
             {
@@ -121,11 +149,16 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             reader.Read();
         }
 
-        // Set dependent keywords ('properties' and 'patternProperties') for 'additionalProperties'
+        // Set dependent keywords
         if (additionalPropertiesKeyword is not null)
         {
             additionalPropertiesKeyword.PropertiesKeyword = propertiesKeyword;
             additionalPropertiesKeyword.PatternPropertiesKeyword = patternPropertiesKeyword;
+        }
+
+        if (itemsKeyword is not null)
+        {
+            itemsKeyword.PrefixItemsKeyword = prefixItemsKeyword;
         }
 
         JsonSchema schema;
@@ -134,18 +167,29 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             ? null
             : new DefsKeyword(defs);
 
-        var conditionalValidator = new ConditionalValidator(predictEvaluator, positiveValidator, negativeValidator);
+        var schemaContainerValidators = new List<ISchemaContainerValidationNode>(2);
+        if (containsSchema is not null)
+        {
+            var arrayContainsValidator = new ArrayContainsValidator(containsSchema, minContains, maxContains);
+            schemaContainerValidators.Add(arrayContainsValidator);
+        }
+
+        if (predictSchema is not null)
+        {
+            var conditionalValidator = new ConditionalValidator(predictSchema, positiveSchema, negativeSchema);
+            schemaContainerValidators.Add(conditionalValidator);
+        }
 
         if (typeToConvert == typeof(IJsonSchemaDocument))
         {
-            schema = new BodyJsonSchemaDocument(validationKeywords, conditionalValidator, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, id, defsKeyword);
+            schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, id, defsKeyword);
         }
         else if (id is not null)
         {
             schema = new JsonSchemaResource(
                 id,
                 validationKeywords,
-                conditionalValidator,
+                schemaContainerValidators,
                 schemaReference,
                 schemaDynamicReference,
                 anchor,
@@ -154,7 +198,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         }
         else
         {
-            schema = new BodyJsonSchema(validationKeywords, conditionalValidator, schemaReference, schemaDynamicReference, anchor, dynamicAnchor);
+            schema = new BodyJsonSchema(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor);
         }
 
         return (T)(object)schema;
