@@ -4,11 +4,11 @@ using System.Text.Json.Serialization;
 namespace JsonSchemaConsoleApp.Keywords;
 
 [Keyword("maxProperties")]
-[JsonConverter(typeof(PropertiesSizeKeywordJsonConverter<MaxPropertiesKeyword>))]
+[JsonConverter(typeof(BenchmarkValueKeywordJsonConverter<MaxPropertiesKeyword>))]
 internal class MaxPropertiesKeyword : PropertiesSizeKeywordBase
 {
     protected override bool IsSizeInRange(int instanceProperties)
     {
-        return instanceProperties <= PropertiesBenchmark;
+        return instanceProperties <= BenchmarkValue;
     }
 }

@@ -1,10 +1,11 @@
 ﻿using System.Text.Json;
+using JsonSchemaConsoleApp.Keywords.interfaces;
 
 namespace JsonSchemaConsoleApp.Keywords;
 
-internal abstract class PropertiesSizeKeywordBase : KeywordBase
+internal abstract class PropertiesSizeKeywordBase : KeywordBase, IBenchmarkValueKeyword
 {
-    public uint PropertiesBenchmark { get; init; }
+    public uint BenchmarkValue { get; init; }
 
     protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
     {
