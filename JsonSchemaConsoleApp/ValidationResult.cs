@@ -41,5 +41,6 @@ public enum ResultCode
     PropertiesOutOfRange,
     NotFoundValidatedItem,
     ContainsOutOfRange,
-    ArrayLengthOutOfRange
+    ArrayLengthOutOfRange,
+    StringLengthOutOfRange
 }
