@@ -36,15 +36,15 @@ internal class JsonSchemaResource : BodyJsonSchema
         return DefsKeyword?.GetDefinition(defNamePath);
     }
 
-    public JsonSchema? FindSubSchemaByJsonPointer(string pointer)
+    public JsonSchema? FindSubSchemaByJsonPointer(string jsonPointerPath)
     {
-        var jsonPointer = new JsonPointer(pointer);
+        var jsonPointer = new JsonPointer(jsonPointerPath);
 
         ISchemaContainerElement? currentElement = this;
-        for (int segmentIdx = 0; segmentIdx < jsonPointer.Count; segmentIdx++)
+        for (int refTokenIdx = 0; refTokenIdx < jsonPointer.Count; refTokenIdx++)
         {
-            string segmentName = jsonPointer.GetSegment(segmentIdx);
-            currentElement = currentElement.GetSubElement(segmentName);
+            string refToken = jsonPointer.GetReferenceToken(refTokenIdx);
+            currentElement = currentElement.GetSubElement(refToken);
             if (currentElement is null)
             {
                 return null;

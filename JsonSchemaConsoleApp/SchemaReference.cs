@@ -31,7 +31,7 @@ internal class SchemaReference : NamedValidationNode
             return null;
         }
 
-        string fragmentWithoutNumberSign = FullUriRef.Fragment.TrimStart('#');
+        string fragmentWithoutNumberSign = FullUriRef.UnescapedFragmentWithoutNumberSign();
         if (string.IsNullOrEmpty(fragmentWithoutNumberSign))
         {
             return schemaResource;

@@ -35,7 +35,7 @@ internal class SchemaDynamicReference : NamedValidationNode
             return null;
         }
 
-        string dynamicAnchor = _fullUriRef.Fragment.TrimStart('#');
+        string dynamicAnchor = _fullUriRef.UnescapedFragmentWithoutNumberSign();
         BodyJsonSchema? schema = staticReferencedSchemaResource.FindSubSchemaByDynamicAnchor(dynamicAnchor);
         if (schema is null)
         {
@@ -56,8 +56,7 @@ internal class SchemaDynamicReference : NamedValidationNode
             return (null, null);
         }
 
-        string fragment = _fullUriRef.Fragment;
-        string dynamicAnchor = fragment.TrimStart('#');
+        string dynamicAnchor = _fullUriRef.UnescapedFragmentWithoutNumberSign();
         BodyJsonSchema? innerMostSubSchema = staticReferencedSchemaResource.FindSubSchemaByDynamicAnchor(dynamicAnchor);
         if (innerMostSubSchema is null)
         {
@@ -74,12 +73,12 @@ internal class SchemaDynamicReference : NamedValidationNode
 
             if (subSchema is not null)
             {
-                return (subSchema, new UriBuilder(resource.BaseUri){Fragment = fragment}.Uri);
+                return (subSchema, new UriBuilder(resource.BaseUri){Fragment = _fullUriRef.Fragment }.Uri);
             }
         }
 
         // Cannot find specified dynamic anchor in reference path, so use the innermost subschema which contains specified dynamic anchor.
-        return (innerMostSubSchema, new UriBuilder(staticReferencedSchemaResource.BaseUri){Fragment = fragment}.Uri);
+        return (innerMostSubSchema, new UriBuilder(staticReferencedSchemaResource.BaseUri){Fragment = _fullUriRef.Fragment }.Uri);
     }
 
     protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
