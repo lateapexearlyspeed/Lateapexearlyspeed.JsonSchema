@@ -3,7 +3,7 @@
   "type": "object",
   "properties": {
     "integer1": {
-      "$ref": "http://my2"
+      "$ref": "http://my2#/properties/integer1"
     },
     "object1": {
       "$id": "http://inside",

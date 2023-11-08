@@ -44,12 +44,16 @@ internal class JsonSchemaResource : BodyJsonSchema
 
     public JsonSchema? FindSubSchemaByJsonPointer(string jsonPointerPath)
     {
-        var jsonPointer = new JsonPointer(jsonPointerPath);
+        JsonPointer? jsonPointer = JsonPointer.Create(jsonPointerPath);
+        if (jsonPointer is null)
+        {
+            return null;
+        }
 
         ISchemaContainerElement? currentElement = this;
-        for (int refTokenIdx = 0; refTokenIdx < jsonPointer.Count; refTokenIdx++)
+
+        foreach (string refToken in jsonPointer)
         {
-            string refToken = jsonPointer.GetReferenceToken(refTokenIdx);
             currentElement = currentElement.GetSubElement(refToken);
             if (currentElement is null)
             {
@@ -62,15 +66,15 @@ internal class JsonSchemaResource : BodyJsonSchema
 
     public BodyJsonSchema? FindSubSchemaByAnchor(string anchorName)
     {
-        return FindSubSchemaBy(this, bodySchema => bodySchema.Anchor == anchorName);
+        return FindBodySubSchemaByFilter(this, bodySchema => bodySchema.Anchor == anchorName);
     }
 
     public BodyJsonSchema? FindSubSchemaByDynamicAnchor(string anchorName)
     {
-        return FindSubSchemaBy(this, bodySchema => bodySchema.DynamicAnchor == anchorName);
+        return FindBodySubSchemaByFilter(this, bodySchema => bodySchema.DynamicAnchor == anchorName);
     }
 
-    private static BodyJsonSchema? FindSubSchemaBy(ISchemaContainerElement schemaContainer, Func<BodyJsonSchema, bool> predicate)
+    private static BodyJsonSchema? FindBodySubSchemaByFilter(ISchemaContainerElement schemaContainer, Func<BodyJsonSchema, bool> predicate)
     {
         if (schemaContainer is BodyJsonSchema currentSchema && predicate(currentSchema))
         {
@@ -79,7 +83,7 @@ internal class JsonSchemaResource : BodyJsonSchema
 
         foreach (ISchemaContainerElement childElement in schemaContainer.EnumerateElements())
         {
-            BodyJsonSchema? subSchema = FindSubSchemaBy(childElement, predicate);
+            BodyJsonSchema? subSchema = FindBodySubSchemaByFilter(childElement, predicate);
             if (subSchema is not null)
             {
                 return subSchema;
@@ -95,6 +99,6 @@ internal class JsonSchemaResource : BodyJsonSchema
 
         return DefsKeyword is null 
             ? schemaElements 
-            : DefsKeyword.GetAllDefinitions().Values.Union(schemaElements);
+            : DefsKeyword.GetAllDefinitions().Values.Concat(schemaElements);
     }
 }

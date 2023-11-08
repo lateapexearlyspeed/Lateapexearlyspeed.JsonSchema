@@ -1,24 +1,25 @@
-﻿using System.Text;
+﻿using System.Collections;
+using System.Text;
 
 namespace JsonSchemaConsoleApp;
 
 /// <summary>
 /// <remarks> Refer to: https://datatracker.ietf.org/doc/html/rfc6901 </remarks>
 /// </summary>
-public class JsonPointer
+public class JsonPointer : IEnumerable<string>
 {
     private const string TokenPrefixCharString = "/";
 
-    private char TokenPrefixChar => TokenPrefixCharString[0];
+    private static char TokenPrefixChar => TokenPrefixCharString[0];
 
     private readonly List<string> _referenceTokens;
 
-    public JsonPointer(IEnumerable<string> unescapedTokenCollection)
+    internal JsonPointer(IEnumerable<string> unescapedTokenCollection)
     {
         _referenceTokens = unescapedTokenCollection.ToList();
     }
 
-    public JsonPointer(string escapedJsonPointerString)
+    private JsonPointer(string escapedJsonPointerString)
     {
         _referenceTokens = new List<string>();
 
@@ -52,11 +53,26 @@ public class JsonPointer
         return escapedReferenceToken.Replace("~1", TokenPrefixCharString).Replace("~0", "~");
     }
 
-    public int Count => _referenceTokens.Count;
-
-    public string GetReferenceToken(int index)
+    /// <returns>If <paramref name="escapedJsonPointerString"/> is an invalid json pointer format, return null.</returns>
+    public static JsonPointer? Create(string escapedJsonPointerString)
     {
-        return _referenceTokens[index];
+        // Invalid json pointer format, return null
+        if (!string.IsNullOrEmpty(escapedJsonPointerString) && escapedJsonPointerString[0] != TokenPrefixChar)
+        {
+            return null;
+        }
+
+        return new JsonPointer(escapedJsonPointerString);
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public IEnumerator<string> GetEnumerator()
+    {
+        return _referenceTokens.GetEnumerator();
     }
 
     public override string ToString()
