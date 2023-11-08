@@ -3,16 +3,14 @@
   "type": "object",
   "properties": {
     "integer1": {
-      "type": "integer"
+      "$ref": "http://my2"
     },
     "object1": {
       "$id": "http://inside",
       "type": "object",
       "properties": {
         "p1": {
-          "type": "integer",
-          "maximum": 1,
-          "allOf": [ true ]
+          "$ref": "http://my2#/properties/integer1"
         },
         "p2": {
           "$id": "http://myp2",

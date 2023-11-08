@@ -59,11 +59,6 @@ public class JsonPointer
         return _referenceTokens[index];
     }
 
-    public void AddReferenceToken(string unescapedRefToken)
-    {
-        _referenceTokens.Add(unescapedRefToken);
-    }
-
     public override string ToString()
     {
         var sb = new StringBuilder();

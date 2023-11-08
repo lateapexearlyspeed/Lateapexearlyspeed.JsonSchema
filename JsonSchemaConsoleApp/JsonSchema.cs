@@ -1,7 +1,5 @@
 ﻿using JsonSchemaConsoleApp.JsonConverters;
-using JsonSchemaConsoleApp.Keywords;
 using JsonSchemaConsoleApp.Keywords.interfaces;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace JsonSchemaConsoleApp;

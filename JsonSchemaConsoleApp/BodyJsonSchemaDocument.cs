@@ -1,6 +1,5 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-using JsonSchemaConsoleApp.JsonConverters;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using JsonSchemaConsoleApp.Keywords;
 using JsonSchemaConsoleApp.Keywords.interfaces;
 
@@ -10,15 +9,17 @@ internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
 {
     private static readonly Uri DefaultDocumentBaseUri = new("http://lateapexearlyspeed");
 
+    /// <summary>
+    /// All schema resources inside current document (including current document itself)
+    /// </summary>
+    public SchemaResourceRegistry LocalSchemaResourceRegistry { get; } = new();
+
+    public SchemaResourceRegistry? GlobalSchemaResourceRegistry { get; set; }
+
     internal BodyJsonSchemaDocument(List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReference? schemaReference, SchemaDynamicReference? schemaDynamicReference, string? anchor, string? dynamicAnchor, Uri? id = null, DefsKeyword? defsKeyword = null) 
         : base(GetBaseUri(id), keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeyword)
     {
     }
-
-    // all schema resources inside current document (including current document itself)
-    public SchemaResourceRegistry LocalSchemaResourceRegistry { get; } = new();
-
-    public SchemaResourceRegistry? GlobalSchemaResourceRegistry { get; set; }
 
     private static Uri GetBaseUri(Uri? id)
     {
@@ -39,21 +40,14 @@ internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
 
         if (containerElement is BodyJsonSchema schema)
         {
-            if (containerElement is JsonSchemaResource schemaResource)
+            schema.ParentResourceBaseUri = parentResourceBaseUri;
+
+            if (schema is JsonSchemaResource schemaResource)
             {
-                schemaResource.ParentResourceBaseUri = parentResourceBaseUri;
+                Debug.Assert(schemaResource.BaseUri is not null);
+
                 currentResourceBaseUri = schemaResource.BaseUri;
                 LocalSchemaResourceRegistry.AddSchemaResource(schemaResource.BaseUri, schemaResource);
-            }
-
-            if (schema.SchemaReference is not null)
-            {
-                schema.SchemaReference.ParentResourceBaseUri = currentResourceBaseUri;
-            }
-
-            if (schema.SchemaDynamicReference is not null)
-            {
-                schema.SchemaDynamicReference.ParentResourceBaseUri = currentResourceBaseUri;
             }
         }
 
@@ -65,19 +59,17 @@ internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
 
     public ValidationResult Validate(JsonElement instance)
     {
-        return Validate(instance, new JsonSchemaOptions
-        {
-            SchemaResourceRegistry = GlobalSchemaResourceRegistry,
-            SchemaRecursionRecorder = new SchemaRecursionRecorder(),
-            ValidationPathStack = new ValidationPathStack()
-        });
-    }
+        Debug.Assert(GlobalSchemaResourceRegistry is not null);
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
-    {
-        options.ValidationPathStack.PushReferencedSchema(this, BaseUri);
-        ValidationResult validationResult = base.ValidateCore(instance, options);
-        options.ValidationPathStack.PopReferencedSchema();
+        var jsonSchemaOptions = new JsonSchemaOptions(GlobalSchemaResourceRegistry);
+
+        Debug.Assert(BaseUri is not null);
+
+        // We need to push current json schema document into path stack here ONLY when this document is 'main' document.
+        // For referenced documents, SchemaReference (or SchemaDynamicReference) will take action to push them into path stack.
+        jsonSchemaOptions.ValidationPathStack.PushReferencedSchema(this, BaseUri);
+        ValidationResult validationResult = Validate(instance, jsonSchemaOptions);
+        jsonSchemaOptions.ValidationPathStack.PopReferencedSchema();
 
         return validationResult;
     }

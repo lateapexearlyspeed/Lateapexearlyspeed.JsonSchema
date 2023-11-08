@@ -1,23 +1,24 @@
-﻿using System.Text.Json.Serialization;
-using JsonSchemaConsoleApp.JsonConverters;
-using JsonSchemaConsoleApp.Keywords;
+﻿using JsonSchemaConsoleApp.Keywords;
 using JsonSchemaConsoleApp.Keywords.interfaces;
 
 namespace JsonSchemaConsoleApp;
 
 internal class JsonSchemaResource : BodyJsonSchema
 {
-    // Should not contain fragment
+    /// <summary>
+    /// Should not contain fragment
+    /// </summary>
     private readonly Uri _id;
 
     public JsonSchemaResource(Uri id, List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReference? schemaReference, SchemaDynamicReference? schemaDynamicReference, string? anchor, string? dynamicAnchor, DefsKeyword? defsKeyword) 
         : base(keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor)
     {
-        _id = id;
-        if (id.IsAbsoluteUri)
+        if (!string.IsNullOrEmpty(id.Fragment))
         {
-            BaseUri = id;
+            throw new BadSchemaException("Id of json schema resource should not contain fragment.");
         }
+
+        _id = id;
         DefsKeyword = defsKeyword;
     }
 
@@ -26,9 +27,14 @@ internal class JsonSchemaResource : BodyJsonSchema
 
     public DefsKeyword? DefsKeyword { get; }
 
-    public Uri ParentResourceBaseUri
+    public override Uri ParentResourceBaseUri
     {
-        set => BaseUri = new Uri(value, _id);
+        set
+        {
+            BaseUri = new Uri(value, _id);
+
+            base.ParentResourceBaseUri = BaseUri;
+        }
     }
 
     public JsonSchema? FindSubSchemaByDefs(string defNamePath)

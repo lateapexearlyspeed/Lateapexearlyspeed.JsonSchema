@@ -4,9 +4,17 @@ namespace JsonSchemaConsoleApp;
 
 public class JsonSchemaOptions
 {
-    internal SchemaResourceRegistry SchemaResourceRegistry { get; init; }
-    internal SchemaRecursionRecorder SchemaRecursionRecorder { get; init; }
-    public ValidationPathStack ValidationPathStack { get; init; }
+    internal SchemaResourceRegistry SchemaResourceRegistry { get; }
+    internal SchemaRecursionRecorder SchemaRecursionRecorder { get; }
+    public ValidationPathStack ValidationPathStack { get; }
+
+    internal JsonSchemaOptions(SchemaResourceRegistry schemaResourceRegistry)
+    {
+        SchemaResourceRegistry = schemaResourceRegistry;
+
+        SchemaRecursionRecorder = new SchemaRecursionRecorder();
+        ValidationPathStack = new ValidationPathStack();
+    }
 }
 
 public class ValidationPathStack

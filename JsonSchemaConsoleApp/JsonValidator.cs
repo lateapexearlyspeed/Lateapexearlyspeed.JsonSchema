@@ -4,13 +4,13 @@ namespace JsonSchemaConsoleApp;
 
 public class JsonValidator
 {
-    private readonly IJsonSchemaDocument _schemaDoc;
+    private readonly IJsonSchemaDocument _mainSchemaDoc;
 
     private readonly SchemaResourceRegistry _globalSchemaResourceRegistry = new();
 
     public JsonValidator(string jsonSchema)
     {
-        _schemaDoc = JsonSchemaDocument.Create(jsonSchema, _globalSchemaResourceRegistry);
+        _mainSchemaDoc = JsonSchemaDocument.Create(jsonSchema, _globalSchemaResourceRegistry);
     }
 
     public void AddExternalDocument(string externalJsonSchema)
@@ -22,7 +22,7 @@ public class JsonValidator
     {
         using (JsonDocument instance = JsonDocument.Parse(jsonInstance))
         {
-            return _schemaDoc.Validate(instance.RootElement);
+            return _mainSchemaDoc.Validate(instance.RootElement);
         }
                 
     }

@@ -1,5 +1,5 @@
 {
-  "integer1": 1,
+  "integer1": "1",
   "object1": {
     "p1": 1,
     "p2": "2"

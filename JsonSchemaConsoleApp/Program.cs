@@ -13,8 +13,8 @@ namespace JsonSchemaConsoleApp
             // ValidationKeywordRegistry.AddKeyword(typeof(TypeKeyword));
 
             var jsonValidator = new JsonValidator(jsonSchema);
-            // string jsonSchema2 = File.ReadAllText("schema2.json");
-            // jsonValidator.AddExternalDocument(jsonSchema2);
+            string jsonSchema2 = File.ReadAllText("schema2.json");
+            jsonValidator.AddExternalDocument(jsonSchema2);
 
             ValidationResult result = jsonValidator.Validate(instance);
         }

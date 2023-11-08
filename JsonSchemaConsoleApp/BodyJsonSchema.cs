@@ -1,6 +1,5 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-using JsonSchemaConsoleApp.JsonConverters;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using JsonSchemaConsoleApp.Keywords;
 using JsonSchemaConsoleApp.Keywords.interfaces;
 
@@ -23,10 +22,16 @@ internal class BodyJsonSchema : JsonSchema
     public BodyJsonSchema(List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReference? schemaReference, SchemaDynamicReference? schemaDynamicReference, string? anchor, string? dynamicAnchor)
     {
         _keywords = keywords;
+
+        Debug.Assert(schemaContainerValidators.All(
+                validator 
+                    => validator.GetType() == typeof(ConditionalValidator) 
+                    || validator.GetType() == typeof(ArrayContainsValidator)));
         _schemaContainerValidators = schemaContainerValidators;
 
         SchemaReference = schemaReference;
         SchemaDynamicReference = schemaDynamicReference;
+
         Anchor = anchor;
         DynamicAnchor = dynamicAnchor;
     }
@@ -100,6 +105,22 @@ internal class BodyJsonSchema : JsonSchema
             foreach (ISchemaContainerElement element in schemaContainer.EnumerateElements())
             {
                 yield return element;
+            }
+        }
+    }
+
+    public virtual Uri ParentResourceBaseUri
+    {
+        set
+        {
+            if (SchemaReference is not null)
+            {
+                SchemaReference.ParentResourceBaseUri = value;
+            }
+
+            if (SchemaDynamicReference is not null)
+            {
+                SchemaDynamicReference.ParentResourceBaseUri = value;
             }
         }
     }
