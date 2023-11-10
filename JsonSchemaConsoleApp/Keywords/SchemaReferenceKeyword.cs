@@ -1,17 +1,20 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using JsonSchemaConsoleApp.JsonConverters;
 
-namespace JsonSchemaConsoleApp;
+namespace JsonSchemaConsoleApp.Keywords;
 
-internal class SchemaReference : NamedValidationNode
+[Keyword(Keyword)]
+[JsonConverter(typeof(SchemaReferenceKeywordJsonConverter))]
+internal class SchemaReferenceKeyword : KeywordBase
 {
     public const string Keyword = "$ref";
 
     private readonly Uri _rawRefValue;
 
-    public SchemaReference(Uri rawRefValue)
+    public SchemaReferenceKeyword(Uri rawRefValue)
     {
-        Name = Keyword;
         _rawRefValue = rawRefValue;
     }
 
@@ -30,6 +33,8 @@ internal class SchemaReference : NamedValidationNode
         {
             return null;
         }
+
+        Debug.Assert(FullUriRef is not null);
 
         string fragmentWithoutNumberSign = FullUriRef.UnescapedFragmentWithoutNumberSign();
         if (string.IsNullOrEmpty(fragmentWithoutNumberSign))
@@ -55,22 +60,27 @@ internal class SchemaReference : NamedValidationNode
 
     public JsonSchemaResource? GetReferencedSchemaResource(JsonSchemaOptions options)
     {
+        Debug.Assert(FullUriRef is not null);
+
         return options.SchemaResourceRegistry.GetSchemaResource(GetBaseUri(FullUriRef));
     }
 
+    /// <returns>Uri from <paramref name="fullUri"/> without fragment</returns>
     private static Uri GetBaseUri(Uri fullUri)
     {
-        string baseUri = fullUri.AbsoluteUri.Substring(0, fullUri.AbsoluteUri.Length - fullUri.Fragment.Length);
+        string baseUri = fullUri.GetLeftPart(UriPartial.Query);
         return new Uri(baseUri);
     }
 
     protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
     {
+        Debug.Assert(FullUriRef is not null);
+
         JsonSchema? referencedSchema = GetReferencedSchema(options);
 
         if (referencedSchema is null)
         {
-            throw new InvalidOperationException($"Cannot find schema for ref: {FullUriRef}");
+            throw new InvalidOperationException($"Cannot find schema for {Keyword}: {FullUriRef}");
         }
 
         if (!options.SchemaRecursionRecorder.TryAdd(referencedSchema, JsonPath.Root))
@@ -78,7 +88,10 @@ internal class SchemaReference : NamedValidationNode
             throw new InvalidOperationException($"Infinite recursion loop detected. Instance path: {""}");
         }
 
-        options.ValidationPathStack.PushReferencedSchema(GetReferencedSchemaResource(options)!, FullUriRef);
+        JsonSchemaResource? referencedSchemaResource = GetReferencedSchemaResource(options);
+        
+        Debug.Assert(referencedSchemaResource is not null);
+        options.ValidationPathStack.PushReferencedSchema(referencedSchemaResource, FullUriRef);
 
         ValidationResult validationResult = referencedSchema.ValidateCore(instance, options);
 

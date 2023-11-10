@@ -11,15 +11,15 @@ internal class BodyJsonSchema : JsonSchema
 
     private readonly List<ISchemaContainerValidationNode> _schemaContainerValidators;
 
-    public SchemaReference? SchemaReference { get; }
+    public SchemaReferenceKeyword? SchemaReference { get; }
     
-    public SchemaDynamicReference? SchemaDynamicReference { get; }
+    public SchemaDynamicReferenceKeyword? SchemaDynamicReference { get; }
 
     public string? Anchor { get; }
 
     public string? DynamicAnchor { get; }
 
-    public BodyJsonSchema(List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReference? schemaReference, SchemaDynamicReference? schemaDynamicReference, string? anchor, string? dynamicAnchor)
+    public BodyJsonSchema(List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor)
     {
         _keywords = keywords;
 
@@ -38,25 +38,19 @@ internal class BodyJsonSchema : JsonSchema
 
     protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
     {
+        IEnumerable<IValidationNode> validationNodes = _keywords.Concat<IValidationNode>(_schemaContainerValidators);
+        
         if (SchemaReference is not null)
         {
-            ValidationResult result = SchemaReference.Validate(instance, options);
-            if (!result.IsValid)
-            {
-                return result;
-            }
+            validationNodes = validationNodes.Append(SchemaReference);
         }
 
         if (SchemaDynamicReference is not null)
         {
-            ValidationResult result = SchemaDynamicReference.Validate(instance, options);
-            if (!result.IsValid)
-            {
-                return result;
-            }
+            validationNodes = validationNodes.Append(SchemaDynamicReference);
         }
 
-        foreach (IValidationNode validationNode in _keywords.Concat<IValidationNode>(_schemaContainerValidators))
+        foreach (IValidationNode validationNode in validationNodes)
         {
             ValidationResult result = validationNode.Validate(instance, options);
             if (!result.IsValid)

@@ -50,8 +50,8 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         uint? maxContains = null;
         uint? minContains = null;
 
-        SchemaReference? schemaReference = null;
-        SchemaDynamicReference? schemaDynamicReference = null;
+        SchemaReferenceKeyword? schemaReference = null;
+        SchemaDynamicReferenceKeyword? schemaDynamicReference = null;
         Dictionary<string, JsonSchema>? defs = null;
         Uri? id = null;
         string? anchor = null;
@@ -117,13 +117,13 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             {
                 minContains = JsonSerializer.Deserialize<uint>(ref reader);
             }
-            else if (keywordName == SchemaReference.Keyword)
+            else if (keywordName == SchemaReferenceKeyword.Keyword)
             {
-                schemaReference = new SchemaReference(new Uri(reader.GetString()!, UriKind.RelativeOrAbsolute));
+                schemaReference = JsonSerializer.Deserialize<SchemaReferenceKeyword>(ref reader);
             }
-            else if (keywordName == SchemaDynamicReference.Keyword)
+            else if (keywordName == SchemaDynamicReferenceKeyword.Keyword)
             {
-                schemaDynamicReference = new SchemaDynamicReference(new Uri(reader.GetString()!, UriKind.RelativeOrAbsolute));
+                schemaDynamicReference = JsonSerializer.Deserialize<SchemaDynamicReferenceKeyword>(ref reader);
             }
             else if (keywordName == DefsKeyword.Keyword)
             {

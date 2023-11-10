@@ -10,20 +10,20 @@ public class JsonValidator
 
     public JsonValidator(string jsonSchema)
     {
-        _mainSchemaDoc = JsonSchemaDocument.Create(jsonSchema, _globalSchemaResourceRegistry);
+        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, _globalSchemaResourceRegistry);
     }
 
     public void AddExternalDocument(string externalJsonSchema)
     {
-        JsonSchemaDocument.Create(externalJsonSchema, _globalSchemaResourceRegistry);
+        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalJsonSchema, _globalSchemaResourceRegistry);
     }
 
     public ValidationResult Validate(string jsonInstance)
     {
+        // ReSharper disable once ConvertToUsingDeclaration
         using (JsonDocument instance = JsonDocument.Parse(jsonInstance))
         {
             return _mainSchemaDoc.Validate(instance.RootElement);
         }
-                
     }
 }

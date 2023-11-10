@@ -16,7 +16,7 @@ internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
 
     public SchemaResourceRegistry? GlobalSchemaResourceRegistry { get; set; }
 
-    internal BodyJsonSchemaDocument(List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReference? schemaReference, SchemaDynamicReference? schemaDynamicReference, string? anchor, string? dynamicAnchor, Uri? id = null, DefsKeyword? defsKeyword = null) 
+    internal BodyJsonSchemaDocument(List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor, Uri? id = null, DefsKeyword? defsKeyword = null) 
         : base(GetBaseUri(id), keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeyword)
     {
     }
@@ -66,7 +66,7 @@ internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
         Debug.Assert(BaseUri is not null);
 
         // We need to push current json schema document into path stack here ONLY when this document is 'main' document.
-        // For referenced documents, SchemaReference (or SchemaDynamicReference) will take action to push them into path stack.
+        // For referenced documents, SchemaReferenceKeyword (or SchemaDynamicReferenceKeyword) will take action to push them into path stack.
         jsonSchemaOptions.ValidationPathStack.PushReferencedSchema(this, BaseUri);
         ValidationResult validationResult = Validate(instance, jsonSchemaOptions);
         jsonSchemaOptions.ValidationPathStack.PopReferencedSchema();

@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.Design;
-using System.Security.AccessControl;
-
-namespace JsonSchemaConsoleApp
+﻿namespace JsonSchemaConsoleApp
 {
     internal class Program
     {

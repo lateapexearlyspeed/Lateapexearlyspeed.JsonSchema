@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.Contracts;
 using System.Text.Json;
 using JsonSchemaConsoleApp.Keywords;
 
@@ -41,6 +40,12 @@ internal class ThrowHelper
     public static JsonException CreateKeywordHasInvalidRegexJsonException<TKeyword>(Exception innerException) where TKeyword : KeywordBase
     {
         return new JsonException(CreateKeywordPrefixContent<TKeyword>() + " expects valid regex string.", innerException);
+    }
+
+    [Pure]
+    public static JsonException CreateKeywordHasInvalidUriJsonException<TKeyword>(Exception innerException) where TKeyword : KeywordBase
+    {
+        return new JsonException(CreateKeywordPrefixContent<TKeyword>() + " expects valid Uri.", innerException);
     }
 
     [Pure]

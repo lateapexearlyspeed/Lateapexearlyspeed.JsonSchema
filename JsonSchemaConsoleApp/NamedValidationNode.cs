@@ -15,7 +15,6 @@ public abstract class NamedValidationNode : IValidationNode
         
         ValidationResult validationResult = ValidateCore(instance, options);
 
-
         if (Name is not null)
         {
             options.ValidationPathStack.PopRelativeLocation();
