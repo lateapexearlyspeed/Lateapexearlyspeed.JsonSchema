@@ -5,6 +5,8 @@ VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonSchemaConsoleApp", "JsonSchemaConsoleApp\JsonSchemaConsoleApp.csproj", "{442C5880-AD7B-4BD1-ADF7-EAE3A798C8DC}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LateApexEarlySpeed.Json.Schema", "LateApexEarlySpeed.Json.Schema\LateApexEarlySpeed.Json.Schema.csproj", "{728F5F36-7138-4AEB-B31E-3F7FC4AA5EE9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{442C5880-AD7B-4BD1-ADF7-EAE3A798C8DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{442C5880-AD7B-4BD1-ADF7-EAE3A798C8DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{442C5880-AD7B-4BD1-ADF7-EAE3A798C8DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{728F5F36-7138-4AEB-B31E-3F7FC4AA5EE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{728F5F36-7138-4AEB-B31E-3F7FC4AA5EE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{728F5F36-7138-4AEB-B31E-3F7FC4AA5EE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{728F5F36-7138-4AEB-B31E-3F7FC4AA5EE9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -15,6 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\LateApexEarlySpeed.Json.Schema\LateApexEarlySpeed.Json.Schema.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="instance.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

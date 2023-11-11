@@ -1,4 +1,7 @@
-﻿namespace JsonSchemaConsoleApp
+﻿using LateApexEarlySpeed.Json.Schema;
+using LateApexEarlySpeed.Json.Schema.Common;
+
+namespace JsonSchemaConsoleApp
 {
     internal class Program
     {
