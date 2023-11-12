@@ -39,14 +39,14 @@ internal class TypeKeyword : KeywordBase
         return validationResult;
     }
 
-    private ValidationResult ValidateAgainstType(JsonElement instance, InstanceType instanceType, JsonSchemaOptions options)
+    private ValidationResult ValidateAgainstType(JsonElement instance, InstanceType expectedInstanceType, JsonSchemaOptions options)
     {
-        switch (instanceType)
+        switch (expectedInstanceType)
         {
             case InstanceType.Integer:
                 if (instance.ValueKind != JsonValueKind.Number)
                 {
-                    return ValidationResult.CreateFailedResult(ResultCode.InvalidTokenKind, options.ValidationPathStack);
+                    return ValidationResult.CreateFailedResult(ResultCode.InvalidTokenKind, GetErrorMessage(expectedInstanceType, instance.ValueKind), options.ValidationPathStack, Name);
                 }
 
                 string rawText = instance.GetRawText();
@@ -58,7 +58,7 @@ internal class TypeKeyword : KeywordBase
                     {
                         if (c != '0')
                         {
-                            return ValidationResult.CreateFailedResult(ResultCode.NotBeInteger, options.ValidationPathStack);
+                            return ValidationResult.CreateFailedResult(ResultCode.NotBeInteger, $"Expect type '{expectedInstanceType}' but actual is double-liked number", options.ValidationPathStack, Name);
                         }
                     }
                 }
@@ -67,21 +67,26 @@ internal class TypeKeyword : KeywordBase
             case InstanceType.Boolean:
                 if (instance.ValueKind != JsonValueKind.True && instance.ValueKind != JsonValueKind.False)
                 {
-                    return ValidationResult.CreateFailedResult(ResultCode.InvalidTokenKind, options.ValidationPathStack);
+                    return ValidationResult.CreateFailedResult(ResultCode.InvalidTokenKind, GetErrorMessage(expectedInstanceType, instance.ValueKind), options.ValidationPathStack, Name);
                 }
                 break;
             default:
-                return ValidateJsonKind(instance, InstanceTypeJsonKindMap[instanceType], options.ValidationPathStack);
+                return ValidateJsonKind(instance, expectedInstanceType, options.ValidationPathStack);
         }
 
         return ValidationResult.ValidResult;
     }
 
-    private ValidationResult ValidateJsonKind(JsonElement instance, JsonValueKind expectedJsonKind, ValidationPathStack validationPathStack)
+    private ValidationResult ValidateJsonKind(JsonElement instance, InstanceType expectedInstanceType, ValidationPathStack validationPathStack)
     {
-        return instance.ValueKind == expectedJsonKind 
+        return instance.ValueKind == InstanceTypeJsonKindMap[expectedInstanceType]
             ? ValidationResult.ValidResult 
-            : ValidationResult.CreateFailedResult(ResultCode.InvalidTokenKind, validationPathStack);
+            : ValidationResult.CreateFailedResult(ResultCode.InvalidTokenKind, GetErrorMessage(expectedInstanceType, instance.ValueKind), validationPathStack, Name);
+    }
+
+    private static string GetErrorMessage(InstanceType expectedType, JsonValueKind actualKind)
+    {
+        return $"Expect type '{expectedType}' but actual is '{actualKind}'";
     }
 }
 
