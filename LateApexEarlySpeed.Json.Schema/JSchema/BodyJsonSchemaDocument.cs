@@ -49,7 +49,7 @@ internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
                 Debug.Assert(schemaResource.BaseUri is not null);
 
                 currentResourceBaseUri = schemaResource.BaseUri;
-                LocalSchemaResourceRegistry.AddSchemaResource(schemaResource.BaseUri, schemaResource);
+                LocalSchemaResourceRegistry.AddSchemaResource(schemaResource);
             }
         }
 

@@ -1,5 +1,9 @@
 ﻿namespace LateApexEarlySpeed.Json.Schema.Common;
 
+/// <summary>
+/// Type <see cref="ValidationResult"/> is designed as immutable object,
+/// so that the commonly used property <see cref="ValidResult"/> can be designed as a shared (singleton) instance to reduce allocation.
+/// </summary>
 public class ValidationResult
 {
     private ValidationResult()

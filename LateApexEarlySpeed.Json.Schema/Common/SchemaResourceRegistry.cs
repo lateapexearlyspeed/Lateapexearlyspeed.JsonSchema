@@ -1,4 +1,5 @@
-﻿using LateApexEarlySpeed.Json.Schema.JSchema;
+﻿using System.Diagnostics;
+using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
 
@@ -11,12 +12,14 @@ internal class SchemaResourceRegistry
         return _schemaResources.GetValueOrDefault(baseUri);
     }
 
-    public void AddSchemaResource(Uri absoluteBaseUri, JsonSchemaResource schemaResource)
+    public void AddSchemaResource(JsonSchemaResource schemaResource)
     {
-        _schemaResources.Add(absoluteBaseUri, schemaResource);
+        Debug.Assert(schemaResource.BaseUri is not null);
+
+        _schemaResources.Add(schemaResource.BaseUri, schemaResource);
     }
 
-    public void Add(SchemaResourceRegistry otherSchemaResourceRegistry)
+    public void AddSchemaResourcesFromRegistry(SchemaResourceRegistry otherSchemaResourceRegistry)
     {
         foreach (KeyValuePair<Uri, JsonSchemaResource> otherKv in otherSchemaResourceRegistry._schemaResources)
         {

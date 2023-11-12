@@ -13,7 +13,7 @@ internal static class JsonSchemaDocument
         if (doc is BodyJsonSchemaDocument bodyDoc)
         {
             bodyDoc.MakeAllIdentifierAndReferenceBeFullUri();
-            globalSchemaResourceRegistry.Add(bodyDoc.LocalSchemaResourceRegistry);
+            globalSchemaResourceRegistry.AddSchemaResourcesFromRegistry(bodyDoc.LocalSchemaResourceRegistry);
 
             bodyDoc.GlobalSchemaResourceRegistry = globalSchemaResourceRegistry;
         }
