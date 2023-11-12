@@ -7,8 +7,9 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(NumberRangeKeywordJsonConverter<MinimumKeyword>))]
 internal class MinimumKeyword : NumberRangeKeywordBase
 {
-    protected override bool IsInRange(double instanceValue)
-    {
-        return instanceValue >= BenchmarkValue;
-    }
+    protected override bool IsInRange(double instanceValue) 
+        => instanceValue >= BenchmarkValue;
+
+    protected override string GetErrorMessage(double instanceValue)
+        => $"Instance '{instanceValue}' is less than '{BenchmarkValue}'";
 }

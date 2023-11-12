@@ -13,15 +13,19 @@ public class ValidationResult
     public JsonPointer? RelativeKeywordLocation { get; init; }
     public Uri? SchemaResourceBaseUri { get; init; }
     public Uri? SubSchemaRefFullUri { get; init; }
+    public string? Keyword { get; init; }
+    public string? ErrorMessage { get; init; }
     public ResultCode ResultCode { get; init; }
 
     public bool IsValid => ResultCode == ResultCode.Valid;
 
     public static ValidationResult ValidResult { get; } = new() { ResultCode = ResultCode.Valid };
-    public static ValidationResult CreateFailedResult(ResultCode failedCode, ValidationPathStack? validationPathStack)
+    public static ValidationResult CreateFailedResult(ResultCode failedCode, string errorMessage, ValidationPathStack? validationPathStack, string? keyword)
         => new()
         {
             ResultCode = failedCode,
+            ErrorMessage = errorMessage,
+            Keyword = keyword,
             RelativeKeywordLocation = validationPathStack?.RelativeKeywordLocationStack.ToJsonPointer(),
             SchemaResourceBaseUri = validationPathStack?.SchemaLocationStack.Peek().resource.BaseUri,
             SubSchemaRefFullUri = validationPathStack?.SchemaLocationStack.Peek().subSchemaRefFullUri
@@ -36,15 +40,15 @@ public enum ResultCode
     InvalidTokenKind,
     MoreThanOnePassedSchemaFound,
     AllSubSchemaFailed,
-    SubSchemaPassed,
+    SubSchemaPassedUnexpected,
     NotFoundRequiredDependentProperty,
-    AlwaysFailed,
+    AlwaysFailedJsonSchema,
     RegexNotMatch,
     NumberOutOfRange,
     NotFoundRequiredProperty,
     PropertiesOutOfRange,
-    NotFoundValidatedItem,
-    ContainsOutOfRange,
+    NotFoundAnyValidatedArrayItem,
+    ValidatedArrayItemsCountOutOfRange,
     ArrayLengthOutOfRange,
     StringLengthOutOfRange
 }

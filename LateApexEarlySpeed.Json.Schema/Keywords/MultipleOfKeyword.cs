@@ -21,7 +21,8 @@ internal class MultipleOfKeyword : KeywordBase
             return ValidationResult.ValidResult;
         }
 
-        double remainder = Math.Abs(instance.GetDouble() % MultipleOf);
+        double instanceValue = instance.GetDouble();
+        double remainder = Math.Abs(instanceValue % MultipleOf);
 
         Debug.Assert(MultipleOf > 0);
 
@@ -29,6 +30,6 @@ internal class MultipleOfKeyword : KeywordBase
         // and 'Precision in Comparisons' part of https://learn.microsoft.com/en-us/dotnet/api/system.double.equals
         return remainder < Tolerance || Math.Abs(remainder - MultipleOf) < MultipleOf * Tolerance 
             ? ValidationResult.ValidResult 
-            : ValidationResult.CreateFailedResult(ResultCode.FailedToMultiple, options.ValidationPathStack);
+            : ValidationResult.CreateFailedResult(ResultCode.FailedToMultiple, $"Instance: '{instanceValue}' is not multiple of '{MultipleOf}'", options.ValidationPathStack, Name);
     }
 }

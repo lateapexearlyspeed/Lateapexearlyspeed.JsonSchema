@@ -11,4 +11,9 @@ internal class MinPropertiesKeyword : PropertiesSizeKeywordBase
     {
         return instanceProperties >= BenchmarkValue;
     }
+
+    protected override string GetErrorMessage(int instanceProperties)
+    {
+        return $"Instance's property count is {instanceProperties} which is less than '{BenchmarkValue}'";
+    }
 }

@@ -19,7 +19,9 @@ internal class BooleanJsonSchema : JsonSchema
 
     protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
     {
-        return _alwaysValid ? ValidationResult.ValidResult : ValidationResult.CreateFailedResult(ResultCode.AlwaysFailed, options.ValidationPathStack);
+        return _alwaysValid 
+            ? ValidationResult.ValidResult 
+            : ValidationResult.CreateFailedResult(ResultCode.AlwaysFailedJsonSchema, "Boolean false json schema occurs", options.ValidationPathStack, null);
     }
 
     public override ISchemaContainerElement? GetSubElement(string name)

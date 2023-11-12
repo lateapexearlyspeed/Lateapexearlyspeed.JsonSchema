@@ -11,4 +11,9 @@ internal class MinLengthKeyword : StringLengthKeywordBase
     {
         return instanceStringLength >= BenchmarkValue;
     }
+
+    protected override string GetErrorMessage(int instanceStringLength)
+    {
+        return $"String instance's length is {instanceStringLength} which is less than '{BenchmarkValue}'";
+    }
 }

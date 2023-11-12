@@ -19,9 +19,11 @@ internal abstract class ArrayLengthKeywordBase : KeywordBase, IBenchmarkValueKey
 
         return IsSizeInRange(instanceLength)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.ArrayLengthOutOfRange, options.ValidationPathStack);
+            : ValidationResult.CreateFailedResult(ResultCode.ArrayLengthOutOfRange, GetErrorMessage(instanceLength), options.ValidationPathStack, Name);
 
     }
 
     protected abstract bool IsSizeInRange(int instanceArrayLength);
+
+    protected abstract string GetErrorMessage(int instanceArrayLength);
 }

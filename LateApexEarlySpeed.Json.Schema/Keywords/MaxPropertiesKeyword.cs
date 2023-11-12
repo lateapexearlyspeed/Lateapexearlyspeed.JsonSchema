@@ -11,4 +11,9 @@ internal class MaxPropertiesKeyword : PropertiesSizeKeywordBase
     {
         return instanceProperties <= BenchmarkValue;
     }
+
+    protected override string GetErrorMessage(int instanceProperties)
+    {
+        return $"Instance's property count is {instanceProperties} which is greater than '{BenchmarkValue}'";
+    }
 }

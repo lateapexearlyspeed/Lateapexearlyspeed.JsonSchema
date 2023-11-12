@@ -24,8 +24,9 @@ internal class PatternKeyword : KeywordBase
             return ValidationResult.ValidResult;
         }
 
-        return _pattern.IsMatch(instance.GetString()!)
+        string instanceText = instance.GetString()!;
+        return _pattern.IsMatch(instanceText)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.RegexNotMatch, options.ValidationPathStack);
+            : ValidationResult.CreateFailedResult(ResultCode.RegexNotMatch, $"Regex: '{_pattern}' cannot find match in instance: '{instanceText}'", options.ValidationPathStack, Name);
     }
 }

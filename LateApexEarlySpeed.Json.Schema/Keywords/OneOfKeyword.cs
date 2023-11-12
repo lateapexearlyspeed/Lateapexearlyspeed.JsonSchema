@@ -25,7 +25,7 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
             {
                 if (foundValidatedSchema)
                 {
-                    return ValidationResult.CreateFailedResult(ResultCode.MoreThanOnePassedSchemaFound, options.ValidationPathStack);
+                    return ValidationResult.CreateFailedResult(ResultCode.MoreThanOnePassedSchemaFound, "More than one schema validate instance", options.ValidationPathStack, Name);
                 }
 
                 foundValidatedSchema = true;
@@ -34,7 +34,7 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
 
         return foundValidatedSchema 
             ? ValidationResult.ValidResult 
-            : ValidationResult.CreateFailedResult(ResultCode.AllSubSchemaFailed, options.ValidationPathStack);
+            : ValidationResult.CreateFailedResult(ResultCode.AllSubSchemaFailed, "All schemas not validated instance", options.ValidationPathStack, Name);
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

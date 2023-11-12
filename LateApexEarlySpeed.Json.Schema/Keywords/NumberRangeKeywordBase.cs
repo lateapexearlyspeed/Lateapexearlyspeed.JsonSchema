@@ -14,10 +14,13 @@ internal abstract class NumberRangeKeywordBase : KeywordBase
             return ValidationResult.ValidResult;
         }
 
-        return IsInRange(instance.GetDouble())
+        double instanceValue = instance.GetDouble();
+        return IsInRange(instanceValue)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.NumberOutOfRange, options.ValidationPathStack);
+            : ValidationResult.CreateFailedResult(ResultCode.NumberOutOfRange, GetErrorMessage(instanceValue), options.ValidationPathStack, Name);
     }
 
     protected abstract bool IsInRange(double instanceValue);
+
+    protected abstract string GetErrorMessage(double instanceValue);
 }

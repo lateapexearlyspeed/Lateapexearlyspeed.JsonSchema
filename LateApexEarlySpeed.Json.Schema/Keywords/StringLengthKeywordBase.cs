@@ -15,10 +15,13 @@ internal abstract class StringLengthKeywordBase : KeywordBase, IBenchmarkValueKe
             return ValidationResult.ValidResult;
         }
 
-        return IsStringLengthInRange(instance.GetString()!.Length)
+        int instanceStringLength = instance.GetString()!.Length;
+        return IsStringLengthInRange(instanceStringLength)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.StringLengthOutOfRange, options.ValidationPathStack);
+            : ValidationResult.CreateFailedResult(ResultCode.StringLengthOutOfRange, GetErrorMessage(instanceStringLength), options.ValidationPathStack, Name);
     }
 
     protected abstract bool IsStringLengthInRange(int instanceStringLength);
+
+    protected abstract string GetErrorMessage(int instanceStringLength);
 }

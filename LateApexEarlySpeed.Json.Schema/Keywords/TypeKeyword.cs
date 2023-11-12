@@ -39,9 +39,9 @@ internal class TypeKeyword : KeywordBase
         return validationResult;
     }
 
-    private ValidationResult ValidateAgainstType(JsonElement instance, InstanceType schemaType, JsonSchemaOptions options)
+    private ValidationResult ValidateAgainstType(JsonElement instance, InstanceType instanceType, JsonSchemaOptions options)
     {
-        switch (schemaType)
+        switch (instanceType)
         {
             case InstanceType.Integer:
                 if (instance.ValueKind != JsonValueKind.Number)
@@ -71,7 +71,7 @@ internal class TypeKeyword : KeywordBase
                 }
                 break;
             default:
-                return ValidateJsonKind(instance, InstanceTypeJsonKindMap[schemaType], options.ValidationPathStack);
+                return ValidateJsonKind(instance, InstanceTypeJsonKindMap[instanceType], options.ValidationPathStack);
         }
 
         return ValidationResult.ValidResult;

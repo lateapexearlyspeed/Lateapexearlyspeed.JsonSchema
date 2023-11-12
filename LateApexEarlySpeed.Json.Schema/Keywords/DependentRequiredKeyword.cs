@@ -24,9 +24,16 @@ internal class DependentRequiredKeyword : KeywordBase
         {
             if (instancePropertyNames.Contains(dependentProperty.Key))
             {
-                if (dependentProperty.Value.Any(requiredProp => !instancePropertyNames.Contains(requiredProp)))
+                foreach (string requiredProp in dependentProperty.Value)
                 {
-                    return ValidationResult.CreateFailedResult(ResultCode.NotFoundRequiredDependentProperty, options.ValidationPathStack);
+                    if (!instancePropertyNames.Contains(requiredProp))
+                    {
+                        return ValidationResult.CreateFailedResult(
+                            ResultCode.NotFoundRequiredDependentProperty, 
+                            $"Instance contains property: '{dependentProperty.Key}' but not contains dependent property: '{requiredProp}'", 
+                            options.ValidationPathStack,
+                            Name);
+                    }
                 }
             }
         }

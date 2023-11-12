@@ -17,7 +17,7 @@ internal class NotKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSche
     protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
     {
         return Schema.Validate(instance, options).IsValid 
-            ? ValidationResult.CreateFailedResult(ResultCode.SubSchemaPassed, options.ValidationPathStack) 
+            ? ValidationResult.CreateFailedResult(ResultCode.SubSchemaPassedUnexpected, "Instance is validated by subSchema which is not allowed", options.ValidationPathStack, Name)
             : ValidationResult.ValidResult;
     }
 

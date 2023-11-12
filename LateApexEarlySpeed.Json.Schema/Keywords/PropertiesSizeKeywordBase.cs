@@ -19,9 +19,11 @@ internal abstract class PropertiesSizeKeywordBase : KeywordBase, IBenchmarkValue
 
         return IsSizeInRange(instanceProperties)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.PropertiesOutOfRange, options.ValidationPathStack);
+            : ValidationResult.CreateFailedResult(ResultCode.PropertiesOutOfRange, GetErrorMessage(instanceProperties), options.ValidationPathStack, Name);
 
     }
 
     protected abstract bool IsSizeInRange(int instanceProperties);
+
+    protected abstract string GetErrorMessage(int instanceProperties);
 }

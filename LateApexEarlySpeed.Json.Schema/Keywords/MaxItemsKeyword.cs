@@ -1,4 +1,7 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
@@ -7,8 +10,9 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(BenchmarkValueKeywordJsonConverter<MaxItemsKeyword>))]
 internal class MaxItemsKeyword : ArrayLengthKeywordBase
 {
-    protected override bool IsSizeInRange(int instanceArrayLength)
-    {
-        return BenchmarkValue >= instanceArrayLength;
-    }
+    protected override bool IsSizeInRange(int instanceArrayLength) 
+        => BenchmarkValue >= instanceArrayLength;
+
+    protected override string GetErrorMessage(int instanceArrayLength) 
+        => $"Array length: {instanceArrayLength} is greater than '{BenchmarkValue}'";
 }

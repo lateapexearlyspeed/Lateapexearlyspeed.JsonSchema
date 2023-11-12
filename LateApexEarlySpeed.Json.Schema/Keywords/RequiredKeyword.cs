@@ -33,7 +33,7 @@ internal class RequiredKeyword : KeywordBase
         {
             if (!instanceProperties.Contains(requiredProperty))
             {
-                return ValidationResult.CreateFailedResult(ResultCode.NotFoundRequiredProperty, options.ValidationPathStack);
+                return ValidationResult.CreateFailedResult(ResultCode.NotFoundRequiredProperty, $"Instance not contain required property '{requiredProperty}'", options.ValidationPathStack, Name);
             }
         }
 
