@@ -44,7 +44,7 @@ internal class SchemaDynamicReferenceKeyword : KeywordBase
         JsonSchema referencedSubSchema = referencedSchemaInfo.Value.subSchema;
         Uri subSchemaFullUriRef = referencedSchemaInfo.Value.subSchemaFullUriRef;
 
-        if (!options.SchemaRecursionRecorder.TryAdd(referencedSubSchema, JsonPath.Root))
+        if (!options.SchemaRecursionRecorder.TryPushRecord(referencedSubSchema, JsonPath.Root))
         {
             throw new InvalidOperationException($"Infinite recursion loop detected. Instance path: {""}");
         }
@@ -57,6 +57,7 @@ internal class SchemaDynamicReferenceKeyword : KeywordBase
         ValidationResult validationResult = referencedSubSchema.ValidateCore(instance, options);
 
         options.ValidationPathStack.PopReferencedSchema();
+        options.SchemaRecursionRecorder.PopRecord();
 
         return validationResult;
     }

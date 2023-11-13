@@ -85,7 +85,7 @@ internal class SchemaReferenceKeyword : KeywordBase
             throw new InvalidOperationException($"Cannot find schema for {Keyword}: {FullUriRef}");
         }
 
-        if (!options.SchemaRecursionRecorder.TryAdd(referencedSchema, JsonPath.Root))
+        if (!options.SchemaRecursionRecorder.TryPushRecord(referencedSchema, JsonPath.Root))
         {
             throw new InvalidOperationException($"Infinite recursion loop detected. Instance path: {""}");
         }
@@ -98,6 +98,7 @@ internal class SchemaReferenceKeyword : KeywordBase
         ValidationResult validationResult = referencedSchema.ValidateCore(instance, options);
 
         options.ValidationPathStack.PopReferencedSchema();
+        options.SchemaRecursionRecorder.PopRecord();
 
         return validationResult;
     }
