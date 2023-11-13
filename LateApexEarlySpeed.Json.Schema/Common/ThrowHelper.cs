@@ -15,13 +15,19 @@ internal class ThrowHelper
     [Pure]
     public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException<TKeyword>(params JsonValueKind[] expectedJsonKinds) where TKeyword : KeywordBase
     {
-        return new JsonException(CreateKeywordPrefixContent<TKeyword>() + $" expects json kind: \"{string.Join(',', expectedJsonKinds)}\"");
+        return new JsonException(CreateKeywordPrefixContent<TKeyword>() + $" expects json kinds: \"{string.Join(',', expectedJsonKinds)}\"");
     }
 
     [Pure]
     public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException(Type keywordType, params JsonValueKind[] expectedJsonKinds)
     {
-        return new JsonException(CreateKeywordPrefixContent(keywordType) + $" expects json kind: \"{string.Join(',', expectedJsonKinds)}\"");
+        return new JsonException(CreateKeywordPrefixContent(keywordType) + $" expects json kinds: \"{string.Join(',', expectedJsonKinds)}\"");
+    }
+
+    [Pure]
+    public static JsonException CreateJsonSchemaHasInvalidJsonValueKindJsonException(params JsonValueKind[] expectedJsonKinds)
+    {
+        return new JsonException($"Json schema expects json kinds: \"{string.Join(',', expectedJsonKinds)}\"");
     }
 
     [Pure]

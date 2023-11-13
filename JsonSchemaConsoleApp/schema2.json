@@ -3,7 +3,8 @@
   "type": "object",
   "properties": {
     "integer1": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 5
     },
     "object1": {
       "$id": "http://inside1",

@@ -8,14 +8,32 @@ public static class ValidationKeywordRegistry
     {
         var builtInKeywordTypes = new[] 
             { 
-                typeof(TypeKeyword), 
-                typeof(MultipleOfKeyword), 
-                typeof(PropertiesKeyword), 
-                typeof(AllOfKeyword), 
-                typeof(AnyOfKeyword), 
-                typeof(OneOfKeyword), 
+                typeof(AdditionalPropertiesKeyword),
+                typeof(AllOfKeyword),
+                typeof(AnyOfKeyword),
+                typeof(DependentRequiredKeyword),
+                typeof(DependentSchemasKeyword),
+                typeof(ExclusiveMaximumKeyword),
+                typeof(ExclusiveMinimumKeyword),
+                typeof(ItemsKeyword),
+                typeof(MaximumKeyword),
+                typeof(MaxItemsKeyword),
+                typeof(MaxLengthKeyword),
+                typeof(MaxPropertiesKeyword),
+                typeof(MinimumKeyword),
+                typeof(MinItemsKeyword),
+                typeof(MinLengthKeyword),
+                typeof(MinPropertiesKeyword),
+                typeof(MultipleOfKeyword),
                 typeof(NotKeyword),
-                typeof(MaximumKeyword)
+                typeof(OneOfKeyword),
+                typeof(PatternKeyword),
+                typeof(PatternPropertiesKeyword),
+                typeof(PrefixItemsKeyword),
+                typeof(PropertiesKeyword),
+                typeof(PropertyNamesKeyword),
+                typeof(RequiredKeyword),
+                typeof(TypeKeyword)
             };
         KeywordsDictionary = builtInKeywordTypes.ToDictionary(KeywordBase.GetKeywordName);
     }
