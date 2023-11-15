@@ -28,7 +28,8 @@ internal class MultipleOfKeyword : KeywordBase
 
         // See https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/arithmetic-operators#floating-point-remainder
         // and 'Precision in Comparisons' part of https://learn.microsoft.com/en-us/dotnet/api/system.double.equals
-        return remainder < Tolerance || Math.Abs(remainder - MultipleOf) < MultipleOf * Tolerance 
+        double actualTolerance = MultipleOf * Tolerance;
+        return remainder < actualTolerance || Math.Abs(remainder - MultipleOf) < actualTolerance 
             ? ValidationResult.ValidResult 
             : ValidationResult.CreateFailedResult(ResultCode.FailedToMultiple, $"Instance: '{instanceValue}' is not multiple of '{MultipleOf}'", options.ValidationPathStack, Name);
     }

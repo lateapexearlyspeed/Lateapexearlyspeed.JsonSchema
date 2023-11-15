@@ -12,27 +12,24 @@ internal class JsonSchemaResource : BodyJsonSchema
     private readonly Uri _id;
 
     public JsonSchemaResource(Uri id, List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor, DefsKeyword? defsKeyword)
-        : base(keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor)
+        : base(keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeyword)
     {
-        if (!string.IsNullOrEmpty(id.Fragment))
-        {
-            throw new BadSchemaException("Id of json schema resource should not contain fragment.");
-        }
-
         _id = id;
-        DefsKeyword = defsKeyword;
     }
 
     // Base uri of current schema resource, must be absolute uri
     public Uri? BaseUri { get; private set; }
-
-    public DefsKeyword? DefsKeyword { get; }
 
     public override Uri ParentResourceBaseUri
     {
         set
         {
             BaseUri = new Uri(value, _id);
+
+            if (!string.IsNullOrEmpty(BaseUri.Fragment))
+            {
+                throw new BadSchemaException("Id of json schema resource should not contain fragment.");
+            }
 
             base.ParentResourceBaseUri = BaseUri;
         }
@@ -84,6 +81,12 @@ internal class JsonSchemaResource : BodyJsonSchema
 
         foreach (ISchemaContainerElement childElement in schemaContainer.EnumerateElements())
         {
+            // Based on json schema test suite, we should not find subschema from another sub schema resource (with $id), so skip schema resource type.
+            if (childElement is JsonSchemaResource)
+            {
+                continue;
+            }
+
             BodyJsonSchema? subSchema = FindBodySubSchemaByFilter(childElement, predicate);
             if (subSchema is not null)
             {
@@ -92,14 +95,5 @@ internal class JsonSchemaResource : BodyJsonSchema
         }
 
         return null;
-    }
-
-    public override IEnumerable<ISchemaContainerElement> EnumerateElements()
-    {
-        IEnumerable<ISchemaContainerElement> schemaElements = base.EnumerateElements();
-
-        return DefsKeyword is null
-            ? schemaElements
-            : DefsKeyword.GetAllDefinitions().Values.Concat(schemaElements);
     }
 }

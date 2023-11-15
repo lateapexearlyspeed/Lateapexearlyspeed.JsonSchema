@@ -133,7 +133,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
             else if (keywordName == IdKeyword.Keyword)
             {
-                id = new Uri(reader.GetString()!);
+                id = new Uri(reader.GetString()!, UriKind.RelativeOrAbsolute);
             }
             else if (keywordName == AnchorKeyword.Keyword)
             {
@@ -200,7 +200,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         }
         else
         {
-            schema = new BodyJsonSchema(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor);
+            schema = new BodyJsonSchema(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeyword);
         }
 
         return (T)(object)schema;

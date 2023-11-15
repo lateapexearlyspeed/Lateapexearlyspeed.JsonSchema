@@ -12,6 +12,36 @@ internal class BodyJsonSchema : JsonSchema
 
     private readonly List<ISchemaContainerValidationNode> _schemaContainerValidators;
 
+    // {
+    //     "$schema": "https://json-schema.org/draft/2020-12/schema",
+    //     "$id": "http://example.com/a.json",
+    //     "$defs": {
+    //         "x": {
+    //             "$id": "http://example.com/b/c.json",
+    //             "not": {
+    //                 "$defs": {
+    //                     "y": {
+    //                         "$id": "d.json",
+    //                         "type": "number"
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     },
+    //     "allOf": [
+    //     {
+    //         "$ref": "http://example.com/b/d.json"
+    //     }
+    //     ]
+    // }
+    /// <summary>
+    /// Pure body json schema is also able to contain '$defs' keyword,
+    /// which is ONLY used to enumerate its inner subschema or sub schema resource (with $id)
+    /// without functionality of 'find by defs-ref' because pure json schema is not a schema resource (no $id)
+    /// 
+    /// </summary>
+    protected readonly DefsKeyword? DefsKeyword;
+
     public SchemaReferenceKeyword? SchemaReference { get; }
 
     public SchemaDynamicReferenceKeyword? SchemaDynamicReference { get; }
@@ -20,7 +50,7 @@ internal class BodyJsonSchema : JsonSchema
 
     public string? DynamicAnchor { get; }
 
-    public BodyJsonSchema(List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor)
+    public BodyJsonSchema(List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor, DefsKeyword? defsKeyword)
     {
         _keywords = keywords;
 
@@ -32,6 +62,8 @@ internal class BodyJsonSchema : JsonSchema
 
         SchemaReference = schemaReference;
         SchemaDynamicReference = schemaDynamicReference;
+        
+        DefsKeyword = defsKeyword;
 
         Anchor = anchor;
         DynamicAnchor = dynamicAnchor;
@@ -100,6 +132,14 @@ internal class BodyJsonSchema : JsonSchema
             foreach (ISchemaContainerElement element in schemaContainer.EnumerateElements())
             {
                 yield return element;
+            }
+        }
+
+        if (DefsKeyword is not null)
+        {
+            foreach (JsonSchema defSchema in DefsKeyword.GetAllDefinitions().Values)
+            {
+                yield return defSchema;
             }
         }
     }
