@@ -176,11 +176,8 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             schemaContainerValidators.Add(arrayContainsValidator);
         }
 
-        if (predictSchema is not null)
-        {
-            var conditionalValidator = new ConditionalValidator(predictSchema, positiveSchema, negativeSchema);
-            schemaContainerValidators.Add(conditionalValidator);
-        }
+        var conditionalValidator = new ConditionalValidator(predictSchema, positiveSchema, negativeSchema);
+        schemaContainerValidators.Add(conditionalValidator);
 
         if (typeToConvert == typeof(IJsonSchemaDocument))
         {

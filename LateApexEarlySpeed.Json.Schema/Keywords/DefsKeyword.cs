@@ -1,4 +1,4 @@
-﻿using LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
@@ -6,38 +6,34 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 /// <summary>
 /// Reference (usage) of keyword '$defs' are not specified whether it should be json pointer encoded or not in json schema doc,
 /// so this library defines it should be json pointer encoded
+/// Update about above specification: Defs ref should be treated as same as normal json pointer path, so it must be json pointer encoded.
 /// </summary>
-internal class DefsKeyword
+internal class DefsKeyword : ISchemaContainerElement
 {
     public const string Keyword = "$defs";
 
     private readonly Dictionary<string, JsonSchema> _definitions;
 
-    /// <summary>
-    /// 
-    /// </summary>
     /// <param name="definitions">Keys of it are short def name which is unescaped content</param>
     public DefsKeyword(Dictionary<string, JsonSchema> definitions)
     {
-        _definitions = definitions.ToDictionary(kv => ConvertToDefNamePath(kv.Key), kv => kv.Value);
+        _definitions = definitions;
     }
 
-    /// <param name="shortDefName">Unescaped content</param>
-    /// <returns>Complete def path as escaped json pointer</returns>
-    private static string ConvertToDefNamePath(string shortDefName)
+    public ISchemaContainerElement? GetSubElement(string name)
     {
-        return new JsonPointer(new[]{Keyword, shortDefName}).ToString();
+        return _definitions.GetValueOrDefault(name);
     }
 
-    /// <param name="defNameJsonPointerPath">Complete def path as escaped json pointer</param>
-    /// <returns></returns>
-    public JsonSchema? GetDefinition(string defNameJsonPointerPath)
+    public IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
-        return _definitions.GetValueOrDefault(defNameJsonPointerPath);
+        return _definitions.Values;
     }
 
-    public Dictionary<string, JsonSchema> GetAllDefinitions()
+    public bool IsSchemaType => false;
+
+    public JsonSchema GetSchema()
     {
-        return _definitions;
+        throw new InvalidOperationException();
     }
 }

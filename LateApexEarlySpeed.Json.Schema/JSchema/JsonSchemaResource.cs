@@ -35,11 +35,6 @@ internal class JsonSchemaResource : BodyJsonSchema
         }
     }
 
-    public JsonSchema? FindSubSchemaByDefs(string defNamePath)
-    {
-        return DefsKeyword?.GetDefinition(defNamePath);
-    }
-
     public JsonSchema? FindSubSchemaByJsonPointer(string jsonPointerPath)
     {
         JsonPointer? jsonPointer = JsonPointer.Create(jsonPointerPath);

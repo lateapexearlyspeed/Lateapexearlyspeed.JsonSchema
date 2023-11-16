@@ -11,14 +11,17 @@ internal class ConditionalValidator : ISchemaContainerValidationNode
     public const string ThenKeywordName = "then";
     public const string ElseKeywordName = "else";
 
-    private readonly JsonSchema _predictEvaluator;
+    private readonly JsonSchema? _predictEvaluator;
     private readonly JsonSchema _positiveValidator;
     private readonly JsonSchema _negativeValidator;
 
-    public ConditionalValidator(JsonSchema predictEvaluator, JsonSchema? positiveValidator, JsonSchema? negativeValidator)
+    public ConditionalValidator(JsonSchema? predictEvaluator, JsonSchema? positiveValidator, JsonSchema? negativeValidator)
     {
         _predictEvaluator = predictEvaluator;
-        _predictEvaluator.Name = IfKeywordName;
+        if (_predictEvaluator is not null)
+        {
+            _predictEvaluator.Name = IfKeywordName;
+        }
 
         _positiveValidator = positiveValidator ?? BooleanJsonSchema.True;
         _positiveValidator.Name = ThenKeywordName;
@@ -29,6 +32,11 @@ internal class ConditionalValidator : ISchemaContainerValidationNode
 
     public ValidationResult Validate(JsonElement instance, JsonSchemaOptions options)
     {
+        if (_predictEvaluator is null)
+        {
+            return ValidationResult.ValidResult;
+        }
+
         return _predictEvaluator.Validate(instance, options).IsValid
             ? _positiveValidator.Validate(instance, options)
             : _negativeValidator.Validate(instance, options);
@@ -51,7 +59,11 @@ internal class ConditionalValidator : ISchemaContainerValidationNode
 
     public IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
-        yield return _predictEvaluator;
+        if (_predictEvaluator is not null)
+        {
+            yield return _predictEvaluator;
+        }
+        
         yield return _positiveValidator;
         yield return _negativeValidator;
     }

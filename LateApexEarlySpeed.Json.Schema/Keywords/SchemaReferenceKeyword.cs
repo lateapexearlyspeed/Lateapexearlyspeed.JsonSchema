@@ -50,13 +50,6 @@ internal class SchemaReferenceKeyword : KeywordBase
             return schemaByJsonPointer;
         }
 
-
-        JsonSchema? schemaFromDefs = schemaResource.FindSubSchemaByDefs(fragmentWithoutNumberSign);
-        if (schemaFromDefs is not null)
-        {
-            return schemaFromDefs;
-        }
-
         return schemaResource.FindSubSchemaByAnchor(fragmentWithoutNumberSign);
     }
 

@@ -8,10 +8,6 @@ namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
 internal class BodyJsonSchema : JsonSchema
 {
-    private readonly List<KeywordBase> _keywords;
-
-    private readonly List<ISchemaContainerValidationNode> _schemaContainerValidators;
-
     // {
     //     "$schema": "https://json-schema.org/draft/2020-12/schema",
     //     "$id": "http://example.com/a.json",
@@ -38,9 +34,12 @@ internal class BodyJsonSchema : JsonSchema
     /// Pure body json schema is also able to contain '$defs' keyword,
     /// which is ONLY used to enumerate its inner subschema or sub schema resource (with $id)
     /// without functionality of 'find by defs-ref' because pure json schema is not a schema resource (no $id)
-    /// 
     /// </summary>
-    protected readonly DefsKeyword? DefsKeyword;
+    private readonly DefsKeyword? _defsKeyword;
+
+    private readonly List<ISchemaContainerValidationNode> _schemaContainerValidators;
+
+    private readonly List<KeywordBase> _keywords;
 
     public SchemaReferenceKeyword? SchemaReference { get; }
 
@@ -63,7 +62,7 @@ internal class BodyJsonSchema : JsonSchema
         SchemaReference = schemaReference;
         SchemaDynamicReference = schemaDynamicReference;
         
-        DefsKeyword = defsKeyword;
+        _defsKeyword = defsKeyword;
 
         Anchor = anchor;
         DynamicAnchor = dynamicAnchor;
@@ -114,6 +113,11 @@ internal class BodyJsonSchema : JsonSchema
             }
         }
 
+        if (name == DefsKeyword.Keyword)
+        {
+            return _defsKeyword;
+        }
+
         return null;
     }
 
@@ -127,20 +131,15 @@ internal class BodyJsonSchema : JsonSchema
             }
         }
 
-        foreach (ISchemaContainerValidationNode schemaContainer in _schemaContainerValidators)
+        IEnumerable<ISchemaContainerElement> schemaContainers = _schemaContainerValidators;
+        if (_defsKeyword is not null)
         {
-            foreach (ISchemaContainerElement element in schemaContainer.EnumerateElements())
-            {
-                yield return element;
-            }
+            schemaContainers = schemaContainers.Append(_defsKeyword);
         }
 
-        if (DefsKeyword is not null)
+        foreach (ISchemaContainerElement containerElement in schemaContainers)
         {
-            foreach (JsonSchema defSchema in DefsKeyword.GetAllDefinitions().Values)
-            {
-                yield return defSchema;
-            }
+            yield return containerElement;
         }
     }
 
