@@ -8,26 +8,28 @@ internal class SchemaRecursionRecorder
     private readonly HashSet<(JsonSchema schema, JsonPath instancePath)> _schemaInstancesHash = new();
     private readonly Stack<(JsonSchema schema, JsonPath instancePath)> _schemaInstancesStack = new();
 
+    /// TODO: when JsonNode is ready, will restore this method body. Temporally comment it for test.
     /// <returns>If there was already <paramref name="schema"/> & <paramref name="instancePath"/> in recorder, return false</returns>
     public bool TryPushRecord(JsonSchema schema, JsonPath instancePath)
     {
-        bool canAdd = _schemaInstancesHash.Add((schema, instancePath));
-        if (!canAdd)
-        {
-            return false;
-        }
-
-        _schemaInstancesStack.Push((schema, instancePath));
+        // bool canAdd = _schemaInstancesHash.Add((schema, instancePath));
+        // if (!canAdd)
+        // {
+        //     return false;
+        // }
+        //
+        // _schemaInstancesStack.Push((schema, instancePath));
 
         return true;
     }
 
+    /// TODO: when JsonNode is ready, will restore this method body. Temporally comment it for test.
     public void PopRecord()
     {
-        Debug.Assert(_schemaInstancesStack.Count != 0);
-        (JsonSchema schema, JsonPath instancePath) = _schemaInstancesStack.Pop();
-
-        bool canFindFromStack = _schemaInstancesHash.Remove((schema, instancePath));
-        Debug.Assert(canFindFromStack);
+        // Debug.Assert(_schemaInstancesStack.Count != 0);
+        // (JsonSchema schema, JsonPath instancePath) = _schemaInstancesStack.Pop();
+        //
+        // bool canFindFromStack = _schemaInstancesHash.Remove((schema, instancePath));
+        // Debug.Assert(canFindFromStack);
     }
 }
