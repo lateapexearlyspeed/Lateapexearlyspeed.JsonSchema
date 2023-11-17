@@ -40,7 +40,8 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             "root pointer ref",
             "Recursive references between schemas",
             "ref creates new scope when adjacent to keywords",
-
+            "A $dynamicRef that initially resolves to a schema with a matching $dynamicAnchor resolves to the first $dynamicAnchor in the dynamic scope",
+            "multiple dynamic paths to the $dynamicRef keyword",
 
         };
         
