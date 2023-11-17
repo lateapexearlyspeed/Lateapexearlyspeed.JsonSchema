@@ -7,7 +7,7 @@ public abstract class NamedValidationNode : IValidationNode
 {
     public string? Name { get; set; }
 
-    public ValidationResult Validate(JsonElement instance, JsonSchemaOptions options)
+    public virtual ValidationResult Validate(JsonElement instance, JsonSchemaOptions options)
     {
         if (Name is not null)
         {

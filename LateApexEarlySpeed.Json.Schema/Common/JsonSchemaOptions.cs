@@ -22,7 +22,9 @@ public class ValidationPathStack
 {
     internal RelativeKeywordLocationStack RelativeKeywordLocationStack { get; } = new();
 
-    internal SchemaLocationStack SchemaLocationStack { get; } = new();
+    internal ReferencedSchemaLocationStack ReferencedSchemaLocationStack { get; } = new();
+
+    internal SchemaResourceStack SchemaResourceStack { get; } = new();
 
     internal void PushRelativeLocation(string name)
     {
@@ -36,16 +38,51 @@ public class ValidationPathStack
 
     internal void PushReferencedSchema(JsonSchemaResource referencedResource, Uri subSchemaRefFullUri)
     {
-        SchemaLocationStack.Push(referencedResource, subSchemaRefFullUri);
+        ReferencedSchemaLocationStack.Push(referencedResource, subSchemaRefFullUri);
     }
 
     internal void PopReferencedSchema()
     {
-        SchemaLocationStack.Pop();
+        ReferencedSchemaLocationStack.Pop();
+    }
+
+    internal void PushSchemaResource(JsonSchemaResource schemaResource)
+    {
+        SchemaResourceStack.Push(schemaResource);
+    }
+
+    internal void PopSchemaResource()
+    {
+        SchemaResourceStack.Pop();
     }
 }
 
-internal class SchemaLocationStack : IEnumerable<(JsonSchemaResource resource, Uri subSchemaRefFullUri)>
+internal class SchemaResourceStack : IEnumerable<JsonSchemaResource>
+{
+    private readonly Stack<JsonSchemaResource> _schemaResources = new();
+
+    public void Push(JsonSchemaResource schemaResource)
+    {
+        _schemaResources.Push(schemaResource);
+    }
+
+    public void Pop()
+    {
+        _schemaResources.Pop();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public IEnumerator<JsonSchemaResource> GetEnumerator()
+    {
+        return _schemaResources.GetEnumerator();
+    }
+}
+
+internal class ReferencedSchemaLocationStack : IEnumerable<(JsonSchemaResource resource, Uri subSchemaRefFullUri)>
 {
     private readonly Stack<(JsonSchemaResource resource, Uri subSchemaRefFullUri)> _schemaLocationStack = new();
 

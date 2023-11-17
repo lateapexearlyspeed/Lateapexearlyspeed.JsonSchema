@@ -52,11 +52,13 @@ internal class SchemaDynamicReferenceKeyword : KeywordBase
         JsonSchemaResource? referencedSchemaResource = GetReferencedSchemaResource(options);
 
         Debug.Assert(referencedSchemaResource is not null);
+        options.ValidationPathStack.PushSchemaResource(referencedSchemaResource);
         options.ValidationPathStack.PushReferencedSchema(referencedSchemaResource, subSchemaFullUriRef);
 
         ValidationResult validationResult = referencedSubSchema.ValidateCore(instance, options);
 
         options.ValidationPathStack.PopReferencedSchema();
+        options.ValidationPathStack.PopSchemaResource();
         options.SchemaRecursionRecorder.PopRecord();
 
         return validationResult;
@@ -85,7 +87,7 @@ internal class SchemaDynamicReferenceKeyword : KeywordBase
                 : (staticReferencedSchema, _staticSchemaReferenceKeyword.FullUriRef);
         }
 
-        foreach (var (resource, _) in options.ValidationPathStack.SchemaLocationStack.Reverse())
+        foreach (JsonSchemaResource resource in options.ValidationPathStack.SchemaResourceStack.Reverse())
         {
             BodyJsonSchema? subSchema = resource.FindSubSchemaByDynamicAnchor(dynamicAnchor);
 
@@ -97,7 +99,7 @@ internal class SchemaDynamicReferenceKeyword : KeywordBase
             }
         }
 
-        // Cannot find specified dynamic anchor in reference path, so use the innermost subschema which contains specified dynamic anchor.
+        // Cannot find specified dynamic anchor in dynamic schema resources path, so use the innermost subschema which contains specified dynamic anchor.
         Debug.Assert(staticReferencedSchemaResource.BaseUri is not null);
         return (innerMostSubSchema, new UriBuilder(staticReferencedSchemaResource.BaseUri) { Fragment = _fullUriRef.Fragment }.Uri);
     }
@@ -119,8 +121,7 @@ internal class SchemaDynamicReferenceKeyword : KeywordBase
             return staticReferencedSchemaResource;
         }
 
-        JsonSchemaResource? schemaResource = options.ValidationPathStack.SchemaLocationStack
-            .Select(location => location.resource)
+        JsonSchemaResource? schemaResource = options.ValidationPathStack.SchemaResourceStack
             .LastOrDefault(resource => resource.FindSubSchemaByDynamicAnchor(dynamicAnchor) is not null);
         return schemaResource ?? staticReferencedSchemaResource;
     }

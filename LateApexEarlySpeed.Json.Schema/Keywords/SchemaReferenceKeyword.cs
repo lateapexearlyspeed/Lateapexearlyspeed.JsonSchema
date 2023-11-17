@@ -50,7 +50,15 @@ internal class SchemaReferenceKeyword : KeywordBase
             return schemaByJsonPointer;
         }
 
-        return schemaResource.FindSubSchemaByAnchor(fragmentWithoutNumberSign);
+        BodyJsonSchema? schemaByAnchor = schemaResource.FindSubSchemaByAnchor(fragmentWithoutNumberSign);
+        if (schemaByAnchor is not null)
+        {
+            return schemaByAnchor;
+        }
+
+        // 'ref' keyword also checks '$dynamicAnchor',
+        // based on test case "A $ref to a $dynamicAnchor in the same schema resource behaves like a normal $ref to an $anchor"
+        return schemaResource.FindSubSchemaByDynamicAnchor(fragmentWithoutNumberSign);
     }
 
     public JsonSchemaResource? GetReferencedSchemaResource(JsonSchemaOptions options)
@@ -86,11 +94,13 @@ internal class SchemaReferenceKeyword : KeywordBase
         JsonSchemaResource? referencedSchemaResource = GetReferencedSchemaResource(options);
         
         Debug.Assert(referencedSchemaResource is not null);
+        options.ValidationPathStack.PushSchemaResource(referencedSchemaResource);
         options.ValidationPathStack.PushReferencedSchema(referencedSchemaResource, FullUriRef);
 
         ValidationResult validationResult = referencedSchema.ValidateCore(instance, options);
 
         options.ValidationPathStack.PopReferencedSchema();
+        options.ValidationPathStack.PopSchemaResource();
         options.SchemaRecursionRecorder.PopRecord();
 
         return validationResult;

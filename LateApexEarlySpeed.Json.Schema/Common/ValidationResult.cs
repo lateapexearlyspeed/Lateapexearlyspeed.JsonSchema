@@ -27,8 +27,8 @@ public class ValidationResult
             ErrorMessage = errorMessage,
             Keyword = keyword,
             RelativeKeywordLocation = validationPathStack?.RelativeKeywordLocationStack.ToJsonPointer(),
-            SchemaResourceBaseUri = validationPathStack?.SchemaLocationStack.Peek().resource.BaseUri,
-            SubSchemaRefFullUri = validationPathStack?.SchemaLocationStack.Peek().subSchemaRefFullUri
+            SchemaResourceBaseUri = validationPathStack?.ReferencedSchemaLocationStack.Peek().resource.BaseUri,
+            SubSchemaRefFullUri = validationPathStack?.ReferencedSchemaLocationStack.Peek().subSchemaRefFullUri
         };
 }
 
