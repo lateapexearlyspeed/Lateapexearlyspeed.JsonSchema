@@ -10,7 +10,7 @@ internal class BenchmarkValueKeywordJsonConverter<TBenchmarkValueKeyword> : Json
 {
     public override TBenchmarkValueKeyword Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (!reader.TryGetUInt32(out uint size))
+        if (!reader.TryGetUInt32ForJsonSchema(out uint size))
         {
             throw ThrowHelper.CreateKeywordHasInvalidNonNegativeIntegerJsonException(typeToConvert);
         }

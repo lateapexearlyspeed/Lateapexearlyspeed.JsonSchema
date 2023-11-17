@@ -26,6 +26,22 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             "$id inside an enum is not a real identifier",
             "non-schema object containing an $anchor property",
             "non-schema object containing an $id property",
+            "contains keyword with const keyword",
+            "minContains=2 with contains",
+            "maxContains with contains",
+            "minContains=1 with contains",
+            "if with boolean schema true",
+            "if appears at the end when serialized (keyword processing sequence)",
+            "if appears at the end when serialized (keyword processing sequence)",
+            "if with boolean schema false",
+            "naive replacement of $ref with its destination is not correct",
+            "collect annotations inside a 'not', even if collection is disabled",
+            "strict-tree schema, guards against misspelled properties",
+            "root pointer ref",
+            "Recursive references between schemas",
+            "ref creates new scope when adjacent to keywords",
+
+
         };
         
         private readonly IEnumerable<string> _externalSchemaDocuments;

@@ -60,13 +60,24 @@ internal class ThrowHelper
         return new JsonException(CreateKeywordPrefixContent(keywordType) + " expects non-negative integer.");
     }
 
+    [Pure]
+    public static JsonException CreateKeywordHasInvalidNonNegativeIntegerJsonException(string keywordName)
+    {
+        return new JsonException(CreateKeywordPrefixContent(keywordName) + " expects non-negative integer.");
+    }
+
     private static string CreateKeywordPrefixContent<TKeyword>() where TKeyword : KeywordBase
     {
-        return $"Keyword:{KeywordBase.GetKeywordName<TKeyword>()}";
+        return CreateKeywordPrefixContent(KeywordBase.GetKeywordName<TKeyword>());
     }
 
     private static string CreateKeywordPrefixContent(Type keywordType)
     {
-        return $"Keyword:{KeywordBase.GetKeywordName(keywordType)}";
+        return CreateKeywordPrefixContent(KeywordBase.GetKeywordName(keywordType));
+    }
+
+    private static string CreateKeywordPrefixContent(string keywordName)
+    {
+        return "Keyword:" + keywordName;
     }
 }

@@ -16,15 +16,15 @@ internal class MultipleOfKeyword : KeywordBase
 
     protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
     {
-        if (instance.ValueKind != JsonValueKind.Number)
+        Debug.Assert(MultipleOf > 0);
+
+        if (instance.ValueKind != JsonValueKind.Number || MultipleOf <= 1e-8)
         {
             return ValidationResult.ValidResult;
         }
 
         double instanceValue = instance.GetDouble();
         double remainder = Math.Abs(instanceValue % MultipleOf);
-
-        Debug.Assert(MultipleOf > 0);
 
         // See https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/arithmetic-operators#floating-point-remainder
         // and 'Precision in Comparisons' part of https://learn.microsoft.com/en-us/dotnet/api/system.double.equals

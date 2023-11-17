@@ -113,11 +113,21 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
             else if (keywordName == ArrayContainsValidator.MaxContainsKeywordName)
             {
-                maxContains = JsonSerializer.Deserialize<uint>(ref reader);
+                if (!reader.TryGetUInt32ForJsonSchema(out uint tmp))
+                {
+                    throw ThrowHelper.CreateKeywordHasInvalidNonNegativeIntegerJsonException(ArrayContainsValidator.MaxContainsKeywordName);
+                }
+
+                maxContains = tmp;
             }
             else if (keywordName == ArrayContainsValidator.MinContainsKeywordName)
             {
-                minContains = JsonSerializer.Deserialize<uint>(ref reader);
+                if (!reader.TryGetUInt32ForJsonSchema(out uint tmp))
+                {
+                    throw ThrowHelper.CreateKeywordHasInvalidNonNegativeIntegerJsonException(ArrayContainsValidator.MinContainsKeywordName);
+                }
+
+                minContains = tmp;
             }
             else if (keywordName == SchemaReferenceKeyword.Keyword)
             {
