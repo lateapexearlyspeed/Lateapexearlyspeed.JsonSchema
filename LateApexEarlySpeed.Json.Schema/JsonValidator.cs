@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
 
@@ -26,7 +27,7 @@ public class JsonValidator
         // ReSharper disable once ConvertToUsingDeclaration
         using (JsonDocument instance = JsonDocument.Parse(jsonInstance))
         {
-            return _mainSchemaDoc.Validate(instance.RootElement);
+            return _mainSchemaDoc.Validate(instance.RootInstanceElement());
         }
     }
 }

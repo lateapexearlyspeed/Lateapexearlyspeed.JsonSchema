@@ -10,6 +10,7 @@ public class ValidationResult
     {
     }
 
+    public ImmutableJsonPointer? InstanceLocation { get; set; }
     public ImmutableJsonPointer? RelativeKeywordLocation { get; init; }
     public Uri? SchemaResourceBaseUri { get; init; }
     public Uri? SubSchemaRefFullUri { get; init; }
@@ -20,7 +21,7 @@ public class ValidationResult
     public bool IsValid => ResultCode == ResultCode.Valid;
 
     public static ValidationResult ValidResult { get; } = new() { ResultCode = ResultCode.Valid };
-    public static ValidationResult CreateFailedResult(ResultCode failedCode, string errorMessage, ValidationPathStack? validationPathStack, string? keyword)
+    public static ValidationResult CreateFailedResult(ResultCode failedCode, string errorMessage, ValidationPathStack? validationPathStack, string? keyword, ImmutableJsonPointer instanceLocation)
         => new()
         {
             ResultCode = failedCode,
@@ -28,7 +29,8 @@ public class ValidationResult
             Keyword = keyword,
             RelativeKeywordLocation = validationPathStack?.RelativeKeywordLocationStack.ToJsonPointer(),
             SchemaResourceBaseUri = validationPathStack?.ReferencedSchemaLocationStack.Peek().resource.BaseUri,
-            SubSchemaRefFullUri = validationPathStack?.ReferencedSchemaLocationStack.Peek().subSchemaRefFullUri
+            SubSchemaRefFullUri = validationPathStack?.ReferencedSchemaLocationStack.Peek().subSchemaRefFullUri,
+            InstanceLocation = instanceLocation
         };
 }
 
@@ -50,5 +52,6 @@ public enum ResultCode
     NotFoundAnyValidatedArrayItem,
     ValidatedArrayItemsCountOutOfRange,
     ArrayLengthOutOfRange,
-    StringLengthOutOfRange
+    StringLengthOutOfRange,
+    InvalidPropertyName
 }

@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
@@ -21,17 +22,17 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
             kv => (new Regex(kv.Key, RegexOptions.Compiled, TimeSpan.FromMilliseconds(200)), kv.Value));
     }
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
+    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.Object)
         {
             return ValidationResult.ValidResult;
         }
 
-        foreach (JsonProperty jsonProperty in instance.EnumerateObject())
+        foreach (JsonInstanceProperty jsonProperty in instance.EnumerateObject())
         {
             string propertyName = jsonProperty.Name;
-            JsonElement propertyValue = jsonProperty.Value;
+            JsonInstanceElement propertyValue = jsonProperty.Value;
 
             foreach ((Regex regex, JsonSchema schema) patternSchema in _patternSchemas.Values)
             {

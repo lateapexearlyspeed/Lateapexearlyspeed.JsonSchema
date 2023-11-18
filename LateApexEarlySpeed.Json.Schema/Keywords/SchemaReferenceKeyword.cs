@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
@@ -75,7 +76,7 @@ internal class SchemaReferenceKeyword : KeywordBase
         return new Uri(baseUri);
     }
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
+    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         Debug.Assert(FullUriRef is not null);
 

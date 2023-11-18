@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
@@ -14,7 +15,7 @@ internal class MultipleOfKeyword : KeywordBase
 
     public double MultipleOf { get; init; }
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
+    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         Debug.Assert(MultipleOf > 0);
 
@@ -31,6 +32,6 @@ internal class MultipleOfKeyword : KeywordBase
         double actualTolerance = MultipleOf * Tolerance;
         return remainder < actualTolerance || Math.Abs(remainder - MultipleOf) < actualTolerance 
             ? ValidationResult.ValidResult 
-            : ValidationResult.CreateFailedResult(ResultCode.FailedToMultiple, $"Instance: '{instanceValue}' is not multiple of '{MultipleOf}'", options.ValidationPathStack, Name);
+            : ValidationResult.CreateFailedResult(ResultCode.FailedToMultiple, $"Instance: '{instanceValue}' is not multiple of '{MultipleOf}'", options.ValidationPathStack, Name, instance.Location);
     }
 }

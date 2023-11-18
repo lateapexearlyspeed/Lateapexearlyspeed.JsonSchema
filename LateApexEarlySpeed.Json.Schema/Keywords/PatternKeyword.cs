@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
@@ -17,7 +18,7 @@ internal class PatternKeyword : KeywordBase
         _pattern = new Regex(pattern, RegexOptions.Compiled, TimeSpan.FromMilliseconds(200));
     }
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
+    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.String)
         {
@@ -27,6 +28,6 @@ internal class PatternKeyword : KeywordBase
         string instanceText = instance.GetString()!;
         return _pattern.IsMatch(instanceText)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.RegexNotMatch, $"Regex: '{_pattern}' cannot find match in instance: '{instanceText}'", options.ValidationPathStack, Name);
+            : ValidationResult.CreateFailedResult(ResultCode.RegexNotMatch, $"Regex: '{_pattern}' cannot find match in instance: '{instanceText}'", options.ValidationPathStack, Name, instance.Location);
     }
 }

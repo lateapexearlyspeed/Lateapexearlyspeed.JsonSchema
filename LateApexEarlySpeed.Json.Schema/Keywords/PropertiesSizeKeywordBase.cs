@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
@@ -8,7 +9,7 @@ internal abstract class PropertiesSizeKeywordBase : KeywordBase, IBenchmarkValue
 {
     public uint BenchmarkValue { get; init; }
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
+    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.Object)
         {
@@ -19,7 +20,7 @@ internal abstract class PropertiesSizeKeywordBase : KeywordBase, IBenchmarkValue
 
         return IsSizeInRange(instanceProperties)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.PropertiesOutOfRange, GetErrorMessage(instanceProperties), options.ValidationPathStack, Name);
+            : ValidationResult.CreateFailedResult(ResultCode.PropertiesOutOfRange, GetErrorMessage(instanceProperties), options.ValidationPathStack, Name, instance.Location);
 
     }
 

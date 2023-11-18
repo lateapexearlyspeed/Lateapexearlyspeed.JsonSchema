@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
@@ -33,7 +34,7 @@ internal class SchemaDynamicReferenceKeyword : KeywordBase
         }
     }
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
+    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         (JsonSchema subSchema, Uri subSchemaFullUriRef)? referencedSchemaInfo = GetReferencedSchema(options);
         if (!referencedSchemaInfo.HasValue)

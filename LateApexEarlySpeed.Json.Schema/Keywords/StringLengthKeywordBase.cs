@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
@@ -8,7 +9,7 @@ internal abstract class StringLengthKeywordBase : KeywordBase, IBenchmarkValueKe
 {
     public uint BenchmarkValue { get; init; }
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
+    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.String)
         {
@@ -18,7 +19,7 @@ internal abstract class StringLengthKeywordBase : KeywordBase, IBenchmarkValueKe
         int instanceStringLength = instance.GetString()!.Length;
         return IsStringLengthInRange(instanceStringLength)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.StringLengthOutOfRange, GetErrorMessage(instanceStringLength), options.ValidationPathStack, Name);
+            : ValidationResult.CreateFailedResult(ResultCode.StringLengthOutOfRange, GetErrorMessage(instanceStringLength), options.ValidationPathStack, Name, instance.Location);
     }
 
     protected abstract bool IsStringLengthInRange(int instanceStringLength);

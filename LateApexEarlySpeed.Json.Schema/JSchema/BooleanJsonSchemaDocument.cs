@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
@@ -17,8 +17,8 @@ internal class BooleanJsonSchemaDocument : IJsonSchemaDocument
         _alwaysValid = alwaysValid;
     }
 
-    public ValidationResult Validate(JsonElement instance)
+    public ValidationResult Validate(JsonInstanceElement instance)
     {
-        return _alwaysValid ? ValidationResult.ValidResult : ValidationResult.CreateFailedResult(ResultCode.AlwaysFailedJsonSchema, "Boolean false json schema document occurs", null, null);
+        return _alwaysValid ? ValidationResult.ValidResult : ValidationResult.CreateFailedResult(ResultCode.AlwaysFailedJsonSchema, "Boolean false json schema document occurs", null, null, instance.Location);
     }
 }

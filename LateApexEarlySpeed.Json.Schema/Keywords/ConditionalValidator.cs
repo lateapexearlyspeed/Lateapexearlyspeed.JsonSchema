@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
@@ -30,7 +31,7 @@ internal class ConditionalValidator : ISchemaContainerValidationNode
         _negativeValidator.Name = ElseKeywordName;
     }
 
-    public ValidationResult Validate(JsonElement instance, JsonSchemaOptions options)
+    public ValidationResult Validate(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (_predictEvaluator is null)
         {

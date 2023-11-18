@@ -1,8 +1,8 @@
-﻿using System.Text.Json;
+﻿using LateApexEarlySpeed.Json.Schema.JInstance;
 
 namespace LateApexEarlySpeed.Json.Schema.Common.interfaces;
 
 public interface IValidationNode
 {
-    ValidationResult Validate(JsonElement instance, JsonSchemaOptions options);
+    ValidationResult Validate(JsonInstanceElement instance, JsonSchemaOptions options);
 }

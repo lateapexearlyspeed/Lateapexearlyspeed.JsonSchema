@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
@@ -93,7 +94,7 @@ internal class JsonSchemaResource : BodyJsonSchema
         return null;
     }
 
-    public override ValidationResult Validate(JsonElement instance, JsonSchemaOptions options)
+    public override ValidationResult Validate(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         options.ValidationPathStack.PushSchemaResource(this);
 

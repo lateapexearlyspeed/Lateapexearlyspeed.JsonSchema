@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
@@ -11,7 +12,7 @@ internal class DependentRequiredKeyword : KeywordBase
 {
     public Dictionary<string, string[]> DependentProperties { get; init; } = null!;
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
+    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.Object)
         {
@@ -32,7 +33,8 @@ internal class DependentRequiredKeyword : KeywordBase
                             ResultCode.NotFoundRequiredDependentProperty, 
                             $"Instance contains property: '{dependentProperty.Key}' but not contains dependent property: '{requiredProp}'", 
                             options.ValidationPathStack,
-                            Name);
+                            Name,
+                            instance.Location);
                     }
                 }
             }

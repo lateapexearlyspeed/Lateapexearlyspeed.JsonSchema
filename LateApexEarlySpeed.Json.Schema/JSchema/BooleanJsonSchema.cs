@@ -1,6 +1,6 @@
-﻿using System.Text.Json;
-using LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
@@ -17,11 +17,11 @@ internal class BooleanJsonSchema : JsonSchema
 
     public static BooleanJsonSchema False => new(false);
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
+    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         return _alwaysValid 
             ? ValidationResult.ValidResult 
-            : ValidationResult.CreateFailedResult(ResultCode.AlwaysFailedJsonSchema, "Boolean false json schema occurs", options.ValidationPathStack, null);
+            : ValidationResult.CreateFailedResult(ResultCode.AlwaysFailedJsonSchema, "Boolean false json schema occurs", options.ValidationPathStack, null, instance.Location);
     }
 
     public override ISchemaContainerElement? GetSubElement(string name)

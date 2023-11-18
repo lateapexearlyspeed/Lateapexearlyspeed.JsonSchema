@@ -12,6 +12,7 @@ public class ImmutableJsonPointer : IEnumerable<string>
     private const string TokenPrefixCharString = "/";
 
     private static char TokenPrefixChar => TokenPrefixCharString[0];
+    public static ImmutableJsonPointer Empty { get; } = new(Enumerable.Empty<string>());
 
     /// <summary>
     /// Unescaped reference tokens

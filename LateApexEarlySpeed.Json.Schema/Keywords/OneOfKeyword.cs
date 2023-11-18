@@ -1,7 +1,7 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
@@ -14,7 +14,7 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
 {
     public List<JsonSchema> SubSchemas { get; init; } = null!;
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
+    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         bool foundValidatedSchema = false;
 
@@ -25,7 +25,7 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
             {
                 if (foundValidatedSchema)
                 {
-                    return ValidationResult.CreateFailedResult(ResultCode.MoreThanOnePassedSchemaFound, "More than one schema validate instance", options.ValidationPathStack, Name);
+                    return ValidationResult.CreateFailedResult(ResultCode.MoreThanOnePassedSchemaFound, "More than one schema validate instance", options.ValidationPathStack, Name, instance.Location);
                 }
 
                 foundValidatedSchema = true;
@@ -34,7 +34,7 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
 
         return foundValidatedSchema 
             ? ValidationResult.ValidResult 
-            : ValidationResult.CreateFailedResult(ResultCode.AllSubSchemaFailed, "All schemas not validated instance", options.ValidationPathStack, Name);
+            : ValidationResult.CreateFailedResult(ResultCode.AllSubSchemaFailed, "All schemas not validated instance", options.ValidationPathStack, Name, instance.Location);
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

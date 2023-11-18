@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
-using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 
@@ -59,7 +59,7 @@ internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
         }
     }
 
-    public ValidationResult Validate(JsonElement instance)
+    public ValidationResult Validate(JsonInstanceElement instance)
     {
         Debug.Assert(GlobalSchemaResourceRegistry is not null);
 

@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
@@ -18,14 +19,14 @@ internal class AdditionalPropertiesKeyword : KeywordBase, ISchemaContainerElemen
 
     public PatternPropertiesKeyword? PatternPropertiesKeyword { get; set; }
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
+    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.Object)
         {
             return ValidationResult.ValidResult;
         }
 
-        foreach (JsonProperty jsonProperty in instance.EnumerateObject())
+        foreach (JsonInstanceProperty jsonProperty in instance.EnumerateObject())
         {
             string propertyName = jsonProperty.Name;
 

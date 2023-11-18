@@ -2,6 +2,7 @@
 using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
@@ -68,7 +69,7 @@ internal class BodyJsonSchema : JsonSchema
         DynamicAnchor = dynamicAnchor;
     }
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
+    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         IEnumerable<IValidationNode> validationNodes = _keywords.Concat<IValidationNode>(_schemaContainerValidators);
 

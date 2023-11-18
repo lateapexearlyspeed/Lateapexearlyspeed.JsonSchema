@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
@@ -16,7 +17,7 @@ internal class RequiredKeyword : KeywordBase
         _requiredProperties = requiredProperties;
     }
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
+    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.Object)
         {
@@ -33,7 +34,7 @@ internal class RequiredKeyword : KeywordBase
         {
             if (!instanceProperties.Contains(requiredProperty))
             {
-                return ValidationResult.CreateFailedResult(ResultCode.NotFoundRequiredProperty, $"Instance not contain required property '{requiredProperty}'", options.ValidationPathStack, Name);
+                return ValidationResult.CreateFailedResult(ResultCode.NotFoundRequiredProperty, $"Instance not contain required property '{requiredProperty}'", options.ValidationPathStack, Name, instance.Location);
             }
         }
 

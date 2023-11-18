@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
@@ -16,7 +17,7 @@ internal class ItemsKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSc
 
     public PrefixItemsKeyword? PrefixItemsKeyword { get; set; }
 
-    protected internal override ValidationResult ValidateCore(JsonElement instance, JsonSchemaOptions options)
+    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.Array)
         {
@@ -24,7 +25,7 @@ internal class ItemsKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSc
         }
 
         int idx = 0;
-        foreach (JsonElement instanceItem in instance.EnumerateArray())
+        foreach (JsonInstanceElement instanceItem in instance.EnumerateArray())
         {
             if (PrefixItemsKeyword is not null && idx < PrefixItemsKeyword.SubSchemas.Count)
             {

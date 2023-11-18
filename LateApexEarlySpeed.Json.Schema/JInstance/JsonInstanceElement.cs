@@ -33,16 +33,16 @@ public readonly struct JsonInstanceElement
         }
     }
 
+    public ImmutableJsonPointer Location => _instanceLocation;
+
     public JsonValueKind ValueKind => _jsonElement.ValueKind;
 
     public string? GetString() => _jsonElement.GetString();
 
     public double GetDouble() => _jsonElement.GetDouble();
 
-    public uint GetUInt32() => _jsonElement.GetUInt32();
-
-    public bool TryGetUInt32(out uint value)
+    public string GetRawText()
     {
-        return _jsonElement.TryGetUInt32(out value);
+        return _jsonElement.GetRawText();
     }
 }
