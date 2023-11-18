@@ -126,8 +126,8 @@ internal class RelativeKeywordLocationStack
         _locationStack.Pop();
     }
 
-    public JsonPointer ToJsonPointer()
+    public ImmutableJsonPointer ToJsonPointer()
     {
-        return new JsonPointer(_locationStack.Reverse());
+        return new ImmutableJsonPointer(_locationStack.Reverse());
     }
 }

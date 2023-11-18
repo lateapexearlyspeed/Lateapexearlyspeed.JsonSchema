@@ -10,7 +10,7 @@ public class ValidationResult
     {
     }
 
-    public JsonPointer? RelativeKeywordLocation { get; init; }
+    public ImmutableJsonPointer? RelativeKeywordLocation { get; init; }
     public Uri? SchemaResourceBaseUri { get; init; }
     public Uri? SubSchemaRefFullUri { get; init; }
     public string? Keyword { get; init; }

@@ -4,22 +4,26 @@ using System.Text;
 namespace LateApexEarlySpeed.Json.Schema.Common;
 
 /// <summary>
+/// An immutable type
 /// <remarks> Refer to: https://datatracker.ietf.org/doc/html/rfc6901 </remarks>
 /// </summary>
-public class JsonPointer : IEnumerable<string>
+public class ImmutableJsonPointer : IEnumerable<string>
 {
     private const string TokenPrefixCharString = "/";
 
     private static char TokenPrefixChar => TokenPrefixCharString[0];
 
+    /// <summary>
+    /// Unescaped reference tokens
+    /// </summary>
     private readonly List<string> _referenceTokens;
 
-    internal JsonPointer(IEnumerable<string> unescapedTokenCollection)
+    internal ImmutableJsonPointer(IEnumerable<string> unescapedTokenCollection)
     {
         _referenceTokens = unescapedTokenCollection.ToList();
     }
 
-    private JsonPointer(string escapedJsonPointerString)
+    private ImmutableJsonPointer(string escapedJsonPointerString)
     {
         _referenceTokens = new List<string>();
 
@@ -54,7 +58,7 @@ public class JsonPointer : IEnumerable<string>
     }
 
     /// <returns>If <paramref name="escapedJsonPointerString"/> is an invalid json pointer format, return null.</returns>
-    public static JsonPointer? Create(string escapedJsonPointerString)
+    public static ImmutableJsonPointer? Create(string escapedJsonPointerString)
     {
         // Invalid json pointer format, return null
         if (!string.IsNullOrEmpty(escapedJsonPointerString) && escapedJsonPointerString[0] != TokenPrefixChar)
@@ -62,7 +66,7 @@ public class JsonPointer : IEnumerable<string>
             return null;
         }
 
-        return new JsonPointer(escapedJsonPointerString);
+        return new ImmutableJsonPointer(escapedJsonPointerString);
     }
 
     IEnumerator IEnumerable.GetEnumerator()
@@ -90,5 +94,23 @@ public class JsonPointer : IEnumerable<string>
     private static string EscapeReferenceToken(string referenceToken)
     {
         return referenceToken.Replace("~", "~0").Replace(TokenPrefixCharString, "~1");
+    }
+
+    /// <summary>
+    /// This method will not modify current instance, it is a immutable operation
+    /// </summary>
+    /// <returns>Newly created <see cref="ImmutableJsonPointer"/> instance.</returns>
+    public ImmutableJsonPointer Add(string unescapedReferenceToken)
+    {
+        return new ImmutableJsonPointer(this.Append(unescapedReferenceToken));
+    }
+
+    /// <summary>
+    /// This method will not modify current instance, it is a immutable operation
+    /// </summary>
+    /// <returns>Newly created <see cref="ImmutableJsonPointer"/> instance.</returns>
+    public ImmutableJsonPointer Add(int arrayItemIdx)
+    {
+        return new ImmutableJsonPointer(this.Append(arrayItemIdx.ToString()));
     }
 }

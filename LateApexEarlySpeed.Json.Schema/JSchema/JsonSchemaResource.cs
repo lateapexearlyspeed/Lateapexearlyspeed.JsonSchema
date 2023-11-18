@@ -38,7 +38,7 @@ internal class JsonSchemaResource : BodyJsonSchema
 
     public JsonSchema? FindSubSchemaByJsonPointer(string jsonPointerPath)
     {
-        JsonPointer? jsonPointer = JsonPointer.Create(jsonPointerPath);
+        ImmutableJsonPointer? jsonPointer = ImmutableJsonPointer.Create(jsonPointerPath);
         if (jsonPointer is null)
         {
             return null;
