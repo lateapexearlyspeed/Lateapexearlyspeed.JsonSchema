@@ -11,38 +11,19 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 {
     public class JsonValidatorTest_ByJsonSchemaTestSuite : IClassFixture<ExternalSchemaDocumentsFixture>
     {
-        private static readonly string[] UnsupportedTestFiles = new[] { "unevaluatedItems", "unevaluatedProperties", "uniqueItems", "enum", "const", "vocabulary" };
+        private static readonly string[] UnsupportedTestFiles = new[] { "unevaluatedItems", "unevaluatedProperties", "vocabulary" };
         private static readonly string[] UnsupportedTestCases = new[]
         {
-            "invalid anchors", 
+            "invalid anchors",
             "validate definition against metaschema", 
             "Invalid use of fragments in location-independent $id",
             "Valid use of empty fragments in location-independent $id", 
             "Unnormalized $ids are allowed but discouraged", 
             "remote ref, containing refs itself", 
             "URN base URI with f-component",
-
-            "$anchor inside an enum is not a real identifier",
-            "$id inside an enum is not a real identifier",
-            "non-schema object containing an $anchor property",
-            "non-schema object containing an $id property",
-            "contains keyword with const keyword",
-            "minContains=2 with contains",
-            "maxContains with contains",
-            "minContains=1 with contains",
-            "if with boolean schema true",
-            "if appears at the end when serialized (keyword processing sequence)",
-            "if appears at the end when serialized (keyword processing sequence)",
-            "if with boolean schema false",
-            "naive replacement of $ref with its destination is not correct",
             "collect annotations inside a 'not', even if collection is disabled",
             "strict-tree schema, guards against misspelled properties",
-            "root pointer ref",
-            "Recursive references between schemas",
-            "ref creates new scope when adjacent to keywords",
-            "A $dynamicRef that initially resolves to a schema with a matching $dynamicAnchor resolves to the first $dynamicAnchor in the dynamic scope",
-            "multiple dynamic paths to the $dynamicRef keyword",
-
+            "ref creates new scope when adjacent to keywords"
         };
         
         private readonly IEnumerable<string> _externalSchemaDocuments;

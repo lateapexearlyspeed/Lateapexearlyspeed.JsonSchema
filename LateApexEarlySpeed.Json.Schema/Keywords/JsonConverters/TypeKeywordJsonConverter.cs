@@ -35,4 +35,6 @@ internal class TypeKeywordJsonConverter : JsonConverter<TypeKeyword>
     {
         throw new NotImplementedException();
     }
+
+    public override bool HandleNull => true;
 }

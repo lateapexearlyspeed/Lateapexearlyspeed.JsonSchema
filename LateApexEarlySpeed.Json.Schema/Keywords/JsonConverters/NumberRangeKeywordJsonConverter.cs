@@ -20,4 +20,6 @@ internal class NumberRangeKeywordJsonConverter<TNumberRangeLimitKeyword> : JsonC
     {
         throw new NotImplementedException();
     }
+
+    public override bool HandleNull => true;
 }

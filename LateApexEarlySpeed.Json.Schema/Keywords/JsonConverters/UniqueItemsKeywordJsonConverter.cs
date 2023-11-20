@@ -25,4 +25,6 @@ public class UniqueItemsKeywordJsonConverter : JsonConverter<UniqueItemsKeyword>
     {
         throw new NotImplementedException();
     }
+
+    public override bool HandleNull => true;
 }

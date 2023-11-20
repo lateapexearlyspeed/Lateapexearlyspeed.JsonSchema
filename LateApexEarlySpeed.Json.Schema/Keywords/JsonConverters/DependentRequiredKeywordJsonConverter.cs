@@ -29,4 +29,6 @@ internal class DependentRequiredKeywordJsonConverter : JsonConverter<DependentRe
     {
         throw new NotImplementedException();
     }
+
+    public override bool HandleNull => true;
 }

@@ -28,4 +28,6 @@ internal class PatternKeywordJsonConverter : JsonConverter<PatternKeyword>
     {
         throw new NotImplementedException();
     }
+
+    public override bool HandleNull => true;
 }

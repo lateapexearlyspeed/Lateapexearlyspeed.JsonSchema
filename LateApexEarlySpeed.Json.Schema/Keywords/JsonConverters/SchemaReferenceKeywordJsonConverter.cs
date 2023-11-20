@@ -27,4 +27,6 @@ internal class SchemaReferenceKeywordJsonConverter : JsonConverter<SchemaReferen
     {
         throw new NotImplementedException();
     }
+
+    public override bool HandleNull => true;
 }

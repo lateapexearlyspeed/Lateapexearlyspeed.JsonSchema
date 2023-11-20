@@ -50,18 +50,9 @@ internal class TypeKeyword : KeywordBase
                     return ValidationResult.CreateFailedResult(ResultCode.InvalidTokenKind, GetErrorMessage(expectedInstanceType, instance.ValueKind), options.ValidationPathStack, Name, instance.Location);
                 }
 
-                string rawText = instance.GetRawText();
-                int dotIdx = rawText.IndexOf('.');
-                if (dotIdx != -1)
+                if (!instance.TryGetInt64ForJsonSchema(out _))
                 {
-                    ReadOnlySpan<char> fraction = rawText.AsSpan(dotIdx + 1);
-                    foreach (char c in fraction)
-                    {
-                        if (c != '0')
-                        {
-                            return ValidationResult.CreateFailedResult(ResultCode.NotBeInteger, $"Expect type '{expectedInstanceType}' but actual is double-liked number", options.ValidationPathStack, Name, instance.Location);
-                        }
-                    }
+                    return ValidationResult.CreateFailedResult(ResultCode.NotBeInteger, $"Expect type '{expectedInstanceType}' but actual is double-liked number", options.ValidationPathStack, Name, instance.Location);
                 }
 
                 break;

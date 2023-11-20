@@ -34,4 +34,6 @@ internal class PatternPropertiesKeywordJsonConverter : JsonConverter<PatternProp
     {
         throw new NotImplementedException();
     }
+
+    public override bool HandleNull => true;
 }

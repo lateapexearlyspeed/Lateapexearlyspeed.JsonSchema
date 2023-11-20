@@ -26,4 +26,6 @@ internal class MultipleOfKeywordJsonConverter : JsonConverter<MultipleOfKeyword>
     {
         throw new NotImplementedException();
     }
+
+    public override bool HandleNull => true;
 }

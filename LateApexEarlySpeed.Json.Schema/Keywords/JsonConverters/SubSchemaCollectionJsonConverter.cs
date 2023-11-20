@@ -42,4 +42,6 @@ internal class SubSchemaCollectionJsonConverter<T> : JsonConverter<T> where T : 
     {
         throw new NotImplementedException();
     }
+
+    public override bool HandleNull => true;
 }

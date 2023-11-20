@@ -93,9 +93,19 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
             }
         }
 
-        if (_minContains.HasValue && validatedItemCount < _minContains)
+        if (_minContains.HasValue)
         {
-            return CreateFailedValidationResultWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMinContainsErrorMessage(), MinContainsKeywordName, options.ValidationPathStack, instance.Location);
+            if (validatedItemCount < _minContains)
+            {
+                return CreateFailedValidationResultWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMinContainsErrorMessage(), MinContainsKeywordName, options.ValidationPathStack, instance.Location);
+            }
+        }
+        else
+        {
+            if (validatedItemCount == 0)
+            {
+                return CreateFailedValidationResultWithLocation(ResultCode.NotFoundAnyValidatedArrayItem, GetFailedContainsErrorMessage(), ContainsKeywordName, options.ValidationPathStack, instance.Location);
+            }
         }
 
         return ValidationResult.ValidResult;
@@ -106,6 +116,9 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
 
     private string GetFailedMinContainsErrorMessage()
         => $"Validated array items count is less than specified '{_minContains}'";
+
+    private string GetFailedContainsErrorMessage()
+        => "Not found any validated array items";
 
     private ValidationResult ValidateWithoutMinContainsAndMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
     {
@@ -119,7 +132,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
             }
         }
 
-        return CreateFailedValidationResultWithLocation(ResultCode.NotFoundAnyValidatedArrayItem, "Not found any validated array items", ContainsKeywordName, options.ValidationPathStack, instance.Location);
+        return CreateFailedValidationResultWithLocation(ResultCode.NotFoundAnyValidatedArrayItem, GetFailedContainsErrorMessage(), ContainsKeywordName, options.ValidationPathStack, instance.Location);
     }
 
     private ValidationResult CreateFailedValidationResultWithLocation(ResultCode resultCode, string errorMessage, string locationName, ValidationPathStack validationPathStack, ImmutableJsonPointer instanceLocation)

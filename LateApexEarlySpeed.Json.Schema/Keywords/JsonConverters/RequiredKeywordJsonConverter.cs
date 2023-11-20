@@ -26,4 +26,6 @@ internal class RequiredKeywordJsonConverter : JsonConverter<RequiredKeyword>
     {
         throw new NotImplementedException();
     }
+
+    public override bool HandleNull => true;
 }

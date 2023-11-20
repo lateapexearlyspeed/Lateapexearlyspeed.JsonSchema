@@ -16,4 +16,6 @@ internal class SingleSchemaJsonConverter<T> : JsonConverter<T> where T : ISingle
     {
         throw new NotImplementedException();
     }
+
+    public override bool HandleNull => true;
 }

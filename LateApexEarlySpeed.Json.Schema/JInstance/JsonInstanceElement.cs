@@ -46,6 +46,33 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
         return _jsonElement.GetRawText();
     }
 
+    public bool TryGetInt64ForJsonSchema(out long value)
+    {
+        if (ValueKind != JsonValueKind.Number)
+        {
+            value = default;
+            return false;
+        }
+
+        string rawText = GetRawText();
+        int dotIdx = rawText.IndexOf('.');
+        if (dotIdx != -1)
+        {
+            ReadOnlySpan<char> fraction = rawText.AsSpan(dotIdx + 1);
+            foreach (char c in fraction)
+            {
+                if (c != '0')
+                {
+                    value = default;
+                    return false;
+                }
+            }
+        }
+
+        value = (long)GetDouble();
+        return true;
+    }
+
     public bool Equals(JsonInstanceElement other)
     {
         if (ValueKind != other.ValueKind)
@@ -64,7 +91,18 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
                 return GetString() == other.GetString();
 
             case JsonValueKind.Number:
-                return GetRawText() == other.GetRawText();
+
+                if (TryGetInt64ForJsonSchema(out long currentInt64Value) && other.TryGetInt64ForJsonSchema(out long otherInt64Value))
+                {
+                    return currentInt64Value == otherInt64Value;
+                }
+
+                const double tolerance = 0.000001;
+
+                double currentValue = GetDouble();
+                double actualTolerance = Math.Abs(currentValue) * tolerance;
+
+                return Math.Abs(currentValue - other.GetDouble()) <= actualTolerance;
 
             case JsonValueKind.Array:
                 return EnumerateArray().SequenceEqual(other.EnumerateArray());

@@ -15,4 +15,6 @@ public class ConstKeywordJsonConverter : JsonConverter<ConstKeyword>
     {
         throw new NotImplementedException();
     }
+
+    public override bool HandleNull => true;
 }

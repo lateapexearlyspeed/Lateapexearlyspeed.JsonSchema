@@ -217,4 +217,6 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
     {
         throw new NotImplementedException();
     }
+
+    public override bool HandleNull => true;
 }

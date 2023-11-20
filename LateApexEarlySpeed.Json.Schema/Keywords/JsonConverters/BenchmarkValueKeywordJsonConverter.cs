@@ -22,4 +22,6 @@ internal class BenchmarkValueKeywordJsonConverter<TBenchmarkValueKeyword> : Json
     {
         throw new NotImplementedException();
     }
+
+    public override bool HandleNull => true;
 }
