@@ -11,8 +11,10 @@ public static class ValidationKeywordRegistry
                 typeof(AdditionalPropertiesKeyword),
                 typeof(AllOfKeyword),
                 typeof(AnyOfKeyword),
+                typeof(ConstKeyword),
                 typeof(DependentRequiredKeyword),
                 typeof(DependentSchemasKeyword),
+                typeof(EnumKeyword),
                 typeof(ExclusiveMaximumKeyword),
                 typeof(ExclusiveMinimumKeyword),
                 typeof(ItemsKeyword),
@@ -33,7 +35,8 @@ public static class ValidationKeywordRegistry
                 typeof(PropertiesKeyword),
                 typeof(PropertyNamesKeyword),
                 typeof(RequiredKeyword),
-                typeof(TypeKeyword)
+                typeof(TypeKeyword),
+                typeof(UniqueItemsKeyword)
             };
         KeywordsDictionary = builtInKeywordTypes.ToDictionary(KeywordBase.GetKeywordName);
     }

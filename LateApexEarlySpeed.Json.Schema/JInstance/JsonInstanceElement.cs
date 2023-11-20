@@ -97,4 +97,9 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
     {
         throw new NotImplementedException();
     }
+
+    public static JsonInstanceElement ParseValue(ref Utf8JsonReader reader)
+    {
+        return new JsonInstanceElement(JsonElement.ParseValue(ref reader), ImmutableJsonPointer.Empty);
+    }
 }

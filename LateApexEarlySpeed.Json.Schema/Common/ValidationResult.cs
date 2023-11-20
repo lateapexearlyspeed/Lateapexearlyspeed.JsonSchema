@@ -53,5 +53,8 @@ public enum ResultCode
     ValidatedArrayItemsCountOutOfRange,
     ArrayLengthOutOfRange,
     StringLengthOutOfRange,
-    InvalidPropertyName
+    InvalidPropertyName,
+    DuplicatedArrayItems,
+    NotFoundInAllowedList,
+    UnexpectedValue
 }
