@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Globalization;
+using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
@@ -16,7 +17,7 @@ internal abstract class StringLengthKeywordBase : KeywordBase, IBenchmarkValueKe
             return ValidationResult.ValidResult;
         }
 
-        int instanceStringLength = instance.GetString()!.Length;
+        int instanceStringLength = new StringInfo(instance.GetString()!).LengthInTextElements;
         return IsStringLengthInRange(instanceStringLength)
             ? ValidationResult.ValidResult
             : ValidationResult.CreateFailedResult(ResultCode.StringLengthOutOfRange, GetErrorMessage(instanceStringLength), options.ValidationPathStack, Name, instance.Location);
