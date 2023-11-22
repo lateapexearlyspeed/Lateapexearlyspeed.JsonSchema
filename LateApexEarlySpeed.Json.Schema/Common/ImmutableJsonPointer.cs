@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Diagnostics;
 using System.Text;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
@@ -113,5 +114,52 @@ public class ImmutableJsonPointer : IEnumerable<string>
     public ImmutableJsonPointer Add(int arrayItemIdx)
     {
         return new ImmutableJsonPointer(this.Append(arrayItemIdx.ToString()));
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != this.GetType()) return false;
+        return Equals((ImmutableJsonPointer)obj);
+    }
+
+    protected bool Equals(ImmutableJsonPointer other)
+    {
+        return _referenceTokens.SequenceEqual(other._referenceTokens);
+    }
+
+    public override int GetHashCode()
+    {
+        if (_referenceTokens.Count >= 7)
+        {
+            return HashCode.Combine(_referenceTokens.Count, _referenceTokens[0], _referenceTokens[1], _referenceTokens[2], _referenceTokens[3], _referenceTokens[4], _referenceTokens[5], _referenceTokens[6]);
+        }
+
+        if (_referenceTokens.Count >= 3)
+        {
+            return HashCode.Combine(_referenceTokens.Count, _referenceTokens[0], _referenceTokens[1], _referenceTokens[2]);
+        }
+
+        switch (_referenceTokens.Count)
+        {
+            case 2:
+                return HashCode.Combine(_referenceTokens.Count, _referenceTokens[0], _referenceTokens[1]);
+            case 1:
+                return HashCode.Combine(_referenceTokens.Count, _referenceTokens[0]);
+            default:
+                Debug.Assert(_referenceTokens.Count == 0);
+                return HashCode.Combine(_referenceTokens.Count);
+        }
+    }
+
+    public static bool operator ==(ImmutableJsonPointer? left, ImmutableJsonPointer? right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(ImmutableJsonPointer? left, ImmutableJsonPointer? right)
+    {
+        return !Equals(left, right);
     }
 }

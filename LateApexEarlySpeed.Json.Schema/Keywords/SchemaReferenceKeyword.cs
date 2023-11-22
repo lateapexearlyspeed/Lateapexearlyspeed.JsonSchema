@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -87,9 +86,9 @@ internal class SchemaReferenceKeyword : KeywordBase
             throw new InvalidOperationException($"Cannot find schema for {Keyword}: {FullUriRef}");
         }
 
-        if (!options.SchemaRecursionRecorder.TryPushRecord(referencedSchema, JsonPath.Root))
+        if (!options.SchemaRecursionRecorder.TryPushRecord(referencedSchema, instance.Location))
         {
-            throw new InvalidOperationException($"Infinite recursion loop detected. Instance path: {""}");
+            throw new InvalidOperationException($"Infinite recursion loop detected. Instance path: {instance.Location}");
         }
 
         JsonSchemaResource? referencedSchemaResource = GetReferencedSchemaResource(options);

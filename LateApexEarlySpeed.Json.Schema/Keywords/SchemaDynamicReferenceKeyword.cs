@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -45,9 +44,9 @@ internal class SchemaDynamicReferenceKeyword : KeywordBase
         JsonSchema referencedSubSchema = referencedSchemaInfo.Value.subSchema;
         Uri subSchemaFullUriRef = referencedSchemaInfo.Value.subSchemaFullUriRef;
 
-        if (!options.SchemaRecursionRecorder.TryPushRecord(referencedSubSchema, JsonPath.Root))
+        if (!options.SchemaRecursionRecorder.TryPushRecord(referencedSubSchema, instance.Location))
         {
-            throw new InvalidOperationException($"Infinite recursion loop detected. Instance path: {""}");
+            throw new InvalidOperationException($"Infinite recursion loop detected. Instance path: {instance.Location}");
         }
 
         JsonSchemaResource? referencedSchemaResource = GetReferencedSchemaResource(options);
