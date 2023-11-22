@@ -26,3 +26,7 @@ jobs:
       run: dotnet build
     - name: Test
       run: dotnet test --no-build --verbosity normal
+    - name: Publish Benchmark
+      run: dotnet publish -c Release LateApexEarlySpeed.Json.Schema.Benchmark/
+    - name: Run Benchmark
+      run: dotnet LateApexEarlySpeed.Json.Schema.Benchmark/bin/Release/net6.0/publish/LateApexEarlySpeed.Json.Schema.Benchmark.dll

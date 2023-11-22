@@ -1,0 +1,8 @@
+{
+  "propNull": null,
+  "propBoolean": true,
+  "propArray": [ 1, 2, 3, 1, 5 ],
+  "propNumber": 1.5,
+  "propString": "abcde",
+  "propInteger": 1
+}

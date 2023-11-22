@@ -1,0 +1,81 @@
+{
+  "$id": "http://main",
+  "type": "object",
+
+  "additionalProperties": false,
+  "patternProperties": {
+    "propB*lean": {
+      "type": "boolean"
+    }
+  },
+  "dependentRequired": {
+    "propNull": [ "propBoolean", "propArray" ]
+  },
+  "dependentSchemas": {
+    "propNull": {
+      "type": "object"
+    }
+  },
+  "properties": {
+    "propNull": {
+      "type": "null"
+    },
+    "propBoolean": {
+      "type": "boolean",
+      "allOf": [
+        true,
+        { "type": "boolean" }
+      ]
+    },
+    "propArray": {
+      "type": "array",
+      "anyOf": [ false, true ],
+      "contains": { "type": "integer" },
+      "maxContains": 100,
+      "minContains": 2,
+      "maxItems": 100,
+      "minItems": 1
+    },
+    "propNumber": {
+      "type": "number",
+      "if": {
+        "const": 1.5
+      },
+      "then": true,
+      "else": true
+    },
+    "propString": {
+      "type": "string"
+    },
+    "propInteger": {
+      "$ref": "#/$defs/typeIsInteger"
+    },
+
+
+
+
+    "object1": {
+      "$id": "http://inside",
+      "type": "object",
+      "properties": {
+        "p2": {
+          "$id": "http://myp2",
+          "$anchor": "test-anchor",
+          "$ref": "#/$defs/n1",
+          "$defs": {
+            "n1": { "type": "integer" }
+          }
+        }
+      },
+      "$defs": {
+        "name": { "type": "integer" }
+      }
+    }
+  },
+  "$defs": {
+    "typeIsInteger": { "type": "integer" },
+    "toTestAnchor": {
+      "$anchor": "test-anchor"
+    }
+  }
+}
