@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
@@ -13,21 +14,27 @@ public class ImmutableJsonPointer : IEnumerable<string>
     private const string TokenPrefixCharString = "/";
 
     private static char TokenPrefixChar => TokenPrefixCharString[0];
+    
     public static ImmutableJsonPointer Empty { get; } = new(Enumerable.Empty<string>());
 
     /// <summary>
     /// Unescaped reference tokens
     /// </summary>
-    private readonly List<string> _referenceTokens;
+    private readonly SingleLinkedList<string> _referenceTokens;
 
     internal ImmutableJsonPointer(IEnumerable<string> unescapedTokenCollection)
     {
-        _referenceTokens = unescapedTokenCollection.ToList();
+        _referenceTokens = new SingleLinkedList<string>(unescapedTokenCollection);
+    }
+
+    private ImmutableJsonPointer(SingleLinkedList<string> referenceTokens)
+    {
+        _referenceTokens = referenceTokens;
     }
 
     private ImmutableJsonPointer(string escapedJsonPointerString)
     {
-        _referenceTokens = new List<string>();
+        _referenceTokens = new SingleLinkedList<string>();
 
         int curIdx = 0;
         while (curIdx < escapedJsonPointerString.Length && escapedJsonPointerString[curIdx] == TokenPrefixChar)
@@ -50,8 +57,6 @@ public class ImmutableJsonPointer : IEnumerable<string>
                 curIdx = escapedJsonPointerString.Length;
             }
         }
-
-        // _referenceTokens = escapedJsonPointerString.Split('/', StringSplitOptions.RemoveEmptyEntries).ToList();
     }
 
     private static string UnescapeReferenceToken(string escapedReferenceToken)
@@ -71,14 +76,48 @@ public class ImmutableJsonPointer : IEnumerable<string>
         return new ImmutableJsonPointer(escapedJsonPointerString);
     }
 
+    public Enumerator GetEnumerator()
+    {
+        return new Enumerator(_referenceTokens.GetEnumerator());
+    }
+
+    IEnumerator<string> IEnumerable<string>.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
     }
 
-    public IEnumerator<string> GetEnumerator()
+    public readonly struct Enumerator : IEnumerator<string>
     {
-        return _referenceTokens.GetEnumerator();
+        private readonly IEnumerator<string> _underlyingEnumerator;
+
+        internal Enumerator(SingleLinkedList<string>.Enumerator enumerator)
+        {
+            _underlyingEnumerator = enumerator;
+        }
+
+        public bool MoveNext()
+        {
+            return _underlyingEnumerator.MoveNext();
+        }
+
+        public void Reset()
+        {
+            _underlyingEnumerator.Reset();
+        }
+
+        public string Current => _underlyingEnumerator.Current;
+
+        object? IEnumerator.Current => ((IEnumerator)_underlyingEnumerator).Current;
+
+        public void Dispose()
+        {
+            _underlyingEnumerator.Dispose();
+        }
     }
 
     public override string ToString()
@@ -101,10 +140,11 @@ public class ImmutableJsonPointer : IEnumerable<string>
     /// <summary>
     /// This method will not modify current instance, it is a immutable operation
     /// </summary>
+    /// <remarks>Based on benchmark, this method is hot path, so we create <see cref="SingleLinkedList{T}"/> type which can share common path nodes for several <see cref="SingleLinkedList{T}"/> instances inside same path</remarks>
     /// <returns>Newly created <see cref="ImmutableJsonPointer"/> instance.</returns>
     public ImmutableJsonPointer Add(string unescapedReferenceToken)
     {
-        return new ImmutableJsonPointer(this.Append(unescapedReferenceToken));
+        return new ImmutableJsonPointer(_referenceTokens.CreateByAppend(unescapedReferenceToken));
     }
 
     /// <summary>
@@ -113,7 +153,7 @@ public class ImmutableJsonPointer : IEnumerable<string>
     /// <returns>Newly created <see cref="ImmutableJsonPointer"/> instance.</returns>
     public ImmutableJsonPointer Add(int arrayItemIdx)
     {
-        return new ImmutableJsonPointer(this.Append(arrayItemIdx.ToString()));
+        return new ImmutableJsonPointer(_referenceTokens.CreateByAppend(arrayItemIdx.ToString()));
     }
 
     public override bool Equals(object? obj)
@@ -162,4 +202,152 @@ public class ImmutableJsonPointer : IEnumerable<string>
     {
         return !Equals(left, right);
     }
+}
+
+internal class SingleLinkedList<T> : IEnumerable<T>
+{
+    private SingleLinkedNode<T>? _head;
+
+    public int Count { get; private set; }
+
+    private SingleLinkedNode<T>[]? _nodesCache;
+
+    public SingleLinkedList(IEnumerable<T> collection)
+    {
+        foreach (T value in collection)
+        {
+            _head = new SingleLinkedNode<T>(value, _head);
+            Count++;
+        }
+    }
+
+    public SingleLinkedList()
+    {
+    }
+
+    private SingleLinkedList(SingleLinkedNode<T>? head, int count)
+    {
+        _head = head;
+        Count = count;
+    }
+
+    /// <summary>
+    /// Create new <see cref="SingleLinkedList{T}"/> instance without modifying original <see cref="SingleLinkedList{T}"/> instance
+    /// </summary>
+    public SingleLinkedList<T> CreateByAppend(T value)
+    {
+        SingleLinkedNode<T> newHead = new SingleLinkedNode<T>(value, _head);
+
+        return new SingleLinkedList<T>(newHead, Count + 1);
+    }
+
+    /// <summary>
+    /// Modify original <see cref="SingleLinkedList{T}"/>
+    /// </summary>
+    public void Add(T value)
+    {
+        _head = new SingleLinkedNode<T>(value, _head);
+        Count++;
+        InvalidateNodesCache();
+    }
+
+    private void InvalidateNodesCache()
+    {
+        _nodesCache = null;
+    }
+
+    public T this[int index]
+    {
+        get
+        {
+            CreateNodesCacheIfInvalidated();
+
+            return _nodesCache[index].Value;
+        }
+    }
+
+    [MemberNotNull(nameof(_nodesCache))]
+    private void CreateNodesCacheIfInvalidated()
+    {
+        if (_nodesCache is not null)
+        {
+            return;
+        }
+
+        _nodesCache = new SingleLinkedNode<T>[Count];
+        SingleLinkedNode<T>? curNode = _head;
+        int i = Count - 1;
+        while (curNode is not null)
+        {
+            _nodesCache[i--] = curNode;
+            curNode = curNode.Next;
+        }
+    }
+
+    public Enumerator GetEnumerator()
+    {
+        return new Enumerator(this);
+    }
+
+    IEnumerator<T> IEnumerable<T>.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public struct Enumerator : IEnumerator<T>
+    {
+        private readonly SingleLinkedList<T> _list;
+        private int _idx = -1;
+
+        /// <remarks>Don't call Enumerable related methods on <paramref name="list"/> here</remarks>
+        public Enumerator(SingleLinkedList<T> list)
+        {
+            _list = list;
+            list.CreateNodesCacheIfInvalidated();
+
+            Current = default!;
+        }
+
+        public T Current { get; private set; }
+
+        object? IEnumerator.Current => Current;
+
+        public bool MoveNext()
+        {
+            if (++_idx < _list.Count)
+            {
+                Debug.Assert(_list._nodesCache is not null);
+                Current = _list._nodesCache[_idx].Value;
+                return true;
+            }
+
+            return false;
+        }
+
+        public void Reset()
+        {
+            _idx = -1;
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+}
+
+internal class SingleLinkedNode<T>
+{
+    public SingleLinkedNode(T value, SingleLinkedNode<T>? next = null)
+    {
+        Value = value;
+        Next = next;
+    }
+
+    public T Value { get; }
+    public SingleLinkedNode<T>? Next { get; set; }
 }

@@ -36,7 +36,7 @@ public class BenchmarkTestClass
         }
     }
 
-    // [Benchmark]
+    [Benchmark]
     public EvaluationResults ValidateByJsonSchemaDotNet()
     {
         using (var instance = JsonDocument.Parse(_instanceText))
@@ -45,7 +45,7 @@ public class BenchmarkTestClass
         }
     }
 
-    // [Benchmark]
+    [Benchmark]
     public ValidationResult ValidateByMyJsonSchema()
     {
         return new JsonValidator(_schemaText).Validate(_instanceText);

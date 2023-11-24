@@ -1,7 +1,8 @@
 {
-  "integer1": "3",
-  "object1": {
-    "p1": 5,
-    "p2": 2
-  }
+  "propNull": null,
+  "propBoolean": true,
+  "propArray": [ 1, 2, 3, 4, 5 ],
+  "propNumber": 1.5,
+  "propString": "abcde",
+  "propInteger": 1
 }
