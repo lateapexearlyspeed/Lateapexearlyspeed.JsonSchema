@@ -1,10 +1,10 @@
 <?xml version='1.0'?>
 <Obfuscator>
-  <Var name="InPath" value=".\bin\Release\net6.0" />
-  <Var name="OutPath" value=".\bin\Release\net6.0\Obfuscator_Output" />
+  <Var name="InPath" value="./bin/Release/net6.0" />
+  <Var name="OutPath" value="./bin/Release/net6.0/Obfuscator_Output" />
   <Var name="HideStrings" value="false" />
 
-  <Module file="$(InPath)\LateApexEarlySpeed.Json.Schema.dll" >
+  <Module file="$(InPath)/LateApexEarlySpeed.Json.Schema.dll" >
     <SkipEnums value="true" />
   </Module>
 </Obfuscator>
