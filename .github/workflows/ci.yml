@@ -51,6 +51,7 @@ jobs:
         
   publish-nuget-pack:    
     
+    needs: build-and-test
     runs-on: ubuntu-22.04
     permissions: write-all
     
