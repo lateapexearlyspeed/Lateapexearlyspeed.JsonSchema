@@ -10,7 +10,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  ci:
+  build-and-test:
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-2022, macos-12]
@@ -48,3 +48,41 @@ jobs:
       run: dotnet publish --property:UseObfuscator=true -c Release LateApexEarlySpeed.Json.Schema.Benchmark/
     - name: Run Benchmark (Obfuscator version)
       run: dotnet LateApexEarlySpeed.Json.Schema.Benchmark/bin/Release/net6.0/publish/LateApexEarlySpeed.Json.Schema.Benchmark.dll
+        
+  publish-nuget-pack:    
+    needs: build-and-test
+    runs-on: windows-2022
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+    - name: Download Obfuscator global tool
+      run: dotnet tool install --global Obfuscar.GlobalTool --version 2.2.38
+    - name: Clean previous build output
+      run: dotnet clean -c Release
+    - name: Build (Obfuscator version)
+      run: dotnet build --property:UseObfuscator=true -c Release
+    - name: Test (Obfuscator version)
+      run: dotnet test --property:UseObfuscator=true --verbosity normal -c Release
+    - name: Create Nuget pack
+      run: dotnet pack LateApexEarlySpeed.Json.Schema/ -c Release --property:UseObfuscator=true
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Upload Nuget pack artifact
+        path: LateApexEarlySpeed.Json.Schema/bin/Release/NugetPackage/
+        if-no-files-found: error
+    - uses: trstringer/manual-approval@v1
+      with:
+        approvers: lateapexearlyspeed
+        minimum-approvals: 1
+        issue-title: "Publishing nuget pack ..."
+        issue-body: "Please approve or deny this nuget pack publish ..."
+        exclude-workflow-initiator-as-approver: false
+        additional-approved-words: ''
+        additional-denied-words: ''
+        
