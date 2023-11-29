@@ -78,6 +78,7 @@ jobs:
         if-no-files-found: error
     - uses: trstringer/manual-approval@v1
       with:
+        secret: ${{ github.TOKEN }}
         approvers: lateapexearlyspeed
         minimum-approvals: 1
         issue-title: "Publishing nuget pack ..."
