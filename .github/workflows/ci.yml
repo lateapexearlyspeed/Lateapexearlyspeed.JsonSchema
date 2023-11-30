@@ -79,6 +79,7 @@ jobs:
         path: LateApexEarlySpeed.Json.Schema/bin/Release/NugetPackage/
         if-no-files-found: error
     - uses: trstringer/manual-approval@v1
+      timeout-minutes: 60
       with:
         secret: ${{ github.TOKEN }}
         approvers: lateapexearlyspeed
