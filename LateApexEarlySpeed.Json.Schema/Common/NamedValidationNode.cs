@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using LateApexEarlySpeed.Json.Schema.Common.interfaces;
+﻿using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;

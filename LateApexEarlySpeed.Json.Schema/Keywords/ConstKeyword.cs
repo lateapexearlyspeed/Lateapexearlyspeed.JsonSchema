@@ -7,7 +7,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("const")]
 [JsonConverter(typeof(ConstKeywordJsonConverter))]
-public class ConstKeyword : KeywordBase
+internal class ConstKeyword : KeywordBase
 {
     private readonly JsonInstanceElement _constValue;
 

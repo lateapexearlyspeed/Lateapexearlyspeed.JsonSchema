@@ -5,7 +5,7 @@ using LateApexEarlySpeed.Json.Schema.JInstance;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
-public class EnumKeywordJsonConverter : JsonConverter<EnumKeyword>
+internal class EnumKeywordJsonConverter : JsonConverter<EnumKeyword>
 {
     public override EnumKeyword Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

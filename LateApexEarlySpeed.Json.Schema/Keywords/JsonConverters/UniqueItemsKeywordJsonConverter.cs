@@ -4,7 +4,7 @@ using LateApexEarlySpeed.Json.Schema.Common;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
-public class UniqueItemsKeywordJsonConverter : JsonConverter<UniqueItemsKeyword>
+internal class UniqueItemsKeywordJsonConverter : JsonConverter<UniqueItemsKeyword>
 {
     public override UniqueItemsKeyword Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

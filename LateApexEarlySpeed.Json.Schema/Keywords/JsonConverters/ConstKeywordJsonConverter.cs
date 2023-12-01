@@ -4,7 +4,7 @@ using LateApexEarlySpeed.Json.Schema.JInstance;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
-public class ConstKeywordJsonConverter : JsonConverter<ConstKeyword>
+internal class ConstKeywordJsonConverter : JsonConverter<ConstKeyword>
 {
     public override ConstKeyword Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

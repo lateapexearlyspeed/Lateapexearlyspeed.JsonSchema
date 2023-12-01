@@ -7,7 +7,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("enum")]
 [JsonConverter(typeof(EnumKeywordJsonConverter))]
-public class EnumKeyword : KeywordBase
+internal class EnumKeyword : KeywordBase
 {
     private readonly List<JsonInstanceElement> _enumList;
 
