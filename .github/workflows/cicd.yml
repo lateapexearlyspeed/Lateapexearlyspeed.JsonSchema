@@ -138,3 +138,5 @@ jobs:
         additional-approved-words: ''
         additional-denied-words: ''
         
+    - name: Publish Nuget pack
+      run: dotnet nuget push LateApexEarlySpeed.Json.Schema/bin/Release/NugetPackage/ --api-key oy2nrnuxwcuw3lenpyuaf6gkqkskgyvenbje7f6moqqdja --source https://api.nuget.org/v3/index.json --no-symbols
