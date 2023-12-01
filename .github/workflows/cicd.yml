@@ -27,7 +27,7 @@ jobs:
       with:
         submodules: 'recursive'
     - name: build-and-test
-      uses: ./.github/actions/build-and-test.yml
+      uses: ./.github/actions/build-and-test/
 
   build-and-test-multiple-env:
   
@@ -43,7 +43,7 @@ jobs:
       with:
         submodules: 'recursive'
     - name: build-and-test
-      uses: ./.github/actions/build-and-test.yml
+      uses: ./.github/actions/build-and-test/
       
   publish-nuget-pack:    
     
