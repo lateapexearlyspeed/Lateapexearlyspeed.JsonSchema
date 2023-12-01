@@ -11,6 +11,21 @@ namespace JsonSchemaConsoleApp
             string instance = File.ReadAllText("instance.json");
 
             var jsonValidator = new JsonValidator(jsonSchema);
+            ValidationResult validationResult = jsonValidator.Validate(instance);
+
+            if (validationResult.IsValid)
+            {
+                Console.WriteLine("good");
+            }
+            else
+            {
+                Console.WriteLine($"Failed keyword: {validationResult.Keyword}");
+                Console.WriteLine($"ResultCode: {validationResult.ResultCode}");
+                Console.WriteLine($"Error message: {validationResult.ErrorMessage}");
+                Console.WriteLine($"Failed instance location: {validationResult.InstanceLocation}");
+                Console.WriteLine($"Failed relative keyword location: {validationResult.RelativeKeywordLocation}");
+                Console.WriteLine($"Failed schema resource base uri: {validationResult.SchemaResourceBaseUri}");
+            }
 
             while (true)
             {

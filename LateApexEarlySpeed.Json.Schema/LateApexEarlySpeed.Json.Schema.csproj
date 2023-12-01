@@ -11,10 +11,11 @@
     <PackageIcon>nuget.icon.jpg</PackageIcon>
     <PackageTags>Json;Schema;Json schema;JsonSchema;Validation</PackageTags>
     <PackageOutputPath>bin\Release\NugetPackage</PackageOutputPath>
-    <Version>1.0.0-beta1</Version>
+    <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0.1</AssemblyVersion>
     <FileVersion>1.0.0.1</FileVersion>
     <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema.Doc</PackageProjectUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -44,9 +45,7 @@
     <Exec Command="obfuscar.console obfuscar-config.xml" />
     <Message Text="Finished obfuscar task." Importance="High" />
 
-    <Copy
-      SourceFiles="$(TargetDir)Obfuscator_Output\$(ProjectName).dll"
-      DestinationFolder="$(TargetDir)" />
+    <Copy SourceFiles="$(TargetDir)Obfuscator_Output\$(ProjectName).dll" DestinationFolder="$(TargetDir)" />
     <Message Text="Finished copying obfuscar output back to project output folder." Importance="High" />
   </Target>
 
