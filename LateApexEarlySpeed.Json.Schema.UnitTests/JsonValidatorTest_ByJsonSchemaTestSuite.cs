@@ -37,7 +37,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
         [Theory]
         [MemberData(nameof(JsonSchemaTestSuiteForDraft2020))]
-        public void Validate_InputFromJsonSchemaTestSuite(string schema, string instance, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        public void ValidateByStringSchema_InputFromJsonSchemaTestSuite(string schema, string instance, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
             _testOutputHelper.WriteLine($"Test description: {testDescription}");
@@ -48,6 +48,22 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                 jsonValidator.AddExternalDocument(schemaDocument);
             }
             
+            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance).IsValid);
+        }
+
+        [Theory]
+        [MemberData(nameof(JsonSchemaTestSuiteForDraft2020))]
+        public void ValidateBySpanSchema_InputFromJsonSchemaTestSuite(string schema, string instance, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        {
+            _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
+            _testOutputHelper.WriteLine($"Test description: {testDescription}");
+
+            var jsonValidator = new JsonValidator(schema.AsSpan());
+            foreach (string schemaDocument in _externalSchemaDocuments)
+            {
+                jsonValidator.AddExternalDocument(schemaDocument.AsSpan());
+            }
+
             Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance).IsValid);
         }
 
