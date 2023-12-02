@@ -12,12 +12,18 @@ public class JsonValidator
 
     private readonly SchemaResourceRegistry _globalSchemaResourceRegistry = new();
 
-    public JsonValidator(string jsonSchema)
+    public JsonValidator(string jsonSchema) : this(jsonSchema.AsSpan())
+    {
+    }
+
+    public JsonValidator(ReadOnlySpan<char> jsonSchema)
     {
         _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, _globalSchemaResourceRegistry);
     }
 
-    public void AddExternalDocument(string externalJsonSchema)
+    public void AddExternalDocument(string externalJsonSchema) => AddExternalDocument(externalJsonSchema.AsSpan());
+
+    public void AddExternalDocument(ReadOnlySpan<char> externalJsonSchema)
     {
         JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalJsonSchema, _globalSchemaResourceRegistry);
     }
