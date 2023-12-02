@@ -67,6 +67,33 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: 'recursive'
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+    - name: Download Obfuscator global tool
+      run: dotnet tool install --global Obfuscar.GlobalTool --version 2.2.38
+    - name: Clean previous build output
+      run: dotnet clean -c Release
+    - name: Build
+      run: dotnet build -c Release
+    - name: Test
+      run: dotnet test --verbosity normal -c Release
+    - name: Publish Benchmark
+      run: dotnet publish -c Release LateApexEarlySpeed.Json.Schema.Benchmark/
+    - name: Run Benchmark
+      run: dotnet LateApexEarlySpeed.Json.Schema.Benchmark/bin/Release/net6.0/publish/LateApexEarlySpeed.Json.Schema.Benchmark.dll
+
+    - name: Clean previous build output
+      run: dotnet clean -c Release
+    - name: Build (Obfuscator version)
+      run: dotnet build --property:UseObfuscator=true -c Release
+    - name: Test (Obfuscator version)
+      run: dotnet test --property:UseObfuscator=true --verbosity normal -c Release
+    - name: Publish Benchmark (Obfuscator version)
+      run: dotnet publish --property:UseObfuscator=true -c Release LateApexEarlySpeed.Json.Schema.Benchmark/
+    - name: Run Benchmark (Obfuscator version)
+      run: dotnet LateApexEarlySpeed.Json.Schema.Benchmark/bin/Release/net6.0/publish/LateApexEarlySpeed.Json.Schema.Benchmark.dll
       
   publish-nuget-pack:    
     
@@ -89,6 +116,8 @@ jobs:
       run: dotnet clean -c Release
     - name: Build (Obfuscator version)
       run: dotnet build --property:UseObfuscator=true -c Release
+    - name: Test (Obfuscator version)
+      run: dotnet test --property:UseObfuscator=true --verbosity normal -c Release
     
     - name: Create Nuget pack
       run: dotnet pack LateApexEarlySpeed.Json.Schema/ -c Release --property:UseObfuscator=true
