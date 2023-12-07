@@ -1,5 +1,7 @@
 ﻿using LateApexEarlySpeed.Json.Schema;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.Generator;
+using LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
 
 namespace JsonSchemaConsoleApp
 {
@@ -7,6 +9,8 @@ namespace JsonSchemaConsoleApp
     {
         static void Main(string[] args)
         {
+            IJsonSchemaDocument schemaDocument = new JsonSchemaGenerator().GenerateJsonSchemaDocument<TestClass>();
+
             string jsonSchema = File.ReadAllText("schema.json");
             string instance = File.ReadAllText("instance.json");
 

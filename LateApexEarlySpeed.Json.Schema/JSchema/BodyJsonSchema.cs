@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -49,6 +48,11 @@ internal class BodyJsonSchema : JsonSchema
     public string? Anchor { get; }
 
     public string? DynamicAnchor { get; }
+
+    public BodyJsonSchema(List<KeywordBase> keywords) : this(keywords, new List<ISchemaContainerValidationNode>(0), null, null, null, null, null)
+    {
+
+    }
 
     public BodyJsonSchema(List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor, DefsKeyword? defsKeyword)
     {
@@ -158,5 +162,10 @@ internal class BodyJsonSchema : JsonSchema
                 SchemaDynamicReference.ParentResourceBaseUri = value;
             }
         }
+    }
+
+    public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id, DefsKeyword defsKeyword)
+    {
+        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, id, defsKeyword);
     }
 }
