@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System;
+using System.Diagnostics.Contracts;
 using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 

@@ -1,4 +1,6 @@
-﻿namespace LateApexEarlySpeed.Json.Schema.Common;
+﻿using System;
+
+namespace LateApexEarlySpeed.Json.Schema.Common;
 
 /// <summary>
 /// Type <see cref="ValidationResult"/> is designed as immutable object,

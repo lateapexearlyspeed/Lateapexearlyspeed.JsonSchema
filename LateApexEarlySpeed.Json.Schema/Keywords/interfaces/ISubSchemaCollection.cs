@@ -1,4 +1,5 @@
-﻿using LateApexEarlySpeed.Json.Schema.JSchema;
+﻿using System.Collections.Generic;
+using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 

@@ -1,4 +1,6 @@
-﻿using LateApexEarlySpeed.Json.Schema.Common;
+﻿using System.Collections.Generic;
+using System.Linq;
+using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 

@@ -1,4 +1,8 @@
-﻿namespace LateApexEarlySpeed.Json.Schema.Keywords;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 public static class ValidationKeywordRegistry
 {

@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Title>Simple and high performance Json Schema implementation for .Net</Title>
     <Authors>Lateapexearlyspeed</Authors>
