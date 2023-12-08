@@ -5,11 +5,11 @@ VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonSchemaConsoleApp", "JsonSchemaConsoleApp\JsonSchemaConsoleApp.csproj", "{442C5880-AD7B-4BD1-ADF7-EAE3A798C8DC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LateApexEarlySpeed.Json.Schema", "LateApexEarlySpeed.Json.Schema\LateApexEarlySpeed.Json.Schema.csproj", "{728F5F36-7138-4AEB-B31E-3F7FC4AA5EE9}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LateApexEarlySpeed.Json.Schema.UnitTests", "LateApexEarlySpeed.Json.Schema.UnitTests\LateApexEarlySpeed.Json.Schema.UnitTests.csproj", "{4DE021D8-2AEA-459B-AE32-1CA01AE7B700}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LateApexEarlySpeed.Json.Schema.Benchmark", "LateApexEarlySpeed.Json.Schema.Benchmark\LateApexEarlySpeed.Json.Schema.Benchmark.csproj", "{91147EAA-61FB-440B-95D9-BDCE884506C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LateApexEarlySpeed.Json.Schema.Benchmark", "LateApexEarlySpeed.Json.Schema.Benchmark\LateApexEarlySpeed.Json.Schema.Benchmark.csproj", "{91147EAA-61FB-440B-95D9-BDCE884506C1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LateApexEarlySpeed.Json.Schema", "LateApexEarlySpeed.Json.Schema\LateApexEarlySpeed.Json.Schema.csproj", "{9D130148-0B13-456B-94FF-96FE26934598}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,10 +21,6 @@ Global
 		{442C5880-AD7B-4BD1-ADF7-EAE3A798C8DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{442C5880-AD7B-4BD1-ADF7-EAE3A798C8DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{442C5880-AD7B-4BD1-ADF7-EAE3A798C8DC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{728F5F36-7138-4AEB-B31E-3F7FC4AA5EE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{728F5F36-7138-4AEB-B31E-3F7FC4AA5EE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{728F5F36-7138-4AEB-B31E-3F7FC4AA5EE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{728F5F36-7138-4AEB-B31E-3F7FC4AA5EE9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4DE021D8-2AEA-459B-AE32-1CA01AE7B700}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4DE021D8-2AEA-459B-AE32-1CA01AE7B700}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4DE021D8-2AEA-459B-AE32-1CA01AE7B700}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -33,6 +29,10 @@ Global
 		{91147EAA-61FB-440B-95D9-BDCE884506C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91147EAA-61FB-440B-95D9-BDCE884506C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91147EAA-61FB-440B-95D9-BDCE884506C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D130148-0B13-456B-94FF-96FE26934598}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D130148-0B13-456B-94FF-96FE26934598}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D130148-0B13-456B-94FF-96FE26934598}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D130148-0B13-456B-94FF-96FE26934598}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

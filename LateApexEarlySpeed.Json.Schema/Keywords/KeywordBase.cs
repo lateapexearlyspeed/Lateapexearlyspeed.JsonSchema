@@ -22,7 +22,7 @@ public abstract class KeywordBase : NamedValidationNode
 
     internal static string GetKeywordName(Type keywordType)
     {
-        Debug.Assert(keywordType.IsAssignableTo(typeof(KeywordBase)));
+        Debug.Assert(typeof(KeywordBase).IsAssignableFrom(keywordType));
 
         return NameForKeywordTypes.GetOrAdd(keywordType, type =>
         {
