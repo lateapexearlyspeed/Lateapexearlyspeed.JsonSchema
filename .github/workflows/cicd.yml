@@ -6,7 +6,7 @@ name: cicd
 on:
   push:
     # Sequence of patterns matched against refs/heads
-    branches: [ "master" ]
+    branches: [ "master", "TargetNetStandard21" ]
     # Sequence of patterns matched against refs/tags
     tags: ["publish*"]
   pull_request:
