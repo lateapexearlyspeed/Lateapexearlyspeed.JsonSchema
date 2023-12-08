@@ -5,12 +5,7 @@ namespace System.Diagnostics.CodeAnalysis;
 // Attributes added in 5.0
 /// <summary>Specifies that the method or property will ensure that the listed field and property members have not-null values.</summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
-#if INTERNAL_NULLABLE_ATTRIBUTES
-internal
-#else
-public
-#endif
-    sealed class MemberNotNullAttribute : Attribute
+internal sealed class MemberNotNullAttribute : Attribute
 {
     /// <summary>Initializes the attribute with a field or property member.</summary>
     /// <param name="member">
