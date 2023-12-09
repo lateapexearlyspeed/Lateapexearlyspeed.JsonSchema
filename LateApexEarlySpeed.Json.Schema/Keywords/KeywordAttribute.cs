@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LateApexEarlySpeed.Json.Schema.Keywords;
+﻿namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [AttributeUsage(AttributeTargets.Class)]
 public sealed class KeywordAttribute : Attribute

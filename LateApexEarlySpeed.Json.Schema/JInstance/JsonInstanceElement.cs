@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
+﻿using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 
 namespace LateApexEarlySpeed.Json.Schema.JInstance;

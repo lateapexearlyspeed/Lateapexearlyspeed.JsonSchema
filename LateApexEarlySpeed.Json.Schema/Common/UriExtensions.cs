@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LateApexEarlySpeed.Json.Schema.Common;
+﻿namespace LateApexEarlySpeed.Json.Schema.Common;
 
 internal static class UriExtensions
 {
