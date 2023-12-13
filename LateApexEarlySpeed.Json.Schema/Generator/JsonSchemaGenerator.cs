@@ -11,7 +11,32 @@ namespace LateApexEarlySpeed.Json.Schema.Generator;
 
 internal class JsonSchemaGeneratorOptions
 {
-    public Dictionary<string, JsonSchemaResource> SchemaResourceDefinitions = new();
+    public TypeSchemaDefinitions SchemaDefinitions = new();
+}
+
+internal class TypeSchemaDefinitions
+{
+    private readonly Dictionary<string, JsonSchemaResource> _schemaResourceDefinitions = new();
+
+    public JsonSchemaResource? GetSchemaDefinition(Type type)
+    {
+        return _schemaResourceDefinitions.GetValueOrDefault(GetDefName(type));
+    }
+
+    public void AddSchemaDefinition(Type type, JsonSchemaResource schemaResource)
+    {
+        _schemaResourceDefinitions.TryAdd(GetDefName(type), schemaResource);
+    }
+
+    public Dictionary<string, JsonSchemaResource> GetAll()
+    {
+        return _schemaResourceDefinitions;
+    }
+
+    public static string GetDefName(Type type)
+    {
+        return type.FullName!;
+    }
 }
 
 public class JsonSchemaGenerator
@@ -19,14 +44,16 @@ public class JsonSchemaGenerator
     public IJsonSchemaDocument GenerateJsonSchemaDocument<T>()
     {
         JsonSchemaGeneratorOptions options = new JsonSchemaGeneratorOptions();
-        BodyJsonSchema jsonSchema = GenerateSchema(typeof(T), options, Enumerable.Empty<KeywordBase>());
+        BodyJsonSchema jsonSchema = GenerateSchema(typeof(T), options, Array.Empty<KeywordBase>());
 
-        return jsonSchema.TransformToSchemaDocument(new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName), new DefsKeyword(options.SchemaResourceDefinitions.ToDictionary(kv => kv.Key, kv => kv.Value as JsonSchema)));
+        return jsonSchema.TransformToSchemaDocument(new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName), new DefsKeyword(options.SchemaDefinitions.GetAll().ToDictionary(kv => kv.Key, kv => kv.Value as JsonSchema)));
     }
 
-    private static BodyJsonSchema GenerateSchema(Type type, JsonSchemaGeneratorOptions options, IEnumerable<KeywordBase> keywordsFromProperty)
+    private static BodyJsonSchema GenerateSchema(Type type, JsonSchemaGeneratorOptions options, KeywordBase[] keywordsFromProperty)
     {
-        if (options.SchemaResourceDefinitions.TryGetValue(type.FullName!, out JsonSchemaResource? schemaDefinition))
+        JsonSchemaResource? schemaDefinition = options.SchemaDefinitions.GetSchemaDefinition(type);
+
+        if (schemaDefinition is not null)
         {
             return schemaDefinition;
         }
@@ -75,26 +102,28 @@ public class JsonSchemaGenerator
         }
 
         // Custom object
-        return GenerateSchemaForCustomObject(type, options, keywordsFromProperty);
+        return GenerateSchemaForCustomObject(type, options);
     }
 
-    private static BodyJsonSchema GenerateSchemaForCustomObject(Type type, JsonSchemaGeneratorOptions options, IEnumerable<KeywordBase> keywordsFromProperty)
+    private static BodyJsonSchema GenerateSchemaForCustomObject(Type type, JsonSchemaGeneratorOptions options)
     {
         var typeKeyword = new TypeKeyword { InstanceTypes = new[] { InstanceType.Object } };
 
-        IEnumerable<KeywordBase> keywordsOnType = GenerateKeywordsFromMemberInfoAttributes(type);
+        IEnumerable<KeywordBase> keywordsOnType = GenerateKeywordsFromType(type);
 
         PropertyInfo[] propertyInfos = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
         var propertiesKeyword = new PropertiesKeyword
         {
             PropertiesSchemas = propertyInfos.ToDictionary(prop => prop.Name, prop =>
             {
-                JsonSchema propertySchema = GenerateSchema(prop.PropertyType, options, GenerateKeywordsFromMemberInfoAttributes(prop));
+                KeywordBase[] keywordsOfProp = GenerateKeywordsFromPropertyInfo(prop);
+                JsonSchema propertySchema = GenerateSchema(prop.PropertyType, options, keywordsOfProp);
 
                 if (propertySchema is JsonSchemaResource propertySchemaResource)
                 {
-                    options.SchemaResourceDefinitions.TryAdd(prop.PropertyType.FullName!, propertySchemaResource);
-                    return GenerateSchemaReference(prop.PropertyType);
+                    options.SchemaDefinitions.AddSchemaDefinition(prop.PropertyType, propertySchemaResource);
+
+                    return GenerateSchemaReference(prop.PropertyType, keywordsOfProp);
                 }
                 else
                 {
@@ -103,7 +132,22 @@ public class JsonSchemaGenerator
             })
         };
 
-        return new JsonSchemaResource(new Uri(type.FullName!, UriKind.Relative), keywordsFromProperty.Concat(keywordsOnType).Append(typeKeyword).Append(propertiesKeyword).ToList(), new List<ISchemaContainerValidationNode>(0), null, null, null, null, null);
+        RequiredKeyword? requiredKeyword = CreateRequiredKeyword(propertyInfos);
+
+        IEnumerable<KeywordBase> keywords = keywordsOnType.Append(typeKeyword).Append(propertiesKeyword);
+        if (requiredKeyword is not null)
+        {
+            keywords = keywords.Append(requiredKeyword);
+        }
+        return new JsonSchemaResource(new Uri(type.FullName!, UriKind.Relative), keywords.ToList(), new List<ISchemaContainerValidationNode>(0), null, null, null, null, null);
+    }
+
+    private static RequiredKeyword? CreateRequiredKeyword(PropertyInfo[] properties)
+    {
+        string[] requiredPropertyNames = properties.Where(prop => prop.GetCustomAttribute<RequiredAttribute>() is not null).Select(prop => prop.Name).ToArray();
+        return requiredPropertyNames.Length == 0 
+            ? null 
+            : new RequiredKeyword(requiredPropertyNames);
     }
 
     private static BodyJsonSchema GenerateSchemaForEnum(Type type, IEnumerable<KeywordBase> keywordsFromProperty)
@@ -115,7 +159,7 @@ public class JsonSchemaGenerator
 
         var keywords = new List<KeywordBase> { typeKeyword, enumKeyword };
         keywords.AddRange(keywordsFromProperty);
-        keywords.AddRange(GenerateKeywordsFromMemberInfoAttributes(type));
+        keywords.AddRange(GenerateKeywordsFromType(type));
 
         return new BodyJsonSchema(keywords);
     }
@@ -123,23 +167,33 @@ public class JsonSchemaGenerator
     /// <summary>
     /// Extract attributes from either header of <see cref="Type"/> itself or <see cref="PropertyInfo"/>
     /// </summary>
-    private static IEnumerable<KeywordBase> GenerateKeywordsFromMemberInfoAttributes(MemberInfo memberInfo)
+    private static KeywordBase[] GenerateKeywordsFromType(Type type)
     {
-        IEnumerable<IKeywordGenerator> keywordGeneratorOnType = memberInfo.GetCustomAttributes().OfType<IKeywordGenerator>();
-        return keywordGeneratorOnType.Select(keywordGenerator => keywordGenerator.CreateKeyword());
+        IEnumerable<IKeywordGenerator> keywordGeneratorOnType = type.GetCustomAttributes().OfType<IKeywordGenerator>();
+        return keywordGeneratorOnType.Select(keywordGenerator => keywordGenerator.CreateKeyword(type)).ToArray();
+    }
+
+    /// <summary>
+    /// Extract attributes from either header of <see cref="Type"/> itself or <see cref="PropertyInfo"/>
+    /// </summary>
+    private static KeywordBase[] GenerateKeywordsFromPropertyInfo(PropertyInfo propertyInfo)
+    {
+        IEnumerable<IKeywordGenerator> keywordGeneratorOnType = propertyInfo.GetCustomAttributes().OfType<IKeywordGenerator>();
+        return keywordGeneratorOnType.Select(keywordGenerator => keywordGenerator.CreateKeyword(propertyInfo.PropertyType)).ToArray();
     }
 
     private static BodyJsonSchema GenerateSchemaForStringDictionary(Type type, JsonSchemaGeneratorOptions options, IEnumerable<KeywordBase> keywordsFromProperty)
     {
         var typeKeyword = new TypeKeyword { InstanceTypes = new[] { InstanceType.Object } };
         Type valueType = type.GetGenericArguments()[1];
-        JsonSchema valueSchema = GenerateSchema(valueType, options, Enumerable.Empty<KeywordBase>());
+        JsonSchema valueSchema = GenerateSchema(valueType, options, Array.Empty<KeywordBase>());
 
         JsonSchema propertySchema;
         if (valueSchema is JsonSchemaResource valueSchemaResource)
         {
-            options.SchemaResourceDefinitions.TryAdd(valueType.FullName!, valueSchemaResource);
-            propertySchema = GenerateSchemaReference(valueType);
+            options.SchemaDefinitions.AddSchemaDefinition(valueType, valueSchemaResource);
+
+            propertySchema = GenerateSchemaReference(valueType, Array.Empty<KeywordBase>());
         }
         else
         {
@@ -157,19 +211,20 @@ public class JsonSchemaGenerator
         return new BodyJsonSchema(keywords);
     }
 
-    private static BodyJsonSchema GenerateSchemaForArray(Type type, JsonSchemaGeneratorOptions options, IEnumerable<KeywordBase> keywordsFromProperty)
+    private static BodyJsonSchema GenerateSchemaForArray(Type type, JsonSchemaGeneratorOptions options, KeywordBase[] keywordsFromProperty)
     {
         List<KeywordBase> keywords = new List<KeywordBase> { new TypeKeyword { InstanceTypes = new[] { InstanceType.Array } } };
         keywords.AddRange(keywordsFromProperty);
         
         Type elementType = type.GetElementType()!;
-        JsonSchema elementSchema = GenerateSchema(elementType, options, Enumerable.Empty<KeywordBase>());
+        JsonSchema elementSchema = GenerateSchema(elementType, options, Array.Empty<KeywordBase>());
 
         JsonSchema itemsSchema;
         if (elementSchema is JsonSchemaResource elementSchemaResource)
         {
-            options.SchemaResourceDefinitions.TryAdd(elementType.FullName!, elementSchemaResource);
-            itemsSchema = GenerateSchemaReference(elementType);
+            options.SchemaDefinitions.AddSchemaDefinition(elementType, elementSchemaResource);
+
+            itemsSchema = GenerateSchemaReference(elementType, Array.Empty<KeywordBase>());
         }
         else
         {
@@ -202,8 +257,20 @@ public class JsonSchemaGenerator
         return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword { InstanceTypes = new[] { InstanceType.Integer } }).ToList());
     }
 
-    private static BodyJsonSchema GenerateSchemaReference(Type type)
+    private static BodyJsonSchema GenerateSchemaReference(Type type, KeywordBase[] keywordsFromProperty)
     {
-        return new BodyJsonSchema(new List<KeywordBase>(0), new List<ISchemaContainerValidationNode>(0), new SchemaReferenceKeyword(new Uri(type.FullName!, UriKind.Relative)), null, null, null, null);
+        return new BodyJsonSchema(keywordsFromProperty.ToList(), new List<ISchemaContainerValidationNode>(0), new SchemaReferenceKeyword(CreateRefUri(type)), null, null, null, null);
+    }
+
+    private static Uri CreateRefUri(Type type)
+    {
+        return new Uri("#" + new ImmutableJsonPointer(
+            new[] { DefsKeyword.Keyword, TypeSchemaDefinitions.GetDefName(type) }), UriKind.Relative);
+
+        // return new UriBuilder
+        // {
+        //     Fragment = new ImmutableJsonPointer(
+        //         new[] { DefsKeyword.Keyword, TypeSchemaDefinitions.GetDefName(type) }).ToString()
+        // }.Uri;
     }
 }
