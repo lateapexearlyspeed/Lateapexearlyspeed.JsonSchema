@@ -9,7 +9,7 @@ namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
 internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
 {
-    private static readonly Uri DefaultDocumentBaseUri = new("http://lateapexearlyspeed");
+    public static Uri DefaultDocumentBaseUri { get; } = new("http://lateapexearlyspeed");
 
     /// <summary>
     /// All schema resources inside current document (including current document itself)
