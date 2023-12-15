@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -65,8 +66,8 @@ public class JsonSchemaGenerator
             return GenerateSchemaForInteger(keywordsFromProperty);
         }
 
-        // Double
-        if (type == typeof(float) || type == typeof(double))
+        // Floating-point numeric types
+        if (type == typeof(float) || type == typeof(double) || type == typeof(decimal))
         {
             return GenerateSchemaForDouble(keywordsFromProperty);
         }
@@ -83,8 +84,8 @@ public class JsonSchemaGenerator
             return GenerateSchemaForString(keywordsFromProperty);
         }
 
-        // Array
-        if (type.IsArray)
+        // Collection
+        if (type.GetInterface("IEnumerable`1") is not null)
         {
             return GenerateSchemaForArray(type, options, keywordsFromProperty);
         }
@@ -101,8 +102,38 @@ public class JsonSchemaGenerator
             return GenerateSchemaForEnum(type, keywordsFromProperty);
         }
 
+        // Nullable value type
+        if (type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+        {
+            return GenerateSchemaForNullableValueType(type, options, keywordsFromProperty);
+        }
+
         // Custom object
         return GenerateSchemaForCustomObject(type, options);
+    }
+
+    private static BodyJsonSchema GenerateSchemaForNullableValueType(Type type, JsonSchemaGeneratorOptions options, KeywordBase[] keywordsFromProperty)
+    {
+        Debug.Assert(type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>));
+
+        Type underlyingType = Nullable.GetUnderlyingType(type)!;
+
+        BodyJsonSchema underlyingSchema = GenerateSchema(underlyingType, options, keywordsFromProperty);
+
+        BodyJsonSchema nullTypeSchema = new BodyJsonSchema(new List<KeywordBase>
+        {
+            new TypeKeyword { InstanceTypes = new[] { InstanceType.Null } }
+        });
+
+        if (underlyingSchema is JsonSchemaResource schemaResource)
+        {
+            options.SchemaDefinitions.AddSchemaDefinition(underlyingType, schemaResource);
+            underlyingSchema = GenerateSchemaReference(underlyingType, keywordsFromProperty);
+        }
+
+        var anyOfKeyword = new AnyOfKeyword { SubSchemas = new List<JsonSchema> { nullTypeSchema, underlyingSchema } };
+
+        return new BodyJsonSchema(new List<KeywordBase> { anyOfKeyword });
     }
 
     private static BodyJsonSchema GenerateSchemaForCustomObject(Type type, JsonSchemaGeneratorOptions options)
@@ -112,9 +143,24 @@ public class JsonSchemaGenerator
         IEnumerable<KeywordBase> keywordsOnType = GenerateKeywordsFromType(type);
 
         PropertyInfo[] propertyInfos = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
-        var propertiesKeyword = new PropertiesKeyword
+
+        PropertiesKeyword propertiesKeyword = CreatePropertiesKeyword(propertyInfos, options);
+
+        RequiredKeyword ? requiredKeyword = CreateRequiredKeyword(propertyInfos);
+
+        IEnumerable<KeywordBase> keywords = keywordsOnType.Append(typeKeyword).Append(propertiesKeyword);
+        if (requiredKeyword is not null)
         {
-            PropertiesSchemas = propertyInfos.ToDictionary(prop => prop.Name, prop =>
+            keywords = keywords.Append(requiredKeyword);
+        }
+        return new JsonSchemaResource(new Uri(type.FullName!, UriKind.Relative), keywords.ToList(), new List<ISchemaContainerValidationNode>(0), null, null, null, null, null);
+    }
+
+    private static PropertiesKeyword CreatePropertiesKeyword(PropertyInfo[] propertyInfos, JsonSchemaGeneratorOptions options)
+    {
+        return new PropertiesKeyword
+        {
+            PropertiesSchemas = propertyInfos.Where(prop => prop.GetCustomAttribute<JsonSchemaIgnoreAttribute>() is not null).ToDictionary(prop => prop.Name, prop =>
             {
                 KeywordBase[] keywordsOfProp = GenerateKeywordsFromPropertyInfo(prop);
                 JsonSchema propertySchema = GenerateSchema(prop.PropertyType, options, keywordsOfProp);
@@ -131,15 +177,6 @@ public class JsonSchemaGenerator
                 }
             })
         };
-
-        RequiredKeyword? requiredKeyword = CreateRequiredKeyword(propertyInfos);
-
-        IEnumerable<KeywordBase> keywords = keywordsOnType.Append(typeKeyword).Append(propertiesKeyword);
-        if (requiredKeyword is not null)
-        {
-            keywords = keywords.Append(requiredKeyword);
-        }
-        return new JsonSchemaResource(new Uri(type.FullName!, UriKind.Relative), keywords.ToList(), new List<ISchemaContainerValidationNode>(0), null, null, null, null, null);
     }
 
     private static RequiredKeyword? CreateRequiredKeyword(PropertyInfo[] properties)
@@ -215,8 +252,9 @@ public class JsonSchemaGenerator
     {
         List<KeywordBase> keywords = new List<KeywordBase> { new TypeKeyword { InstanceTypes = new[] { InstanceType.Array } } };
         keywords.AddRange(keywordsFromProperty);
-        
-        Type elementType = type.GetElementType()!;
+
+        Debug.Assert(type.GetInterface("IEnumerable`1") is not null);
+        Type elementType = type.GetInterface("IEnumerable`1").GetGenericArguments()[0];
         JsonSchema elementSchema = GenerateSchema(elementType, options, Array.Empty<KeywordBase>());
 
         JsonSchema itemsSchema;

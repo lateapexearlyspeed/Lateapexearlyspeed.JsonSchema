@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.Generator;
