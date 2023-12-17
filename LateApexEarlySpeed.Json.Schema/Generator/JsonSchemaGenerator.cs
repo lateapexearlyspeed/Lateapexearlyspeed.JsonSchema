@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -158,30 +159,38 @@ public class JsonSchemaGenerator
 
     private static PropertiesKeyword CreatePropertiesKeyword(PropertyInfo[] propertyInfos, JsonSchemaGeneratorOptions options)
     {
+        var propertiesSchemas = new Dictionary<string, JsonSchema>();
+
+        foreach (PropertyInfo propertyInfo in propertyInfos.Where(prop => prop.GetCustomAttribute<JsonSchemaIgnoreAttribute>() is not null))
+        {
+            KeywordBase[] keywordsOfProp = GenerateKeywordsFromPropertyInfo(propertyInfo);
+            JsonSchema propertySchema = GenerateSchema(propertyInfo.PropertyType, options, keywordsOfProp);
+
+            if (propertySchema is JsonSchemaResource propertySchemaResource)
+            {
+                options.SchemaDefinitions.AddSchemaDefinition(propertyInfo.PropertyType, propertySchemaResource);
+
+                propertySchema = GenerateSchemaReference(propertyInfo.PropertyType, keywordsOfProp);
+            }
+
+            propertiesSchemas[GetPropertyName(propertyInfo)] = propertySchema;
+        }
+
         return new PropertiesKeyword
         {
-            PropertiesSchemas = propertyInfos.Where(prop => prop.GetCustomAttribute<JsonSchemaIgnoreAttribute>() is not null).ToDictionary(prop => prop.Name, prop =>
-            {
-                KeywordBase[] keywordsOfProp = GenerateKeywordsFromPropertyInfo(prop);
-                JsonSchema propertySchema = GenerateSchema(prop.PropertyType, options, keywordsOfProp);
-
-                if (propertySchema is JsonSchemaResource propertySchemaResource)
-                {
-                    options.SchemaDefinitions.AddSchemaDefinition(prop.PropertyType, propertySchemaResource);
-
-                    return GenerateSchemaReference(prop.PropertyType, keywordsOfProp);
-                }
-                else
-                {
-                    return propertySchema;
-                }
-            })
+            PropertiesSchemas = propertiesSchemas
         };
+    }
+
+    private static string GetPropertyName(PropertyInfo propertyInfo)
+    {
+        JsonPropertyNameAttribute? jsonPropertyNameAttribute = propertyInfo.GetCustomAttribute<JsonPropertyNameAttribute>();
+        return jsonPropertyNameAttribute is null ? propertyInfo.Name : jsonPropertyNameAttribute.Name;
     }
 
     private static RequiredKeyword? CreateRequiredKeyword(PropertyInfo[] properties)
     {
-        string[] requiredPropertyNames = properties.Where(prop => prop.GetCustomAttribute<RequiredAttribute>() is not null).Select(prop => prop.Name).ToArray();
+        string[] requiredPropertyNames = properties.Where(prop => prop.GetCustomAttribute<RequiredAttribute>() is not null).Select(GetPropertyName).ToArray();
         return requiredPropertyNames.Length == 0 
             ? null 
             : new RequiredKeyword(requiredPropertyNames);
