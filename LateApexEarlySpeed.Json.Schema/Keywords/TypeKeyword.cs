@@ -21,14 +21,19 @@ internal class TypeKeyword : KeywordBase
         { InstanceType.String, JsonValueKind.String }
     };
 
-    public InstanceType[] InstanceTypes { get; init; } = null!;
+    private readonly InstanceType[] _instanceTypes;
+
+    public TypeKeyword(params InstanceType[] instanceTypes)
+    {
+        _instanceTypes = instanceTypes;
+    }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        Debug.Assert(InstanceTypes.Length != 0);
+        Debug.Assert(_instanceTypes.Length != 0);
         Unsafe.SkipInit(out ValidationResult validationResult);
 
-        foreach (InstanceType instanceType in InstanceTypes)
+        foreach (InstanceType instanceType in _instanceTypes)
         {
             validationResult = ValidateAgainstType(instance, instanceType, options);
             if (validationResult.IsValid)

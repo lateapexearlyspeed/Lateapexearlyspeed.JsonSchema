@@ -16,10 +16,10 @@ internal class MultipleOfKeywordJsonConverter : JsonConverter<MultipleOfKeyword>
         double multipleOf = reader.GetDouble();
         if (multipleOf <= 0)
         {
-            throw new JsonException($"Type:{nameof(MultipleOfKeyword)} expects {nameof(MultipleOfKeyword.MultipleOf)} to be number greater than 0.");
+            throw ThrowHelper.CreateKeywordHasInvalidPositiveNumberJsonException<MultipleOfKeyword>();
         }
 
-        return new MultipleOfKeyword { MultipleOf = multipleOf };
+        return new MultipleOfKeyword(multipleOf);
     }
 
     public override void Write(Utf8JsonWriter writer, MultipleOfKeyword value, JsonSerializerOptions options)

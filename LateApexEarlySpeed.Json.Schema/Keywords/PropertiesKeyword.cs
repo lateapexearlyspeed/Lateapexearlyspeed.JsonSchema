@@ -12,7 +12,12 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(PropertiesKeywordJsonConverter))]
 internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
 {
-    public Dictionary<string, JsonSchema> PropertiesSchemas { get; init; } = null!;
+    private readonly Dictionary<string, JsonSchema> _propertiesSchemas;
+
+    public PropertiesKeyword(Dictionary<string, JsonSchema> propertiesSchemas)
+    {
+        _propertiesSchemas = propertiesSchemas;
+    }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
@@ -23,7 +28,7 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
 
         foreach (JsonInstanceProperty instanceProperty in instance.EnumerateObject())
         {
-            if (PropertiesSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? schema))
+            if (_propertiesSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? schema))
             {
                 ValidationResult result = schema.Validate(instanceProperty.Value, options);
                 if (!result.IsValid)
@@ -38,12 +43,12 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
 
     public ISchemaContainerElement? GetSubElement(string name)
     {
-        return PropertiesSchemas.GetValueOrDefault(name);
+        return _propertiesSchemas.GetValueOrDefault(name);
     }
 
     public IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
-        return PropertiesSchemas.Values;
+        return _propertiesSchemas.Values;
     }
 
     public bool IsSchemaType => false;
@@ -55,6 +60,6 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
 
     public bool ContainsPropertyName(string propertyName)
     {
-        return PropertiesSchemas.ContainsKey(propertyName);
+        return _propertiesSchemas.ContainsKey(propertyName);
     }
 }

@@ -33,7 +33,7 @@ internal class PropertiesKeywordJsonConverter : JsonConverter<PropertiesKeyword>
             reader.Read();
         }
 
-        return new PropertiesKeyword { PropertiesSchemas = propertiesSchemas };
+        return new PropertiesKeyword(propertiesSchemas);
     }
 
     public override void Write(Utf8JsonWriter writer, PropertiesKeyword value, JsonSerializerOptions options)

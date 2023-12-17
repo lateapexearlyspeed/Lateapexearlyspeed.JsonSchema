@@ -14,6 +14,6 @@ public class MultipleOfAttribute : Attribute, IKeywordGenerator
 
     public KeywordBase CreateKeyword(Type type)
     {
-        return new MultipleOfKeyword { MultipleOf = _multipleOf };
+        return new MultipleOfKeyword(_multipleOf);
     }
 }

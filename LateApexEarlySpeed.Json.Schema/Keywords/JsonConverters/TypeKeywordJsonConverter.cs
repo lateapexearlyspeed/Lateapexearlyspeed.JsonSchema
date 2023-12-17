@@ -28,7 +28,7 @@ internal class TypeKeywordJsonConverter : JsonConverter<TypeKeyword>
             throw ThrowHelper.CreateKeywordHasInvalidJsonValueKindJsonException<TypeKeyword>(JsonValueKind.String, JsonValueKind.Array);
         }
 
-        return new TypeKeyword { InstanceTypes = instanceTypes };
+        return new TypeKeyword(instanceTypes);
     }
 
     public override void Write(Utf8JsonWriter writer, TypeKeyword value, JsonSerializerOptions options)

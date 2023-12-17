@@ -61,6 +61,12 @@ internal class ThrowHelper
     }
 
     [Pure]
+    public static JsonException CreateKeywordHasInvalidPositiveNumberJsonException<TKeyword>() where TKeyword : KeywordBase
+    {
+        return new JsonException(CreateKeywordPrefixContent<TKeyword>() + " expects positive number.");
+    }
+
+    [Pure]
     public static JsonException CreateKeywordHasInvalidNonNegativeIntegerJsonException(string keywordName)
     {
         return new JsonException(CreateKeywordPrefixContent(keywordName) + " expects non-negative integer.");

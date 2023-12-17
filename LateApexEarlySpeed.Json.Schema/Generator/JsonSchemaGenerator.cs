@@ -123,7 +123,7 @@ public class JsonSchemaGenerator
 
         BodyJsonSchema nullTypeSchema = new BodyJsonSchema(new List<KeywordBase>
         {
-            new TypeKeyword { InstanceTypes = new[] { InstanceType.Null } }
+            new TypeKeyword(InstanceType.Null)
         });
 
         if (underlyingSchema is JsonSchemaResource schemaResource)
@@ -132,14 +132,14 @@ public class JsonSchemaGenerator
             underlyingSchema = GenerateSchemaReference(underlyingType, keywordsFromProperty);
         }
 
-        var anyOfKeyword = new AnyOfKeyword { SubSchemas = new List<JsonSchema> { nullTypeSchema, underlyingSchema } };
+        var anyOfKeyword = new AnyOfKeyword(new List<JsonSchema> { nullTypeSchema, underlyingSchema});
 
         return new BodyJsonSchema(new List<KeywordBase> { anyOfKeyword });
     }
 
     private static BodyJsonSchema GenerateSchemaForCustomObject(Type type, JsonSchemaGeneratorOptions options)
     {
-        var typeKeyword = new TypeKeyword { InstanceTypes = new[] { InstanceType.Object } };
+        var typeKeyword = new TypeKeyword(InstanceType.Object);
 
         IEnumerable<KeywordBase> keywordsOnType = GenerateKeywordsFromType(type);
 
@@ -176,10 +176,7 @@ public class JsonSchemaGenerator
             propertiesSchemas[GetPropertyName(propertyInfo)] = propertySchema;
         }
 
-        return new PropertiesKeyword
-        {
-            PropertiesSchemas = propertiesSchemas
-        };
+        return new PropertiesKeyword(propertiesSchemas);
     }
 
     private static string GetPropertyName(PropertyInfo propertyInfo)
@@ -198,7 +195,7 @@ public class JsonSchemaGenerator
 
     private static BodyJsonSchema GenerateSchemaForEnum(Type type, IEnumerable<KeywordBase> keywordsFromProperty)
     {
-        var typeKeyword = new TypeKeyword { InstanceTypes = new[] { InstanceType.String } };
+        var typeKeyword = new TypeKeyword(InstanceType.String);
 
         IEnumerable<JsonInstanceElement> allowedStringEnums = type.GetEnumNames().Select(name => new JsonInstanceElement(JsonSerializer.SerializeToElement(name), ImmutableJsonPointer.Empty));
         var enumKeyword = new EnumKeyword(allowedStringEnums.ToList());
@@ -230,7 +227,7 @@ public class JsonSchemaGenerator
 
     private static BodyJsonSchema GenerateSchemaForStringDictionary(Type type, JsonSchemaGeneratorOptions options, IEnumerable<KeywordBase> keywordsFromProperty)
     {
-        var typeKeyword = new TypeKeyword { InstanceTypes = new[] { InstanceType.Object } };
+        var typeKeyword = new TypeKeyword(InstanceType.Object);
         Type valueType = type.GetGenericArguments()[1];
         JsonSchema valueSchema = GenerateSchema(valueType, options, Array.Empty<KeywordBase>());
 
@@ -259,7 +256,7 @@ public class JsonSchemaGenerator
 
     private static BodyJsonSchema GenerateSchemaForArray(Type type, JsonSchemaGeneratorOptions options, KeywordBase[] keywordsFromProperty)
     {
-        List<KeywordBase> keywords = new List<KeywordBase> { new TypeKeyword { InstanceTypes = new[] { InstanceType.Array } } };
+        List<KeywordBase> keywords = new List<KeywordBase> { new TypeKeyword(InstanceType.Array) };
         keywords.AddRange(keywordsFromProperty);
 
         Debug.Assert(type.GetInterface("IEnumerable`1") is not null);
@@ -286,22 +283,22 @@ public class JsonSchemaGenerator
 
     private static BodyJsonSchema GenerateSchemaForString(IEnumerable<KeywordBase> keywordsFromProperty)
     {
-        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword { InstanceTypes = new[] { InstanceType.String } }).ToList());
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.String)).ToList());
     }
 
     private static BodyJsonSchema GenerateSchemaForBoolean(IEnumerable<KeywordBase> keywordsFromProperty)
     {
-        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword { InstanceTypes = new[] { InstanceType.Boolean } }).ToList());
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Boolean)).ToList());
     }
 
     private static BodyJsonSchema GenerateSchemaForDouble(IEnumerable<KeywordBase> keywordsFromProperty)
     {
-        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword { InstanceTypes = new[] { InstanceType.Number } }).ToList());
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Number)).ToList());
     }
 
     private static BodyJsonSchema GenerateSchemaForInteger(IEnumerable<KeywordBase> keywordsFromProperty)
     {
-        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword { InstanceTypes = new[] { InstanceType.Integer } }).ToList());
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Integer)).ToList());
     }
 
     private static BodyJsonSchema GenerateSchemaReference(Type type, KeywordBase[] keywordsFromProperty)
