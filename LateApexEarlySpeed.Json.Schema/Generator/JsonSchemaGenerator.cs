@@ -14,31 +14,7 @@ namespace LateApexEarlySpeed.Json.Schema.Generator;
 internal class JsonSchemaGeneratorOptions
 {
     public TypeSchemaDefinitions SchemaDefinitions = new();
-}
-
-internal class TypeSchemaDefinitions
-{
-    private readonly Dictionary<string, JsonSchemaResource> _schemaResourceDefinitions = new();
-
-    public JsonSchemaResource? GetSchemaDefinition(Type type)
-    {
-        return _schemaResourceDefinitions.GetValueOrDefault(GetDefName(type));
-    }
-
-    public void AddSchemaDefinition(Type type, JsonSchemaResource schemaResource)
-    {
-        _schemaResourceDefinitions.TryAdd(GetDefName(type), schemaResource);
-    }
-
-    public Dictionary<string, JsonSchemaResource> GetAll()
-    {
-        return _schemaResourceDefinitions;
-    }
-
-    public static string GetDefName(Type type)
-    {
-        return type.FullName!;
-    }
+    public JsonSchemaNamingPolicy PropertyNamingPolicy { get; set; } = JsonSchemaNamingPolicy.SharedDefault;
 }
 
 public class JsonSchemaGenerator
@@ -147,7 +123,7 @@ public class JsonSchemaGenerator
 
         PropertiesKeyword propertiesKeyword = CreatePropertiesKeyword(propertyInfos, options);
 
-        RequiredKeyword ? requiredKeyword = CreateRequiredKeyword(propertyInfos);
+        RequiredKeyword ? requiredKeyword = CreateRequiredKeyword(propertyInfos, options);
 
         IEnumerable<KeywordBase> keywords = keywordsOnType.Append(typeKeyword).Append(propertiesKeyword);
         if (requiredKeyword is not null)
@@ -173,21 +149,24 @@ public class JsonSchemaGenerator
                 propertySchema = GenerateSchemaReference(propertyInfo.PropertyType, keywordsOfProp);
             }
 
-            propertiesSchemas[GetPropertyName(propertyInfo)] = propertySchema;
+            propertiesSchemas[GetPropertyName(propertyInfo, options)] = propertySchema;
         }
 
         return new PropertiesKeyword(propertiesSchemas);
     }
 
-    private static string GetPropertyName(PropertyInfo propertyInfo)
+    private static string GetPropertyName(PropertyInfo propertyInfo, JsonSchemaGeneratorOptions options)
     {
         JsonPropertyNameAttribute? jsonPropertyNameAttribute = propertyInfo.GetCustomAttribute<JsonPropertyNameAttribute>();
-        return jsonPropertyNameAttribute is null ? propertyInfo.Name : jsonPropertyNameAttribute.Name;
+        
+        return jsonPropertyNameAttribute is null 
+            ? options.PropertyNamingPolicy.ConvertName(propertyInfo.Name) 
+            : jsonPropertyNameAttribute.Name;
     }
 
-    private static RequiredKeyword? CreateRequiredKeyword(PropertyInfo[] properties)
+    private static RequiredKeyword? CreateRequiredKeyword(PropertyInfo[] properties, JsonSchemaGeneratorOptions options)
     {
-        string[] requiredPropertyNames = properties.Where(prop => prop.GetCustomAttribute<RequiredAttribute>() is not null).Select(GetPropertyName).ToArray();
+        string[] requiredPropertyNames = properties.Where(prop => prop.GetCustomAttribute<RequiredAttribute>() is not null).Select(propertyInfo => GetPropertyName(propertyInfo, options)).ToArray();
         return requiredPropertyNames.Length == 0 
             ? null 
             : new RequiredKeyword(requiredPropertyNames);
