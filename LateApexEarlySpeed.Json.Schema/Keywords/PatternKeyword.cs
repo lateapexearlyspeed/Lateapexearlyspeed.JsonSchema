@@ -15,7 +15,7 @@ internal class PatternKeyword : KeywordBase
 
     public PatternKeyword(string pattern)
     {
-        _pattern = new Regex(pattern, RegexOptions.Compiled, TimeSpan.FromMilliseconds(200));
+        _pattern = RegexFactory.Create(pattern, RegexOptions.Compiled);
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)

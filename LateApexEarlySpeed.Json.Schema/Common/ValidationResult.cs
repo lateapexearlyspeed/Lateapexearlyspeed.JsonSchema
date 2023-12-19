@@ -56,5 +56,6 @@ public enum ResultCode
     InvalidPropertyName,
     DuplicatedArrayItems,
     NotFoundInAllowedList,
-    UnexpectedValue
+    UnexpectedValue,
+    InvalidFormat
 }

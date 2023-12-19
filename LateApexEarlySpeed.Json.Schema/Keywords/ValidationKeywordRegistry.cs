@@ -1,5 +1,4 @@
-﻿using LateApexEarlySpeed.Json.Schema.Common;
-namespace LateApexEarlySpeed.Json.Schema.Keywords;
+﻿namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 public static class ValidationKeywordRegistry
 {
@@ -18,6 +17,7 @@ public static class ValidationKeywordRegistry
                 typeof(EnumKeyword),
                 typeof(ExclusiveMaximumKeyword),
                 typeof(ExclusiveMinimumKeyword),
+                typeof(FormatKeyword),
                 typeof(ItemsKeyword),
                 typeof(MaximumKeyword),
                 typeof(MaxItemsKeyword),

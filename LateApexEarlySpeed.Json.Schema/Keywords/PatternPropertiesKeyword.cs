@@ -19,7 +19,7 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
     {
         _patternSchemas = patternSchemas.ToDictionary(
             kv => kv.Key, 
-            kv => (new Regex(kv.Key, RegexOptions.Compiled, TimeSpan.FromMilliseconds(200)), kv.Value));
+            kv => (RegexFactory.Create(kv.Key, RegexOptions.Compiled), kv.Value));
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)

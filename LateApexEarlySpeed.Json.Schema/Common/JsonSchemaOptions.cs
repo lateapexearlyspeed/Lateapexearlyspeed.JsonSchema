@@ -8,6 +8,7 @@ public class JsonSchemaOptions
     internal SchemaResourceRegistry SchemaResourceRegistry { get; }
     internal SchemaRecursionRecorder SchemaRecursionRecorder { get; }
     public ValidationPathStack ValidationPathStack { get; }
+    public bool ValidateFormat { get; set; } = false;
 
     internal JsonSchemaOptions(SchemaResourceRegistry schemaResourceRegistry)
     {
