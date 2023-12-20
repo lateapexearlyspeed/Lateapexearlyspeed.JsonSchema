@@ -12,6 +12,18 @@ public class ExternalSchemaDocumentsFixture
 
     public IEnumerable<string> ExternalSchemaDocuments { get; }
 
+    public Uri[] HttpBasedDocumentUris { get; } = new[]
+    {
+        new Uri("https://json-schema.org/draft/2020-12/schema"),
+        new Uri("https://json-schema.org/draft/2020-12/meta/core"),
+        new Uri("https://json-schema.org/draft/2020-12/meta/applicator"),
+        new Uri("https://json-schema.org/draft/2020-12/meta/unevaluated"),
+        new Uri("https://json-schema.org/draft/2020-12/meta/validation"),
+        new Uri("https://json-schema.org/draft/2020-12/meta/meta-data"),
+        new Uri("https://json-schema.org/draft/2020-12/meta/format-annotation"),
+        new Uri("https://json-schema.org/draft/2020-12/meta/content"),
+    };
+
     private IEnumerable<string> PrepareRefRemoteDocuments()
     {
         string path = Path.Combine("JSON-Schema-Test-Suite", "remotes");

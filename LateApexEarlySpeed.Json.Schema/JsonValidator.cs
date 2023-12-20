@@ -3,14 +3,25 @@ using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LateApexEarlySpeed.Json.Schema;
 
 public class JsonValidator
 {
+    private const string HttpClientName = "lateapexearlyspeed";
     private readonly IJsonSchemaDocument _mainSchemaDoc;
 
     private readonly SchemaResourceRegistry _globalSchemaResourceRegistry = new();
+    private static readonly IHttpClientFactory HttpClientFactory;
+
+    static JsonValidator()
+    {
+        var services = new ServiceCollection();
+        services.AddHttpClient(HttpClientName);
+        ServiceProvider sp = services.BuildServiceProvider();
+        HttpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+    }
 
     public JsonValidator(string jsonSchema) : this(jsonSchema.AsSpan())
     {
@@ -26,6 +37,17 @@ public class JsonValidator
     public void AddExternalDocument(ReadOnlySpan<char> externalJsonSchema)
     {
         JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalJsonSchema, _globalSchemaResourceRegistry);
+    }
+
+    public async Task AddHttpDocumentAsync(Uri remoteUri)
+    {
+        HttpClient httpClient = HttpClientFactory.CreateClient(HttpClientName);
+        HttpResponseMessage response = await httpClient.GetAsync(remoteUri);
+        
+        response.EnsureSuccessStatusCode();
+
+        string jsonSchemaText = await response.Content.ReadAsStringAsync();
+        AddExternalDocument(jsonSchemaText);
     }
 
     public ValidationResult Validate(string jsonInstance)
