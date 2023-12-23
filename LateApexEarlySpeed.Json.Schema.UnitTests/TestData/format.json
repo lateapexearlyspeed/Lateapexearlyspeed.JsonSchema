@@ -519,7 +519,7 @@
         },
         {
           "description": "invalid iri string - relative uri",
-          "data": "/abc/def",
+          "data": "abc/def",
           "valid": false
         },
         {
