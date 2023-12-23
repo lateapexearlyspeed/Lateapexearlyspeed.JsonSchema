@@ -46,6 +46,7 @@ public static class FormatRegistry
         FormatValidatorTypes.Add(formatAttribute.Name, type);
     }
 
+    /// <returns>Return <see cref="Type"/> for <paramref name="format"/> keyword if registered; otherwise return null</returns>
     public static Type? GetFormatType(string format)
     {
         return FormatValidatorTypes.GetValueOrDefault(format);

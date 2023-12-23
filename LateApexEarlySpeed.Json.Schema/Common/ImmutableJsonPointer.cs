@@ -22,46 +22,14 @@ public class ImmutableJsonPointer : IEnumerable<string>
     /// </summary>
     private readonly SingleLinkedList<string> _referenceTokens;
 
-    internal ImmutableJsonPointer(IEnumerable<string> unescapedTokenCollection)
+    internal ImmutableJsonPointer(IEnumerable<string> unescapedTokenCollection) 
+        : this(new SingleLinkedList<string>(unescapedTokenCollection))
     {
-        _referenceTokens = new SingleLinkedList<string>(unescapedTokenCollection);
     }
 
     private ImmutableJsonPointer(SingleLinkedList<string> referenceTokens)
     {
         _referenceTokens = referenceTokens;
-    }
-
-    private ImmutableJsonPointer(string escapedJsonPointerString)
-    {
-        _referenceTokens = new SingleLinkedList<string>();
-
-        int curIdx = 0;
-        while (curIdx < escapedJsonPointerString.Length && escapedJsonPointerString[curIdx] == TokenPrefixChar)
-        {
-            curIdx++;
-
-            int nextPrefixIdx = escapedJsonPointerString.IndexOf(TokenPrefixChar, curIdx);
-            if (nextPrefixIdx != -1)
-            {
-                string escapedReferenceToken = escapedJsonPointerString.Substring(curIdx, nextPrefixIdx - curIdx);
-                _referenceTokens.Add(UnescapeReferenceToken(escapedReferenceToken));
-
-                curIdx = nextPrefixIdx;
-            }
-            else
-            {
-                string escapedReferenceToken = escapedJsonPointerString.Substring(curIdx, escapedJsonPointerString.Length - curIdx);
-                _referenceTokens.Add(UnescapeReferenceToken(escapedReferenceToken));
-
-                curIdx = escapedJsonPointerString.Length;
-            }
-        }
-    }
-
-    private static string UnescapeReferenceToken(string escapedReferenceToken)
-    {
-        return escapedReferenceToken.Replace("~1", TokenPrefixCharString).Replace("~0", "~");
     }
 
     /// <returns>If <paramref name="escapedJsonPointerString"/> is an invalid json pointer format, return null.</returns>
@@ -73,7 +41,69 @@ public class ImmutableJsonPointer : IEnumerable<string>
             return null;
         }
 
-        return new ImmutableJsonPointer(escapedJsonPointerString);
+        var referenceTokens = new SingleLinkedList<string>();
+
+        int curIdx = 0;
+        while (curIdx < escapedJsonPointerString.Length)
+        {
+            curIdx++;
+
+            int nextPrefixIdx = escapedJsonPointerString.IndexOf(TokenPrefixChar, curIdx);
+
+            // Cannot find '/', so set 'nextPrefixIdx' to end of 'escapedJsonPointerString',
+            // then eventually 'curIdx' will also be at the end of 'escapedJsonPointerString', and exit loop.
+            if (nextPrefixIdx == -1)
+            {
+                nextPrefixIdx = escapedJsonPointerString.Length;
+            }
+
+            string escapedReferenceToken = escapedJsonPointerString.Substring(curIdx, nextPrefixIdx - curIdx);
+            string? unescapedReferenceToken = UnescapeReferenceToken(escapedReferenceToken);
+            if (unescapedReferenceToken is null)
+            {
+                return null;
+            }
+
+            referenceTokens.Add(unescapedReferenceToken);
+
+            curIdx = nextPrefixIdx;
+        }
+
+        return new ImmutableJsonPointer(referenceTokens);
+    }
+
+    /// <returns>
+    /// If <paramref name="escapedReferenceToken"/> is not a valid 'escaped' reference token value, return null.
+    /// </returns>
+    private static string? UnescapeReferenceToken(string escapedReferenceToken)
+    {
+        bool findTildeChar = false;
+        int idx = 0;
+
+        while (true)
+        {
+            int tildeIdx = escapedReferenceToken.IndexOf('~', idx);
+
+            if (tildeIdx == -1)
+            {
+                break;
+            }
+
+            findTildeChar = true;
+            int nextIdx = tildeIdx + 1;
+
+            // Invalid '~' in escapedReferenceToken
+            if (nextIdx >= escapedReferenceToken.Length || (escapedReferenceToken[nextIdx] != '1' && escapedReferenceToken[nextIdx] != '0'))
+            {
+                return null;
+            }
+
+            idx = tildeIdx + 2;
+        }
+
+        return findTildeChar 
+            ? escapedReferenceToken.Replace("~1", TokenPrefixCharString).Replace("~0", "~") 
+            : escapedReferenceToken;
     }
 
     public Enumerator GetEnumerator()

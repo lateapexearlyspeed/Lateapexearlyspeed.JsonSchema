@@ -59,19 +59,15 @@ internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
         }
     }
 
-    public ValidationResult Validate(JsonInstanceElement instance)
+    public ValidationResult DoValidation(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        Debug.Assert(GlobalSchemaResourceRegistry is not null);
-
-        var jsonSchemaOptions = new JsonSchemaOptions(GlobalSchemaResourceRegistry);
-
         Debug.Assert(BaseUri is not null);
 
         // We need to push current json schema document into path stack here ONLY when this document is 'main' document.
         // For referenced documents, SchemaReferenceKeyword (or SchemaDynamicReferenceKeyword) will take action to push them into path stack.
-        jsonSchemaOptions.ValidationPathStack.PushReferencedSchema(this, BaseUri);
-        ValidationResult validationResult = Validate(instance, jsonSchemaOptions);
-        jsonSchemaOptions.ValidationPathStack.PopReferencedSchema();
+        options.ValidationPathStack.PushReferencedSchema(this, BaseUri);
+        ValidationResult validationResult = Validate(instance, options);
+        options.ValidationPathStack.PopReferencedSchema();
 
         return validationResult;
     }

@@ -1,13 +1,16 @@
-﻿using System.Text.Json;
+﻿using LateApexEarlySpeed.Json.Schema.Keywords;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace LateApexEarlySpeed.Json.Schema.UnitTests;
 
-public class ExternalSchemaDocumentsFixture
+public class JsonValidatorTestFixture
 {
-    public ExternalSchemaDocumentsFixture()
+    public JsonValidatorTestFixture()
     {
         ExternalSchemaDocuments = PrepareRefRemoteDocuments();
+
+        FormatRegistry.AddFormatType<TestCustomFormatValidator>();
     }
 
     public IEnumerable<string> ExternalSchemaDocuments { get; }

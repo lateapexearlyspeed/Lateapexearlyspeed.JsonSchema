@@ -10,7 +10,10 @@ internal class TimeFormatValidator : FormatValidator
         "HH:mm:ss.fzzz",
         "HH:mm:ss.fZ",
         "HH:mm:sszzz",
-        "HH:mm:ssZ"
+        "HH:mm:ssZ",
+
+        "HH:mm:ss.f",
+        "HH:mm:ss",
     };
 
     public override bool Validate(string content)

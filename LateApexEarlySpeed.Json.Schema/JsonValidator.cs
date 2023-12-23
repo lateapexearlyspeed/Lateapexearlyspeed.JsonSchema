@@ -50,12 +50,14 @@ public class JsonValidator
         AddExternalDocument(jsonSchemaText);
     }
 
-    public ValidationResult Validate(string jsonInstance)
+    public ValidationResult Validate(string jsonInstance, JsonSchemaOptions? options = null)
     {
         // ReSharper disable once ConvertToUsingDeclaration
         using (JsonDocument instance = JsonDocument.Parse(jsonInstance))
         {
-            return _mainSchemaDoc.Validate(instance.RootInstanceElement());
+            options = new JsonSchemaOptions(options, _globalSchemaResourceRegistry);
+
+            return _mainSchemaDoc.DoValidation(instance.RootInstanceElement(), options);
         }
     }
 }

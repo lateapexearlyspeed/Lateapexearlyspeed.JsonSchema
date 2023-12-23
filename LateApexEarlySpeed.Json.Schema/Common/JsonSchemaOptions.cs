@@ -5,17 +5,29 @@ namespace LateApexEarlySpeed.Json.Schema.Common;
 
 public class JsonSchemaOptions
 {
-    internal SchemaResourceRegistry SchemaResourceRegistry { get; }
-    internal SchemaRecursionRecorder SchemaRecursionRecorder { get; }
-    public ValidationPathStack ValidationPathStack { get; }
-    public bool ValidateFormat { get; set; } = false;
+    internal SchemaResourceRegistry? SchemaResourceRegistry { get; set; }
+    internal SchemaRecursionRecorder SchemaRecursionRecorder { get; } = new();
+    public ValidationPathStack ValidationPathStack { get; } = new();
+    public bool ValidateFormat { get; set; }
 
-    internal JsonSchemaOptions(SchemaResourceRegistry schemaResourceRegistry)
+    /// <summary>
+    /// User entry point to create <see cref="JsonSchemaOptions"/> instance
+    /// </summary>
+    public JsonSchemaOptions()
+    {
+    }
+
+    /// <summary>
+    /// Copy user defined <paramref name="options"/> and set <see cref="SchemaResourceRegistry"/>
+    /// </summary>
+    internal JsonSchemaOptions(JsonSchemaOptions? options, SchemaResourceRegistry schemaResourceRegistry)
     {
         SchemaResourceRegistry = schemaResourceRegistry;
 
-        SchemaRecursionRecorder = new SchemaRecursionRecorder();
-        ValidationPathStack = new ValidationPathStack();
+        if (options is not null)
+        {
+            ValidateFormat = options.ValidateFormat;
+        }
     }
 }
 

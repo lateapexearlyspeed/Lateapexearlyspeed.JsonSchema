@@ -64,6 +64,7 @@ internal class SchemaReferenceKeyword : KeywordBase
     public JsonSchemaResource? GetReferencedSchemaResource(JsonSchemaOptions options)
     {
         Debug.Assert(FullUriRef is not null);
+        Debug.Assert(options.SchemaResourceRegistry is not null);
 
         return options.SchemaResourceRegistry.GetSchemaResource(GetBaseUri(FullUriRef));
     }

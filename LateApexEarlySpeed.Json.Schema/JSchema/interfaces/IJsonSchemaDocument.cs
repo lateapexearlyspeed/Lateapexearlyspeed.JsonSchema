@@ -8,5 +8,5 @@ namespace LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
 [JsonConverter(typeof(JsonSchemaJsonConverter<IJsonSchemaDocument>))]
 public interface IJsonSchemaDocument
 {
-    ValidationResult Validate(JsonInstanceElement instance);
+    ValidationResult DoValidation(JsonInstanceElement instance, JsonSchemaOptions options);
 }
