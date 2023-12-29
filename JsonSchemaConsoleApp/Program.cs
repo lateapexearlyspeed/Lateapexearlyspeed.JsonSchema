@@ -1,8 +1,6 @@
-﻿using System.Globalization;
-using LateApexEarlySpeed.Json.Schema;
+﻿using LateApexEarlySpeed.Json.Schema;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Generator;
-using LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
 
 namespace JsonSchemaConsoleApp
 {
