@@ -6,5 +6,6 @@
 
   <Module file="$(InPath)/LateApexEarlySpeed.Json.Schema.dll" >
     <SkipEnums value="true" />
+    <SkipType name="LateApexEarlySpeed.Json.Schema.JSchema.BodyJsonSchemaDocument" skipProperties="true" />
   </Module>
 </Obfuscator>
