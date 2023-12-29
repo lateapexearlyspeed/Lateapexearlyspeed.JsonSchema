@@ -10,10 +10,10 @@ namespace LateApexEarlySpeed.Json.Schema;
 public class JsonValidator
 {
     private const string HttpClientName = "lateapexearlyspeed";
-    private readonly IJsonSchemaDocument _mainSchemaDoc;
-
-    private readonly SchemaResourceRegistry _globalSchemaResourceRegistry = new();
     private static readonly IHttpClientFactory HttpClientFactory;
+
+    private readonly IJsonSchemaDocument _mainSchemaDoc;
+    private readonly SchemaResourceRegistry _globalSchemaResourceRegistry = new();
 
     static JsonValidator()
     {
@@ -30,6 +30,12 @@ public class JsonValidator
     public JsonValidator(ReadOnlySpan<char> jsonSchema)
     {
         _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, _globalSchemaResourceRegistry);
+    }
+
+    internal JsonValidator(BodyJsonSchemaDocument mainSchemaDoc)
+    {
+        JsonSchemaDocument.UpdateDocWithGlobalResourceRegistry(mainSchemaDoc, _globalSchemaResourceRegistry);
+        _mainSchemaDoc = mainSchemaDoc;
     }
 
     public void AddExternalDocument(string externalJsonSchema) => AddExternalDocument(externalJsonSchema.AsSpan());

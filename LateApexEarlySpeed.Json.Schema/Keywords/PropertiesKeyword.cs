@@ -16,6 +16,11 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
 
     public PropertiesKeyword(Dictionary<string, JsonSchema> propertiesSchemas)
     {
+        foreach (var (propName, schema) in propertiesSchemas)
+        {
+            schema.Name = propName;
+        }
+
         _propertiesSchemas = propertiesSchemas;
     }
 

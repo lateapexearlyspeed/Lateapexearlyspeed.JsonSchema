@@ -2,9 +2,11 @@
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-[Format("date-time")]
+[Format(FormatName)]
 internal class DateTimeFormatValidator : FormatValidator
 {
+    public const string FormatName = "date-time";
+
     private static readonly string[] Formats = new[]
     {
         "yyyy-MM-ddTHH:mm:ss.fzzz",

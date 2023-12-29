@@ -6,7 +6,7 @@ using LateApexEarlySpeed.Json.Schema.JSchema.JsonConverters;
 namespace LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
 
 [JsonConverter(typeof(JsonSchemaJsonConverter<IJsonSchemaDocument>))]
-public interface IJsonSchemaDocument
+internal interface IJsonSchemaDocument
 {
     ValidationResult DoValidation(JsonInstanceElement instance, JsonSchemaOptions options);
 }

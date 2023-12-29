@@ -20,4 +20,11 @@ internal static class JsonSchemaDocument
 
         return doc;
     }
+
+    public static void UpdateDocWithGlobalResourceRegistry(BodyJsonSchemaDocument schemaDoc, SchemaResourceRegistry globalSchemaResourceRegistry)
+    {
+        schemaDoc.MakeAllIdentifierAndReferenceBeFullUri();
+        globalSchemaResourceRegistry.AddSchemaResourcesFromRegistry(schemaDoc.LocalSchemaResourceRegistry);
+        schemaDoc.GlobalSchemaResourceRegistry = globalSchemaResourceRegistry;
+    }
 }

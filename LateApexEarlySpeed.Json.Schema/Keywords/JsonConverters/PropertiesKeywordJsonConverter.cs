@@ -25,9 +25,8 @@ internal class PropertiesKeywordJsonConverter : JsonConverter<PropertiesKeyword>
             reader.Read();
 
             JsonSchema? propertySchema = JsonSerializer.Deserialize<JsonSchema>(ref reader);
+            
             Debug.Assert(propertySchema is not null);
-
-            propertySchema.Name = propertyName;
             propertiesSchemas.Add(propertyName, propertySchema);
 
             reader.Read();

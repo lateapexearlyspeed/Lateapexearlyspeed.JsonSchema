@@ -10,7 +10,7 @@ namespace JsonSchemaConsoleApp
     {
         static void Main(string[] args)
         {
-            IJsonSchemaDocument schemaDocument = new JsonSchemaGenerator().GenerateJsonSchemaDocument<TestClass>();
+            JsonValidator validator = JsonSchemaGenerator.GenerateJsonValidator<TestClass>();
 
             string jsonSchema = File.ReadAllText("schema.json");
             string instance = File.ReadAllText("instance.json");

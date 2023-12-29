@@ -3,9 +3,11 @@ using LateApexEarlySpeed.Json.Schema.Common;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-[Format("email")]
+[Format(FormatName)]
 internal class EmailFormatValidator : FormatValidator
 {
+    public const string FormatName = "email";
+
     /// <summary>
     /// Refer to: https://stackoverflow.com/questions/201323/how-can-i-validate-an-email-address-using-a-regular-expression?page=1&tab=scoredesc#tab-top
     /// </summary>

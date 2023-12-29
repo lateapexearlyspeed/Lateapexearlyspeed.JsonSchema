@@ -1,8 +1,10 @@
 ﻿namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-[Format("uri-reference")]
+[Format(FormatName)]
 internal class UriReferenceFormatValidator : FormatValidator
 {
+    public const string FormatName = "uri-reference";
+
     public override bool Validate(string content)
     {
         try

@@ -6,7 +6,6 @@ using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
-using LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.Generator;
@@ -17,14 +16,18 @@ internal class JsonSchemaGeneratorOptions
     public JsonSchemaNamingPolicy PropertyNamingPolicy { get; set; } = JsonSchemaNamingPolicy.SharedDefault;
 }
 
-public class JsonSchemaGenerator
+public static class JsonSchemaGenerator
 {
-    public IJsonSchemaDocument GenerateJsonSchemaDocument<T>()
+    public static JsonValidator GenerateJsonValidator<T>() => GenerateJsonValidator(typeof(T));
+
+    public static JsonValidator GenerateJsonValidator(Type type)
     {
         JsonSchemaGeneratorOptions options = new JsonSchemaGeneratorOptions();
-        BodyJsonSchema jsonSchema = GenerateSchema(typeof(T), options, Array.Empty<KeywordBase>());
+        BodyJsonSchema jsonSchema = GenerateSchema(type, options, Array.Empty<KeywordBase>());
 
-        return jsonSchema.TransformToSchemaDocument(new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName), new DefsKeyword(options.SchemaDefinitions.GetAll().ToDictionary(kv => kv.Key, kv => kv.Value as JsonSchema)));
+        BodyJsonSchemaDocument bodyJsonSchemaDocument = jsonSchema.TransformToSchemaDocument(new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, type.FullName), new DefsKeyword(options.SchemaDefinitions.GetAll().ToDictionary(kv => kv.Key, kv => kv.Value as JsonSchema)));
+
+        return new JsonValidator(bodyJsonSchemaDocument);
     }
 
     private static BodyJsonSchema GenerateSchema(Type type, JsonSchemaGeneratorOptions options, KeywordBase[] keywordsFromProperty)
@@ -36,11 +39,16 @@ public class JsonSchemaGenerator
             return schemaDefinition;
         }
 
-        // Integer
-        if (type == typeof(int) || type == typeof(long) || type == typeof(short) || type == typeof(sbyte)
-            || type == typeof(uint) || type == typeof(ulong) || type == typeof(ushort) || type == typeof(byte))
+        // Signed Integer
+        if (type == typeof(int) || type == typeof(long) || type == typeof(short) || type == typeof(sbyte))
         {
-            return GenerateSchemaForInteger(keywordsFromProperty);
+            return GenerateSchemaForSignedInteger(keywordsFromProperty);
+        }
+
+        // Unsigned integer
+        if (type == typeof(uint) || type == typeof(ulong) || type == typeof(ushort) || type == typeof(byte))
+        {
+            return GenerateSchemaForUnsignedInteger(keywordsFromProperty);
         }
 
         // Floating-point numeric types
@@ -79,6 +87,21 @@ public class JsonSchemaGenerator
             return GenerateSchemaForEnum(type, keywordsFromProperty);
         }
 
+        if (type == typeof(Guid))
+        {
+            return GenerateSchemaForGuid(keywordsFromProperty);
+        }
+
+        if (type == typeof(Uri))
+        {
+            return GenerateSchemaForUri(keywordsFromProperty);
+        }
+
+        if (type == typeof(DateTimeOffset))
+        {
+            return GenerateSchemaForDateTimeOffset(keywordsFromProperty);
+        }
+
         // Nullable value type
         if (type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
         {
@@ -87,6 +110,35 @@ public class JsonSchemaGenerator
 
         // Custom object
         return GenerateSchemaForCustomObject(type, options);
+    }
+
+    private static BodyJsonSchema GenerateSchemaForUnsignedInteger(KeywordBase[] keywordsFromProperty)
+    {
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Integer)).Append(new MinimumKeyword {BenchmarkValue = 0}).ToList());
+    }
+
+    private static BodyJsonSchema GenerateSchemaForDateTimeOffset(KeywordBase[] keywordsFromProperty)
+    {
+        var typeKeyword = new TypeKeyword(InstanceType.String);
+        var formatKeyword = new FormatKeyword(DateTimeFormatValidator.FormatName);
+
+        return new BodyJsonSchema(new List<KeywordBase>(keywordsFromProperty) { typeKeyword, formatKeyword });
+    }
+
+    private static BodyJsonSchema GenerateSchemaForUri(KeywordBase[] keywordsFromProperty)
+    {
+        var typeKeyword = new TypeKeyword(InstanceType.String);
+        var formatKeyword = new FormatKeyword(UriReferenceFormatValidator.FormatName);
+
+        return new BodyJsonSchema(new List<KeywordBase>(keywordsFromProperty) { typeKeyword, formatKeyword });
+    }
+
+    private static BodyJsonSchema GenerateSchemaForGuid(KeywordBase[] keywordsFromProperty)
+    {
+        var typeKeyword = new TypeKeyword(InstanceType.String);
+        var formatKeyword = new FormatKeyword(GuidFormatValidator.FormatName);
+
+        return new BodyJsonSchema(new List<KeywordBase>(keywordsFromProperty) { typeKeyword, formatKeyword });
     }
 
     private static BodyJsonSchema GenerateSchemaForNullableValueType(Type type, JsonSchemaGeneratorOptions options, KeywordBase[] keywordsFromProperty)
@@ -137,7 +189,7 @@ public class JsonSchemaGenerator
     {
         var propertiesSchemas = new Dictionary<string, JsonSchema>();
 
-        foreach (PropertyInfo propertyInfo in propertyInfos.Where(prop => prop.GetCustomAttribute<JsonSchemaIgnoreAttribute>() is not null))
+        foreach (PropertyInfo propertyInfo in propertyInfos.Where(prop => prop.GetCustomAttribute<JsonSchemaIgnoreAttribute>() is null))
         {
             KeywordBase[] keywordsOfProp = GenerateKeywordsFromPropertyInfo(propertyInfo);
             JsonSchema propertySchema = GenerateSchema(propertyInfo.PropertyType, options, keywordsOfProp);
@@ -275,7 +327,7 @@ public class JsonSchemaGenerator
         return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Number)).ToList());
     }
 
-    private static BodyJsonSchema GenerateSchemaForInteger(IEnumerable<KeywordBase> keywordsFromProperty)
+    private static BodyJsonSchema GenerateSchemaForSignedInteger(IEnumerable<KeywordBase> keywordsFromProperty)
     {
         return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Integer)).ToList());
     }

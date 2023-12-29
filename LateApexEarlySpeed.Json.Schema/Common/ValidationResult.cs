@@ -10,7 +10,18 @@ public class ValidationResult
     {
     }
 
-    public ImmutableJsonPointer? InstanceLocation { get; set; }
+    internal ValidationResult(ResultCode resultCode, string? keyword, string errorMessage, ImmutableJsonPointer instanceLocation, ImmutableJsonPointer? relativeKeywordLocation, Uri? schemaResourceBaseUri, Uri? subSchemaRefFullUri)
+    {
+        ResultCode = resultCode;
+        Keyword = keyword;
+        ErrorMessage = errorMessage;
+        InstanceLocation = instanceLocation;
+        RelativeKeywordLocation = relativeKeywordLocation;
+        SchemaResourceBaseUri = schemaResourceBaseUri;
+        SubSchemaRefFullUri = subSchemaRefFullUri;
+    }
+
+    public ImmutableJsonPointer? InstanceLocation { get; init; }
     public ImmutableJsonPointer? RelativeKeywordLocation { get; init; }
     public Uri? SchemaResourceBaseUri { get; init; }
     public Uri? SubSchemaRefFullUri { get; init; }
@@ -22,16 +33,14 @@ public class ValidationResult
 
     public static ValidationResult ValidResult { get; } = new() { ResultCode = ResultCode.Valid };
     public static ValidationResult CreateFailedResult(ResultCode failedCode, string errorMessage, ValidationPathStack? validationPathStack, string? keyword, ImmutableJsonPointer instanceLocation)
-        => new()
-        {
-            ResultCode = failedCode,
-            ErrorMessage = errorMessage,
-            Keyword = keyword,
-            RelativeKeywordLocation = validationPathStack?.RelativeKeywordLocationStack.ToJsonPointer(),
-            SchemaResourceBaseUri = validationPathStack?.ReferencedSchemaLocationStack.Peek().resource.BaseUri,
-            SubSchemaRefFullUri = validationPathStack?.ReferencedSchemaLocationStack.Peek().subSchemaRefFullUri,
-            InstanceLocation = instanceLocation
-        };
+        => new(failedCode, 
+            keyword, 
+            errorMessage, 
+            instanceLocation, 
+            validationPathStack?.RelativeKeywordLocationStack.ToJsonPointer(),
+            validationPathStack?.ReferencedSchemaLocationStack.Peek().resource.BaseUri,
+            validationPathStack?.ReferencedSchemaLocationStack.Peek().subSchemaRefFullUri
+            );
 }
 
 public enum ResultCode
