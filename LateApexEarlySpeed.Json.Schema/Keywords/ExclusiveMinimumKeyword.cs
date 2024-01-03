@@ -11,5 +11,10 @@ internal class ExclusiveMinimumKeyword : NumberRangeKeywordBase
         => instanceValue > BenchmarkValue;
 
     protected override string GetErrorMessage(double instanceValue)
-        => $"Instance '{instanceValue}' is equal to or less than '{BenchmarkValue}'";
+        => ErrorMessage(instanceValue, BenchmarkValue);
+
+    public static string ErrorMessage(double instanceValue, double minimum)
+    {
+        return $"Instance '{instanceValue}' is equal to or less than '{minimum}'";
+    }
 }

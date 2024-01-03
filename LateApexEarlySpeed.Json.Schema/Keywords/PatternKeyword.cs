@@ -28,6 +28,11 @@ internal class PatternKeyword : KeywordBase
         string instanceText = instance.GetString()!;
         return _pattern.IsMatch(instanceText)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.RegexNotMatch, $"Regex: '{_pattern}' cannot find match in instance: '{instanceText}'", options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.CreateFailedResult(ResultCode.RegexNotMatch, ErrorMessage(_pattern.ToString(), instanceText), options.ValidationPathStack, Name, instance.Location);
+    }
+
+    public static string ErrorMessage(string pattern, string instanceText)
+    {
+        return $"Regex: '{pattern}' cannot find match in instance: '{instanceText}'";
     }
 }

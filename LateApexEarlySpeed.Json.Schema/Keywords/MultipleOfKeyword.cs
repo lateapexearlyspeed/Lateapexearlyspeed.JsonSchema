@@ -37,6 +37,11 @@ internal class MultipleOfKeyword : KeywordBase
         double actualTolerance = _multipleOf * Tolerance;
         return remainder < actualTolerance || Math.Abs(remainder - _multipleOf) < actualTolerance 
             ? ValidationResult.ValidResult 
-            : ValidationResult.CreateFailedResult(ResultCode.FailedToMultiple, $"Instance: '{instanceValue}' is not multiple of '{_multipleOf}'", options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.CreateFailedResult(ResultCode.FailedToMultiple, ErrorMessage(instanceValue, _multipleOf), options.ValidationPathStack, Name, instance.Location);
+    }
+
+    public static string ErrorMessage(double instanceValue, double multipleOf)
+    {
+        return $"Instance: '{instanceValue}' is not multiple of '{multipleOf}'";
     }
 }

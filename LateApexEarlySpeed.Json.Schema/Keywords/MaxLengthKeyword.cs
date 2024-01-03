@@ -14,6 +14,11 @@ internal class MaxLengthKeyword : StringLengthKeywordBase
 
     protected override string GetErrorMessage(int instanceStringLength)
     {
-        return $"String instance's length is {instanceStringLength} which is greater than '{BenchmarkValue}'";
+        return ErrorMessage(instanceStringLength, BenchmarkValue);
+    }
+
+    public static string ErrorMessage(int instanceLength, uint maxLength)
+    {
+        return $"String instance's length is {instanceLength} which is greater than '{maxLength}'";
     }
 }

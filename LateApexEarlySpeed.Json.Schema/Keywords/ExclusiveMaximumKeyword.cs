@@ -11,5 +11,10 @@ internal class ExclusiveMaximumKeyword : NumberRangeKeywordBase
         => instanceValue < BenchmarkValue;
 
     protected override string GetErrorMessage(double instanceValue)
-        => $"Instance '{instanceValue}' is equal to or greater than '{BenchmarkValue}'";
+        => ErrorMessage(instanceValue, BenchmarkValue);
+
+    public static string ErrorMessage(double instanceValue, double maximum)
+    {
+        return $"Instance '{instanceValue}' is equal to or greater than '{maximum}'";
+    }
 }
