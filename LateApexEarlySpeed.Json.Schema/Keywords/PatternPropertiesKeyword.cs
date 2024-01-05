@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -13,13 +12,13 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(PatternPropertiesKeywordJsonConverter))]
 internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
 {
-    private readonly Dictionary<string, (Regex regex, JsonSchema schema)> _patternSchemas;
+    private readonly Dictionary<string, (LazyCompiledRegex regex, JsonSchema schema)> _patternSchemas;
 
     public PatternPropertiesKeyword(Dictionary<string, JsonSchema> patternSchemas)
     {
         _patternSchemas = patternSchemas.ToDictionary(
             kv => kv.Key, 
-            kv => (RegexFactory.Create(kv.Key, RegexOptions.Compiled), kv.Value));
+            kv => (new LazyCompiledRegex(kv.Key), kv.Value));
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
@@ -34,7 +33,7 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
             string propertyName = jsonProperty.Name;
             JsonInstanceElement propertyValue = jsonProperty.Value;
 
-            foreach ((Regex regex, JsonSchema schema) patternSchema in _patternSchemas.Values)
+            foreach ((LazyCompiledRegex regex, JsonSchema schema) patternSchema in _patternSchemas.Values)
             {
                 if (patternSchema.regex.IsMatch(propertyName))
                 {
@@ -52,7 +51,7 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
 
     public ISchemaContainerElement? GetSubElement(string name)
     {
-        return _patternSchemas.TryGetValue(name, out (Regex regex, JsonSchema schema) regexAndSchema) 
+        return _patternSchemas.TryGetValue(name, out (LazyCompiledRegex regex, JsonSchema schema) regexAndSchema) 
             ? regexAndSchema.schema 
             : null;
     }

@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
@@ -11,11 +10,11 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(PatternKeywordJsonConverter))]
 internal class PatternKeyword : KeywordBase
 {
-    private readonly Regex _pattern;
+    private readonly LazyCompiledRegex _pattern;
 
     public PatternKeyword(string pattern)
     {
-        _pattern = RegexFactory.Create(pattern, RegexOptions.Compiled);
+        _pattern = new LazyCompiledRegex(pattern);
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
