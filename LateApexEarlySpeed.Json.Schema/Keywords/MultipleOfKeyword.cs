@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
@@ -7,6 +8,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
+[Obfuscation(ApplyToMembers = false)]
 [Keyword("multipleOf")]
 [JsonConverter(typeof(MultipleOfKeywordJsonConverter))]
 internal class MultipleOfKeyword : KeywordBase
@@ -40,6 +42,7 @@ internal class MultipleOfKeyword : KeywordBase
             : ValidationResult.CreateFailedResult(ResultCode.FailedToMultiple, ErrorMessage(instanceValue, _multipleOf), options.ValidationPathStack, Name, instance.Location);
     }
 
+    [Obfuscation]
     public static string ErrorMessage(double instanceValue, double multipleOf)
     {
         return $"Instance: '{instanceValue}' is not multiple of '{multipleOf}'";

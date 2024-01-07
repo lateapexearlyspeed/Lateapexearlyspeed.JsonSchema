@@ -57,7 +57,7 @@ internal class TypeKeyword : KeywordBase
 
                 if (!instance.TryGetInt64ForJsonSchema(out _))
                 {
-                    return ValidationResult.CreateFailedResult(ResultCode.NotBeInteger, $"Expect type '{expectedInstanceType}' but actual is float number", options.ValidationPathStack, Name, instance.Location);
+                    return ValidationResult.CreateFailedResult(ResultCode.NotBeInteger, $"Expect type '{expectedInstanceType}' but actual is 'float number'", options.ValidationPathStack, Name, instance.Location);
                 }
 
                 break;

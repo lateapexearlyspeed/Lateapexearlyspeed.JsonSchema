@@ -3,6 +3,8 @@ using LateApexEarlySpeed.Json.Schema.Generator;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 using Xunit;
+// ReSharper disable ClassNeverInstantiated.Local
+// ReSharper disable InconsistentNaming
 
 namespace LateApexEarlySpeed.Json.Schema.UnitTests;
 
@@ -54,26 +56,19 @@ public class JsonSchemaGeneratorTest
         samples = samples.Concat(CreateSamplesForFloatNumber<double>());
         samples = samples.Concat(CreateSamplesForFloatNumber<decimal>());
 
+        // Boolean
+        samples = samples.Concat(CreateSamplesForBoolean());
 
-
-        
-
-
+        // string
+        samples = samples.Concat(CreateSamplesForString());
 
         samples = samples.Concat(CreateSamplesForMaximumAttribute());
         samples = samples.Concat(CreateSamplesForMinimumAttribute());
         samples = samples.Concat(CreateSamplesForExclusiveMaximumAttribute());
         samples = samples.Concat(CreateSamplesForExclusiveMinimumAttribute());
         samples = samples.Concat(CreateSamplesForNumberRangeAttribute());
-
-
-
-
-        // boolean
-        samples = samples.Concat(CreateSamplesForBoolean());
-
-        // string
-        samples = samples.Concat(CreateSamplesForString());
+        samples = samples.Concat(CreateSamplesForIntegerEnumAttribute());
+        samples = samples.Concat(CreateSamplesForMultipleOfAttribute());
 
         return samples;
     }
@@ -84,7 +79,7 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<string>("null", new ValidationResult(
             ResultCode.InvalidTokenKind,
             "type",
-            $"Expect type '{InstanceType.String}' but actual is '{InstanceType.Null}'",
+            GetInvalidTokenErrorMessage(InstanceType.String, InstanceType.Null.ToString()),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(string).FullName),
@@ -285,46 +280,46 @@ public class JsonSchemaGeneratorTest
     private class PatternAttributeTestClass
     {
         [Pattern("a*b")]
-        public string Prop { get; set; }
+        public string? Prop { get; set; }
     }
 
     private class MinLengthAttributeTestClass
     {
         [MinLength(1)]
-        public string Prop { get; set; }
+        public string? Prop { get; set; }
     }
 
     private class MaxLengthAttributeTestClass
     {
         [MaxLength(3)]
-        public string Prop { get; set; }
+        public string? Prop { get; set; }
     }
 
     private class LengthRangeAttributeTestClass
     {
         [LengthRange(1, 3)]
-        public string Prop { get; set; }
+        public string? Prop { get; set; }
     }
 
     private class IPv4AttributeTestClass
     {
         [IPv4]
-        public string Prop { get; set; }
+        public string? Prop { get; set; }
     }
 
     private class IPv6AttributeTestClass
     {
         [IPv6]
-        public string Prop { get; set; }
+        public string? Prop { get; set; }
     }
 
     private static Uri GetMainDocBaseUri<T>() 
         => new(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName);
 
-    private static string GetInvalidTokenErrorMessage(InstanceType expected, InstanceType actual) 
+    private static string GetInvalidTokenErrorMessage(InstanceType expected, string actual) 
         => $"Expect type '{expected}' but actual is '{actual}'";
 
-    internal class EmailAttributeTestClass
+    private class EmailAttributeTestClass
     {
         [Email]
         public string? Email { get; set; }
@@ -448,7 +443,7 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<bool>("\"true\"", new ValidationResult(
             ResultCode.InvalidTokenKind,
             "type",
-            $"Expect type '{InstanceType.Boolean}' but actual is '{InstanceType.String}'",
+            GetInvalidTokenErrorMessage(InstanceType.Boolean, InstanceType.String.ToString()),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(bool).FullName),
@@ -472,7 +467,7 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<T>("\"abc\"", new ValidationResult(
             ResultCode.InvalidTokenKind,
             "type",
-            $"Expect type '{InstanceType.Integer}' but actual is '{InstanceType.String}'",
+            GetInvalidTokenErrorMessage(InstanceType.Integer, InstanceType.String.ToString()),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
@@ -481,52 +476,43 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<T>("1.5", new ValidationResult(
             ResultCode.NotBeInteger,
             "type",
-            $"Expect type '{InstanceType.Integer}' but actual is float number",
+            GetInvalidTokenErrorMessage(InstanceType.Integer, "float number"),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
             GetMainDocBaseUri<T>(),
             GetMainDocBaseUri<T>()
         ));
-
-        // IntegerEnumAttribute
-        yield return TestSample.Create<IntegerEnumAttributeTestClass<T>>("""
-{
- "Prop": 1
-}
-""", ValidationResult.ValidResult);
-
-        yield return TestSample.Create<IntegerEnumAttributeTestClass<T>>("""
-{
- "Prop": 3
-}
-""", new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage(),
-            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/enum"),
-            GetMainDocBaseUri<IntegerEnumAttributeTestClass<T>>(),
-            GetMainDocBaseUri<IntegerEnumAttributeTestClass<T>>()
-        ));
-
-        // MultipleOfAttribute
-        yield return TestSample.Create<MultipleOfAttributeTestClass<T>>("""
-{
-  "Prop": 6
-}
-""", ValidationResult.ValidResult);
-
-        yield return TestSample.Create<MultipleOfAttributeTestClass<T>>("""
-{
-  "Prop": 4
-}
-""", new ValidationResult(ResultCode.FailedToMultiple, "multipleOf", MultipleOfKeyword.ErrorMessage(4, 1.5),
-            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/multipleOf"), 
-            GetMainDocBaseUri<MultipleOfAttributeTestClass<T>>(),
-            GetMainDocBaseUri<MultipleOfAttributeTestClass<T>>()
-            ));
     }
 
-    private class MultipleOfAttributeTestClass<T> where T : unmanaged
+    private static IEnumerable<TestSample> CreateSamplesForMultipleOfAttribute()
+    {
+        yield return TestSample.Create<MultipleOfAttributeTestClass>("""
+{
+  "Prop": 4.5
+}
+""", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<MultipleOfAttributeTestClass>("""
+{
+  "Prop": -4.5
+}
+""", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<MultipleOfAttributeTestClass>("""
+{
+  "Prop": 4.3
+}
+""", new ValidationResult(ResultCode.FailedToMultiple, "multipleOf", MultipleOfKeyword.ErrorMessage(4.3, 1.5),
+            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/multipleOf"),
+            GetMainDocBaseUri<MultipleOfAttributeTestClass>(),
+            GetMainDocBaseUri<MultipleOfAttributeTestClass>()
+        ));
+    }
+
+    private class MultipleOfAttributeTestClass
     {
         [MultipleOf(1.5)]
-        public T Prop { get; set; }
+        public double Prop { get; set; }
     }
 
     private static IEnumerable<TestSample> CreateSamplesForSignedInteger<T>() where T : unmanaged
@@ -537,7 +523,7 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<T>("\"abc\"", new ValidationResult(
             ResultCode.InvalidTokenKind,
             "type",
-            $"Expect type '{InstanceType.Integer}' but actual is '{InstanceType.String}'",
+            GetInvalidTokenErrorMessage(InstanceType.Integer, InstanceType.String.ToString()),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
@@ -546,58 +532,37 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<T>("1.5", new ValidationResult(
             ResultCode.NotBeInteger,
             "type",
-            $"Expect type '{InstanceType.Integer}' but actual is float number",
+            GetInvalidTokenErrorMessage(InstanceType.Integer, "float number"),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
         ));
+    }
 
-        // IntegerEnumAttribute
-        yield return TestSample.Create<IntegerEnumAttributeTestClass<T>>("""
+    private static IEnumerable<TestSample> CreateSamplesForIntegerEnumAttribute()
+    {
+        yield return TestSample.Create<IntegerEnumAttributeTestClass>("""
 {
  "Prop": 1
 }
 """, ValidationResult.ValidResult);
 
-        yield return TestSample.Create<IntegerEnumAttributeTestClass<T>>("""
+        yield return TestSample.Create<IntegerEnumAttributeTestClass>("""
 {
  "Prop": 3
 }
 """, new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage(),
             ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/enum"),
-            GetMainDocBaseUri<IntegerEnumAttributeTestClass<T>>(),
-            GetMainDocBaseUri<IntegerEnumAttributeTestClass<T>>()
-        ));
-
-        // MultipleOfAttribute
-        yield return TestSample.Create<MultipleOfAttributeTestClass<T>>("""
-{
-  "Prop": 6
-}
-""", ValidationResult.ValidResult);
-
-        yield return TestSample.Create<MultipleOfAttributeTestClass<T>>("""
-{
-  "Prop": -6
-}
-""", ValidationResult.ValidResult);
-
-        yield return TestSample.Create<MultipleOfAttributeTestClass<T>>("""
-{
-  "Prop": 4
-}
-""", new ValidationResult(ResultCode.FailedToMultiple, "multipleOf", MultipleOfKeyword.ErrorMessage(4, 1.5),
-            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/multipleOf"),
-            GetMainDocBaseUri<MultipleOfAttributeTestClass<T>>(),
-            GetMainDocBaseUri<MultipleOfAttributeTestClass<T>>()
+            GetMainDocBaseUri<IntegerEnumAttributeTestClass>(),
+            GetMainDocBaseUri<IntegerEnumAttributeTestClass>()
         ));
     }
 
-    private class IntegerEnumAttributeTestClass<T> where T : unmanaged
+    private class IntegerEnumAttributeTestClass
     {
         [IntegerEnum(1, 2)]
-        public T Prop { get; set; }
+        public int Prop { get; set; }
     }
 
     private static IEnumerable<TestSample> CreateSamplesForFloatNumber<T>() where T : unmanaged
@@ -609,34 +574,11 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<T>("\"abc\"", new ValidationResult(
             ResultCode.InvalidTokenKind,
             "type",
-            $"Expect type '{InstanceType.Number}' but actual is '{InstanceType.String}'",
+            GetInvalidTokenErrorMessage(InstanceType.Number, InstanceType.String.ToString()),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
-        ));
-
-        // MultipleOfAttribute
-        yield return TestSample.Create<MultipleOfAttributeTestClass<T>>("""
-{
-  "Prop": 4.5
-}
-""", ValidationResult.ValidResult);
-
-        yield return TestSample.Create<MultipleOfAttributeTestClass<T>>("""
-{
-  "Prop": -4.5
-}
-""", ValidationResult.ValidResult);
-
-        yield return TestSample.Create<MultipleOfAttributeTestClass<T>>("""
-{
-  "Prop": 4.3
-}
-""", new ValidationResult(ResultCode.FailedToMultiple, "multipleOf", MultipleOfKeyword.ErrorMessage(4.3, 1.5),
-            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/multipleOf"),
-            GetMainDocBaseUri<MultipleOfAttributeTestClass<T>>(),
-            GetMainDocBaseUri<MultipleOfAttributeTestClass<T>>()
         ));
     }
 

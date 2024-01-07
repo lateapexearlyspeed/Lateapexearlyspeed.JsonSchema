@@ -1,10 +1,12 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Reflection;
+using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
+[Obfuscation(ApplyToMembers = false)]
 [Keyword("enum")]
 [JsonConverter(typeof(EnumKeywordJsonConverter))]
 internal class EnumKeyword : KeywordBase
@@ -24,6 +26,7 @@ internal class EnumKeyword : KeywordBase
             : ValidationResult.CreateFailedResult(ResultCode.NotFoundInAllowedList, ErrorMessage(), options.ValidationPathStack, Name, instance.Location);
     }
 
+    [Obfuscation]
     public static string ErrorMessage()
     {
         return "Not found in allowed list";
