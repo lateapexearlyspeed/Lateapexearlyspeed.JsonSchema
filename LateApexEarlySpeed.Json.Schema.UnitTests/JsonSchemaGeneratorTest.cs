@@ -69,8 +69,107 @@ public class JsonSchemaGeneratorTest
         samples = samples.Concat(CreateSamplesForNumberRangeAttribute());
         samples = samples.Concat(CreateSamplesForIntegerEnumAttribute());
         samples = samples.Concat(CreateSamplesForMultipleOfAttribute());
+        samples = samples.Concat(CreateSamplesForEmailAttribute());
+        samples = samples.Concat(CreateSamplesForStringEnumAttribute());
+        samples = samples.Concat(CreateSamplesForIPv4Attribute());
+        samples = samples.Concat(CreateSamplesForIPv6Attribute());
+        samples = samples.Concat(CreateSamplesForLengthRangeAttribute());
+        samples = samples.Concat(CreateSamplesForMaxLengthAttribute());
+        samples = samples.Concat(CreateSamplesForMinLengthAttribute());
+        samples = samples.Concat(CreateSamplesForPatternAttribute());
+        samples = samples.Concat(CreateSamplesForArray());
 
         return samples;
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForUnsignedInteger<T>() where T : unmanaged
+    {
+        yield return TestSample.Create<T>("0", ValidationResult.ValidResult);
+        yield return TestSample.Create<T>("1", ValidationResult.ValidResult);
+        yield return TestSample.Create<T>("-1", new ValidationResult(
+            ResultCode.NumberOutOfRange,
+            "minimum",
+            "Instance '-1' is less than '0'",
+            ImmutableJsonPointer.Empty,
+            ImmutableJsonPointer.Create("/minimum")!,
+            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
+            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
+        ));
+        yield return TestSample.Create<T>("\"abc\"", new ValidationResult(
+            ResultCode.InvalidTokenKind,
+            "type",
+            GetInvalidTokenErrorMessage(InstanceType.Integer, InstanceType.String.ToString()),
+            ImmutableJsonPointer.Empty,
+            ImmutableJsonPointer.Create("/type")!,
+            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
+            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
+        ));
+        yield return TestSample.Create<T>("1.5", new ValidationResult(
+            ResultCode.NotBeInteger,
+            "type",
+            GetInvalidTokenErrorMessage(InstanceType.Integer, "float number"),
+            ImmutableJsonPointer.Empty,
+            ImmutableJsonPointer.Create("/type")!,
+            GetSchemaResourceBaseUri<T>(),
+            GetSchemaResourceBaseUri<T>()
+        ));
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForSignedInteger<T>() where T : unmanaged
+    {
+        yield return TestSample.Create<T>("0", ValidationResult.ValidResult);
+        yield return TestSample.Create<T>("1", ValidationResult.ValidResult);
+        yield return TestSample.Create<T>("-1", ValidationResult.ValidResult);
+        yield return TestSample.Create<T>("\"abc\"", new ValidationResult(
+            ResultCode.InvalidTokenKind,
+            "type",
+            GetInvalidTokenErrorMessage(InstanceType.Integer, InstanceType.String.ToString()),
+            ImmutableJsonPointer.Empty,
+            ImmutableJsonPointer.Create("/type")!,
+            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
+            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
+        ));
+        yield return TestSample.Create<T>("1.5", new ValidationResult(
+            ResultCode.NotBeInteger,
+            "type",
+            GetInvalidTokenErrorMessage(InstanceType.Integer, "float number"),
+            ImmutableJsonPointer.Empty,
+            ImmutableJsonPointer.Create("/type")!,
+            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
+            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
+        ));
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForFloatNumber<T>() where T : unmanaged
+    {
+        yield return TestSample.Create<T>("0", ValidationResult.ValidResult);
+        yield return TestSample.Create<T>("1", ValidationResult.ValidResult);
+        yield return TestSample.Create<T>("1.5", ValidationResult.ValidResult);
+        yield return TestSample.Create<T>("-1.5", ValidationResult.ValidResult);
+        yield return TestSample.Create<T>("\"abc\"", new ValidationResult(
+            ResultCode.InvalidTokenKind,
+            "type",
+            GetInvalidTokenErrorMessage(InstanceType.Number, InstanceType.String.ToString()),
+            ImmutableJsonPointer.Empty,
+            ImmutableJsonPointer.Create("/type")!,
+            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
+            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
+        ));
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForBoolean()
+    {
+        yield return TestSample.Create<bool>("true", ValidationResult.ValidResult);
+        yield return TestSample.Create<bool>("false", ValidationResult.ValidResult);
+        yield return TestSample.Create<bool>("\"true\"", new ValidationResult(
+            ResultCode.InvalidTokenKind,
+            "type",
+            GetInvalidTokenErrorMessage(InstanceType.Boolean, InstanceType.String.ToString()),
+            ImmutableJsonPointer.Empty,
+            ImmutableJsonPointer.Create("/type")!,
+            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(bool).FullName),
+            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(bool).FullName)
+        ));
     }
 
     private static IEnumerable<TestSample> CreateSamplesForString()
@@ -85,180 +184,54 @@ public class JsonSchemaGeneratorTest
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(string).FullName),
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(string).FullName)
         ));
+    }
 
-        yield return TestSample.Create<EmailAttributeTestClass>(
-"""
-{
-  "Email": "hello@world.com"
-}
+    private static IEnumerable<TestSample> CreateSamplesForArray()
+    {
+        yield return TestSample.Create<int[]>("[]", ValidationResult.ValidResult);
+        yield return TestSample.Create<int[]>("[1, 2]", ValidationResult.ValidResult);
+        yield return TestSample.Create<object[]>("""
+[
+  {
+    "Prop": 1.5
+  }
+]
 """, ValidationResult.ValidResult);
 
-        yield return TestSample.Create<EmailAttributeTestClass>(
-            """
-{
-  "Email": "@world.com"
-} 
-""", new ValidationResult(
-                ResultCode.InvalidFormat, 
-                "format", 
-                "Invalid string value for format:'email'", 
-                ImmutableJsonPointer.Create("/Email")!, 
-                ImmutableJsonPointer.Create("/properties/Email/format")!,
-                new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(EmailAttributeTestClass).FullName),
-                new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(EmailAttributeTestClass).FullName)));
-
-        yield return TestSample.Create<StringEnumAttributeTestClass>(
-            """
-{
-  "Prop": "b"
-}
-""",
-            ValidationResult.ValidResult
-            );
-        yield return TestSample.Create<StringEnumAttributeTestClass>(
-            """
-{
-  "Prop": 1
-}
-""",
-            new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", "Not found in allowed list", 
-                ImmutableJsonPointer.Create("/Prop")!,
-                ImmutableJsonPointer.Create("/properties/Prop/enum"),
-                GetMainDocBaseUri<StringEnumAttributeTestClass>(),
-                GetMainDocBaseUri<StringEnumAttributeTestClass>()
-                ));
-        yield return TestSample.Create<StringEnumAttributeTestClass>(
-            """
-{
-  "Prop": "c"
-}
-""",
-            new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", "Not found in allowed list",
-                ImmutableJsonPointer.Create("/Prop")!,
-                ImmutableJsonPointer.Create("/properties/Prop/enum"),
-                GetMainDocBaseUri<StringEnumAttributeTestClass>(),
-                GetMainDocBaseUri<StringEnumAttributeTestClass>())
-            );
-
-        yield return TestSample.Create<IPv4AttributeTestClass>(
-            """
-{
-  "Prop": "192.168.1.1"
-}
-""",
-            ValidationResult.ValidResult);
-
-        yield return TestSample.Create<IPv4AttributeTestClass>(
-            """
-{
-  "Prop": "127.0.0.0.1"
-}
-""",
-            new ValidationResult(
-                ResultCode.InvalidFormat,
-                "format",
-                "Invalid string value for format:'ipv4'",
-                ImmutableJsonPointer.Create("/Prop")!,
-                ImmutableJsonPointer.Create("/properties/Prop/format")!,
-                GetMainDocBaseUri<IPv4AttributeTestClass>(),
-                GetMainDocBaseUri<IPv4AttributeTestClass>()));
-
-        yield return TestSample.Create<IPv6AttributeTestClass>(
-            """
-{
-  "Prop": "AA22:BB11:1122:CDEF:1234:AA99:7654:7410"
-}
-""",
-            ValidationResult.ValidResult);
-
-        yield return TestSample.Create<IPv6AttributeTestClass>(
-            """
-{
-  "Prop": "12345::"
-}
-""",
-            new ValidationResult(
-                ResultCode.InvalidFormat,
-                "format",
-                "Invalid string value for format:'ipv6'",
-                ImmutableJsonPointer.Create("/Prop")!,
-                ImmutableJsonPointer.Create("/properties/Prop/format")!,
-                GetMainDocBaseUri<IPv6AttributeTestClass>(),
-                GetMainDocBaseUri<IPv6AttributeTestClass>()));
-
-        yield return TestSample.Create<LengthRangeAttributeTestClass>("""
-{
-  "Prop": "a"
-}
+        yield return TestSample.Create<ArrayItemObject[]>("""
+[
+  {
+    "Prop": 1.5
+  }
+]
 """, ValidationResult.ValidResult);
 
-        yield return TestSample.Create<LengthRangeAttributeTestClass>("""
-{
-  "Prop": "ab"
-}
-""", ValidationResult.ValidResult);
+        yield return TestSample.Create<int[]>("null", new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Array, InstanceType.Null.ToString()),
+            ImmutableJsonPointer.Empty,
+            ImmutableJsonPointer.Create("/type"),
+            GetSchemaResourceBaseUri<int[]>(),
+            GetSchemaResourceBaseUri<int[]>()));
 
-        yield return TestSample.Create<LengthRangeAttributeTestClass>("""
-{
-  "Prop": "abc"
-}
-""", ValidationResult.ValidResult);
+        yield return TestSample.Create<ArrayItemObject[]>("""
+[
+  {
+    "Prop": "abc"
+  }
+]
+""", new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Number, InstanceType.String.ToString()),
+            ImmutableJsonPointer.Create("/0/Prop")!,
+            ImmutableJsonPointer.Create("/items/$ref/properties/Prop/type"),
+            GetSchemaResourceBaseUri<ArrayItemObject[]>(),
+            new Uri(GetSchemaResourceBaseUri<ArrayItemObject[]>(), "#/defs/" + typeof(ArrayItemObject).FullName)));
+    }
 
-        yield return TestSample.Create<LengthRangeAttributeTestClass>("""
-{
-  "Prop": ""
-}
-""", new ValidationResult(ResultCode.StringLengthOutOfRange, "minLength", MinLengthKeyword.ErrorMessage(0, 1), 
-            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/allOf/0/minLength"), 
-            GetMainDocBaseUri<LengthRangeAttributeTestClass>(),
-            GetMainDocBaseUri<LengthRangeAttributeTestClass>()
-            ));
+    private class ArrayItemObject
+    {
+        public float Prop { get; set; }
+    }
 
-        yield return TestSample.Create<LengthRangeAttributeTestClass>("""
-{
-  "Prop": "abcd"
-}
-""", new ValidationResult(ResultCode.StringLengthOutOfRange, "maxLength", MaxLengthKeyword.ErrorMessage(4, 3),
-            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/allOf/1/maxLength"),
-            GetMainDocBaseUri<LengthRangeAttributeTestClass>(),
-            GetMainDocBaseUri<LengthRangeAttributeTestClass>()
-        ));
-
-        // MaxLengthAttribute
-        yield return TestSample.Create<MaxLengthAttributeTestClass>("""
-{
-  "Prop": "abc"
-}
-""", ValidationResult.ValidResult);
-
-        yield return TestSample.Create<MaxLengthAttributeTestClass>("""
-{
-  "Prop": "abcd"
-}
-""", new ValidationResult(ResultCode.StringLengthOutOfRange, "maxLength", MaxLengthKeyword.ErrorMessage(4, 3),
-            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/maxLength"),
-            GetMainDocBaseUri<MaxLengthAttributeTestClass>(),
-            GetMainDocBaseUri<MaxLengthAttributeTestClass>()
-        ));
-
-        // MinLengthAttribute
-        yield return TestSample.Create<MinLengthAttributeTestClass>("""
-{
-  "Prop": "a"
-}
-""", ValidationResult.ValidResult);
-
-        yield return TestSample.Create<MinLengthAttributeTestClass>("""
-{
-  "Prop": ""
-}
-""", new ValidationResult(ResultCode.StringLengthOutOfRange, "minLength", MinLengthKeyword.ErrorMessage(0, 1),
-            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/minLength"),
-            GetMainDocBaseUri<MinLengthAttributeTestClass>(),
-            GetMainDocBaseUri<MinLengthAttributeTestClass>()
-        ));
-
-        // PatternAttribute
+    private static IEnumerable<TestSample> CreateSamplesForPatternAttribute()
+    {
         yield return TestSample.Create<PatternAttributeTestClass>(""" 
 {
   "Prop": "ab"
@@ -269,12 +242,12 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": "aa"
 }
-""", new ValidationResult(ResultCode.RegexNotMatch, "pattern", PatternKeyword.ErrorMessage("a*b", "aa"), 
+""", new ValidationResult(ResultCode.RegexNotMatch, "pattern", PatternKeyword.ErrorMessage("a*b", "aa"),
             ImmutableJsonPointer.Create("/Prop")!,
-            ImmutableJsonPointer.Create("/properties/Prop/pattern"), 
-            GetMainDocBaseUri<PatternAttributeTestClass>(),
-            GetMainDocBaseUri<PatternAttributeTestClass>()
-            ));
+            ImmutableJsonPointer.Create("/properties/Prop/pattern"),
+            GetSchemaResourceBaseUri<PatternAttributeTestClass>(),
+            GetSchemaResourceBaseUri<PatternAttributeTestClass>()
+        ));
     }
 
     private class PatternAttributeTestClass
@@ -283,53 +256,11 @@ public class JsonSchemaGeneratorTest
         public string? Prop { get; set; }
     }
 
-    private class MinLengthAttributeTestClass
-    {
-        [MinLength(1)]
-        public string? Prop { get; set; }
-    }
-
-    private class MaxLengthAttributeTestClass
-    {
-        [MaxLength(3)]
-        public string? Prop { get; set; }
-    }
-
-    private class LengthRangeAttributeTestClass
-    {
-        [LengthRange(1, 3)]
-        public string? Prop { get; set; }
-    }
-
-    private class IPv4AttributeTestClass
-    {
-        [IPv4]
-        public string? Prop { get; set; }
-    }
-
-    private class IPv6AttributeTestClass
-    {
-        [IPv6]
-        public string? Prop { get; set; }
-    }
-
-    private static Uri GetMainDocBaseUri<T>() 
+    private static Uri GetSchemaResourceBaseUri<T>() 
         => new(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName);
 
     private static string GetInvalidTokenErrorMessage(InstanceType expected, string actual) 
         => $"Expect type '{expected}' but actual is '{actual}'";
-
-    private class EmailAttributeTestClass
-    {
-        [Email]
-        public string? Email { get; set; }
-    }
-
-    internal class StringEnumAttributeTestClass
-    {
-        [StringEnum("a", "b")]
-        public string? Prop { get; set; }
-    }
 
     private static IEnumerable<TestSample> CreateSamplesForMaximumAttribute()
     {
@@ -351,8 +282,8 @@ public class JsonSchemaGeneratorTest
 }
 """, new ValidationResult(ResultCode.NumberOutOfRange, "maximum", MaximumKeyword.ErrorMessage(2.50001, 2.5),
             ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/maximum"),
-            GetMainDocBaseUri<MaximumAttributeTestClass>(),
-            GetMainDocBaseUri<MaximumAttributeTestClass>()
+            GetSchemaResourceBaseUri<MaximumAttributeTestClass>(),
+            GetSchemaResourceBaseUri<MaximumAttributeTestClass>()
         ));
     }
 
@@ -382,8 +313,8 @@ public class JsonSchemaGeneratorTest
 }
 """, new ValidationResult(ResultCode.NumberOutOfRange, "minimum", MinimumKeyword.ErrorMessage(2.499999, 2.5),
             ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/minimum"),
-            GetMainDocBaseUri<MinimumAttributeTestClass>(),
-            GetMainDocBaseUri<MinimumAttributeTestClass>()
+            GetSchemaResourceBaseUri<MinimumAttributeTestClass>(),
+            GetSchemaResourceBaseUri<MinimumAttributeTestClass>()
         ));
     }
 
@@ -420,8 +351,8 @@ public class JsonSchemaGeneratorTest
 """, new ValidationResult(ResultCode.NumberOutOfRange, "minimum", MinimumKeyword.ErrorMessage(-1.50001, -1.5), 
             ImmutableJsonPointer.Create("/Prop")!,
             ImmutableJsonPointer.Create("/properties/Prop/allOf/0/minimum"), 
-            GetMainDocBaseUri<NumberRangeAttributeTestClass>(),
-            GetMainDocBaseUri<NumberRangeAttributeTestClass>()
+            GetSchemaResourceBaseUri<NumberRangeAttributeTestClass>(),
+            GetSchemaResourceBaseUri<NumberRangeAttributeTestClass>()
             ));
 
         yield return TestSample.Create<NumberRangeAttributeTestClass>("""
@@ -431,57 +362,318 @@ public class JsonSchemaGeneratorTest
 """, new ValidationResult(ResultCode.NumberOutOfRange, "maximum", MaximumKeyword.ErrorMessage(2.50001, 2.5),
             ImmutableJsonPointer.Create("/Prop")!,
             ImmutableJsonPointer.Create("/properties/Prop/allOf/1/maximum"),
-            GetMainDocBaseUri<NumberRangeAttributeTestClass>(),
-            GetMainDocBaseUri<NumberRangeAttributeTestClass>()
+            GetSchemaResourceBaseUri<NumberRangeAttributeTestClass>(),
+            GetSchemaResourceBaseUri<NumberRangeAttributeTestClass>()
         ));
     }
 
-    private static IEnumerable<TestSample> CreateSamplesForBoolean()
+    private class NumberRangeAttributeTestClass
     {
-        yield return TestSample.Create<bool>("true", ValidationResult.ValidResult);
-        yield return TestSample.Create<bool>("false", ValidationResult.ValidResult);
-        yield return TestSample.Create<bool>("\"true\"", new ValidationResult(
-            ResultCode.InvalidTokenKind,
-            "type",
-            GetInvalidTokenErrorMessage(InstanceType.Boolean, InstanceType.String.ToString()),
-            ImmutableJsonPointer.Empty,
-            ImmutableJsonPointer.Create("/type")!,
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(bool).FullName),
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(bool).FullName)
+        [NumberRange(-1.5, 2.5)]
+        public double Prop { get; set; }
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForIPv6Attribute()
+    {
+        yield return TestSample.Create<IPv6AttributeTestClass>(
+            """
+{
+  "Prop": "AA22:BB11:1122:CDEF:1234:AA99:7654:7410"
+}
+""",
+            ValidationResult.ValidResult);
+
+        yield return TestSample.Create<IPv6AttributeTestClass>(
+            """
+{
+  "Prop": "12345::"
+}
+""",
+            new ValidationResult(
+                ResultCode.InvalidFormat,
+                "format",
+                "Invalid string value for format:'ipv6'",
+                ImmutableJsonPointer.Create("/Prop")!,
+                ImmutableJsonPointer.Create("/properties/Prop/format")!,
+                GetSchemaResourceBaseUri<IPv6AttributeTestClass>(),
+                GetSchemaResourceBaseUri<IPv6AttributeTestClass>()));
+    }
+
+    private class IPv6AttributeTestClass
+    {
+        [IPv6]
+        public string? Prop { get; set; }
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForMinLengthAttribute()
+    {
+        yield return TestSample.Create<MinLengthAttributeTestClass<string>>("""
+{
+  "Prop": "a"
+}
+""", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<MinLengthAttributeTestClass<int[]>>("""
+{
+  "Prop": [1]
+}
+""", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<MinLengthAttributeTestClass<string>>("""
+{
+  "Prop": ""
+}
+""", new ValidationResult(ResultCode.StringLengthOutOfRange, "minLength", MinLengthKeyword.ErrorMessage(0, 1),
+            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/minLength"),
+            GetSchemaResourceBaseUri<MinLengthAttributeTestClass<string>>(),
+            GetSchemaResourceBaseUri<MinLengthAttributeTestClass<string>>()
+        ));
+
+        yield return TestSample.Create<MinLengthAttributeTestClass<int[]>>("""
+{
+  "Prop": []
+}
+""", new ValidationResult(ResultCode.ArrayLengthOutOfRange, "minItems", MinItemsKeyword.ErrorMessage(0, 1),
+            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/minItems"),
+            GetSchemaResourceBaseUri<MinLengthAttributeTestClass<int[]>>(),
+            GetSchemaResourceBaseUri<MinLengthAttributeTestClass<int[]>>()
+        ));
+    }
+
+    private class MinLengthAttributeTestClass<T>
+    {
+        [MinLength(1)]
+        public T? Prop { get; set; }
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForMaxLengthAttribute()
+    {
+        yield return TestSample.Create<MaxLengthAttributeTestClass<string>>("""
+{
+  "Prop": "abc"
+}
+""", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<MaxLengthAttributeTestClass<int[]>>("""
+{
+  "Prop": [1, 2, 3]
+}
+""", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<MaxLengthAttributeTestClass<string>>("""
+{
+  "Prop": "abcd"
+}
+""", new ValidationResult(ResultCode.StringLengthOutOfRange, "maxLength", MaxLengthKeyword.ErrorMessage(4, 3),
+            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/maxLength"),
+            GetSchemaResourceBaseUri<MaxLengthAttributeTestClass<string>>(),
+            GetSchemaResourceBaseUri<MaxLengthAttributeTestClass<string>>()
+        ));
+
+        yield return TestSample.Create<MaxLengthAttributeTestClass<int[]>>("""
+{
+  "Prop": [1, 2, 3, 4]
+}
+""", new ValidationResult(ResultCode.ArrayLengthOutOfRange, "maxItems", MaxItemsKeyword.ErrorMessage(4, 3),
+            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/maxItems"),
+            GetSchemaResourceBaseUri<MaxLengthAttributeTestClass<int[]>>(),
+            GetSchemaResourceBaseUri<MaxLengthAttributeTestClass<int[]>>()
+        ));
+    }
+
+    private class MaxLengthAttributeTestClass<T>
+    {
+        [MaxLength(3)]
+        public T? Prop { get; set; }
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForLengthRangeAttribute()
+    {
+        yield return TestSample.Create<LengthRangeAttributeTestClass<string>>("""
+{
+  "Prop": "a"
+}
+""", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<LengthRangeAttributeTestClass<int[]>>("""
+{
+  "Prop": [1]
+}
+""", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<LengthRangeAttributeTestClass<string>>("""
+{
+  "Prop": "ab"
+}
+""", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<LengthRangeAttributeTestClass<int[]>>("""
+{
+  "Prop": [1, 2]
+}
+""", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<LengthRangeAttributeTestClass<string>>("""
+{
+  "Prop": "abc"
+}
+""", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<LengthRangeAttributeTestClass<int[]>>("""
+{
+  "Prop": [1, 2, 3]
+}
+""", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<LengthRangeAttributeTestClass<string>>("""
+{
+  "Prop": ""
+}
+""", new ValidationResult(ResultCode.StringLengthOutOfRange, "minLength", MinLengthKeyword.ErrorMessage(0, 1),
+            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/allOf/0/minLength"),
+            GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<string>>(),
+            GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<string>>()
+        ));
+
+        yield return TestSample.Create<LengthRangeAttributeTestClass<int[]>>("""
+{
+  "Prop": []
+}
+""", new ValidationResult(ResultCode.ArrayLengthOutOfRange, "minItems", MinItemsKeyword.ErrorMessage(0, 1),
+            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/allOf/0/minItems"),
+            GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<int[]>>(),
+            GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<int[]>>()
+        ));
+
+        yield return TestSample.Create<LengthRangeAttributeTestClass<string>>("""
+{
+  "Prop": "abcd"
+}
+""", new ValidationResult(ResultCode.StringLengthOutOfRange, "maxLength", MaxLengthKeyword.ErrorMessage(4, 3),
+            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/allOf/1/maxLength"),
+            GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<string>>(),
+            GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<string>>()
+        ));
+
+        yield return TestSample.Create<LengthRangeAttributeTestClass<int[]>>("""
+{
+  "Prop": [1, 2, 3, 4]
+}
+""", new ValidationResult(ResultCode.ArrayLengthOutOfRange, "maxItems", MaxItemsKeyword.ErrorMessage(4, 3),
+            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/allOf/1/maxItems"),
+            GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<int[]>>(),
+            GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<int[]>>()
+        ));
+    }
+
+    private class LengthRangeAttributeTestClass<T>
+    {
+        [LengthRange(1, 3)]
+        public T? Prop { get; set; }
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForIPv4Attribute()
+    {
+        yield return TestSample.Create<IPv4AttributeTestClass>(
+            """
+{
+  "Prop": "192.168.1.1"
+}
+""",
+            ValidationResult.ValidResult);
+
+        yield return TestSample.Create<IPv4AttributeTestClass>(
+            """
+{
+  "Prop": "127.0.0.0.1"
+}
+""",
+            new ValidationResult(
+                ResultCode.InvalidFormat,
+                "format",
+                "Invalid string value for format:'ipv4'",
+                ImmutableJsonPointer.Create("/Prop")!,
+                ImmutableJsonPointer.Create("/properties/Prop/format")!,
+                GetSchemaResourceBaseUri<IPv4AttributeTestClass>(),
+                GetSchemaResourceBaseUri<IPv4AttributeTestClass>()));
+    }
+
+    private class IPv4AttributeTestClass
+    {
+        [IPv4]
+        public string? Prop { get; set; }
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForStringEnumAttribute()
+    {
+        yield return TestSample.Create<StringEnumAttributeTestClass>(
+            """
+{
+  "Prop": "b"
+}
+""",
+            ValidationResult.ValidResult
+        );
+        yield return TestSample.Create<StringEnumAttributeTestClass>(
+            """
+{
+  "Prop": 1
+}
+""",
+            new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", "Not found in allowed list",
+                ImmutableJsonPointer.Create("/Prop")!,
+                ImmutableJsonPointer.Create("/properties/Prop/enum"),
+                GetSchemaResourceBaseUri<StringEnumAttributeTestClass>(),
+                GetSchemaResourceBaseUri<StringEnumAttributeTestClass>()
             ));
+        yield return TestSample.Create<StringEnumAttributeTestClass>(
+            """
+{
+  "Prop": "c"
+}
+""",
+            new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", "Not found in allowed list",
+                ImmutableJsonPointer.Create("/Prop")!,
+                ImmutableJsonPointer.Create("/properties/Prop/enum"),
+                GetSchemaResourceBaseUri<StringEnumAttributeTestClass>(),
+                GetSchemaResourceBaseUri<StringEnumAttributeTestClass>())
+        );
     }
 
-    private static IEnumerable<TestSample> CreateSamplesForUnsignedInteger<T>() where T : unmanaged
+    internal class StringEnumAttributeTestClass
     {
-        yield return TestSample.Create<T>("0", ValidationResult.ValidResult);
-        yield return TestSample.Create<T>("1", ValidationResult.ValidResult);
-        yield return TestSample.Create<T>("-1", new ValidationResult(
-            ResultCode.NumberOutOfRange,
-            "minimum",
-            "Instance '-1' is less than '0'",
-            ImmutableJsonPointer.Empty,
-            ImmutableJsonPointer.Create("/minimum")!,
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
-        ));
-        yield return TestSample.Create<T>("\"abc\"", new ValidationResult(
-            ResultCode.InvalidTokenKind,
-            "type",
-            GetInvalidTokenErrorMessage(InstanceType.Integer, InstanceType.String.ToString()),
-            ImmutableJsonPointer.Empty,
-            ImmutableJsonPointer.Create("/type")!,
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
-        ));
-        yield return TestSample.Create<T>("1.5", new ValidationResult(
-            ResultCode.NotBeInteger,
-            "type",
-            GetInvalidTokenErrorMessage(InstanceType.Integer, "float number"),
-            ImmutableJsonPointer.Empty,
-            ImmutableJsonPointer.Create("/type")!,
-            GetMainDocBaseUri<T>(),
-            GetMainDocBaseUri<T>()
-        ));
+        [StringEnum("a", "b")]
+        public string? Prop { get; set; }
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForEmailAttribute()
+    {
+        yield return TestSample.Create<EmailAttributeTestClass>(
+            """
+{
+  "Email": "hello@world.com"
+}
+""", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<EmailAttributeTestClass>(
+            """
+{
+  "Email": "@world.com"
+} 
+""", new ValidationResult(
+                ResultCode.InvalidFormat,
+                "format",
+                "Invalid string value for format:'email'",
+                ImmutableJsonPointer.Create("/Email")!,
+                ImmutableJsonPointer.Create("/properties/Email/format")!,
+                new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(EmailAttributeTestClass).FullName),
+                new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(EmailAttributeTestClass).FullName)));
+    }
+
+    private class EmailAttributeTestClass
+    {
+        [Email]
+        public string? Email { get; set; }
     }
 
     private static IEnumerable<TestSample> CreateSamplesForMultipleOfAttribute()
@@ -504,8 +696,8 @@ public class JsonSchemaGeneratorTest
 }
 """, new ValidationResult(ResultCode.FailedToMultiple, "multipleOf", MultipleOfKeyword.ErrorMessage(4.3, 1.5),
             ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/multipleOf"),
-            GetMainDocBaseUri<MultipleOfAttributeTestClass>(),
-            GetMainDocBaseUri<MultipleOfAttributeTestClass>()
+            GetSchemaResourceBaseUri<MultipleOfAttributeTestClass>(),
+            GetSchemaResourceBaseUri<MultipleOfAttributeTestClass>()
         ));
     }
 
@@ -513,31 +705,6 @@ public class JsonSchemaGeneratorTest
     {
         [MultipleOf(1.5)]
         public double Prop { get; set; }
-    }
-
-    private static IEnumerable<TestSample> CreateSamplesForSignedInteger<T>() where T : unmanaged
-    {
-        yield return TestSample.Create<T>("0", ValidationResult.ValidResult);
-        yield return TestSample.Create<T>("1", ValidationResult.ValidResult);
-        yield return TestSample.Create<T>("-1", ValidationResult.ValidResult);
-        yield return TestSample.Create<T>("\"abc\"", new ValidationResult(
-            ResultCode.InvalidTokenKind,
-            "type",
-            GetInvalidTokenErrorMessage(InstanceType.Integer, InstanceType.String.ToString()),
-            ImmutableJsonPointer.Empty,
-            ImmutableJsonPointer.Create("/type")!,
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
-        ));
-        yield return TestSample.Create<T>("1.5", new ValidationResult(
-            ResultCode.NotBeInteger,
-            "type",
-            GetInvalidTokenErrorMessage(InstanceType.Integer, "float number"),
-            ImmutableJsonPointer.Empty,
-            ImmutableJsonPointer.Create("/type")!,
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
-        ));
     }
 
     private static IEnumerable<TestSample> CreateSamplesForIntegerEnumAttribute()
@@ -554,8 +721,8 @@ public class JsonSchemaGeneratorTest
 }
 """, new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage(),
             ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/enum"),
-            GetMainDocBaseUri<IntegerEnumAttributeTestClass>(),
-            GetMainDocBaseUri<IntegerEnumAttributeTestClass>()
+            GetSchemaResourceBaseUri<IntegerEnumAttributeTestClass>(),
+            GetSchemaResourceBaseUri<IntegerEnumAttributeTestClass>()
         ));
     }
 
@@ -563,23 +730,6 @@ public class JsonSchemaGeneratorTest
     {
         [IntegerEnum(1, 2)]
         public int Prop { get; set; }
-    }
-
-    private static IEnumerable<TestSample> CreateSamplesForFloatNumber<T>() where T : unmanaged
-    {
-        yield return TestSample.Create<T>("0", ValidationResult.ValidResult);
-        yield return TestSample.Create<T>("1", ValidationResult.ValidResult);
-        yield return TestSample.Create<T>("1.5", ValidationResult.ValidResult);
-        yield return TestSample.Create<T>("-1.5", ValidationResult.ValidResult);
-        yield return TestSample.Create<T>("\"abc\"", new ValidationResult(
-            ResultCode.InvalidTokenKind,
-            "type",
-            GetInvalidTokenErrorMessage(InstanceType.Number, InstanceType.String.ToString()),
-            ImmutableJsonPointer.Empty,
-            ImmutableJsonPointer.Create("/type")!,
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
-        ));
     }
 
     private static IEnumerable<TestSample> CreateSamplesForExclusiveMaximumAttribute()
@@ -602,8 +752,8 @@ public class JsonSchemaGeneratorTest
 }
 """, new ValidationResult(ResultCode.NumberOutOfRange, "exclusiveMaximum", ExclusiveMaximumKeyword.ErrorMessage(3.0, 3),
             ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/exclusiveMaximum"),
-            GetMainDocBaseUri<ExclusiveMaximumAttributeTestClass>(),
-            GetMainDocBaseUri<ExclusiveMaximumAttributeTestClass>()
+            GetSchemaResourceBaseUri<ExclusiveMaximumAttributeTestClass>(),
+            GetSchemaResourceBaseUri<ExclusiveMaximumAttributeTestClass>()
         ));
     }
 
@@ -633,8 +783,8 @@ public class JsonSchemaGeneratorTest
 }
 """, new ValidationResult(ResultCode.NumberOutOfRange, "exclusiveMinimum", ExclusiveMinimumKeyword.ErrorMessage(2.5, 2.5),
             ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/exclusiveMinimum"),
-            GetMainDocBaseUri<ExclusiveMinimumAttributeTestClass>(),
-            GetMainDocBaseUri<ExclusiveMinimumAttributeTestClass>()
+            GetSchemaResourceBaseUri<ExclusiveMinimumAttributeTestClass>(),
+            GetSchemaResourceBaseUri<ExclusiveMinimumAttributeTestClass>()
         ));
     }
 
@@ -663,14 +813,3 @@ public class JsonSchemaGeneratorTest
         }
     }
 }
-
-internal class NumberRangeAttributeTestClass
-{
-    [NumberRange(-1.5, 2.5)]
-    public double Prop { get; set; }
-}
-
-
-
-
-
