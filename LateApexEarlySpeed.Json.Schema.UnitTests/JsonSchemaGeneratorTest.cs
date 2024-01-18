@@ -470,7 +470,7 @@ public class JsonSchemaGeneratorTest
             ImmutableJsonPointer.Create("/PropName")!,
             ImmutableJsonPointer.Create("/properties/PropName/$ref/type"), 
             GetSchemaResourceBaseUri<CustomObject>(),
-            GetSubSchemaRefFullUriForDefs<CustomObject, InnerCustomObject>()), new JsonSchemaGeneratorOptions{PropertyNamingPolicy = JsonSchemaNamingPolicy.SharedDefault});
+            GetSubSchemaRefFullUriForDefs<CustomObject, InnerCustomObject>()), new JsonSchemaGeneratorOptions());
 
         yield return TestSample.Create<CustomObject>("""
             {
