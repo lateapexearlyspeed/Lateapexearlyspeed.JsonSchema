@@ -10,22 +10,22 @@ using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.Generator;
 
-internal class JsonSchemaGeneratorOptions
+public class JsonSchemaGeneratorOptions
 {
-    public TypeSchemaDefinitions SchemaDefinitions = new();
+    internal TypeSchemaDefinitions SchemaDefinitions = new();
     public JsonSchemaNamingPolicy PropertyNamingPolicy { get; set; } = JsonSchemaNamingPolicy.SharedDefault;
 }
 
 public static class JsonSchemaGenerator
 {
-    public static JsonValidator GenerateJsonValidator<T>() => GenerateJsonValidator(typeof(T));
+    public static JsonValidator GenerateJsonValidator<T>(JsonSchemaGeneratorOptions? options = null) => GenerateJsonValidator(typeof(T), options);
 
-    public static JsonValidator GenerateJsonValidator(Type type)
+    public static JsonValidator GenerateJsonValidator(Type type, JsonSchemaGeneratorOptions? options = null)
     {
-        JsonSchemaGeneratorOptions options = new JsonSchemaGeneratorOptions();
+        options ??= new JsonSchemaGeneratorOptions();
         BodyJsonSchema jsonSchema = GenerateSchema(type, options, Array.Empty<KeywordBase>());
 
-        BodyJsonSchemaDocument bodyJsonSchemaDocument = jsonSchema.TransformToSchemaDocument(new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, type.FullName), new DefsKeyword(options.SchemaDefinitions.GetAll().ToDictionary(kv => kv.Key, kv => kv.Value as JsonSchema)));
+        BodyJsonSchemaDocument bodyJsonSchemaDocument = jsonSchema.TransformToSchemaDocument(new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, type.FullName!), new DefsKeyword(options.SchemaDefinitions.GetAll().ToDictionary(kv => kv.Key, kv => kv.Value as JsonSchema)));
 
         return new JsonValidator(bodyJsonSchemaDocument);
     }
@@ -40,21 +40,62 @@ public static class JsonSchemaGenerator
         }
 
         // Signed Integer
-        if (type == typeof(int) || type == typeof(long) || type == typeof(short) || type == typeof(sbyte))
+        if (type == typeof(int))
         {
-            return GenerateSchemaForSignedInteger(keywordsFromProperty);
+            return GenerateSchemaForSignedInteger(keywordsFromProperty, int.MinValue, int.MaxValue);
+        }
+
+        if (type == typeof(long))
+        {
+            return GenerateSchemaForSignedInteger(keywordsFromProperty, long.MinValue, long.MaxValue);
+        }
+
+        if (type == typeof(short))
+        {
+            return GenerateSchemaForSignedInteger(keywordsFromProperty, short.MinValue, short.MaxValue);
+        }
+
+        if (type == typeof(sbyte))
+        {
+            return GenerateSchemaForSignedInteger(keywordsFromProperty, sbyte.MinValue, sbyte.MaxValue);
         }
 
         // Unsigned integer
-        if (type == typeof(uint) || type == typeof(ulong) || type == typeof(ushort) || type == typeof(byte))
+        if (type == typeof(uint))
         {
-            return GenerateSchemaForUnsignedInteger(keywordsFromProperty);
+            return GenerateSchemaForUnsignedInteger(keywordsFromProperty, uint.MaxValue);
+        }
+
+        if (type == typeof(ulong))
+        {
+            return GenerateSchemaForUnsignedInteger(keywordsFromProperty, ulong.MaxValue);
+        }
+
+        if (type == typeof(ushort))
+        {
+            return GenerateSchemaForUnsignedInteger(keywordsFromProperty, ushort.MaxValue);
+        }
+
+        if (type == typeof(byte))
+        {
+            return GenerateSchemaForUnsignedInteger(keywordsFromProperty, byte.MaxValue);
         }
 
         // Floating-point numeric types
-        if (type == typeof(float) || type == typeof(double) || type == typeof(decimal))
+        if (type == typeof(float))
         {
-            return GenerateSchemaForDouble(keywordsFromProperty);
+            return GenerateSchemaForDouble(keywordsFromProperty, float.MinValue, float.MaxValue);
+        }
+
+        if (type == typeof(double))
+        {
+            return GenerateSchemaForDouble(keywordsFromProperty, double.MinValue, double.MaxValue);
+        }
+
+        // TODO: consider decimal range !
+        if (type == typeof(decimal))
+        {
+            return GenerateSchemaForDouble(keywordsFromProperty, double.MinValue, double.MaxValue);
         }
 
         // Boolean
@@ -69,16 +110,16 @@ public static class JsonSchemaGenerator
             return GenerateSchemaForString(keywordsFromProperty);
         }
 
-        // Collection
-        if (type.GetInterface("IEnumerable`1") is not null)
-        {
-            return GenerateSchemaForArray(type, options, keywordsFromProperty);
-        }
-
         // Dictionary<string, TValue>
         if (type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>) && type.GetGenericArguments()[0] == typeof(string))
         {
             return GenerateSchemaForStringDictionary(type, options, keywordsFromProperty);
+        }
+
+        // Collection
+        if (type.GetInterface("IEnumerable`1") is not null)
+        {
+            return GenerateSchemaForArray(type, options, keywordsFromProperty);
         }
 
         // Enum
@@ -112,9 +153,9 @@ public static class JsonSchemaGenerator
         return GenerateSchemaForCustomObject(type, options);
     }
 
-    private static BodyJsonSchema GenerateSchemaForUnsignedInteger(KeywordBase[] keywordsFromProperty)
+    private static BodyJsonSchema GenerateSchemaForUnsignedInteger(KeywordBase[] keywordsFromProperty, ulong max)
     {
-        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Integer)).Append(new MinimumKeyword {BenchmarkValue = 0}).ToList());
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Integer)).Append(new MinimumKeyword(0)).Append(new MaximumKeyword(max)).ToList());
     }
 
     private static BodyJsonSchema GenerateSchemaForDateTimeOffset(KeywordBase[] keywordsFromProperty)
@@ -322,14 +363,14 @@ public static class JsonSchemaGenerator
         return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Boolean)).ToList());
     }
 
-    private static BodyJsonSchema GenerateSchemaForDouble(IEnumerable<KeywordBase> keywordsFromProperty)
+    private static BodyJsonSchema GenerateSchemaForDouble(IEnumerable<KeywordBase> keywordsFromProperty, double min, double max)
     {
-        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Number)).ToList());
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Number)).Append(new MinimumKeyword(min)).Append(new MaximumKeyword(max)).ToList());
     }
 
-    private static BodyJsonSchema GenerateSchemaForSignedInteger(IEnumerable<KeywordBase> keywordsFromProperty)
+    private static BodyJsonSchema GenerateSchemaForSignedInteger(IEnumerable<KeywordBase> keywordsFromProperty, long min, long max)
     {
-        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Integer)).ToList());
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Integer)).Append(new MinimumKeyword(min)).Append(new MaximumKeyword(max)).ToList());
     }
 
     private static BodyJsonSchema GenerateSchemaReference(Type type, KeywordBase[] keywordsFromProperty)

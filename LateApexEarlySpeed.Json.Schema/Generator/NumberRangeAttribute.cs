@@ -19,8 +19,8 @@ public class NumberRangeAttribute : Attribute, IKeywordGenerator
     {
         return new AllOfKeyword(new List<JsonSchema>
         {
-            new BodyJsonSchema(new List<KeywordBase> { new MinimumKeyword { BenchmarkValue = _min } }),
-            new BodyJsonSchema(new List<KeywordBase> { new MaximumKeyword { BenchmarkValue = _max } })
+            new BodyJsonSchema(new List<KeywordBase> { new MinimumKeyword(_min) }),
+            new BodyJsonSchema(new List<KeywordBase> { new MaximumKeyword(_max) })
         });
     }
 }

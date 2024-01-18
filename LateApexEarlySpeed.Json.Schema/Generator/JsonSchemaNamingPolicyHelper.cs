@@ -25,10 +25,11 @@ internal class JsonSchemaNamingPolicyHelper
                 : word.Span.ToUpperInvariant(transformedWord);
             Debug.Assert(result == word.Length);
 
-            sb.AppendFormat("{0}{1}", transformedWord, separator);
+            sb.Append(transformedWord);
+            sb.Append(separator);
         }
 
-        Debug.Assert(sb.Length != 0 && sb[^1] == '-');
+        Debug.Assert(sb.Length != 0 && sb[^1] == separator);
         return sb.ToString(0, sb.Length - 1);
     }
 }

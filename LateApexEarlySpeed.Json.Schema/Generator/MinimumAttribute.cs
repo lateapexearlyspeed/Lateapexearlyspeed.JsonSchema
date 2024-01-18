@@ -14,6 +14,6 @@ public class MinimumAttribute : Attribute, IKeywordGenerator
 
     public KeywordBase CreateKeyword(Type type)
     {
-        return new MinimumKeyword { BenchmarkValue = _minimum };
+        return new MinimumKeyword(_minimum);
     }
 }

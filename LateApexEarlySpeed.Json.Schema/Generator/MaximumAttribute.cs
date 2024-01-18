@@ -14,6 +14,6 @@ public class MaximumAttribute : Attribute, IKeywordGenerator
 
     public KeywordBase CreateKeyword(Type type)
     {
-        return new MaximumKeyword { BenchmarkValue = _maximum };
+        return new MaximumKeyword(_maximum);
     }
 }

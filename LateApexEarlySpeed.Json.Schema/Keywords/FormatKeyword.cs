@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -6,6 +7,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
+[Obfuscation(ApplyToMembers = false)]
 [Keyword("format")]
 [JsonConverter(typeof(FormatKeywordJsonConverter))]
 public class FormatKeyword : KeywordBase
@@ -28,6 +30,12 @@ public class FormatKeyword : KeywordBase
 
         return _formatValidator.Validate(instance.GetString()!)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.InvalidFormat, $"Invalid string value for format:'{_format}'", options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.CreateFailedResult(ResultCode.InvalidFormat, ErrorMessage(_format), options.ValidationPathStack, Name, instance.Location);
+    }
+
+    [Obfuscation]
+    public static string ErrorMessage(string format)
+    {
+        return $"Invalid string value for format:'{format}'";
     }
 }

@@ -46,6 +46,33 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
         return _jsonElement.GetRawText();
     }
 
+    /// <summary>
+    /// This method will check the numeric range and convert to corresponding type. The matching order is: long -> ulong -> double.
+    /// This method will ensure one parameter will be set as <see cref="Nullable{T}.HasValue"/> unless exception thrown.
+    /// </summary>
+    public void GetNumericValue(out double? doubleValue, out long? longValue, out ulong? ulongValue)
+    {
+        if (_jsonElement.TryGetInt64(out long tmpLong))
+        {
+            longValue = tmpLong;
+            doubleValue = null;
+            ulongValue = null;
+            return;
+        }
+
+        if (_jsonElement.TryGetUInt64(out ulong tmpULong))
+        {
+            ulongValue = tmpULong;
+            doubleValue = null;
+            longValue = null;
+            return;
+        }
+
+        doubleValue = _jsonElement.GetDouble();
+        longValue = null;
+        ulongValue = null;
+    }
+
     public bool TryGetInt64ForJsonSchema(out long value)
     {
         if (ValueKind != JsonValueKind.Number)

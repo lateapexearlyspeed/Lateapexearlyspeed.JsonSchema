@@ -6,18 +6,123 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Obfuscation(ApplyToMembers = false)]
 [Keyword("minimum")]
-[JsonConverter(typeof(NumberRangeKeywordJsonConverter<MinimumKeyword>))]
+[JsonConverter(typeof(MinimumKeywordJsonConverter))]
 internal class MinimumKeyword : NumberRangeKeywordBase
 {
-    protected override bool IsInRange(double instanceValue) 
-        => instanceValue >= BenchmarkValue;
+    public MinimumKeyword(double min) : base(new DoubleTypeBenchmarkChecker(min))
+    {
+    }
 
-    protected override string GetErrorMessage(double instanceValue)
-        => ErrorMessage(instanceValue, BenchmarkValue);
+    public MinimumKeyword(long min) : base(new LongTypeBenchmarkChecker(min))
+    {
+    }
+
+    public MinimumKeyword(ulong min) : base(new UnsignedLongTypeBenchmarkChecker(min))
+    {
+    }
 
     [Obfuscation]
-    public static string ErrorMessage(double instanceValue, double minimum)
+    public static string ErrorMessage(object instanceValue, object minimum)
     {
         return $"Instance '{instanceValue}' is less than '{minimum}'";
+    }
+
+    private class DoubleTypeBenchmarkChecker : BenchmarkChecker
+    {
+        private readonly double _benchmark;
+
+        public DoubleTypeBenchmarkChecker(double benchmark)
+        {
+            _benchmark = benchmark;
+        }
+
+        public override bool IsInRange(double instanceValue)
+        {
+            return instanceValue >= _benchmark;
+        }
+
+        public override bool IsInRange(long instanceValue)
+        {
+            return instanceValue >= _benchmark;
+        }
+
+        public override bool IsInRange(ulong instanceValue)
+        {
+            return instanceValue >= _benchmark;
+        }
+
+        public override string GetErrorMessage(object instanceValue)
+        {
+            return ErrorMessage(instanceValue, _benchmark);
+        }
+    }
+
+    private class LongTypeBenchmarkChecker : BenchmarkChecker
+    {
+        private readonly long _benchmark;
+
+        public LongTypeBenchmarkChecker(long benchmark)
+        {
+            _benchmark = benchmark;
+        }
+
+        public override bool IsInRange(double instanceValue)
+        {
+            return instanceValue >= _benchmark;
+        }
+
+        public override bool IsInRange(long instanceValue)
+        {
+            return instanceValue >= _benchmark;
+        }
+
+        public override bool IsInRange(ulong instanceValue)
+        {
+            if (_benchmark < 0)
+            {
+                return true;
+            }
+            return instanceValue >= (ulong)_benchmark;
+        }
+
+        public override string GetErrorMessage(object instanceValue)
+        {
+            return ErrorMessage(instanceValue, _benchmark);
+        }
+    }
+
+    private class UnsignedLongTypeBenchmarkChecker : BenchmarkChecker
+    {
+        private readonly ulong _benchmark;
+
+        public UnsignedLongTypeBenchmarkChecker(ulong benchmark)
+        {
+            _benchmark = benchmark;
+        }
+
+        public override bool IsInRange(double instanceValue)
+        {
+            return instanceValue >= _benchmark;
+        }
+
+        public override bool IsInRange(long instanceValue)
+        {
+            if (_benchmark > long.MaxValue)
+            {
+                return false;
+            }
+
+            return instanceValue >= (long)_benchmark;
+        }
+
+        public override bool IsInRange(ulong instanceValue)
+        {
+            return instanceValue >= _benchmark;
+        }
+
+        public override string GetErrorMessage(object instanceValue)
+        {
+            return ErrorMessage(instanceValue, _benchmark);
+        }
     }
 }
