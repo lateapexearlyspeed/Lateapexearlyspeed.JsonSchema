@@ -92,10 +92,9 @@ public static class JsonSchemaGenerator
             return GenerateSchemaForDouble(keywordsFromProperty, double.MinValue, double.MaxValue);
         }
 
-        // TODO: consider decimal range !
         if (type == typeof(decimal))
         {
-            return GenerateSchemaForDouble(keywordsFromProperty, double.MinValue, double.MaxValue);
+            return GenerateSchemaForDecimal(keywordsFromProperty);
         }
 
         // Boolean
@@ -168,7 +167,7 @@ public static class JsonSchemaGenerator
 
     private static BodyJsonSchema GenerateSchemaForUri(KeywordBase[] keywordsFromProperty)
     {
-        var typeKeyword = new TypeKeyword(InstanceType.String);
+        var typeKeyword = new TypeKeyword(InstanceType.String, InstanceType.Null);
         var formatKeyword = new FormatKeyword(UriReferenceFormatValidator.FormatName);
 
         return new BodyJsonSchema(new List<KeywordBase>(keywordsFromProperty) { typeKeyword, formatKeyword });
@@ -206,9 +205,9 @@ public static class JsonSchemaGenerator
         return new BodyJsonSchema(new List<KeywordBase> { anyOfKeyword });
     }
 
-    private static BodyJsonSchema GenerateSchemaForCustomObject(Type type, JsonSchemaGeneratorOptions options)
+    private static JsonSchemaResource GenerateSchemaForCustomObject(Type type, JsonSchemaGeneratorOptions options)
     {
-        var typeKeyword = new TypeKeyword(InstanceType.Object);
+        var typeKeyword = new TypeKeyword(InstanceType.Object, InstanceType.Null);
 
         IEnumerable<KeywordBase> keywordsOnType = GenerateKeywordsFromType(type);
 
@@ -216,13 +215,14 @@ public static class JsonSchemaGenerator
 
         PropertiesKeyword propertiesKeyword = CreatePropertiesKeyword(propertyInfos, options);
 
-        RequiredKeyword ? requiredKeyword = CreateRequiredKeyword(propertyInfos, options);
+        RequiredKeyword? requiredKeyword = CreateRequiredKeyword(propertyInfos, options);
 
         IEnumerable<KeywordBase> keywords = keywordsOnType.Append(typeKeyword).Append(propertiesKeyword);
         if (requiredKeyword is not null)
         {
             keywords = keywords.Append(requiredKeyword);
         }
+
         return new JsonSchemaResource(new Uri(type.FullName!, UriKind.Relative), keywords.ToList(), new List<ISchemaContainerValidationNode>(0), null, null, null, null, null);
     }
 
@@ -299,7 +299,7 @@ public static class JsonSchemaGenerator
 
     private static BodyJsonSchema GenerateSchemaForStringDictionary(Type type, JsonSchemaGeneratorOptions options, IEnumerable<KeywordBase> keywordsFromProperty)
     {
-        var typeKeyword = new TypeKeyword(InstanceType.Object);
+        var typeKeyword = new TypeKeyword(InstanceType.Object, InstanceType.Null);
         Type valueType = type.GetGenericArguments()[1];
         JsonSchema valueSchema = GenerateSchema(valueType, options, Array.Empty<KeywordBase>());
 
@@ -328,7 +328,7 @@ public static class JsonSchemaGenerator
 
     private static BodyJsonSchema GenerateSchemaForArray(Type type, JsonSchemaGeneratorOptions options, KeywordBase[] keywordsFromProperty)
     {
-        List<KeywordBase> keywords = new List<KeywordBase> { new TypeKeyword(InstanceType.Array) };
+        List<KeywordBase> keywords = new List<KeywordBase> { new TypeKeyword(InstanceType.Array, InstanceType.Null) };
         keywords.AddRange(keywordsFromProperty);
 
         Debug.Assert(type.GetInterface("IEnumerable`1") is not null);
@@ -355,7 +355,7 @@ public static class JsonSchemaGenerator
 
     private static BodyJsonSchema GenerateSchemaForString(IEnumerable<KeywordBase> keywordsFromProperty)
     {
-        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.String)).ToList());
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.String, InstanceType.Null)).ToList());
     }
 
     private static BodyJsonSchema GenerateSchemaForBoolean(IEnumerable<KeywordBase> keywordsFromProperty)
@@ -366,6 +366,11 @@ public static class JsonSchemaGenerator
     private static BodyJsonSchema GenerateSchemaForDouble(IEnumerable<KeywordBase> keywordsFromProperty, double min, double max)
     {
         return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Number)).Append(new MinimumKeyword(min)).Append(new MaximumKeyword(max)).ToList());
+    }
+
+    private static BodyJsonSchema GenerateSchemaForDecimal(IEnumerable<KeywordBase> keywordsFromProperty)
+    {
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Number)).Append(new MinimumKeyword(decimal.MinValue)).Append(new MaximumKeyword(decimal.MaxValue)).ToList());
     }
 
     private static BodyJsonSchema GenerateSchemaForSignedInteger(IEnumerable<KeywordBase> keywordsFromProperty, long min, long max)

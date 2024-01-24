@@ -47,7 +47,6 @@ public enum ResultCode
 {
     Valid,
     FailedToMultiple,
-    NotBeInteger,
     InvalidTokenKind,
     MoreThanOnePassedSchemaFound,
     AllSubSchemaFailed,

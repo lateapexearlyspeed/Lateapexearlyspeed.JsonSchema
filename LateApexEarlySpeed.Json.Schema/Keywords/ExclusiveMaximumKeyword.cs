@@ -9,15 +9,19 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(ExclusiveMaximumKeywordJsonConverter))]
 internal class ExclusiveMaximumKeyword : NumberRangeKeywordBase
 {
-    public ExclusiveMaximumKeyword(double max) : base(new DoubleTypeBenchmarkChecker(max))
+    public ExclusiveMaximumKeyword(double max) : base(new DoubleTypeBenchmarkCheckerBase(max))
     {
     }
 
-    public ExclusiveMaximumKeyword(long max) : base(new LongTypeBenchmarkChecker(max))
+    public ExclusiveMaximumKeyword(long max) : base(new LongTypeBenchmarkCheckerBase(max))
     {
     }
 
-    public ExclusiveMaximumKeyword(ulong max) : base(new UnsignedLongTypeBenchmarkChecker(max))
+    public ExclusiveMaximumKeyword(ulong max) : base(new UnsignedLongTypeBenchmarkCheckerBase(max))
+    {
+    }
+
+    public ExclusiveMaximumKeyword(decimal max) : base(new DecimalBenchmarkChecker(max))
     {
     }
 
@@ -27,56 +31,56 @@ internal class ExclusiveMaximumKeyword : NumberRangeKeywordBase
         return $"Instance '{instanceValue}' is equal to or greater than '{maximum}'";
     }
 
-    private class DoubleTypeBenchmarkChecker : BenchmarkChecker
+    private class DoubleTypeBenchmarkCheckerBase : NonDecimalBenchmarkCheckerBase
     {
         private readonly double _benchmark;
 
-        public DoubleTypeBenchmarkChecker(double benchmark)
+        public DoubleTypeBenchmarkCheckerBase(double benchmark)
         {
             _benchmark = benchmark;
         }
 
-        public override bool IsInRange(double instanceValue)
+        protected override bool IsInRange(double instanceValue)
         {
             return instanceValue < _benchmark;
         }
 
-        public override bool IsInRange(long instanceValue)
+        protected override bool IsInRange(long instanceValue)
         {
             return instanceValue < _benchmark;
         }
 
-        public override bool IsInRange(ulong instanceValue)
+        protected override bool IsInRange(ulong instanceValue)
         {
             return instanceValue < _benchmark;
         }
 
-        public override string GetErrorMessage(object instanceValue)
+        protected override string GetErrorMessage(object instanceValue)
         {
             return ErrorMessage(instanceValue, _benchmark);
         }
     }
 
-    private class LongTypeBenchmarkChecker : BenchmarkChecker
+    private class LongTypeBenchmarkCheckerBase : NonDecimalBenchmarkCheckerBase
     {
         private readonly long _benchmark;
 
-        public LongTypeBenchmarkChecker(long benchmark)
+        public LongTypeBenchmarkCheckerBase(long benchmark)
         {
             _benchmark = benchmark;
         }
 
-        public override bool IsInRange(double instanceValue)
+        protected override bool IsInRange(double instanceValue)
         {
             return instanceValue < _benchmark;
         }
 
-        public override bool IsInRange(long instanceValue)
+        protected override bool IsInRange(long instanceValue)
         {
             return instanceValue < _benchmark;
         }
 
-        public override bool IsInRange(ulong instanceValue)
+        protected override bool IsInRange(ulong instanceValue)
         {
             if (_benchmark < 0)
             {
@@ -85,27 +89,27 @@ internal class ExclusiveMaximumKeyword : NumberRangeKeywordBase
             return instanceValue < (ulong)_benchmark;
         }
 
-        public override string GetErrorMessage(object instanceValue)
+        protected override string GetErrorMessage(object instanceValue)
         {
             return ErrorMessage(instanceValue, _benchmark);
         }
     }
 
-    private class UnsignedLongTypeBenchmarkChecker : BenchmarkChecker
+    private class UnsignedLongTypeBenchmarkCheckerBase : NonDecimalBenchmarkCheckerBase
     {
         private readonly ulong _benchmark;
 
-        public UnsignedLongTypeBenchmarkChecker(ulong benchmark)
+        public UnsignedLongTypeBenchmarkCheckerBase(ulong benchmark)
         {
             _benchmark = benchmark;
         }
 
-        public override bool IsInRange(double instanceValue)
+        protected override bool IsInRange(double instanceValue)
         {
             return instanceValue < _benchmark;
         }
 
-        public override bool IsInRange(long instanceValue)
+        protected override bool IsInRange(long instanceValue)
         {
             if (_benchmark > long.MaxValue)
             {
@@ -115,14 +119,31 @@ internal class ExclusiveMaximumKeyword : NumberRangeKeywordBase
             return instanceValue < (long)_benchmark;
         }
 
-        public override bool IsInRange(ulong instanceValue)
+        protected override bool IsInRange(ulong instanceValue)
         {
             return instanceValue < _benchmark;
         }
 
-        public override string GetErrorMessage(object instanceValue)
+        protected override string GetErrorMessage(object instanceValue)
         {
             return ErrorMessage(instanceValue, _benchmark);
+        }
+    }
+
+    private class DecimalBenchmarkChecker : DecimalBenchmarkCheckerBase
+    {
+        public DecimalBenchmarkChecker(decimal benchmark) : base(benchmark)
+        {
+        }
+
+        protected override bool IsInRange(decimal instanceValue)
+        {
+            return instanceValue < BenchmarkValue;
+        }
+
+        protected override string GetErrorMessage(object instanceValue)
+        {
+            return ErrorMessage(instanceValue, BenchmarkValue);
         }
     }
 }

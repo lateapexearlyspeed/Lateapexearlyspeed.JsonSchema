@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
@@ -31,59 +30,41 @@ internal class TypeKeyword : KeywordBase
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         Debug.Assert(_instanceTypes.Length != 0);
-        Unsafe.SkipInit(out ValidationResult validationResult);
 
         foreach (InstanceType instanceType in _instanceTypes)
         {
-            validationResult = ValidateAgainstType(instance, instanceType, options);
-            if (validationResult.IsValid)
+            if (IsValidAgainstType(instance, instanceType))
             {
                 return ValidationResult.ValidResult;
             }
         }
 
-        return validationResult;
+        return ValidationResult.CreateFailedResult(ResultCode.InvalidTokenKind, GetErrorMessage(instance.ValueKind), options.ValidationPathStack, Name, instance.Location);
     }
 
-    private ValidationResult ValidateAgainstType(JsonInstanceElement instance, InstanceType expectedInstanceType, JsonSchemaOptions options)
+    private string GetErrorMessage(JsonValueKind actualKind)
+    {
+        return $"Expect type(s): '{string.Join('|', _instanceTypes)}' but actual is '{actualKind}'";
+    }
+
+    private bool IsValidAgainstType(JsonInstanceElement instance, InstanceType expectedInstanceType)
     {
         switch (expectedInstanceType)
         {
             case InstanceType.Integer:
-                if (instance.ValueKind != JsonValueKind.Number)
-                {
-                    return ValidationResult.CreateFailedResult(ResultCode.InvalidTokenKind, GetErrorMessage(expectedInstanceType, instance.ValueKind), options.ValidationPathStack, Name, instance.Location);
-                }
+                return instance.ValueKind == JsonValueKind.Number && instance.TryGetInt64ForJsonSchema(out _);
 
-                if (!instance.TryGetInt64ForJsonSchema(out _))
-                {
-                    return ValidationResult.CreateFailedResult(ResultCode.NotBeInteger, $"Expect type '{expectedInstanceType}' but actual is 'float number'", options.ValidationPathStack, Name, instance.Location);
-                }
-
-                break;
             case InstanceType.Boolean:
-                if (instance.ValueKind != JsonValueKind.True && instance.ValueKind != JsonValueKind.False)
-                {
-                    return ValidationResult.CreateFailedResult(ResultCode.InvalidTokenKind, GetErrorMessage(expectedInstanceType, instance.ValueKind), options.ValidationPathStack, Name, instance.Location);
-                }
-                break;
+                return instance.ValueKind == JsonValueKind.True || instance.ValueKind == JsonValueKind.False;
+
             default:
-                return ValidateJsonKind(instance, expectedInstanceType, options.ValidationPathStack);
+                return IsValidJsonKind(instance, expectedInstanceType);
         }
-
-        return ValidationResult.ValidResult;
     }
 
-    private ValidationResult ValidateJsonKind(JsonInstanceElement instance, InstanceType expectedInstanceType, ValidationPathStack validationPathStack)
+    private static bool IsValidJsonKind(JsonInstanceElement instance, InstanceType expectedInstanceType)
     {
-        return instance.ValueKind == InstanceTypeJsonKindMap[expectedInstanceType]
-            ? ValidationResult.ValidResult 
-            : ValidationResult.CreateFailedResult(ResultCode.InvalidTokenKind, GetErrorMessage(expectedInstanceType, instance.ValueKind), validationPathStack, Name, instance.Location);
-    }
-
-    private static string GetErrorMessage(InstanceType expectedType, JsonValueKind actualKind)
-    {
-        return $"Expect type '{expectedType}' but actual is '{actualKind}'";
+        return instance.ValueKind == InstanceTypeJsonKindMap[expectedInstanceType];
     }
 }
 

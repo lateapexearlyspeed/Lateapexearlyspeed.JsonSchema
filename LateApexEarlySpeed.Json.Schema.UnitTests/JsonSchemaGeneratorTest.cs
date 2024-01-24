@@ -123,16 +123,16 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<T>("\"abc\"", new ValidationResult(
             ResultCode.InvalidTokenKind,
             "type",
-            GetInvalidTokenErrorMessage(InstanceType.Integer, InstanceType.String.ToString()),
+            GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Integer),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
         ));
         yield return TestSample.Create<T>("1.5", new ValidationResult(
-            ResultCode.NotBeInteger,
+            ResultCode.InvalidTokenKind,
             "type",
-            GetInvalidTokenErrorMessage(InstanceType.Integer, "float number"),
+            GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Integer),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
             GetSchemaResourceBaseUri<T>(),
@@ -174,16 +174,16 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<T>("\"abc\"", new ValidationResult(
             ResultCode.InvalidTokenKind,
             "type",
-            GetInvalidTokenErrorMessage(InstanceType.Integer, InstanceType.String.ToString()),
+            GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Integer),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
         ));
         yield return TestSample.Create<T>("1.5", new ValidationResult(
-            ResultCode.NotBeInteger,
+            ResultCode.InvalidTokenKind,
             "type",
-            GetInvalidTokenErrorMessage(InstanceType.Integer, "float number"),
+            GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Integer),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
@@ -246,7 +246,7 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<T>("\"abc\"", new ValidationResult(
             ResultCode.InvalidTokenKind,
             "type",
-            GetInvalidTokenErrorMessage(InstanceType.Number, InstanceType.String.ToString()),
+            GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Number),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
@@ -256,7 +256,7 @@ public class JsonSchemaGeneratorTest
         if (typeof(T) == typeof(float))
         {
             double max = float.MaxValue;
-            double instanceData = double.MaxValue;
+            double instanceData = max * 2;
 
             yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), new ValidationResult(ResultCode.NumberOutOfRange, "maximum", MaximumKeyword.ErrorMessage(instanceData, max),
                 ImmutableJsonPointer.Empty, 
@@ -266,9 +266,31 @@ public class JsonSchemaGeneratorTest
                 ));
 
             double min = float.MinValue;
-            instanceData = double.MinValue;
+            instanceData = min * 2;
 
             yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), new ValidationResult(ResultCode.NumberOutOfRange, "minimum", MinimumKeyword.ErrorMessage(instanceData, min),
+                ImmutableJsonPointer.Empty,
+                ImmutableJsonPointer.Create("/minimum"),
+                GetSchemaResourceBaseUri<T>(),
+                GetSchemaResourceBaseUri<T>()
+            ));
+        }
+        else if (typeof(T) == typeof(decimal))
+        {
+            double instanceData = (double)decimal.MaxValue * 2;
+
+            yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), new ValidationResult(ResultCode.NumberOutOfRange, "minimum",
+                $"Instance value: '{instanceData}' cannot be converted to decimal.",
+                ImmutableJsonPointer.Empty,
+                ImmutableJsonPointer.Create("/minimum"),
+                GetSchemaResourceBaseUri<T>(),
+                GetSchemaResourceBaseUri<T>()
+            ));
+
+            instanceData = (double)decimal.MinValue * 2;
+            
+            yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), new ValidationResult(ResultCode.NumberOutOfRange, "minimum",
+                $"Instance value: '{instanceData}' cannot be converted to decimal.",
                 ImmutableJsonPointer.Empty,
                 ImmutableJsonPointer.Create("/minimum"),
                 GetSchemaResourceBaseUri<T>(),
@@ -284,7 +306,7 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<bool>("\"true\"", new ValidationResult(
             ResultCode.InvalidTokenKind,
             "type",
-            GetInvalidTokenErrorMessage(InstanceType.Boolean, InstanceType.String.ToString()),
+            GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Boolean),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(bool).FullName),
@@ -295,10 +317,11 @@ public class JsonSchemaGeneratorTest
     private static IEnumerable<TestSample> CreateSamplesForString()
     {
         yield return TestSample.Create<string>("\"abc\"", ValidationResult.ValidResult);
-        yield return TestSample.Create<string>("null", new ValidationResult(
+        yield return TestSample.Create<string>("null", ValidationResult.ValidResult);
+        yield return TestSample.Create<string>("100", new ValidationResult(
             ResultCode.InvalidTokenKind,
             "type",
-            GetInvalidTokenErrorMessage(InstanceType.String, InstanceType.Null.ToString()),
+            GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.String, InstanceType.Null),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
             new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(string).FullName),
@@ -310,6 +333,7 @@ public class JsonSchemaGeneratorTest
     {
         yield return TestSample.Create<int[]>("[]", ValidationResult.ValidResult);
         yield return TestSample.Create<int[]>("[1, 2]", ValidationResult.ValidResult);
+        yield return TestSample.Create<int[]>("null", ValidationResult.ValidResult);
         yield return TestSample.Create<object[]>("""
 [
   {
@@ -326,11 +350,7 @@ public class JsonSchemaGeneratorTest
 ]
 """, ValidationResult.ValidResult);
 
-        yield return TestSample.Create<int[]>("null", new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Array, InstanceType.Null.ToString()),
-            ImmutableJsonPointer.Empty,
-            ImmutableJsonPointer.Create("/type"),
-            GetSchemaResourceBaseUri<int[]>(),
-            GetSchemaResourceBaseUri<int[]>()));
+        yield return TestSample.Create<int[]>("null", ValidationResult.ValidResult);
 
         yield return TestSample.Create<ArrayItemObject[]>("""
 [
@@ -338,7 +358,8 @@ public class JsonSchemaGeneratorTest
     "Prop": "abc"
   }
 ]
-""", new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Number, InstanceType.String.ToString()),
+""", new ValidationResult(ResultCode.InvalidTokenKind, "type", 
+            GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Number),
             ImmutableJsonPointer.Create("/0/Prop")!,
             ImmutableJsonPointer.Create("/items/$ref/properties/Prop/type"),
             GetSchemaResourceBaseUri<ArrayItemObject[]>(),
@@ -353,18 +374,20 @@ public class JsonSchemaGeneratorTest
     private static IEnumerable<TestSample> CreateSamplesForObject()
     {
         yield return TestSample.Create<CustomObject>("""
-{
-  "PropName": {
-    "InnerProp": "abc"
-  }
-}
-""", ValidationResult.ValidResult);
+        {
+            "PropName": {
+                "InnerProp": "abc"
+            }
+        }
+        """, ValidationResult.ValidResult);
+
+        yield return TestSample.Create<CustomObject>("null", ValidationResult.ValidResult);
 
         yield return TestSample.Create<CustomObject>("""
 {
   "PropName": "invalid"
 }
-""", new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Object, InstanceType.String.ToString()),
+""", new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/PropName")!,
             ImmutableJsonPointer.Create("/properties/PropName/$ref/type"),
             GetSchemaResourceBaseUri<CustomObject>(),
@@ -395,11 +418,18 @@ public class JsonSchemaGeneratorTest
 
         yield return TestSample.Create<StringDictionaryTestClass>("""
             {
+              "Prop": null
+            }
+            """, ValidationResult.ValidResult);
+
+        yield return TestSample.Create<StringDictionaryTestClass>("""
+            {
               "Prop": {
                 "P1": 123
               }
             }
-            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Object, InstanceType.Number.ToString()),
+            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", 
+            GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/Prop/P1")!,
             ImmutableJsonPointer.Create("/properties/Prop/additionalProperties/$ref/type"),
             GetSchemaResourceBaseUri<StringDictionaryTestClass>(),
@@ -422,7 +452,8 @@ public class JsonSchemaGeneratorTest
             GetSchemaResourceBaseUri<TestEnum>(),
             GetSchemaResourceBaseUri<TestEnum>()));
 
-        yield return TestSample.Create<TestEnum>("0", new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.String, InstanceType.Number.ToString()),
+        yield return TestSample.Create<TestEnum>("0", new ValidationResult(ResultCode.InvalidTokenKind, "type", 
+            GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.String),
             ImmutableJsonPointer.Empty, 
             ImmutableJsonPointer.Create("/type"),
             GetSchemaResourceBaseUri<TestEnum>(),
@@ -451,8 +482,8 @@ public class JsonSchemaGeneratorTest
     private static IEnumerable<TestSample> CreateSamplesForUri()
     {
         yield return TestSample.Create<Uri>("\"http://localhost\"", ValidationResult.ValidResult);
-
         yield return TestSample.Create<Uri>("\"localhost\"", ValidationResult.ValidResult);
+        yield return TestSample.Create<Uri>("null", ValidationResult.ValidResult);
     }
 
     private static Uri GetSubSchemaRefFullUriForDefs<TDocument, TSubSchema>()
@@ -464,9 +495,10 @@ public class JsonSchemaGeneratorTest
     {
         yield return TestSample.Create<CustomObject>("""
             {
-              "PropName": null
+              "PropName": 1
             }
-            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Object, InstanceType.Null.ToString()),
+            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", 
+            GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/PropName")!,
             ImmutableJsonPointer.Create("/properties/PropName/$ref/type"), 
             GetSchemaResourceBaseUri<CustomObject>(),
@@ -474,9 +506,10 @@ public class JsonSchemaGeneratorTest
 
         yield return TestSample.Create<CustomObject>("""
             {
-              "propName": null
+              "propName": 1
             }
-            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Object, InstanceType.Null.ToString()),
+            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", 
+            GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/propName")!,
             ImmutableJsonPointer.Create("/properties/propName/$ref/type"),
             GetSchemaResourceBaseUri<CustomObject>(),
@@ -484,9 +517,10 @@ public class JsonSchemaGeneratorTest
 
         yield return TestSample.Create<CustomObject>("""
             {
-              "prop_name": null
+              "prop_name": 1
             }
-            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Object, InstanceType.Null.ToString()),
+            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", 
+            GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/prop_name")!,
             ImmutableJsonPointer.Create("/properties/prop_name/$ref/type"),
             GetSchemaResourceBaseUri<CustomObject>(),
@@ -494,9 +528,10 @@ public class JsonSchemaGeneratorTest
 
         yield return TestSample.Create<CustomObject>("""
             {
-              "PROP_NAME": null
+              "PROP_NAME": 1
             }
-            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Object, InstanceType.Null.ToString()),
+            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", 
+            GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/PROP_NAME")!,
             ImmutableJsonPointer.Create("/properties/PROP_NAME/$ref/type"),
             GetSchemaResourceBaseUri<CustomObject>(),
@@ -504,9 +539,10 @@ public class JsonSchemaGeneratorTest
 
         yield return TestSample.Create<CustomObject>("""
             {
-              "prop-name": null
+              "prop-name": 1
             }
-            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Object, InstanceType.Null.ToString()),
+            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", 
+            GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/prop-name")!,
             ImmutableJsonPointer.Create("/properties/prop-name/$ref/type"),
             GetSchemaResourceBaseUri<CustomObject>(),
@@ -514,9 +550,10 @@ public class JsonSchemaGeneratorTest
 
         yield return TestSample.Create<CustomObject>("""
             {
-              "PROP-NAME": null
+              "PROP-NAME": 1
             }
-            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Object, InstanceType.Null.ToString()),
+            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", 
+            GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/PROP-NAME")!,
             ImmutableJsonPointer.Create("/properties/PROP-NAME/$ref/type"),
             GetSchemaResourceBaseUri<CustomObject>(),
@@ -619,7 +656,8 @@ public class JsonSchemaGeneratorTest
             {
               "NewPropName": null
             }
-            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Integer, InstanceType.Null.ToString()),
+            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", 
+            GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Integer),
             ImmutableJsonPointer.Create("/NewPropName")!,
             ImmutableJsonPointer.Create("/properties/NewPropName/type"),
             GetSchemaResourceBaseUri<PropertyNameAttributeTestClass>(),
@@ -661,8 +699,8 @@ public class JsonSchemaGeneratorTest
     private static Uri GetSchemaResourceBaseUri<T>() 
         => new(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName);
 
-    private static string GetInvalidTokenErrorMessage(InstanceType expected, string actual) 
-        => $"Expect type '{expected}' but actual is '{actual}'";
+    private static string GetInvalidTokenErrorMessage(string actualType, params InstanceType[] expectedTypes) 
+        => $"Expect type(s): '{string.Join('|', expectedTypes)}' but actual is '{actualType}'";
 
     private static IEnumerable<TestSample> CreateSamplesForMaximumAttribute()
     {

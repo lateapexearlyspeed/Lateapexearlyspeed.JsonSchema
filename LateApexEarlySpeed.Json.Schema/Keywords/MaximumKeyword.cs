@@ -21,13 +21,17 @@ internal class MaximumKeyword : NumberRangeKeywordBase
     {
     }
 
+    public MaximumKeyword(decimal max) : base(new DecimalBenchmarkChecker(max))
+    {
+    }
+
     [Obfuscation]
     public static string ErrorMessage(object instanceValue, object maximum)
     {
         return $"Instance '{instanceValue}' is greater than '{maximum}'";
     }
 
-    private class DoubleTypeBenchmarkChecker : BenchmarkChecker
+    private class DoubleTypeBenchmarkChecker : NonDecimalBenchmarkCheckerBase
     {
         private readonly double _benchmark;
 
@@ -36,28 +40,28 @@ internal class MaximumKeyword : NumberRangeKeywordBase
             _benchmark = benchmark;
         }
 
-        public override bool IsInRange(double instanceValue)
+        protected override bool IsInRange(double instanceValue)
         {
             return instanceValue <= _benchmark;
         }
 
-        public override bool IsInRange(long instanceValue)
+        protected override bool IsInRange(long instanceValue)
         {
             return instanceValue <= _benchmark;
         }
 
-        public override bool IsInRange(ulong instanceValue)
+        protected override bool IsInRange(ulong instanceValue)
         {
             return instanceValue <= _benchmark;
         }
 
-        public override string GetErrorMessage(object instanceValue)
+        protected override string GetErrorMessage(object instance)
         {
-            return ErrorMessage(instanceValue, _benchmark);
+            return ErrorMessage(instance, _benchmark);
         }
     }
 
-    private class LongTypeBenchmarkChecker : BenchmarkChecker
+    private class LongTypeBenchmarkChecker : NonDecimalBenchmarkCheckerBase
     {
         private readonly long _benchmark;
 
@@ -66,17 +70,17 @@ internal class MaximumKeyword : NumberRangeKeywordBase
             _benchmark = benchmark;
         }
 
-        public override bool IsInRange(double instanceValue)
+        protected override bool IsInRange(double instanceValue)
         {
             return instanceValue <= _benchmark;
         }
 
-        public override bool IsInRange(long instanceValue)
+        protected override bool IsInRange(long instanceValue)
         {
             return instanceValue <= _benchmark;
         }
 
-        public override bool IsInRange(ulong instanceValue)
+        protected override bool IsInRange(ulong instanceValue)
         {
             if (_benchmark < 0)
             {
@@ -85,13 +89,13 @@ internal class MaximumKeyword : NumberRangeKeywordBase
             return instanceValue <= (ulong)_benchmark;
         }
 
-        public override string GetErrorMessage(object instanceValue)
+        protected override string GetErrorMessage(object instanceValue)
         {
             return ErrorMessage(instanceValue, _benchmark);
         }
     }
 
-    private class UnsignedLongTypeBenchmarkChecker : BenchmarkChecker
+    private class UnsignedLongTypeBenchmarkChecker : NonDecimalBenchmarkCheckerBase
     {
         private readonly ulong _benchmark;
 
@@ -100,12 +104,12 @@ internal class MaximumKeyword : NumberRangeKeywordBase
             _benchmark = benchmark;
         }
 
-        public override bool IsInRange(double instanceValue)
+        protected override bool IsInRange(double instanceValue)
         {
             return instanceValue <= _benchmark;
         }
 
-        public override bool IsInRange(long instanceValue)
+        protected override bool IsInRange(long instanceValue)
         {
             if (_benchmark > long.MaxValue)
             {
@@ -115,14 +119,31 @@ internal class MaximumKeyword : NumberRangeKeywordBase
             return instanceValue <= (long)_benchmark;
         }
 
-        public override bool IsInRange(ulong instanceValue)
+        protected override bool IsInRange(ulong instanceValue)
         {
             return instanceValue <= _benchmark;
         }
 
-        public override string GetErrorMessage(object instanceValue)
+        protected override string GetErrorMessage(object instanceValue)
         {
             return ErrorMessage(instanceValue, _benchmark);
+        }
+    }
+
+    private class DecimalBenchmarkChecker : DecimalBenchmarkCheckerBase
+    {
+        public DecimalBenchmarkChecker(decimal max) : base(max)
+        {
+        }
+
+        protected override bool IsInRange(decimal instanceValue)
+        {
+            return instanceValue <= BenchmarkValue;
+        }
+
+        protected override string GetErrorMessage(object instanceValue)
+        {
+            return ErrorMessage(instanceValue, BenchmarkValue);
         }
     }
 }

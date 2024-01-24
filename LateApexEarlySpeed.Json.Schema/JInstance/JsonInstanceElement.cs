@@ -41,6 +41,11 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 
     public double GetDouble() => _jsonElement.GetDouble();
 
+    public bool TryGetDecimal(out decimal value)
+    {
+        return _jsonElement.TryGetDecimal(out value);
+    }
+
     public string GetRawText()
     {
         return _jsonElement.GetRawText();
