@@ -103,6 +103,7 @@ public class JsonSchemaGeneratorTest
         samples = samples.Concat(CreateSamplesForRequiredAttribute());
         samples = samples.Concat(CreateSamplesForUniqueItemsAttribute());
         samples = samples.Concat(CreateSamplesForPropertyNameAttribute());
+        samples = samples.Concat(CreateSamplesForNotNullAttribute());
         
         return samples;
     }
@@ -382,6 +383,12 @@ public class JsonSchemaGeneratorTest
         """, ValidationResult.ValidResult);
 
         yield return TestSample.Create<CustomObject>("null", ValidationResult.ValidResult);
+        
+        yield return TestSample.Create<CustomObject>("""
+            {
+              "PropName": null
+            }
+            """, ValidationResult.ValidResult);
 
         yield return TestSample.Create<CustomObject>("""
 {
@@ -644,6 +651,53 @@ public class JsonSchemaGeneratorTest
         public int[]? Prop { get; set; }
     }
 
+    private static IEnumerable<TestSample> CreateSamplesForNotNullAttribute()
+    {
+        yield return TestSample.Create<CustomObjectWithNotNullProperty>("""
+            {
+              "StringProp": "abc",
+              "ObjectProp": {
+                "InnerProp": "cba"
+              }
+            }
+            """, ValidationResult.ValidResult);
+
+        yield return TestSample.Create<CustomObjectWithNotNullProperty>("""
+            {
+              "StringProp": null,
+              "ObjectProp": {
+                "InnerProp": "cba"
+              }
+            }
+            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", 
+            GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array),
+            ImmutableJsonPointer.Create("/StringProp")!,
+            ImmutableJsonPointer.Create("/properties/StringProp/allOf/1/type"),
+            GetSchemaResourceBaseUri<CustomObjectWithNotNullProperty>(),
+            GetSchemaResourceBaseUri<CustomObjectWithNotNullProperty>()));
+
+        yield return TestSample.Create<CustomObjectWithNotNullProperty>("""
+            {
+              "StringProp": "abc",
+              "ObjectProp": null
+            }
+            """, new ValidationResult(ResultCode.InvalidTokenKind, "type",
+            GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array),
+            ImmutableJsonPointer.Create("/ObjectProp")!,
+            ImmutableJsonPointer.Create("/properties/ObjectProp/allOf/1/type"),
+            GetSchemaResourceBaseUri<CustomObjectWithNotNullProperty>(),
+            GetSchemaResourceBaseUri<CustomObjectWithNotNullProperty>()));
+    }
+
+    private class CustomObjectWithNotNullProperty
+    {
+        [NotNull]
+        public string? StringProp { get; set; }
+
+        [NotNull]
+        public InnerCustomObject? ObjectProp { get; set; }
+    }
+
     private static IEnumerable<TestSample> CreateSamplesForPropertyNameAttribute()
     {
         yield return TestSample.Create<PropertyNameAttributeTestClass>("""
@@ -882,7 +936,7 @@ public class JsonSchemaGeneratorTest
 
     private class MinLengthAttributeTestClass<T>
     {
-        [MinLength(1)]
+        [Generator.MinLength(1)]
         public T? Prop { get; set; }
     }
 
@@ -923,7 +977,7 @@ public class JsonSchemaGeneratorTest
 
     private class MaxLengthAttributeTestClass<T>
     {
-        [MaxLength(3)]
+        [Generator.MaxLength(3)]
         public T? Prop { get; set; }
     }
 

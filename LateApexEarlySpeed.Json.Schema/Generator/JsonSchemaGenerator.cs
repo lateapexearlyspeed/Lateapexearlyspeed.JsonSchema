@@ -242,6 +242,14 @@ public static class JsonSchemaGenerator
                 propertySchema = GenerateSchemaReference(propertyInfo.PropertyType, keywordsOfProp);
             }
 
+            if (propertyInfo.GetCustomAttribute<NotNullAttribute>() is not null)
+            {
+                var typeKeyword = new TypeKeyword(InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array);
+                var allOfKeyword = new AllOfKeyword(new List<JsonSchema>{ propertySchema, new BodyJsonSchema(new List<KeywordBase>{typeKeyword})});
+                
+                propertySchema = new BodyJsonSchema(new List<KeywordBase> { allOfKeyword });
+            }
+
             propertiesSchemas[GetPropertyName(propertyInfo, options)] = propertySchema;
         }
 
