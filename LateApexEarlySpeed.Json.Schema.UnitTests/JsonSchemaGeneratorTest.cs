@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using System.Collections.Immutable;
+using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Generator;
@@ -65,8 +67,17 @@ public class JsonSchemaGeneratorTest
         // string
         samples = samples.Concat(CreateSamplesForString());
         
-        // Array
-        samples = samples.Concat(CreateSamplesForArray());
+        // Collection
+        samples = samples.Concat(CreateSamplesForCollection(typeof(Array)));
+        samples = samples.Concat(CreateSamplesForCollection(typeof(List<>)));
+        samples = samples.Concat(CreateSamplesForCollection(typeof(Queue<>)));
+        samples = samples.Concat(CreateSamplesForCollection(typeof(Stack<>)));
+        samples = samples.Concat(CreateSamplesForCollection(typeof(HashSet<>)));
+        samples = samples.Concat(CreateSamplesForCollection(typeof(IReadOnlyList<>)));
+        samples = samples.Concat(CreateSamplesForCollection(typeof(ReadOnlyCollection<>)));
+        samples = samples.Concat(CreateSamplesForCollection(typeof(ImmutableArray<>)));
+        samples = samples.Concat(CreateSamplesForCollection(typeof(ImmutableHashSet<>)));
+        samples = samples.Concat(CreateSamplesForCollection(typeof(ImmutableList<>)));
         
         // Object
         samples = samples.Concat(CreateSamplesForObject());
@@ -330,12 +341,32 @@ public class JsonSchemaGeneratorTest
         ));
     }
 
-    private static IEnumerable<TestSample> CreateSamplesForArray()
+    private static IEnumerable<TestSample> CreateSamplesForCollection(Type openGenericCollectionOrArrayType)
     {
-        yield return TestSample.Create<int[]>("[]", ValidationResult.ValidResult);
-        yield return TestSample.Create<int[]>("[1, 2]", ValidationResult.ValidResult);
-        yield return TestSample.Create<int[]>("null", ValidationResult.ValidResult);
-        yield return TestSample.Create<object[]>("""
+        Type intCollection;
+        Type objectCollection;
+        Type arrayItemObjectCollection;
+
+        if (openGenericCollectionOrArrayType == typeof(Array))
+        {
+            intCollection = typeof(int).MakeArrayType();
+            objectCollection = typeof(object).MakeArrayType();
+            arrayItemObjectCollection = typeof(ArrayItemObject).MakeArrayType();
+        }
+        else
+        {
+            Assert.NotNull(openGenericCollectionOrArrayType.GetInterface("IEnumerable`1"));
+            Assert.True(openGenericCollectionOrArrayType.IsGenericTypeDefinition);
+
+            intCollection = openGenericCollectionOrArrayType.MakeGenericType(typeof(int));
+            objectCollection = openGenericCollectionOrArrayType.MakeGenericType(typeof(object));
+            arrayItemObjectCollection = openGenericCollectionOrArrayType.MakeGenericType(typeof(ArrayItemObject));
+        }
+
+        yield return TestSample.Create(intCollection, "[]", ValidationResult.ValidResult);
+        yield return TestSample.Create(intCollection, "[1, 2]", ValidationResult.ValidResult);
+        yield return TestSample.Create(intCollection, "null", ValidationResult.ValidResult);
+        yield return TestSample.Create(objectCollection, """
 [
   {
     "Prop": 1.5
@@ -343,7 +374,7 @@ public class JsonSchemaGeneratorTest
 ]
 """, ValidationResult.ValidResult);
 
-        yield return TestSample.Create<ArrayItemObject[]>("""
+        yield return TestSample.Create(arrayItemObjectCollection, """
 [
   {
     "Prop": 1.5
@@ -351,9 +382,15 @@ public class JsonSchemaGeneratorTest
 ]
 """, ValidationResult.ValidResult);
 
-        yield return TestSample.Create<int[]>("null", ValidationResult.ValidResult);
+        yield return TestSample.Create(intCollection, "null", ValidationResult.ValidResult);
+        
+        yield return TestSample.Create(intCollection, "1", new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Array, InstanceType.Null),
+            ImmutableJsonPointer.Empty, 
+            ImmutableJsonPointer.Create("/type"), 
+            GetSchemaResourceBaseUri(intCollection),
+            GetSchemaResourceBaseUri(intCollection)));
 
-        yield return TestSample.Create<ArrayItemObject[]>("""
+        yield return TestSample.Create(arrayItemObjectCollection, """
 [
   {
     "Prop": "abc"
@@ -363,8 +400,8 @@ public class JsonSchemaGeneratorTest
             GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Number),
             ImmutableJsonPointer.Create("/0/Prop")!,
             ImmutableJsonPointer.Create("/items/$ref/properties/Prop/type"),
-            GetSchemaResourceBaseUri<ArrayItemObject[]>(),
-            GetSubSchemaRefFullUriForDefs<ArrayItemObject[], ArrayItemObject>()));
+            GetSchemaResourceBaseUri(arrayItemObjectCollection),
+            GetSubSchemaRefFullUriForDefs(arrayItemObjectCollection, typeof(ArrayItemObject))));
     }
 
     private class ArrayItemObject
@@ -495,7 +532,12 @@ public class JsonSchemaGeneratorTest
 
     private static Uri GetSubSchemaRefFullUriForDefs<TDocument, TSubSchema>()
     {
-        return new Uri(GetSchemaResourceBaseUri<TDocument>(), "#/defs/" + typeof(TSubSchema).FullName);
+        return GetSubSchemaRefFullUriForDefs(typeof(TDocument), typeof(TSubSchema));
+    }
+
+    private static Uri GetSubSchemaRefFullUriForDefs(Type document, Type subSchema)
+    {
+        return new Uri(GetSchemaResourceBaseUri(document), "#/defs/" + subSchema.FullName);
     }
 
     private static IEnumerable<TestSample> CreateSamplesForJsonSchemaNamingPolicy()
@@ -751,7 +793,10 @@ public class JsonSchemaGeneratorTest
     }
 
     private static Uri GetSchemaResourceBaseUri<T>() 
-        => new(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName);
+        => GetSchemaResourceBaseUri(typeof(T));
+
+    private static Uri GetSchemaResourceBaseUri(Type type)
+        => new(BodyJsonSchemaDocument.DefaultDocumentBaseUri, type.FullName);
 
     private static string GetInvalidTokenErrorMessage(string actualType, params InstanceType[] expectedTypes) 
         => $"Expect type(s): '{string.Join('|', expectedTypes)}' but actual is '{actualType}'";
@@ -1304,6 +1349,11 @@ public class JsonSchemaGeneratorTest
         public static TestSample Create<T>(string jsonInstance, ValidationResult expectedValidationResult, JsonSchemaGeneratorOptions? options = null)
         {
             return new TestSample(typeof(T), jsonInstance, expectedValidationResult, options);
+        }
+
+        public static TestSample Create(Type type, string jsonInstance, ValidationResult expectedValidationResult, JsonSchemaGeneratorOptions? options = null)
+        {
+            return new TestSample(type, jsonInstance, expectedValidationResult, options);
         }
     }
 }

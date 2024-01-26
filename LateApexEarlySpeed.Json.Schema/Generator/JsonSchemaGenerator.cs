@@ -118,7 +118,7 @@ public static class JsonSchemaGenerator
         // Collection
         if (type.GetInterface("IEnumerable`1") is not null)
         {
-            return GenerateSchemaForArray(type, options, keywordsFromProperty);
+            return GenerateSchemaForCollection(type, options, keywordsFromProperty);
         }
 
         // Enum
@@ -334,7 +334,7 @@ public static class JsonSchemaGenerator
         return new BodyJsonSchema(keywords);
     }
 
-    private static BodyJsonSchema GenerateSchemaForArray(Type type, JsonSchemaGeneratorOptions options, KeywordBase[] keywordsFromProperty)
+    private static BodyJsonSchema GenerateSchemaForCollection(Type type, JsonSchemaGeneratorOptions options, KeywordBase[] keywordsFromProperty)
     {
         List<KeywordBase> keywords = new List<KeywordBase> { new TypeKeyword(InstanceType.Array, InstanceType.Null) };
         keywords.AddRange(keywordsFromProperty);
