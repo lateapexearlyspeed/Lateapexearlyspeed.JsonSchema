@@ -1,12 +1,16 @@
 ﻿using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Generator;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 using Xunit;
+using ValidationResult = LateApexEarlySpeed.Json.Schema.Common.ValidationResult;
 
 // ReSharper disable ClassNeverInstantiated.Local
 // ReSharper disable InconsistentNaming
@@ -94,6 +98,24 @@ public class JsonSchemaGeneratorTest
         // Uri
         samples = samples.Concat(CreateSamplesForUri());
         
+        // DateTimeOffset
+        samples = samples.Concat(CreateSamplesForDateTimeOffset());
+        
+        // DateTime
+        samples = samples.Concat(CreateSamplesForDateTime());
+        
+        // Arbitrary json types
+        samples = samples.Concat(CreateSamplesForArbitraryJsonTypes<JsonElement>());
+        samples = samples.Concat(CreateSamplesForArbitraryJsonTypes<JsonDocument>());
+        samples = samples.Concat(CreateSamplesForArbitraryJsonTypes<JsonNode>());
+        samples = samples.Concat(CreateSamplesForArbitraryJsonTypes<JsonValue>());
+        
+        // JsonArray
+        samples = samples.Concat(CreateSamplesForArbitraryJsonArray());
+        
+        // JsonObject
+        samples = samples.Concat(CreateSamplesForArbitraryJsonObject());
+        
         samples = samples.Concat(CreateSamplesForMaximumAttribute());
         samples = samples.Concat(CreateSamplesForMinimumAttribute());
         samples = samples.Concat(CreateSamplesForExclusiveMaximumAttribute());
@@ -110,13 +132,72 @@ public class JsonSchemaGeneratorTest
         samples = samples.Concat(CreateSamplesForMinLengthAttribute());
         samples = samples.Concat(CreateSamplesForPatternAttribute());
         samples = samples.Concat(CreateSamplesForJsonSchemaNamingPolicy());
-        samples = samples.Concat(CreateSamplesForJsonSchemaIgnoreAttribute());
+        samples = samples.Concat(CreateSamplesForJsonIgnoreAttribute());
         samples = samples.Concat(CreateSamplesForRequiredAttribute());
         samples = samples.Concat(CreateSamplesForUniqueItemsAttribute());
         samples = samples.Concat(CreateSamplesForPropertyNameAttribute());
         samples = samples.Concat(CreateSamplesForNotNullAttribute());
         
         return samples;
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForDateTimeOffset()
+    {
+        yield return TestSample.Create<DateTimeOffset>("\"1990-02-25T15:59:59-08:00\"", ValidationResult.ValidResult);
+        yield return TestSample.Create<DateTimeOffset>("\"1990-02-25T15:59:59.1-08:00\"", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<DateTimeOffset>("\"1990-02-25T15:59:59.1\"", new ValidationResult(ResultCode.InvalidFormat, "format", FormatKeyword.ErrorMessage("date-time"),
+            ImmutableJsonPointer.Empty, 
+            ImmutableJsonPointer.Create("/format"), 
+            GetSchemaResourceBaseUri<DateTimeOffset>(),
+            GetSchemaResourceBaseUri<DateTimeOffset>()));
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForDateTime()
+    {
+        yield return TestSample.Create<DateTime>("\"1990-02-25T15:59:59\"", ValidationResult.ValidResult);
+        yield return TestSample.Create<DateTime>("\"1990-02-25T15:59:59.1\"", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<DateTime>("\"1990-02-25T15:59:59.1-08:00\"", new ValidationResult(ResultCode.InvalidFormat, "format", FormatKeyword.ErrorMessage("dotnet-date-time"),
+            ImmutableJsonPointer.Empty,
+            ImmutableJsonPointer.Create("/format"),
+            GetSchemaResourceBaseUri<DateTime>(),
+            GetSchemaResourceBaseUri<DateTime>()));
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForArbitraryJsonArray()
+    {
+        yield return TestSample.Create<JsonArray>("[1, 2, 3]", ValidationResult.ValidResult);
+        yield return TestSample.Create<JsonArray>("null", new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Array),
+            ImmutableJsonPointer.Empty, 
+            ImmutableJsonPointer.Create("/type"), 
+            GetSchemaResourceBaseUri<JsonArray>(),
+            GetSchemaResourceBaseUri<JsonArray>()));
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForArbitraryJsonObject()
+    {
+        yield return TestSample.Create<JsonObject>("{}", ValidationResult.ValidResult);
+        yield return TestSample.Create<JsonObject>("""
+            {
+              "Prop": 123
+            }
+            """, ValidationResult.ValidResult);
+
+        yield return TestSample.Create<JsonObject>("null", new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object),
+            ImmutableJsonPointer.Empty,
+            ImmutableJsonPointer.Create("/type"),
+            GetSchemaResourceBaseUri<JsonObject>(),
+            GetSchemaResourceBaseUri<JsonObject>()));
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForArbitraryJsonTypes<T>()
+    {
+        yield return TestSample.Create<T>("{}", ValidationResult.ValidResult);
+        yield return TestSample.Create<T>("[]", ValidationResult.ValidResult);
+        yield return TestSample.Create<T>("null", ValidationResult.ValidResult);
+        yield return TestSample.Create<T>("1", ValidationResult.ValidResult);
+        yield return TestSample.Create<T>("\"a\"", ValidationResult.ValidResult);
     }
 
     private static IEnumerable<TestSample> CreateSamplesForUnsignedInteger<T>() where T : unmanaged
@@ -129,18 +210,16 @@ public class JsonSchemaGeneratorTest
             "Instance '-1' is less than '0'",
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/minimum")!,
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
-        ));
+            GetSchemaResourceBaseUri<T>(),
+            GetSchemaResourceBaseUri<T>()));
         yield return TestSample.Create<T>("\"abc\"", new ValidationResult(
             ResultCode.InvalidTokenKind,
             "type",
             GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Integer),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
-        ));
+            GetSchemaResourceBaseUri<T>(),
+            GetSchemaResourceBaseUri<T>()));
         yield return TestSample.Create<T>("1.5", new ValidationResult(
             ResultCode.InvalidTokenKind,
             "type",
@@ -189,18 +268,16 @@ public class JsonSchemaGeneratorTest
             GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Integer),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
-        ));
+            GetSchemaResourceBaseUri<T>(),
+            GetSchemaResourceBaseUri<T>()));
         yield return TestSample.Create<T>("1.5", new ValidationResult(
             ResultCode.InvalidTokenKind,
             "type",
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Integer),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
-        ));
+            GetSchemaResourceBaseUri<T>(),
+            GetSchemaResourceBaseUri<T>()));
 
         ulong max;
         long min;
@@ -261,9 +338,8 @@ public class JsonSchemaGeneratorTest
             GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Number),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName),
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(T).FullName)
-        ));
+            GetSchemaResourceBaseUri<T>(),
+            GetSchemaResourceBaseUri<T>()));
 
         if (typeof(T) == typeof(float))
         {
@@ -321,9 +397,8 @@ public class JsonSchemaGeneratorTest
             GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Boolean),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(bool).FullName),
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(bool).FullName)
-        ));
+            GetSchemaResourceBaseUri<bool>(),
+            GetSchemaResourceBaseUri<bool>()));
     }
 
     private static IEnumerable<TestSample> CreateSamplesForString()
@@ -336,9 +411,8 @@ public class JsonSchemaGeneratorTest
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.String, InstanceType.Null),
             ImmutableJsonPointer.Empty,
             ImmutableJsonPointer.Create("/type")!,
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(string).FullName),
-            new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(string).FullName)
-        ));
+            GetSchemaResourceBaseUri<string>(),
+            GetSchemaResourceBaseUri<string>()));
     }
 
     private static IEnumerable<TestSample> CreateSamplesForCollection(Type openGenericCollectionOrArrayType)
@@ -609,34 +683,34 @@ public class JsonSchemaGeneratorTest
             GetSubSchemaRefFullUriForDefs<CustomObject, InnerCustomObject>()), new JsonSchemaGeneratorOptions { PropertyNamingPolicy = JsonSchemaNamingPolicy.KebabCaseUpper });
     }
 
-    private static IEnumerable<TestSample> CreateSamplesForJsonSchemaIgnoreAttribute()
+    private static IEnumerable<TestSample> CreateSamplesForJsonIgnoreAttribute()
     {
-        yield return TestSample.Create<JsonSchemaIgnoreAttributeTestClass>("""
+        yield return TestSample.Create<JsonIgnoreAttributeTestClass>("""
             {
               "Prop": null
             }
             """, ValidationResult.ValidResult);
     }
 
-    private class JsonSchemaIgnoreAttributeTestClass
+    private class JsonIgnoreAttributeTestClass
     {
-        [JsonSchemaIgnore]
+        [JsonIgnore]
         public int Prop { get; set; }
     }
 
     private static IEnumerable<TestSample> CreateSamplesForRequiredAttribute()
     {
-        yield return TestSample.Create<RequiredAttributeTestClass>("""
+        yield return TestSample.Create<JsonRequiredAttributeTestClass>("""
             {
               "Prop": 1
             }
             """, ValidationResult.ValidResult);
 
-        yield return TestSample.Create<RequiredAttributeTestClass>("{}", new ValidationResult(ResultCode.NotFoundRequiredProperty, "required", RequiredKeyword.ErrorMessage("Prop"), 
+        yield return TestSample.Create<JsonRequiredAttributeTestClass>("{}", new ValidationResult(ResultCode.NotFoundRequiredProperty, "required", RequiredKeyword.ErrorMessage("Prop"), 
             ImmutableJsonPointer.Create("")!, 
             ImmutableJsonPointer.Create("/required"),
-            GetSchemaResourceBaseUri<RequiredAttributeTestClass>(),
-            GetSchemaResourceBaseUri<RequiredAttributeTestClass>()));
+            GetSchemaResourceBaseUri<JsonRequiredAttributeTestClass>(),
+            GetSchemaResourceBaseUri<JsonRequiredAttributeTestClass>()));
 
         yield return TestSample.Create<RequiredAttributeForCustomNamedPropertyTestClass>("""
             {
@@ -655,9 +729,9 @@ public class JsonSchemaGeneratorTest
             GetSchemaResourceBaseUri<RequiredAttributeForCustomNamedPropertyTestClass>()));
     }
 
-    private class RequiredAttributeTestClass
+    private class JsonRequiredAttributeTestClass
     {
-        [Required]
+        [JsonRequired]
         public int Prop { get; set; }
     }
 
@@ -796,7 +870,7 @@ public class JsonSchemaGeneratorTest
         => GetSchemaResourceBaseUri(typeof(T));
 
     private static Uri GetSchemaResourceBaseUri(Type type)
-        => new(BodyJsonSchemaDocument.DefaultDocumentBaseUri, type.FullName);
+        => new(BodyJsonSchemaDocument.DefaultDocumentBaseUri, "[Main]-" + type.FullName);
 
     private static string GetInvalidTokenErrorMessage(string actualType, params InstanceType[] expectedTypes) 
         => $"Expect type(s): '{string.Join('|', expectedTypes)}' but actual is '{actualType}'";
@@ -1203,8 +1277,8 @@ public class JsonSchemaGeneratorTest
                 FormatKeyword.ErrorMessage("email"),
                 ImmutableJsonPointer.Create("/Email")!,
                 ImmutableJsonPointer.Create("/properties/Email/format")!,
-                new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(EmailAttributeTestClass).FullName),
-                new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, typeof(EmailAttributeTestClass).FullName)));
+                GetSchemaResourceBaseUri<EmailAttributeTestClass>(),
+                GetSchemaResourceBaseUri<EmailAttributeTestClass>()));
     }
 
     private class EmailAttributeTestClass

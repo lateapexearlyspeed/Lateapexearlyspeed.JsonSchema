@@ -1,6 +1,8 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -25,7 +27,7 @@ public static class JsonSchemaGenerator
         options ??= new JsonSchemaGeneratorOptions();
         BodyJsonSchema jsonSchema = GenerateSchema(type, options, Array.Empty<KeywordBase>());
 
-        BodyJsonSchemaDocument bodyJsonSchemaDocument = jsonSchema.TransformToSchemaDocument(new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, type.FullName!), new DefsKeyword(options.SchemaDefinitions.GetAll().ToDictionary(kv => kv.Key, kv => kv.Value as JsonSchema)));
+        BodyJsonSchemaDocument bodyJsonSchemaDocument = jsonSchema.TransformToSchemaDocument(new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, "[Main]-" + type.FullName), new DefsKeyword(options.SchemaDefinitions.GetAll().ToDictionary(kv => kv.Key, kv => kv.Value as JsonSchema)));
 
         return new JsonValidator(bodyJsonSchemaDocument);
     }
@@ -115,6 +117,24 @@ public static class JsonSchemaGenerator
             return GenerateSchemaForStringDictionary(type, options, keywordsFromProperty);
         }
 
+        // Arbitrary json types
+        if (type == typeof(JsonElement) || type == typeof(JsonDocument) || type == typeof(JsonNode) || type == typeof(JsonValue))
+        {
+            return GenerateSchemaForArbitraryJsonTypes(keywordsFromProperty);
+        }
+
+        // Json Array
+        if (type == typeof(JsonArray))
+        {
+            return GenerateSchemaForJsonType(InstanceType.Array, keywordsFromProperty);
+        }
+
+        // Json Object
+        if (type == typeof(JsonObject))
+        {
+            return GenerateSchemaForJsonType(InstanceType.Object, keywordsFromProperty);
+        }
+
         // Collection
         if (type.GetInterface("IEnumerable`1") is not null)
         {
@@ -142,6 +162,11 @@ public static class JsonSchemaGenerator
             return GenerateSchemaForDateTimeOffset(keywordsFromProperty);
         }
 
+        if (type == typeof(DateTime))
+        {
+            return GenerateSchemaForDateTime(keywordsFromProperty);
+        }
+
         // Nullable value type
         if (type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
         {
@@ -150,6 +175,16 @@ public static class JsonSchemaGenerator
 
         // Custom object
         return GenerateSchemaForCustomObject(type, options);
+    }
+
+    private static BodyJsonSchema GenerateSchemaForJsonType(InstanceType instanceType, KeywordBase[] keywordsFromProperty)
+    {
+        return new BodyJsonSchema(new List<KeywordBase>(keywordsFromProperty) { new TypeKeyword(instanceType) });
+    }
+
+    private static BodyJsonSchema GenerateSchemaForArbitraryJsonTypes(KeywordBase[] keywordsFromProperty)
+    {
+        return new BodyJsonSchema(keywordsFromProperty.ToList());
     }
 
     private static BodyJsonSchema GenerateSchemaForUnsignedInteger(KeywordBase[] keywordsFromProperty, ulong max)
@@ -161,6 +196,14 @@ public static class JsonSchemaGenerator
     {
         var typeKeyword = new TypeKeyword(InstanceType.String);
         var formatKeyword = new FormatKeyword(DateTimeFormatValidator.FormatName);
+
+        return new BodyJsonSchema(new List<KeywordBase>(keywordsFromProperty) { typeKeyword, formatKeyword });
+    }
+
+    private static BodyJsonSchema GenerateSchemaForDateTime(KeywordBase[] keywordsFromProperty)
+    {
+        var typeKeyword = new TypeKeyword(InstanceType.String);
+        var formatKeyword = new FormatKeyword(DotNetDateTimeFormatValidator.FormatName);
 
         return new BodyJsonSchema(new List<KeywordBase>(keywordsFromProperty) { typeKeyword, formatKeyword });
     }
@@ -230,7 +273,7 @@ public static class JsonSchemaGenerator
     {
         var propertiesSchemas = new Dictionary<string, JsonSchema>();
 
-        foreach (PropertyInfo propertyInfo in propertyInfos.Where(prop => prop.GetCustomAttribute<JsonSchemaIgnoreAttribute>() is null))
+        foreach (PropertyInfo propertyInfo in propertyInfos.Where(prop => prop.GetCustomAttribute<JsonIgnoreAttribute>() is null))
         {
             KeywordBase[] keywordsOfProp = GenerateKeywordsFromPropertyInfo(propertyInfo);
             JsonSchema propertySchema = GenerateSchema(propertyInfo.PropertyType, options, keywordsOfProp);
@@ -267,7 +310,9 @@ public static class JsonSchemaGenerator
 
     private static RequiredKeyword? CreateRequiredKeyword(PropertyInfo[] properties, JsonSchemaGeneratorOptions options)
     {
-        string[] requiredPropertyNames = properties.Where(prop => prop.GetCustomAttribute<RequiredAttribute>() is not null).Select(propertyInfo => GetPropertyName(propertyInfo, options)).ToArray();
+        string[] requiredPropertyNames = properties
+            .Where(prop => prop.GetCustomAttribute<JsonRequiredAttribute>() is not null || prop.GetCustomAttribute<RequiredAttribute>() is not null)
+            .Select(propertyInfo => GetPropertyName(propertyInfo, options)).ToArray();
         return requiredPropertyNames.Length == 0 
             ? null 
             : new RequiredKeyword(requiredPropertyNames);

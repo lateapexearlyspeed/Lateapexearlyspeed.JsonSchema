@@ -12,6 +12,7 @@ public static class FormatRegistry
         Type[] builtInFormatTypes = new[]
         {
             typeof(DateTimeFormatValidator),
+            typeof(DotNetDateTimeFormatValidator),
             typeof(TimeFormatValidator),
             typeof(DateFormatValidator),
             typeof(EmailFormatValidator),
