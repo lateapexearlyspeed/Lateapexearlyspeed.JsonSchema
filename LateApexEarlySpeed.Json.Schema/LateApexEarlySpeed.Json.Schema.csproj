@@ -48,14 +48,4 @@
     </None>
   </ItemGroup>
 
-  <!-- Refer to: https://makolyte.com/dotnet-copy-files-to-a-specified-directory-after-the-build/ -->
-  <Target Name="Obfuscar" AfterTargets="Build" Condition="$(UseObfuscator)==true And $(Configuration)==Release">
-    <Message Text="Executing obfuscar task..." Importance="High" />
-    <Exec Command="obfuscar.console obfuscar-config.xml" />
-    <Message Text="Finished obfuscar task." Importance="High" />
-
-    <Copy SourceFiles="$(TargetDir)Obfuscator_Output\$(ProjectName).dll" DestinationFolder="$(TargetDir)" />
-    <Message Text="Finished copying obfuscar output back to project output folder." Importance="High" />
-  </Target>
-
 </Project>

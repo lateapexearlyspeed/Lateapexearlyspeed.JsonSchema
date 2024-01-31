@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -7,7 +6,6 @@ using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-[Obfuscation(ApplyToMembers = false)]
 [Keyword("pattern")]
 [JsonConverter(typeof(PatternKeywordJsonConverter))]
 internal class PatternKeyword : KeywordBase
@@ -32,7 +30,6 @@ internal class PatternKeyword : KeywordBase
             : ValidationResult.CreateFailedResult(ResultCode.RegexNotMatch, ErrorMessage(_pattern.ToString(), instanceText), options.ValidationPathStack, Name, instance.Location);
     }
 
-    [Obfuscation]
     public static string ErrorMessage(string pattern, string instanceText)
     {
         return $"Regex: '{pattern}' cannot find match in instance: '{instanceText}'";

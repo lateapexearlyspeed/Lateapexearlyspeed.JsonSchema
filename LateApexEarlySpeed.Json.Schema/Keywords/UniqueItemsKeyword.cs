@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -7,7 +6,6 @@ using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-[Obfuscation(ApplyToMembers = false)]
 [Keyword("uniqueItems")]
 [JsonConverter(typeof(UniqueItemsKeywordJsonConverter))]
 internal class UniqueItemsKeyword : KeywordBase
@@ -43,7 +41,6 @@ internal class UniqueItemsKeyword : KeywordBase
         return ValidationResult.ValidResult;
     }
 
-    [Obfuscation]
     public static string ErrorMessage()
     {
         return "There are duplicated array items";

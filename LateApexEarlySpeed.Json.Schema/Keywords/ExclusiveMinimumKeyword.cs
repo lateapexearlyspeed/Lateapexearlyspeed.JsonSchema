@@ -1,10 +1,8 @@
-﻿using System.Reflection;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-[Obfuscation(ApplyToMembers = false)]
 [Keyword("exclusiveMinimum")]
 [JsonConverter(typeof(ExclusiveMinimumKeywordJsonConverter))]
 internal class ExclusiveMinimumKeyword : NumberRangeKeywordBase
@@ -25,7 +23,6 @@ internal class ExclusiveMinimumKeyword : NumberRangeKeywordBase
     {
     }
 
-    [Obfuscation]
     public static string ErrorMessage(object instanceValue, object minimum)
     {
         return $"Instance '{instanceValue}' is equal to or less than '{minimum}'";

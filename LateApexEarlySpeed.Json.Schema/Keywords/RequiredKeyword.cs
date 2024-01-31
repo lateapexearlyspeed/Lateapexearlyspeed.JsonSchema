@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -7,7 +6,6 @@ using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-[Obfuscation(ApplyToMembers = false)]
 [Keyword("required")]
 [JsonConverter(typeof(RequiredKeywordJsonConverter))]
 internal class RequiredKeyword : KeywordBase
@@ -43,7 +41,6 @@ internal class RequiredKeyword : KeywordBase
         return ValidationResult.ValidResult;
     }
 
-    [Obfuscation]
     public static string ErrorMessage(string missedPropertyName)
     {
         return $"Instance not contain required property '{missedPropertyName}'";

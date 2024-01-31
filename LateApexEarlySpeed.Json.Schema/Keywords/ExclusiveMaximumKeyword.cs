@@ -1,10 +1,8 @@
-﻿using System.Reflection;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-[Obfuscation(ApplyToMembers = false)]
 [Keyword("exclusiveMaximum")]
 [JsonConverter(typeof(ExclusiveMaximumKeywordJsonConverter))]
 internal class ExclusiveMaximumKeyword : NumberRangeKeywordBase
@@ -25,7 +23,6 @@ internal class ExclusiveMaximumKeyword : NumberRangeKeywordBase
     {
     }
 
-    [Obfuscation]
     public static string ErrorMessage(object instanceValue, object maximum)
     {
         return $"Instance '{instanceValue}' is equal to or greater than '{maximum}'";
