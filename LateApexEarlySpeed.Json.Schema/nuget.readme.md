@@ -148,8 +148,6 @@ Note: "STJ" means "System.Text.Json" which is built-in json package in .net sdk,
 }
 ```
 
-In future, this library may be transformed to be open source project.
-
 ## Basic Usage
 
 ```
