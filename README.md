@@ -1,15 +1,15 @@
-﻿# Lateapexearlyspeed.Json.Schema
+# Lateapexearlyspeed.Json.Schema
 
 This is a high performance Json schema .Net implementation library based on [Json schema](https://json-schema.org/) - draft 2020.12 (latest one by 2023.12).
 
-This library also supports validator generation from your .net class code.
+This library also supports validator generation from your class code, see below.
 
 ---
 The json validation functionalities have passed [official json schema test-suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) for draft 2020.12 (except cases about limitation listed below)
 
 **High performance** - this .Net library has good performance compared with existing more popular and excellent .Net implementations in common cases by BenchmarkDotnet result, but please verify in your use cases.
 
-*Some Benchmark result:*
+*Some Benchmark result (note they are compared under same use pattern - see [Performance Tips](#performance-tips) ):*
 
 12th Gen Intel Core i7-12800H, 1 CPU, 20 logical and 14 physical cores
 
@@ -148,8 +148,6 @@ Note: "STJ" means "System.Text.Json" which is built-in json package in .net sdk,
 }
 ```
 
-In future, this library may be transformed to be open source project.
-
 ## Basic Usage
 
 ```
@@ -208,7 +206,7 @@ When validation failed, you can check detailed error information by:
     https://example.com/schemas/common
     ```
 
-## Performance Tips
+## <a name="performance-tips"></a> Performance Tips
 Reuse instantiated JsonValidator instances (which basically represent json schema) to validate incoming json instance data if possible in your cases, to gain better performance.
 
 ## External json schema document reference support
@@ -339,7 +337,120 @@ FormatRegistry.AddFormatType<TestCustomFormatValidator>();
 - Due to lack Annotation support, it also not support following keywords: unevaluatedProperties, unevaluatedItems
 - Not support content-encoded string currently
 
-## Issue report
+# Validator generation from code
+
+Besides of user-provided json schema, this library also supports to generate validator from code.
+
+## Basic usage
+
+```csharp
+JsonValidator validator = JsonSchemaGenerator.GenerateJsonValidator<TestClass>();
+
+// Now use validator instance as normal
+```
+
+## Supported .net types by now
+
+Numeric types: byte, sbyte, short, ushort, int, uint, long, ulong, float, double, decimal.
+
+Boolean, String, Dictionary<string,TAny>, JsonElement, JsonDocument, JsonNode, JsonValue, JsonArray, JsonObject, generic type of IEnumerable<TAny>, Enum, Guid, Uri, DateTimeOffset, DateTime, Nullable value type (generic type of Nullable<TValue>), Custom object.
+
+## Supported validation attributes by now
+
+Besides of generating validator by type, you can also indicate more constraint by Attributes, check their constructors arguments then you can get usage:
+
+- EmailAttribute
+- ExclusiveMaximumAttribute
+- ExclusiveMinimumAttribute
+- MaximumAttribute
+- MinimumAttribute
+- MultipleOfAttribute
+- StringEnumAttribute
+- IntegerEnumAttribute
+- IPv4Attribute
+- IPv6Attribute
+- LengthRangeAttribute (for both string length and array length)
+- MaxLengthAttribute (for both string length and array length)
+- MinLengthAttribute (for both string length and array length)
+- UniqueItemsAttribute (for array)
+- NumberRangeAttribute
+- PatternAttribute (for string)
+
+### Usage:
+
+```csharp
+class TestClass
+{
+    [Maximum(2)]
+    public int Prop { get; set; }
+
+    [LengthRange(10, 20)]
+    [Pattern("*abc*")]
+    public string StringProp { get; set; }
+}
+```
+
+## Nullable consideration
+
+By default, this library will treat all .net reference types as be nullable. If you would mark some reference typed properties as be not nullable, annotate those properties with `[LateApexEarlySpeed.Json.Schema.Generator.NotNullAttribute]`
+
+## Required or ignored
+
+By default, this library will validate value of specified properties when find out those properties from json.
+
+If you would mark some properties as required properties in json, annotate them with `[System.Text.Json.Serialization.JsonRequiredAttribute]` or `[System.ComponentModel.DataAnnotations.RequiredAttribute]`
+
+If you would mark some properties as explicit ignored ones (that is, ignore validation even if they appear in json), annotate them with `[System.Text.Json.Serialization.JsonIgnoreAttribute]`
+
+This library uses .net core built-in attributes for these requirement, so that user code can have consistent experience.
+
+## Custom property name
+
+As what System.Text.Json supports for property name, this library supports user custom property name by attributes or options:
+
+System.Text.Json.Serialization.JsonPropertyNameAttribute:
+
+```csharp
+class CustomNamedPropertyTestClass
+    {
+        [JsonPropertyName("NewPropName")]
+        public int Prop { get; set; }
+    }
+```
+
+JsonSchemaNamingPolicy options:
+- JsonSchemaNamingPolicy.CamelCase:
+First word starts with a lower case character. Successive words start with an uppercase character. TempCelsius	=> tempCelsius 
+
+- JsonSchemaNamingPolicy.KebabCaseLower: Words are separated by hyphens. All characters are lowercase. TempCelsius	-> temp-celsius
+
+- JsonSchemaNamingPolicy.KebabCaseUpper: Words are separated by hyphens. All characters are uppercase. TempCelsius	=> TEMP-CELSIUS
+
+- JsonSchemaNamingPolicy.SnakeCaseLower: Words are separated by underscores. All characters are lowercase. TempCelsius	-> temp_celsius
+
+- JsonSchemaNamingPolicy.SnakeCaseUpper: Words are separated by underscores. All characters are uppercase. TempCelsius	-> TEMP_CELSIUS
+
+- JsonSchemaNamingPolicy.SharedDefault: default option, not change original property name 
+
+- write your own JsonSchemaNamingPolicy:
+```csharp
+internal class YourNamingPolicy : JsonSchemaNamingPolicy
+{
+    public override string ConvertName(string name)
+    {
+        // convert and return new name.
+    }
+}
+```
+
+### Usage:
+```csharp
+JsonValidator validator = JsonSchemaGenerator.GenerateJsonValidator(type, new JsonSchemaGeneratorOptions { PropertyNamingPolicy = JsonSchemaNamingPolicy.CamelCase }));
+```
+
+Note: when specify both JsonPropertyNameAttribute on specific property and custom PropertyNamingPolicy in option, JsonPropertyNameAttribute will take higher priority over option for that property.
+
+# Issue report
 
 Welcome to raise issue and wishlist, I will try to fix if make sense, thanks !
 

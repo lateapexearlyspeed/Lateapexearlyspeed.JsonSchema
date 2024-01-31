@@ -13,7 +13,7 @@
     <Description>Simple and high performance Json Schema implementation for .Net</Description>
     <PackageReadmeFile>nuget.readme.md</PackageReadmeFile>
     <PackageIcon>nuget.icon.jpg</PackageIcon>
-    <PackageTags>Json;Schema;Json schema;JsonSchema;Validation</PackageTags>
+    <PackageTags>Json;Schema;Json schema;JsonSchema;Validation;SchemaValidatorGeneration;Generation</PackageTags>
     <PackageOutputPath>bin\Release\NugetPackage</PackageOutputPath>
     <Version>1.0.6</Version>
     <AssemblyVersion>1.0.6</AssemblyVersion>
