@@ -8,7 +8,7 @@ public class JsonSchemaOptions
     internal SchemaResourceRegistry? SchemaResourceRegistry { get; set; }
     internal SchemaRecursionRecorder SchemaRecursionRecorder { get; } = new();
     public ValidationPathStack ValidationPathStack { get; } = new();
-    public bool ValidateFormat { get; set; }
+    public bool ValidateFormat { get; set; } = true;
 
     /// <summary>
     /// User entry point to create <see cref="JsonSchemaOptions"/> instance

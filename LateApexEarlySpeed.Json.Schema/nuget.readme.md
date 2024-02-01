@@ -307,12 +307,6 @@ This library supports following formats currently:
 - json-pointer
 - regex
 
-Format validation is opt-in feature, it is off by default. To enable format validation, pass configured JsonSchemaOptions when calling Validate method:
-
-```csharp
-jsonValidator.Validate(instance, new JsonSchemaOptions{ValidateFormat = true});
-```
-
 If require more format, implement an custom FormatValidator, and register it:
 
 ```csharp

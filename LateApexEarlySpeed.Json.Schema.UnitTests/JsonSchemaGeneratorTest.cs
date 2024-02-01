@@ -24,7 +24,7 @@ public class JsonSchemaGeneratorTest
     public void GenerateJsonValidator_Validate(Type type, string jsonInstance, ValidationResult expectedValidationResult, JsonSchemaGeneratorOptions? options)
     {
         JsonValidator jsonValidator = JsonSchemaGenerator.GenerateJsonValidator(type, options);
-        ValidationResult validationResult = jsonValidator.Validate(jsonInstance, new JsonSchemaOptions{ValidateFormat = true});
+        ValidationResult validationResult = jsonValidator.Validate(jsonInstance);
 
         Assert.Equal(expectedValidationResult.IsValid, validationResult.IsValid);
         Assert.Equal(expectedValidationResult.ResultCode, validationResult.ResultCode);

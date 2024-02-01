@@ -64,7 +64,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                 }
             }
 
-            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance).IsValid);
+            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ValidateFormat = false}).IsValid);
         }
 
         [Theory]
@@ -88,7 +88,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                 }
             }
 
-            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance).IsValid);
+            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ValidateFormat = false}).IsValid);
         }
 
         [Theory]
@@ -100,7 +100,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
             var jsonValidator = new JsonValidator(schema);
 
-            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ValidateFormat = true}).IsValid);
+            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance).IsValid);
         }
 
         [Theory]
@@ -111,7 +111,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             Assert.NotNull(FormatRegistry.GetFormatType("custom_format"));
 
             var jsonValidator = new JsonValidator(schema);
-            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions { ValidateFormat = true }).IsValid);
+            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance).IsValid);
         }
 
         public static IEnumerable<object[]> JsonSchemaTestSuiteForDraft2020
