@@ -2,7 +2,7 @@
 
 namespace LateApexEarlySpeed.Json.Schema.Generator;
 
-[AttributeUsage(AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public class MinLengthAttribute : Attribute, IKeywordGenerator
 {
     private readonly uint _min;

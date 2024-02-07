@@ -2,7 +2,7 @@
 
 namespace LateApexEarlySpeed.Json.Schema.Generator;
 
-[AttributeUsage(AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public class StringEnumAttribute : Attribute, IKeywordGenerator
 {
     private readonly EnumGenerator<string> _enumGenerator;

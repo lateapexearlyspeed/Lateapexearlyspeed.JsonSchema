@@ -2,7 +2,7 @@
 
 namespace LateApexEarlySpeed.Json.Schema.Generator;
 
-[AttributeUsage(AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 // ReSharper disable once InconsistentNaming
 public class IPv4Attribute : Attribute, IKeywordGenerator
 {

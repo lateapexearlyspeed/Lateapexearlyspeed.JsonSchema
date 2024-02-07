@@ -2,7 +2,7 @@
 
 namespace LateApexEarlySpeed.Json.Schema.Generator;
 
-[AttributeUsage(AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public class ExclusiveMinimumAttribute : Attribute, IKeywordGenerator
 {
     private readonly double _minimum;

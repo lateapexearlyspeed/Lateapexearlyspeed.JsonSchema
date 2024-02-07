@@ -2,7 +2,7 @@
 
 namespace LateApexEarlySpeed.Json.Schema.Generator;
 
-[AttributeUsage(AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public class PatternAttribute : Attribute, IKeywordGenerator
 {
     private readonly string _pattern;

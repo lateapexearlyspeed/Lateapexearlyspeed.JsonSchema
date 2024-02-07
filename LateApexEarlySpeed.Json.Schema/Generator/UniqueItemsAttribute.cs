@@ -2,7 +2,7 @@
 
 namespace LateApexEarlySpeed.Json.Schema.Generator;
 
-[AttributeUsage(AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public class UniqueItemsAttribute : Attribute, IKeywordGenerator
 {
     public KeywordBase CreateKeyword(Type type)

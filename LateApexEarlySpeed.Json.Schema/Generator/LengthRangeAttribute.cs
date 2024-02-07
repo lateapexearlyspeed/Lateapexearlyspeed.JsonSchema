@@ -3,7 +3,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.Generator;
 
-[AttributeUsage(AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public class LengthRangeAttribute : Attribute, IKeywordGenerator
 {
     private readonly uint _min;

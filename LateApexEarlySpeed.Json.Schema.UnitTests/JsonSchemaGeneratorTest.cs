@@ -510,11 +510,31 @@ public class JsonSchemaGeneratorTest
             ImmutableJsonPointer.Create("/properties/PropName/$ref/type"),
             GetSchemaResourceBaseUri<CustomObject>(),
             GetSubSchemaRefFullUriForDefs<CustomObject, InnerCustomObject>()));
+
+        yield return TestSample.Create<CustomObject>("""
+            {
+              "NewFieldName": 2
+            }
+            """, ValidationResult.ValidResult);
+
+        yield return TestSample.Create<CustomObject>("""
+            {
+              "NewFieldName": 1
+            }
+            """, new ValidationResult(ResultCode.NumberOutOfRange, "minimum", MinimumKeyword.ErrorMessage(1, 2),
+            ImmutableJsonPointer.Create("/NewFieldName")!,
+            ImmutableJsonPointer.Create("/properties/NewFieldName/minimum"),
+            GetSchemaResourceBaseUri<CustomObject>(),
+            GetSchemaResourceBaseUri<CustomObject>()));
     }
 
     private class CustomObject
     {
         public InnerCustomObject? PropName { get; set; }
+
+        [JsonPropertyName("NewFieldName")]
+        [Minimum(2)]
+        public int FieldName;
     }
 
     private class InnerCustomObject
@@ -1284,7 +1304,7 @@ public class JsonSchemaGeneratorTest
     private class EmailAttributeTestClass
     {
         [Email]
-        public string? Email { get; set; }
+        public string? Email;
     }
 
     private static IEnumerable<TestSample> CreateSamplesForMultipleOfAttribute()

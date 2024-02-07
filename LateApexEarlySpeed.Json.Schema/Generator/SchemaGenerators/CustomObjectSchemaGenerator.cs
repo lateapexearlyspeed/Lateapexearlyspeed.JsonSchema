@@ -2,6 +2,7 @@
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
@@ -15,11 +16,14 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
 
         IEnumerable<KeywordBase> keywordsOnType = SchemaGenerationHelper.GenerateKeywordsFromType(typeToConvert);
 
-        PropertyInfo[] propertyInfos = typeToConvert.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
+        PropertyInfo[] propertyInfos = typeToConvert.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        FieldInfo[] fieldInfos = typeToConvert.GetFields(BindingFlags.Public | BindingFlags.Instance);
 
-        PropertiesKeyword propertiesKeyword = CreatePropertiesKeyword(propertyInfos, options);
+        IEnumerable<MemberInfo> memberInfos = propertyInfos.Concat<MemberInfo>(fieldInfos);
 
-        RequiredKeyword? requiredKeyword = CreateRequiredKeyword(propertyInfos, options);
+        PropertiesKeyword propertiesKeyword = CreatePropertiesKeyword(memberInfos, options);
+
+        RequiredKeyword? requiredKeyword = CreateRequiredKeyword(memberInfos, options);
 
         IEnumerable<KeywordBase> keywords = keywordsOnType.Append(typeKeyword).Append(propertiesKeyword);
         if (requiredKeyword is not null)
@@ -30,23 +34,25 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
         return new JsonSchemaResource(new Uri(typeToConvert.FullName!, UriKind.Relative), keywords.ToList(), new List<ISchemaContainerValidationNode>(0), null, null, null, null, null);
     }
 
-    private static PropertiesKeyword CreatePropertiesKeyword(PropertyInfo[] propertyInfos, JsonSchemaGeneratorOptions options)
+    private static PropertiesKeyword CreatePropertiesKeyword(IEnumerable<MemberInfo> memberInfos, JsonSchemaGeneratorOptions options)
     {
         var propertiesSchemas = new Dictionary<string, JsonSchema>();
 
-        foreach (PropertyInfo propertyInfo in propertyInfos.Where(prop => prop.GetCustomAttribute<JsonIgnoreAttribute>() is null))
+        foreach (MemberInfo memberInfo in memberInfos.Where(prop => prop.GetCustomAttribute<JsonIgnoreAttribute>() is null))
         {
-            KeywordBase[] keywordsOfProp = GenerateKeywordsFromPropertyInfo(propertyInfo);
-            JsonSchema propertySchema = JsonSchemaGenerator.GenerateSchema(propertyInfo.PropertyType, keywordsOfProp, options);
+            Type memberType = GetMemberType(memberInfo);
+
+            KeywordBase[] keywordsOfMember = GenerateKeywordsFromMemberInfo(memberInfo);
+            JsonSchema propertySchema = JsonSchemaGenerator.GenerateSchema(memberType, keywordsOfMember, options);
 
             if (propertySchema is JsonSchemaResource propertySchemaResource)
             {
-                options.SchemaDefinitions.AddSchemaDefinition(propertyInfo.PropertyType, propertySchemaResource);
+                options.SchemaDefinitions.AddSchemaDefinition(memberType, propertySchemaResource);
 
-                propertySchema = SchemaGenerationHelper.GenerateSchemaReference(propertyInfo.PropertyType, keywordsOfProp);
+                propertySchema = SchemaGenerationHelper.GenerateSchemaReference(memberType, keywordsOfMember);
             }
 
-            if (propertyInfo.GetCustomAttribute<NotNullAttribute>() is not null)
+            if (memberInfo.GetCustomAttribute<NotNullAttribute>() is not null)
             {
                 var typeKeyword = new TypeKeyword(InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array);
                 var allOfKeyword = new AllOfKeyword(new List<JsonSchema> { propertySchema, new BodyJsonSchema(new List<KeywordBase> { typeKeyword }) });
@@ -54,37 +60,51 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
                 propertySchema = new BodyJsonSchema(new List<KeywordBase> { allOfKeyword });
             }
 
-            propertiesSchemas[GetPropertyName(propertyInfo, options)] = propertySchema;
+            propertiesSchemas[GetPropertyName(memberInfo, options)] = propertySchema;
         }
 
         return new PropertiesKeyword(propertiesSchemas);
     }
 
-    private static string GetPropertyName(PropertyInfo propertyInfo, JsonSchemaGeneratorOptions options)
+    private static string GetPropertyName(MemberInfo memberInfo, JsonSchemaGeneratorOptions options)
     {
-        JsonPropertyNameAttribute? jsonPropertyNameAttribute = propertyInfo.GetCustomAttribute<JsonPropertyNameAttribute>();
+        JsonPropertyNameAttribute? jsonPropertyNameAttribute = memberInfo.GetCustomAttribute<JsonPropertyNameAttribute>();
 
         return jsonPropertyNameAttribute is null
-            ? options.PropertyNamingPolicy.ConvertName(propertyInfo.Name)
+            ? options.PropertyNamingPolicy.ConvertName(memberInfo.Name)
             : jsonPropertyNameAttribute.Name;
     }
 
-    private static RequiredKeyword? CreateRequiredKeyword(PropertyInfo[] properties, JsonSchemaGeneratorOptions options)
+    private static RequiredKeyword? CreateRequiredKeyword(IEnumerable<MemberInfo> members, JsonSchemaGeneratorOptions options)
     {
-        string[] requiredPropertyNames = properties
+        string[] requiredPropertyNames = members
             .Where(prop => prop.GetCustomAttribute<JsonRequiredAttribute>() is not null || prop.GetCustomAttribute<RequiredAttribute>() is not null)
-            .Select(propertyInfo => GetPropertyName(propertyInfo, options)).ToArray();
+            .Select(memberInfo => GetPropertyName(memberInfo, options)).ToArray();
         return requiredPropertyNames.Length == 0
             ? null
             : new RequiredKeyword(requiredPropertyNames);
     }
 
     /// <summary>
-    /// Extract attributes from <see cref="PropertyInfo"/>
+    /// Extract attributes from either <see cref="PropertyInfo"/> or <see cref="FieldInfo"/>
     /// </summary>
-    private static KeywordBase[] GenerateKeywordsFromPropertyInfo(PropertyInfo propertyInfo)
+    private static KeywordBase[] GenerateKeywordsFromMemberInfo(MemberInfo memberInfo)
     {
-        IEnumerable<IKeywordGenerator> keywordGeneratorOnType = propertyInfo.GetCustomAttributes().OfType<IKeywordGenerator>();
-        return keywordGeneratorOnType.Select(keywordGenerator => keywordGenerator.CreateKeyword(propertyInfo.PropertyType)).ToArray();
+        IEnumerable<IKeywordGenerator> keywordGeneratorOnType = memberInfo.GetCustomAttributes().OfType<IKeywordGenerator>();
+        return keywordGeneratorOnType.Select(keywordGenerator => keywordGenerator.CreateKeyword(GetMemberType(memberInfo))).ToArray();
+    }
+
+    private static Type GetMemberType(MemberInfo memberInfo)
+    {
+        Debug.Assert((memberInfo.MemberType & (MemberTypes.Property | MemberTypes.Field)) != 0);
+
+        if ((memberInfo.MemberType & MemberTypes.Property) != 0)
+        {
+            Debug.Assert(memberInfo is PropertyInfo);
+            return ((PropertyInfo)memberInfo).PropertyType;
+        }
+
+        Debug.Assert(memberInfo is FieldInfo);
+        return ((FieldInfo)memberInfo).FieldType;
     }
 }
