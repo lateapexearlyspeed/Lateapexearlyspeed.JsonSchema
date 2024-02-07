@@ -3,11 +3,11 @@ using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.Generator;
 
-internal class EnumGenerator<T> where T : notnull
+internal class EnumKeywordGenerator<T> where T : notnull
 {
     private readonly T[] _allowedValues;
 
-    public EnumGenerator(T[] allowedValues)
+    public EnumKeywordGenerator(T[] allowedValues)
     {
         _allowedValues = allowedValues;
     }

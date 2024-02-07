@@ -583,6 +583,11 @@ public class JsonSchemaGeneratorTest
     private static IEnumerable<TestSample> CreateSamplesForEnum()
     {
         yield return TestSample.Create<TestEnum>("\"A\"", ValidationResult.ValidResult);
+        yield return TestSample.Create<TestEnum>("\"B\"", ValidationResult.ValidResult);
+        yield return TestSample.Create<TestEnum>("\"C\"", ValidationResult.ValidResult);
+        yield return TestSample.Create<TestEnum>("0", ValidationResult.ValidResult);
+        yield return TestSample.Create<TestEnum>("1", ValidationResult.ValidResult);
+        yield return TestSample.Create<TestEnum>("2", ValidationResult.ValidResult);
 
         yield return TestSample.Create<TestEnum>("\"D\"", new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage(),
             ImmutableJsonPointer.Empty, 
@@ -590,10 +595,10 @@ public class JsonSchemaGeneratorTest
             GetSchemaResourceBaseUri<TestEnum>(),
             GetSchemaResourceBaseUri<TestEnum>()));
 
-        yield return TestSample.Create<TestEnum>("0", new ValidationResult(ResultCode.InvalidTokenKind, "type", 
-            GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.String),
+        yield return TestSample.Create<TestEnum>("3", new ValidationResult(ResultCode.NotFoundInAllowedList, "enum",
+            EnumKeyword.ErrorMessage(),
             ImmutableJsonPointer.Empty, 
-            ImmutableJsonPointer.Create("/type"),
+            ImmutableJsonPointer.Create("/enum"),
             GetSchemaResourceBaseUri<TestEnum>(),
             GetSchemaResourceBaseUri<TestEnum>()
             ));

@@ -5,15 +5,15 @@ namespace LateApexEarlySpeed.Json.Schema.Generator;
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public class StringEnumAttribute : Attribute, IKeywordGenerator
 {
-    private readonly EnumGenerator<string> _enumGenerator;
+    private readonly EnumKeywordGenerator<string> _enumKeywordGenerator;
 
     public StringEnumAttribute(params string[] allowedValues)
     {
-        _enumGenerator = new EnumGenerator<string>(allowedValues);
+        _enumKeywordGenerator = new EnumKeywordGenerator<string>(allowedValues);
     }
 
     public KeywordBase CreateKeyword(Type type)
     {
-        return _enumGenerator.CreateKeyword();
+        return _enumKeywordGenerator.CreateKeyword();
     }
 }
