@@ -28,15 +28,17 @@ internal static class SchemaGenerationHelper
         return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Number)).Append(new MinimumKeyword(decimal.MinValue)).Append(new MaximumKeyword(decimal.MaxValue)).ToList());
     }
 
-    public static BodyJsonSchema GenerateSchemaReference(Type type, IEnumerable<KeywordBase> keywordsFromProperty)
+    public static BodyJsonSchema GenerateSchemaReference(Type type, IEnumerable<KeywordBase> keywordsFromProperty, Uri baseUri)
     {
-        return new BodyJsonSchema(keywordsFromProperty.ToList(), new List<ISchemaContainerValidationNode>(0), new SchemaReferenceKeyword(CreateRefUri(type)), null, null, null, null);
+        return new BodyJsonSchema(keywordsFromProperty.ToList(), new List<ISchemaContainerValidationNode>(0), new SchemaReferenceKeyword(CreateRefUri(type, baseUri)), null, null, null, null);
     }
 
-    private static Uri CreateRefUri(Type type)
+    private static Uri CreateRefUri(Type type, Uri baseUri)
     {
-        return new Uri("#" + new ImmutableJsonPointer(
+        var relativeRefUri = new Uri("#" + new ImmutableJsonPointer(
             new[] { DefsKeyword.Keyword, TypeSchemaDefinitions.GetDefName(type) }), UriKind.Relative);
+
+        return new Uri(baseUri, relativeRefUri);
     }
 
     public static BodyJsonSchema GenerateSchemaForJsonType(InstanceType instanceType, IEnumerable<KeywordBase> keywordsFromProperty)

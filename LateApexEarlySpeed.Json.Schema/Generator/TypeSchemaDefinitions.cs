@@ -1,5 +1,4 @@
-﻿using LateApexEarlySpeed.Json.Schema.Common;
-using LateApexEarlySpeed.Json.Schema.JSchema;
+﻿using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Generator;
 

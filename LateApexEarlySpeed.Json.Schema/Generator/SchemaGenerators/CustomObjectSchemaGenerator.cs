@@ -12,7 +12,9 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
 {
     public BodyJsonSchema Generate(Type typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
-        var typeKeyword = new TypeKeyword(InstanceType.Object, InstanceType.Null);
+        TypeKeyword typeKeyword = typeToConvert.IsValueType
+            ? new TypeKeyword(InstanceType.Object)
+            : new TypeKeyword(InstanceType.Object, InstanceType.Null);
 
         IEnumerable<KeywordBase> keywordsOnType = SchemaGenerationHelper.GenerateKeywordsFromType(typeToConvert);
 
@@ -49,7 +51,7 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
             {
                 options.SchemaDefinitions.AddSchemaDefinition(memberType, propertySchemaResource);
 
-                propertySchema = SchemaGenerationHelper.GenerateSchemaReference(memberType, keywordsOfMember);
+                propertySchema = SchemaGenerationHelper.GenerateSchemaReference(memberType, keywordsOfMember, options.MainDocumentBaseUri!);
             }
 
             if (memberInfo.GetCustomAttribute<NotNullAttribute>() is not null)

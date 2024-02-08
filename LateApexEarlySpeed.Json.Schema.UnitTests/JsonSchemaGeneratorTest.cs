@@ -19,6 +19,22 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests;
 
 public class JsonSchemaGeneratorTest
 {
+    [Fact]
+    public void GenerateJsonValidator_LoopReference_Throw()
+    {
+        Assert.Throws<InvalidOperationException>(() => JsonSchemaGenerator.GenerateJsonValidator<LoopReferenceClass>());
+    }
+
+    class LoopReferenceClass
+    {
+        public InnerLoopReference? Prop { get; set; }
+    }
+
+    class InnerLoopReference
+    {
+        public LoopReferenceClass? Prop { get; set; }
+    }
+
     [Theory]
     [MemberData(nameof(TestData))]
     public void GenerateJsonValidator_Validate(Type type, string jsonInstance, ValidationResult expectedValidationResult, JsonSchemaGeneratorOptions? options)
@@ -84,7 +100,10 @@ public class JsonSchemaGeneratorTest
         samples = samples.Concat(CreateSamplesForCollection(typeof(ImmutableList<>)));
         
         // Object
-        samples = samples.Concat(CreateSamplesForObject());
+        samples = samples.Concat(CreateSamplesForCustomClass());
+        
+        // Struct
+        samples = samples.Concat(CreateSamplesForCustomStruct());
         
         // Dictionary<string,>
         samples = samples.Concat(CreateSamplesForStringDictionary());
@@ -116,6 +135,9 @@ public class JsonSchemaGeneratorTest
         // JsonObject
         samples = samples.Concat(CreateSamplesForArbitraryJsonObject());
         
+        // Nullable value type
+        samples = samples.Concat(CreateSamplesForNullableValueType());
+        
         samples = samples.Concat(CreateSamplesForMaximumAttribute());
         samples = samples.Concat(CreateSamplesForMinimumAttribute());
         samples = samples.Concat(CreateSamplesForExclusiveMaximumAttribute());
@@ -139,6 +161,40 @@ public class JsonSchemaGeneratorTest
         samples = samples.Concat(CreateSamplesForNotNullAttribute());
         
         return samples;
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForNullableValueType()
+    {
+        yield return TestSample.Create<int?>("1", ValidationResult.ValidResult);
+        yield return TestSample.Create<int?>("null", ValidationResult.ValidResult);
+        yield return TestSample.Create<int?>("\"a\"", new ValidationResult(ResultCode.InvalidTokenKind, "type", 
+            GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Integer),
+            ImmutableJsonPointer.Empty, 
+            ImmutableJsonPointer.Create("/anyOf/1/type"), 
+            GetSchemaResourceBaseUri<int?>(),
+            GetSchemaResourceBaseUri<int?>()
+            ));
+
+        yield return TestSample.Create<CustomStruct?>("""
+            {
+              "PropName": {
+                "InnerProp": "abc"
+              }
+            }
+            """, ValidationResult.ValidResult);
+
+        yield return TestSample.Create<CustomStruct?>("""
+            {
+              "PropName": {
+                "InnerProp": 1
+              }
+            }
+            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.String, InstanceType.Null),
+            ImmutableJsonPointer.Create("/PropName/InnerProp")!,
+            ImmutableJsonPointer.Create("/anyOf/1/$ref/properties/PropName/$ref/properties/InnerProp/type"), 
+            GetSchemaResourceBaseUri<CustomStruct?>(),
+            GetSubSchemaRefFullUriForDefs<CustomStruct?, InnerCustomStruct>()
+            ));
     }
 
     private static IEnumerable<TestSample> CreateSamplesForDateTimeOffset()
@@ -483,9 +539,9 @@ public class JsonSchemaGeneratorTest
         public float Prop { get; set; }
     }
 
-    private static IEnumerable<TestSample> CreateSamplesForObject()
+    private static IEnumerable<TestSample> CreateSamplesForCustomClass()
     {
-        yield return TestSample.Create<CustomObject>("""
+        yield return TestSample.Create<CustomClass>("""
         {
             "PropName": {
                 "InnerProp": "abc"
@@ -493,51 +549,139 @@ public class JsonSchemaGeneratorTest
         }
         """, ValidationResult.ValidResult);
 
-        yield return TestSample.Create<CustomObject>("null", ValidationResult.ValidResult);
+        yield return TestSample.Create<CustomClass>("null", ValidationResult.ValidResult);
         
-        yield return TestSample.Create<CustomObject>("""
+        yield return TestSample.Create<CustomClass>("""
             {
               "PropName": null
             }
             """, ValidationResult.ValidResult);
 
-        yield return TestSample.Create<CustomObject>("""
+        yield return TestSample.Create<CustomClass>("""
 {
   "PropName": "invalid"
 }
 """, new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/PropName")!,
             ImmutableJsonPointer.Create("/properties/PropName/$ref/type"),
-            GetSchemaResourceBaseUri<CustomObject>(),
-            GetSubSchemaRefFullUriForDefs<CustomObject, InnerCustomObject>()));
+            GetSchemaResourceBaseUri<CustomClass>(),
+            GetSubSchemaRefFullUriForDefs<CustomClass, InnerCustomClass>()));
 
-        yield return TestSample.Create<CustomObject>("""
+        yield return TestSample.Create<CustomClass>("""
             {
               "NewFieldName": 2
             }
             """, ValidationResult.ValidResult);
 
-        yield return TestSample.Create<CustomObject>("""
+        yield return TestSample.Create<CustomClass>("""
             {
               "NewFieldName": 1
             }
             """, new ValidationResult(ResultCode.NumberOutOfRange, "minimum", MinimumKeyword.ErrorMessage(1, 2),
             ImmutableJsonPointer.Create("/NewFieldName")!,
             ImmutableJsonPointer.Create("/properties/NewFieldName/minimum"),
-            GetSchemaResourceBaseUri<CustomObject>(),
-            GetSchemaResourceBaseUri<CustomObject>()));
+            GetSchemaResourceBaseUri<CustomClass>(),
+            GetSchemaResourceBaseUri<CustomClass>()));
+
+        yield return TestSample.Create<CustomClass>("""
+        {
+            "PropName": {
+                "InnerProp": "abc",
+                "InnerProp2": {
+                  "InnerInnerProp": 1
+                }
+            }
+        }
+        """, ValidationResult.ValidResult);
+
+        yield return TestSample.Create<CustomClass>("""
+        {
+            "PropName": {
+                "InnerProp": "abc",
+                "InnerProp2": {
+                  "InnerInnerProp": "aaa"
+                }
+            }
+        }
+        """, new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Integer),
+            ImmutableJsonPointer.Create("/PropName/InnerProp2/InnerInnerProp")!, 
+            ImmutableJsonPointer.Create("/properties/PropName/$ref/properties/InnerProp2/$ref/properties/InnerInnerProp/type"),
+            GetSchemaResourceBaseUri<CustomClass>(),
+            GetSubSchemaRefFullUriForDefs<CustomClass, InnerCustomClass2>()
+        ));
     }
 
-    private class CustomObject
+    private class CustomClass
     {
-        public InnerCustomObject? PropName { get; set; }
+        public InnerCustomClass? PropName { get; set; }
 
         [JsonPropertyName("NewFieldName")]
         [Minimum(2)]
         public int FieldName;
     }
 
-    private class InnerCustomObject
+    private class InnerCustomClass
+    {
+        public string? InnerProp { get; set; }
+        public InnerCustomClass2? InnerProp2 { get; set; }
+    }
+
+    private class InnerCustomClass2
+    {
+        public int InnerInnerProp { get; set; }
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForCustomStruct()
+    {
+        yield return TestSample.Create<CustomStruct>("""
+        {
+            "PropName": {
+                "InnerProp": "abc"
+            }
+        }
+        """, ValidationResult.ValidResult);
+
+        yield return TestSample.Create<CustomStruct>("""
+        {
+            "PropName": {
+                "InnerProp": 1
+            }
+        }
+        """, new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.String, InstanceType.Null),
+            ImmutableJsonPointer.Create("/PropName/InnerProp")!,
+            ImmutableJsonPointer.Create("/properties/PropName/$ref/properties/InnerProp/type"),
+            GetSchemaResourceBaseUri<CustomStruct>(),
+            GetSubSchemaRefFullUriForDefs<CustomStruct, InnerCustomStruct>()
+            ));
+
+        yield return TestSample.Create<CustomStruct>("""
+            {
+              "PropName": null
+            }
+            """, new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object),
+            ImmutableJsonPointer.Create("/PropName")!,
+            ImmutableJsonPointer.Create("/properties/PropName/$ref/type"),
+            GetSchemaResourceBaseUri<CustomStruct>(),
+            GetSubSchemaRefFullUriForDefs<CustomStruct, InnerCustomStruct>()
+            ));
+
+        yield return TestSample.Create<CustomStruct>("""
+        {
+          "PropName": "invalid"
+        }
+        """, new ValidationResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Object),
+            ImmutableJsonPointer.Create("/PropName")!,
+            ImmutableJsonPointer.Create("/properties/PropName/$ref/type"),
+            GetSchemaResourceBaseUri<CustomStruct>(),
+            GetSubSchemaRefFullUriForDefs<CustomStruct, InnerCustomStruct>()));
+    }
+
+    private struct CustomStruct
+    {
+        public InnerCustomStruct PropName { get; set; }
+    }
+
+    private struct InnerCustomStruct
     {
         public string? InnerProp { get; set; }
     }
@@ -571,13 +715,13 @@ public class JsonSchemaGeneratorTest
             ImmutableJsonPointer.Create("/Prop/P1")!,
             ImmutableJsonPointer.Create("/properties/Prop/additionalProperties/$ref/type"),
             GetSchemaResourceBaseUri<StringDictionaryTestClass>(),
-            GetSubSchemaRefFullUriForDefs<StringDictionaryTestClass, InnerCustomObject>()
+            GetSubSchemaRefFullUriForDefs<StringDictionaryTestClass, InnerCustomClass>()
         ));
     }
 
     class StringDictionaryTestClass
     {
-        public Dictionary<string, InnerCustomObject> Prop { get; set; } = null!;
+        public Dictionary<string, InnerCustomClass> Prop { get; set; } = null!;
     }
 
     private static IEnumerable<TestSample> CreateSamplesForEnum()
@@ -641,7 +785,7 @@ public class JsonSchemaGeneratorTest
 
     private static IEnumerable<TestSample> CreateSamplesForJsonSchemaNamingPolicy()
     {
-        yield return TestSample.Create<CustomObject>("""
+        yield return TestSample.Create<CustomClass>("""
             {
               "PropName": 1
             }
@@ -649,10 +793,10 @@ public class JsonSchemaGeneratorTest
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/PropName")!,
             ImmutableJsonPointer.Create("/properties/PropName/$ref/type"), 
-            GetSchemaResourceBaseUri<CustomObject>(),
-            GetSubSchemaRefFullUriForDefs<CustomObject, InnerCustomObject>()), new JsonSchemaGeneratorOptions());
+            GetSchemaResourceBaseUri<CustomClass>(),
+            GetSubSchemaRefFullUriForDefs<CustomClass, InnerCustomClass>()), new JsonSchemaGeneratorOptions());
 
-        yield return TestSample.Create<CustomObject>("""
+        yield return TestSample.Create<CustomClass>("""
             {
               "propName": 1
             }
@@ -660,10 +804,10 @@ public class JsonSchemaGeneratorTest
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/propName")!,
             ImmutableJsonPointer.Create("/properties/propName/$ref/type"),
-            GetSchemaResourceBaseUri<CustomObject>(),
-            GetSubSchemaRefFullUriForDefs<CustomObject, InnerCustomObject>()), new JsonSchemaGeneratorOptions { PropertyNamingPolicy = JsonSchemaNamingPolicy.CamelCase });
+            GetSchemaResourceBaseUri<CustomClass>(),
+            GetSubSchemaRefFullUriForDefs<CustomClass, InnerCustomClass>()), new JsonSchemaGeneratorOptions { PropertyNamingPolicy = JsonSchemaNamingPolicy.CamelCase });
 
-        yield return TestSample.Create<CustomObject>("""
+        yield return TestSample.Create<CustomClass>("""
             {
               "prop_name": 1
             }
@@ -671,10 +815,10 @@ public class JsonSchemaGeneratorTest
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/prop_name")!,
             ImmutableJsonPointer.Create("/properties/prop_name/$ref/type"),
-            GetSchemaResourceBaseUri<CustomObject>(),
-            GetSubSchemaRefFullUriForDefs<CustomObject, InnerCustomObject>()), new JsonSchemaGeneratorOptions { PropertyNamingPolicy = JsonSchemaNamingPolicy.SnakeCaseLower });
+            GetSchemaResourceBaseUri<CustomClass>(),
+            GetSubSchemaRefFullUriForDefs<CustomClass, InnerCustomClass>()), new JsonSchemaGeneratorOptions { PropertyNamingPolicy = JsonSchemaNamingPolicy.SnakeCaseLower });
 
-        yield return TestSample.Create<CustomObject>("""
+        yield return TestSample.Create<CustomClass>("""
             {
               "PROP_NAME": 1
             }
@@ -682,10 +826,10 @@ public class JsonSchemaGeneratorTest
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/PROP_NAME")!,
             ImmutableJsonPointer.Create("/properties/PROP_NAME/$ref/type"),
-            GetSchemaResourceBaseUri<CustomObject>(),
-            GetSubSchemaRefFullUriForDefs<CustomObject, InnerCustomObject>()), new JsonSchemaGeneratorOptions { PropertyNamingPolicy = JsonSchemaNamingPolicy.SnakeCaseUpper });
+            GetSchemaResourceBaseUri<CustomClass>(),
+            GetSubSchemaRefFullUriForDefs<CustomClass, InnerCustomClass>()), new JsonSchemaGeneratorOptions { PropertyNamingPolicy = JsonSchemaNamingPolicy.SnakeCaseUpper });
 
-        yield return TestSample.Create<CustomObject>("""
+        yield return TestSample.Create<CustomClass>("""
             {
               "prop-name": 1
             }
@@ -693,10 +837,10 @@ public class JsonSchemaGeneratorTest
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/prop-name")!,
             ImmutableJsonPointer.Create("/properties/prop-name/$ref/type"),
-            GetSchemaResourceBaseUri<CustomObject>(),
-            GetSubSchemaRefFullUriForDefs<CustomObject, InnerCustomObject>()), new JsonSchemaGeneratorOptions { PropertyNamingPolicy = JsonSchemaNamingPolicy.KebabCaseLower });
+            GetSchemaResourceBaseUri<CustomClass>(),
+            GetSubSchemaRefFullUriForDefs<CustomClass, InnerCustomClass>()), new JsonSchemaGeneratorOptions { PropertyNamingPolicy = JsonSchemaNamingPolicy.KebabCaseLower });
 
-        yield return TestSample.Create<CustomObject>("""
+        yield return TestSample.Create<CustomClass>("""
             {
               "PROP-NAME": 1
             }
@@ -704,8 +848,8 @@ public class JsonSchemaGeneratorTest
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             ImmutableJsonPointer.Create("/PROP-NAME")!,
             ImmutableJsonPointer.Create("/properties/PROP-NAME/$ref/type"),
-            GetSchemaResourceBaseUri<CustomObject>(),
-            GetSubSchemaRefFullUriForDefs<CustomObject, InnerCustomObject>()), new JsonSchemaGeneratorOptions { PropertyNamingPolicy = JsonSchemaNamingPolicy.KebabCaseUpper });
+            GetSchemaResourceBaseUri<CustomClass>(),
+            GetSubSchemaRefFullUriForDefs<CustomClass, InnerCustomClass>()), new JsonSchemaGeneratorOptions { PropertyNamingPolicy = JsonSchemaNamingPolicy.KebabCaseUpper });
     }
 
     private static IEnumerable<TestSample> CreateSamplesForJsonIgnoreAttribute()
@@ -836,7 +980,7 @@ public class JsonSchemaGeneratorTest
         public string? StringProp { get; set; }
 
         [NotNull]
-        public InnerCustomObject? ObjectProp { get; set; }
+        public InnerCustomClass? ObjectProp { get; set; }
     }
 
     private static IEnumerable<TestSample> CreateSamplesForPropertyNameAttribute()
@@ -1456,6 +1600,7 @@ public class JsonSchemaGeneratorTest
         }
     }
 }
+
 
 
 

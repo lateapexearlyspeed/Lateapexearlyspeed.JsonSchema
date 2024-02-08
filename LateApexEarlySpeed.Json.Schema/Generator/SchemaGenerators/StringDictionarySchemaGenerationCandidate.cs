@@ -21,7 +21,7 @@ internal class StringDictionarySchemaGenerationCandidate : ISchemaGenerationCand
         {
             options.SchemaDefinitions.AddSchemaDefinition(valueType, valueSchemaResource);
 
-            propertySchema = SchemaGenerationHelper.GenerateSchemaReference(valueType, Enumerable.Empty<KeywordBase>());
+            propertySchema = SchemaGenerationHelper.GenerateSchemaReference(valueType, Enumerable.Empty<KeywordBase>(), options.MainDocumentBaseUri!);
         }
         else
         {

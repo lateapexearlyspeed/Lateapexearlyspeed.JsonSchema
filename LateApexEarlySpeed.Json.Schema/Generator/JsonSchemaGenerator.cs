@@ -6,7 +6,29 @@ namespace LateApexEarlySpeed.Json.Schema.Generator;
 
 public class JsonSchemaGeneratorOptions
 {
-    internal TypeSchemaDefinitions SchemaDefinitions = new();
+    /// <summary>
+    /// User entry point to create <see cref="JsonSchemaGeneratorOptions"/> instance
+    /// </summary>
+    public JsonSchemaGeneratorOptions()
+    {
+    }
+
+    /// <summary>
+    /// Copy user defined <paramref name="options"/> and set <see cref="MainDocumentBaseUri"/>
+    /// </summary>
+    internal JsonSchemaGeneratorOptions(JsonSchemaGeneratorOptions? options, Uri mainDocumentBaseUri)
+    {
+        MainDocumentBaseUri = mainDocumentBaseUri;
+
+        if (options is not null)
+        {
+            PropertyNamingPolicy = options.PropertyNamingPolicy;
+        }
+    }
+
+    internal TypeSchemaDefinitions SchemaDefinitions { get; } = new();
+    internal Uri? MainDocumentBaseUri { get; set; }
+    internal TypeGenerationRecorder TypeGenerationRecorder { get; } = new();
     public JsonSchemaNamingPolicy PropertyNamingPolicy { get; set; } = JsonSchemaNamingPolicy.SharedDefault;
 }
 
@@ -16,10 +38,12 @@ public static class JsonSchemaGenerator
 
     public static JsonValidator GenerateJsonValidator(Type type, JsonSchemaGeneratorOptions? options = null)
     {
-        options ??= new JsonSchemaGeneratorOptions();
+        var mainDocumentBaseUri = new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, "[Main]-" + type.FullName);
+        options = new JsonSchemaGeneratorOptions(options, mainDocumentBaseUri);
+
         BodyJsonSchema jsonSchema = GenerateSchema(type, Enumerable.Empty<KeywordBase>(), options);
 
-        BodyJsonSchemaDocument bodyJsonSchemaDocument = jsonSchema.TransformToSchemaDocument(new Uri(BodyJsonSchemaDocument.DefaultDocumentBaseUri, "[Main]-" + type.FullName), new DefsKeyword(options.SchemaDefinitions.GetAll().ToDictionary(kv => kv.Key, kv => kv.Value as JsonSchema)));
+        BodyJsonSchemaDocument bodyJsonSchemaDocument = jsonSchema.TransformToSchemaDocument(mainDocumentBaseUri, new DefsKeyword(options.SchemaDefinitions.GetAll().ToDictionary(kv => kv.Key, kv => kv.Value as JsonSchema)));
 
         return new JsonValidator(bodyJsonSchemaDocument);
     }
@@ -33,7 +57,13 @@ public static class JsonSchemaGenerator
             return schemaDefinition;
         }
 
+        options.TypeGenerationRecorder.PushType(type);
+        
         ISchemaGenerator schemaGenerator = SchemaGeneratorSelector.Select(type);
-        return schemaGenerator.Generate(type, keywordsFromProperty, options);
+        BodyJsonSchema bodyJsonSchema = schemaGenerator.Generate(type, keywordsFromProperty, options);
+        
+        options.TypeGenerationRecorder.PopType();
+
+        return bodyJsonSchema;
     }
 }

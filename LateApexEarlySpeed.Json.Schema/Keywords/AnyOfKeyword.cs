@@ -12,6 +12,8 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<AnyOfKeyword>))]
 internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContainerElement
 {
+    private readonly List<JsonSchema> _subSchemas = null!;
+
     public AnyOfKeyword()
     {
     }
@@ -21,7 +23,19 @@ internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
         SubSchemas = subSchemas;
     }
 
-    public List<JsonSchema> SubSchemas { get; init; } = null!;
+    public List<JsonSchema> SubSchemas
+    {
+        get => _subSchemas;
+        
+        init
+        {
+            _subSchemas = value;
+            for (int i = 0; i < _subSchemas.Count; i++)
+            {
+                _subSchemas[i].Name = i.ToString();
+            }
+        }
+    }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {

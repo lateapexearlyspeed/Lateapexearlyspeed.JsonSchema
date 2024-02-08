@@ -26,6 +26,7 @@ internal class AllOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
     public List<JsonSchema> SubSchemas
     {
         get => _subSchemas;
+        
         init
         {
             _subSchemas = value;

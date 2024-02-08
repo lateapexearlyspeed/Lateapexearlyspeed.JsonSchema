@@ -27,7 +27,7 @@ internal class NullableValueTypeSchemaGenerationCandidate : ISchemaGenerationCan
         if (underlyingSchema is JsonSchemaResource schemaResource)
         {
             options.SchemaDefinitions.AddSchemaDefinition(underlyingType, schemaResource);
-            underlyingSchema = SchemaGenerationHelper.GenerateSchemaReference(underlyingType, keywordsFromProperty);
+            underlyingSchema = SchemaGenerationHelper.GenerateSchemaReference(underlyingType, keywordsFromProperty, options.MainDocumentBaseUri!);
         }
 
         var anyOfKeyword = new AnyOfKeyword(new List<JsonSchema> { nullTypeSchema, underlyingSchema });

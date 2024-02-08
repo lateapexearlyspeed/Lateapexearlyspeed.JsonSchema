@@ -25,7 +25,7 @@ internal class CollectionSchemaGenerationCandidate : ISchemaGenerationCandidate
         {
             options.SchemaDefinitions.AddSchemaDefinition(elementType, elementSchemaResource);
 
-            itemsSchema = SchemaGenerationHelper.GenerateSchemaReference(elementType, Enumerable.Empty<KeywordBase>());
+            itemsSchema = SchemaGenerationHelper.GenerateSchemaReference(elementType, Enumerable.Empty<KeywordBase>(), options.MainDocumentBaseUri!);
         }
         else
         {
