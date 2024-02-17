@@ -65,5 +65,9 @@ public enum ResultCode
     DuplicatedArrayItems,
     NotFoundInAllowedList,
     UnexpectedValue,
-    InvalidFormat
+    InvalidFormat,
+    NotBeforeSpecifiedTimePoint,
+    NotAfterSpecifiedTimePoint,
+    FailedForCustomValidation,
+    FailedToDeserialize
 }

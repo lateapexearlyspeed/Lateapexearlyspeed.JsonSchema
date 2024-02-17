@@ -402,65 +402,6 @@
     ]
   },
   {
-    "description": "dotnet-date-time format",
-    "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "format": "dotnet-date-time"
-    },
-    "tests": [
-      {
-        "description": "all string formats ignore integers",
-        "data": 12,
-        "valid": true
-      },
-      {
-        "description": "all string formats ignore floats",
-        "data": 13.7,
-        "valid": true
-      },
-      {
-        "description": "all string formats ignore objects",
-        "data": {},
-        "valid": true
-      },
-      {
-        "description": "all string formats ignore arrays",
-        "data": [],
-        "valid": true
-      },
-      {
-        "description": "all string formats ignore booleans",
-        "data": false,
-        "valid": true
-      },
-      {
-        "description": "all string formats ignore nulls",
-        "data": null,
-        "valid": true
-      },
-      {
-        "description": "invalid dotnet-date-time string with offset",
-        "data": "1990-02-25T15:59:60.123-08:00",
-        "valid": false
-      },
-      {
-        "description": "invalid dotnet-date-time string without offset",
-        "data": "1990-02-25T15:59:59.123",
-        "valid": false
-      },
-      {
-        "description": "valid date-time string with float second",
-        "data": "1990-02-25T15:59:59.1",
-        "valid": true
-      },
-      {
-        "description": "valid date-time string without with float second",
-        "data": "1990-02-25T15:59:59",
-        "valid": true
-      }
-    ]
-  },
-  {
     "description": "json-pointer format",
     "schema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",

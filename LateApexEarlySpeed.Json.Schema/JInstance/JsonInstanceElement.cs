@@ -5,18 +5,19 @@ namespace LateApexEarlySpeed.Json.Schema.JInstance;
 
 public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 {
-    private readonly JsonElement _jsonElement;
     private readonly ImmutableJsonPointer _instanceLocation;
+
+    internal JsonElement InternalJsonElement { get; }
 
     public JsonInstanceElement(JsonElement jsonElement, ImmutableJsonPointer instanceLocation)
     {
-        _jsonElement = jsonElement;
+        InternalJsonElement = jsonElement;
         _instanceLocation = instanceLocation;
     }
 
     public IEnumerable<JsonInstanceProperty> EnumerateObject()
     {
-        JsonElement.ObjectEnumerator objectEnumerator = _jsonElement.EnumerateObject();
+        JsonElement.ObjectEnumerator objectEnumerator = InternalJsonElement.EnumerateObject();
         foreach (JsonProperty jsonProperty in objectEnumerator)
         {
             yield return new JsonInstanceProperty(jsonProperty, _instanceLocation.Add(jsonProperty.Name));
@@ -27,7 +28,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
     {
         int idx = 0;
 
-        foreach (JsonElement item in _jsonElement.EnumerateArray())
+        foreach (JsonElement item in InternalJsonElement.EnumerateArray())
         {
             yield return new JsonInstanceElement(item, _instanceLocation.Add(idx++));
         }
@@ -35,20 +36,20 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 
     public ImmutableJsonPointer Location => _instanceLocation;
 
-    public JsonValueKind ValueKind => _jsonElement.ValueKind;
+    public JsonValueKind ValueKind => InternalJsonElement.ValueKind;
 
-    public string? GetString() => _jsonElement.GetString();
+    public string? GetString() => InternalJsonElement.GetString();
 
-    public double GetDouble() => _jsonElement.GetDouble();
+    public double GetDouble() => InternalJsonElement.GetDouble();
 
     public bool TryGetDecimal(out decimal value)
     {
-        return _jsonElement.TryGetDecimal(out value);
+        return InternalJsonElement.TryGetDecimal(out value);
     }
 
     public string GetRawText()
     {
-        return _jsonElement.GetRawText();
+        return InternalJsonElement.GetRawText();
     }
 
     /// <summary>
@@ -57,7 +58,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
     /// </summary>
     public void GetNumericValue(out double? doubleValue, out long? longValue, out ulong? ulongValue)
     {
-        if (_jsonElement.TryGetInt64(out long tmpLong))
+        if (InternalJsonElement.TryGetInt64(out long tmpLong))
         {
             longValue = tmpLong;
             doubleValue = null;
@@ -65,7 +66,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
             return;
         }
 
-        if (_jsonElement.TryGetUInt64(out ulong tmpULong))
+        if (InternalJsonElement.TryGetUInt64(out ulong tmpULong))
         {
             ulongValue = tmpULong;
             doubleValue = null;
@@ -73,7 +74,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
             return;
         }
 
-        doubleValue = _jsonElement.GetDouble();
+        doubleValue = InternalJsonElement.GetDouble();
         longValue = null;
         ulongValue = null;
     }
@@ -171,5 +172,13 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
     public static JsonInstanceElement ParseValue(ref Utf8JsonReader reader)
     {
         return new JsonInstanceElement(JsonElement.ParseValue(ref reader), ImmutableJsonPointer.Empty);
+    }
+
+    /// <summary>
+    /// Gets a string representation for the current value appropriate to the value type.
+    /// </summary>
+    public override string ToString()
+    {
+        return InternalJsonElement.ToString();
     }
 }

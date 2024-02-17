@@ -9,4 +9,11 @@ internal class JsonInstanceSerializer
     {
         return new JsonInstanceElement(JsonSerializer.SerializeToElement(value), ImmutableJsonPointer.Empty);
     }
+
+    public static JsonInstanceElement Deserialize(string json)
+    {
+        JsonElement jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
+
+        return new JsonInstanceElement(jsonElement, ImmutableJsonPointer.Empty);
+    }
 }

@@ -6,6 +6,8 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.FluentGenerator;
+using LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 using LateApexEarlySpeed.Json.Schema.Generator;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
@@ -201,10 +203,11 @@ public class JsonSchemaGeneratorTest
     {
         yield return TestSample.Create<DateTimeOffset>("\"1990-02-25T15:59:59-08:00\"", ValidationResult.ValidResult);
         yield return TestSample.Create<DateTimeOffset>("\"1990-02-25T15:59:59.1-08:00\"", ValidationResult.ValidResult);
+        yield return TestSample.Create<DateTimeOffset>("\"1990-02-25T15:59:59.1\"", ValidationResult.ValidResult);
 
-        yield return TestSample.Create<DateTimeOffset>("\"1990-02-25T15:59:59.1\"", new ValidationResult(ResultCode.InvalidFormat, "format", FormatKeyword.ErrorMessage("date-time"),
+        yield return TestSample.Create<DateTimeOffset>("\"abc1990-02-25T15:59:59.1\"", new ValidationResult(ResultCode.InvalidFormat, "ext-DateTimeOffsetFormat", DateTimeOffsetFormatExtensionKeyword.ErrorMessage(),
             ImmutableJsonPointer.Empty, 
-            ImmutableJsonPointer.Create("/format"), 
+            ImmutableJsonPointer.Create("/ext-DateTimeOffsetFormat"), 
             GetSchemaResourceBaseUri<DateTimeOffset>(),
             GetSchemaResourceBaseUri<DateTimeOffset>()));
     }
@@ -213,10 +216,11 @@ public class JsonSchemaGeneratorTest
     {
         yield return TestSample.Create<DateTime>("\"1990-02-25T15:59:59\"", ValidationResult.ValidResult);
         yield return TestSample.Create<DateTime>("\"1990-02-25T15:59:59.1\"", ValidationResult.ValidResult);
+        yield return TestSample.Create<DateTime>("\"1990-02-25T15:59:59.1-08:00\"", ValidationResult.ValidResult);
 
-        yield return TestSample.Create<DateTime>("\"1990-02-25T15:59:59.1-08:00\"", new ValidationResult(ResultCode.InvalidFormat, "format", FormatKeyword.ErrorMessage("dotnet-date-time"),
+        yield return TestSample.Create<DateTime>("\"abc1990-02-25T15:59:59.1-08:00\"", new ValidationResult(ResultCode.InvalidFormat, "ext-DateTimeFormat", DateTimeFormatExtensionKeyword.ErrorMessage(),
             ImmutableJsonPointer.Empty,
-            ImmutableJsonPointer.Create("/format"),
+            ImmutableJsonPointer.Create("/ext-DateTimeFormat"),
             GetSchemaResourceBaseUri<DateTime>(),
             GetSchemaResourceBaseUri<DateTime>()));
     }

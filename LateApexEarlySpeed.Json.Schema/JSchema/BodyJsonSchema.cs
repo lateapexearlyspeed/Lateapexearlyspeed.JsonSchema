@@ -168,4 +168,9 @@ internal class BodyJsonSchema : JsonSchema
     {
         return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, id, defsKeyword);
     }
+
+    public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id)
+    {
+        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, id, _defsKeyword);
+    }
 }
