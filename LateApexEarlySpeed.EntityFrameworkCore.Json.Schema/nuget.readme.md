@@ -1,0 +1,1 @@
+﻿This library provides schema of json column for EntityFramework Core

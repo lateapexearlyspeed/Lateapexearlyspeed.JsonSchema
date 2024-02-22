@@ -8,16 +8,16 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Title>Simple and high performance Json Schema implementation for .Net</Title>
+    <Title>Json schema for EntityFramework Core</Title>
     <Authors>Lateapexearlyspeed</Authors>
-    <Description>Simple and high performance Json Schema implementation for .Net</Description>
+    <Description>Provide schema of json column for EntityFramework Core</Description>
     <PackageReadmeFile>nuget.readme.md</PackageReadmeFile>
     <PackageIcon>nuget.icon.jpg</PackageIcon>
-    <PackageTags>Json;Schema;Json schema;JsonSchema;Validation;SchemaValidatorGeneration;Generation</PackageTags>
+    <PackageTags>Microsoft.EntityFrameworkCore;Entity Framework Core;entity-framework-core;EntityFrameworkCore;EFCore;EntityFramework;Json;Schema;Json schema;JsonSchema;Validation</PackageTags>
     <PackageOutputPath>bin\Release\NugetPackage</PackageOutputPath>
-    <Version>1.0.9</Version>
-    <AssemblyVersion>1.0.9</AssemblyVersion>
-    <FileVersion>1.0.9</FileVersion>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <FileVersion>1.0.0</FileVersion>
     <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema</PackageProjectUrl>
   </PropertyGroup>
@@ -33,11 +33,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
-    <PackageReference Include="System.Text.Json" Version="8.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="nuget.icon.jpg">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
@@ -46,6 +41,14 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.32" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LateApexEarlySpeed.Json.Schema\LateApexEarlySpeed.Json.Schema.csproj" />
   </ItemGroup>
 
 </Project>
