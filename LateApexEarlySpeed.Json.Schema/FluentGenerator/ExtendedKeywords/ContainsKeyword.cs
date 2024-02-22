@@ -36,7 +36,7 @@ internal class ContainsKeyword : KeywordBase
             Name, instance.Location);
     }
 
-    internal string ErrorMessage(string instanceJson)
+    internal static string ErrorMessage(string instanceJson)
     {
         return $"Array not contain any element met validation, array instance: {instanceJson}";
     }

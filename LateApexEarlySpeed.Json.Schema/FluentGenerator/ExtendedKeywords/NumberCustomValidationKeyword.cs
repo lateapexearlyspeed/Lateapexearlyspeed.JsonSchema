@@ -5,13 +5,12 @@ using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 
-[Keyword("ext-custom-NumberValidation")]
-public class NumberCustomValidationKeyword : KeywordBase
+public abstract class NumberCustomValidationKeyword<T> : KeywordBase
 {
-    private readonly Func<double, bool> _validator;
-    private readonly Func<double, string> _errorMessageFunc;
+    private readonly Func<T, bool> _validator;
+    private readonly Func<T, string> _errorMessageFunc;
 
-    public NumberCustomValidationKeyword(Func<double, bool> validator, Func<double, string> errorMessageFunc)
+    protected NumberCustomValidationKeyword(Func<T, bool> validator, Func<T, string> errorMessageFunc)
     {
         _validator = validator;
         _errorMessageFunc = errorMessageFunc;
@@ -24,11 +23,18 @@ public class NumberCustomValidationKeyword : KeywordBase
             return ValidationResult.ValidResult;
         }
 
-        double instanceData = instance.GetDouble();
+        if (!TryGetNumber(instance, out T instanceData))
+        {
+            return ValidationResult.CreateFailedResult(ResultCode.FailedForCustomValidation, ErrorMessageForTypeConvert(instance.ToString()), options.ValidationPathStack, Name, instance.Location);
+        }
 
         return _validator(instanceData)
             ? ValidationResult.ValidResult
             : ValidationResult.CreateFailedResult(ResultCode.FailedForCustomValidation, _errorMessageFunc(instanceData), options.ValidationPathStack,
                 Name, instance.Location);
     }
+
+    protected abstract bool TryGetNumber(JsonInstanceElement instance, out T value);
+
+    protected internal static string ErrorMessageForTypeConvert(string instanceJson) => $"Cannot convert json value:{instanceJson} to specified type:{typeof(T)}";
 }

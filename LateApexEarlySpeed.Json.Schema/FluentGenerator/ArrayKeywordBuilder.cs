@@ -15,7 +15,7 @@ public class ArrayKeywordBuilder : KeywordBuilder
     {
     }
 
-    public ArrayKeywordBuilder SerializationEquivalent(object[] collection)
+    public ArrayKeywordBuilder SerializationEquivalent(object?[] collection)
     {
         Keywords.Add(new ConstKeyword(JsonInstanceSerializer.SerializeToElement(collection)));
 
@@ -40,8 +40,8 @@ public class ArrayKeywordBuilder : KeywordBuilder
     {
         Keywords.AddRange(new KeywordBase[]
         {
-            new MinLengthKeyword { BenchmarkValue = length },
-            new MaxLengthKeyword {BenchmarkValue = length}
+            new MinItemsKeyword { BenchmarkValue = length },
+            new MaxItemsKeyword {BenchmarkValue = length}
         });
 
         return this;

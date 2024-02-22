@@ -7,34 +7,12 @@ public class JsonSchemaBuilder
 {
     private KeywordBuilder? _keywordBuilder;
 
-    // public static void Test()
-    // {
-    //     JsonSchemaBuilder builder = new JsonSchemaBuilder();
-    //
-    //     builder.IsJsonString().Equal("abc").IsIn(new string[] { "a" }).HasMaxLength(10).HasMinLength(1).HasPattern("*a*").HasCustomValidation(s => s.StartsWith('1'), s => s);
-    //     builder.IsJsonNumber().Equal(1).IsIn(new double[] { 1, 2, 3 }).IsGreaterThan(1).IsLessThan(10).NotGreaterThan(11).NotLessThan(0).MultipleOf(3)
-    //         .HasCustomValidation(d => Math.Abs(d - 1.5) < 0.001, d => "");
-    //     builder.IsJsonObject().Equivalent("{}").SerializationEquivalent(new{A = "a", B = "b"}).HasNoProperty("aaa").HasProperty("abc").HasProperty("a", b => b.IsJsonString()).HasProperty("b", b => b.IsJsonNumber())
-    //         .HasCustomValidation<TestClass>(tc => true, tc => "").HasCustomValidation(typeof(TestClass), tc => true, tc => "").HasCustomValidation(element => true, element => "");
-    //     builder.IsJsonArray().Equivalent("[]").NotContains(b => b.IsJsonString()).Contains(b => b.IsJsonString()).SerializationEquivalent(new object[]{}).HasItems(b => b.IsJsonString()).HasLength(8).HasMaxLength(10).HasMinLength(1).HasUniqueItems().HasCustomValidation<TestClass>(array => true, array => "").HasCustomValidation(element => true, element => "");
-    //     builder.IsJsonNull();
-    //     builder.IsNotJsonNull();
-    //     builder.IsJsonBoolean();
-    //     builder.IsJsonTrue();
-    //     builder.IsJsonFalse();
-    //     builder.IsDateTimeOffset().Equal(DateTimeOffset.UtcNow).Before(DateTimeOffset.UtcNow).After(DateTimeOffset.UtcNow).HasCustomValidation(dt => true, dt => "");
-    //     builder.IsDateTime().Equal(DateTime.UtcNow).Before(DateTime.UtcNow).After(DateTime.UtcNow).HasCustomValidation(dt => true, dt => "");
-    //     builder.IsGuid();
-    //
-    //     JsonValidator jsonValidator = builder.BuildValidator();
-    // }
-
-    public void IsGuid()
+    private void IsGuid()
     {
         _keywordBuilder = new GuidKeywordBuilder();
     }
 
-    public DateTimeKeywordBuilder IsDateTime(string[]? formats = null)
+    private DateTimeKeywordBuilder IsDateTime(string[]? formats = null)
     {
         var dateTimeKeywordBuilder = new DateTimeKeywordBuilder(formats);
         _keywordBuilder = dateTimeKeywordBuilder;
@@ -42,7 +20,7 @@ public class JsonSchemaBuilder
         return dateTimeKeywordBuilder;
     }
 
-    public DateTimeOffsetKeywordBuilder IsDateTimeOffset(string[]? formats = null)
+    private DateTimeOffsetKeywordBuilder IsDateTimeOffset(string[]? formats = null)
     {
         var dateTimeOffsetKeywordBuilder = new DateTimeOffsetKeywordBuilder(formats);
         _keywordBuilder = dateTimeOffsetKeywordBuilder;
@@ -50,8 +28,16 @@ public class JsonSchemaBuilder
         return dateTimeOffsetKeywordBuilder;
     }
 
-    public void IsNotJsonNull()
+    private static InvalidOperationException CreateExceptionOfRebindKeywordBuilder() 
+        => new($"{nameof(JsonSchemaBuilder)} instance only needs to be configured once.");
+
+    public void NotJsonNull()
     {
+        if (_keywordBuilder is not null)
+        {
+            throw CreateExceptionOfRebindKeywordBuilder();
+        }
+
         var keywordBuilder = new KeywordBuilder();
         keywordBuilder.Keywords.Add(new TypeKeyword(InstanceType.Object, InstanceType.Array, InstanceType.Boolean, InstanceType.Number, InstanceType.String));
 
@@ -60,46 +46,91 @@ public class JsonSchemaBuilder
 
     public void IsJsonTrue()
     {
+        if (_keywordBuilder is not null)
+        {
+            throw CreateExceptionOfRebindKeywordBuilder();
+        }
+
         AssociateKeywordBuilder<TrueKeywordBuilder>();
     }
 
     public void IsJsonFalse()
     {
+        if (_keywordBuilder is not null)
+        {
+            throw CreateExceptionOfRebindKeywordBuilder();
+        }
+
         AssociateKeywordBuilder<FalseKeywordBuilder>();
     }
 
     public void IsJsonBoolean()
     {
+        if (_keywordBuilder is not null)
+        {
+            throw CreateExceptionOfRebindKeywordBuilder();
+        }
+
         AssociateKeywordBuilder<BooleanKeywordBuilder>();
     }
 
     public StringKeywordBuilder IsJsonString()
     {
+        if (_keywordBuilder is not null)
+        {
+            throw CreateExceptionOfRebindKeywordBuilder();
+        }
+
         return AssociateKeywordBuilder<StringKeywordBuilder>();
     }
 
     public NumberKeywordBuilder IsJsonNumber()
     {
+        if (_keywordBuilder is not null)
+        {
+            throw CreateExceptionOfRebindKeywordBuilder();
+        }
+
         return AssociateKeywordBuilder<NumberKeywordBuilder>();
     }
 
     public ArrayKeywordBuilder IsJsonArray()
     {
+        if (_keywordBuilder is not null)
+        {
+            throw CreateExceptionOfRebindKeywordBuilder();
+        }
+
         return AssociateKeywordBuilder<ArrayKeywordBuilder>();
     }
 
     public NullKeywordBuilder IsJsonNull()
     {
+        if (_keywordBuilder is not null)
+        {
+            throw CreateExceptionOfRebindKeywordBuilder();
+        }
+
         return AssociateKeywordBuilder<NullKeywordBuilder>();
     }
 
     public ObjectKeywordBuilder IsJsonObject()
     {
+        if (_keywordBuilder is not null)
+        {
+            throw CreateExceptionOfRebindKeywordBuilder();
+        }
+
         return AssociateKeywordBuilder<ObjectKeywordBuilder>();
     }
 
     public void Or(params Action<JsonSchemaBuilder>[] configureSchemaBuilders)
     {
+        if (_keywordBuilder is not null)
+        {
+            throw CreateExceptionOfRebindKeywordBuilder();
+        }
+
         _keywordBuilder = new OrKeywordBuilder(configureSchemaBuilders);
     }
 

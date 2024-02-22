@@ -52,7 +52,7 @@ internal class TypeKeyword : KeywordBase
         switch (expectedInstanceType)
         {
             case InstanceType.Integer:
-                return instance.ValueKind == JsonValueKind.Number && instance.TryGetInt64ForJsonSchema(out _);
+                return instance.IsIntegerTypeForJsonSchema();
 
             case InstanceType.Boolean:
                 return instance.ValueKind == JsonValueKind.True || instance.ValueKind == JsonValueKind.False;

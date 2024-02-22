@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics;
+using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
@@ -18,8 +19,15 @@ internal class ConstKeyword : KeywordBase
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return _constValue == instance
-            ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.UnexpectedValue, "Unexpected value found", options.ValidationPathStack, Name, instance.Location);
+        EquivalentResult equivalentResult = _constValue.Equivalent(instance);
+
+        if (equivalentResult.Result)
+        {
+            return ValidationResult.ValidResult;
+        }
+
+        Debug.Assert(equivalentResult.DetailedMessage is not null);
+        Debug.Assert(equivalentResult.OtherLocation is not null);
+        return ValidationResult.CreateFailedResult(ResultCode.UnexpectedValue, equivalentResult.DetailedMessage, options.ValidationPathStack, Name, equivalentResult.OtherLocation);
     }
 }

@@ -21,11 +21,11 @@ internal class EnumKeyword : KeywordBase
     {
         return _enumList.Contains(instance)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.NotFoundInAllowedList, ErrorMessage(), options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.CreateFailedResult(ResultCode.NotFoundInAllowedList, ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location);
     }
 
-    public static string ErrorMessage()
+    internal static string ErrorMessage(string instanceJsonText)
     {
-        return "Not found in allowed list";
+        return $"Instance: {instanceJsonText} not found in allowed list";
     }
 }

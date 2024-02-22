@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Globalization;
+using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 
 namespace LateApexEarlySpeed.Json.Schema.JInstance;
@@ -42,6 +44,12 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 
     public double GetDouble() => InternalJsonElement.GetDouble();
 
+    public bool TryGetDouble(out double value) => InternalJsonElement.TryGetDouble(out value);
+    
+    public bool TryGetInt64(out long value) => InternalJsonElement.TryGetInt64(out value);
+    
+    public bool TryGetUInt64(out ulong value) => InternalJsonElement.TryGetUInt64(out value);
+
     public bool TryGetDecimal(out decimal value)
     {
         return InternalJsonElement.TryGetDecimal(out value);
@@ -79,11 +87,71 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
         ulongValue = null;
     }
 
+    /// <summary>
+    /// Check if can convert to long or ulong range (consider zero decimal)
+    /// </summary>
+    public bool IsIntegerTypeForJsonSchema()
+    {
+        if (!IsIntegerOrZeroDecimalNumber())
+        {
+            return false;
+        }
+
+        double value = GetDouble();
+        return value <= ulong.MaxValue && value >= long.MinValue;
+    }
+
+    /// <summary>
+    /// Check if can convert to ulong range (consider zero decimal)
+    /// </summary>
+    public bool TryGetUInt64ForJsonSchema(out ulong value)
+    {
+        if (!IsIntegerOrZeroDecimalNumber())
+        {
+            value = default;
+            return false;
+        }
+
+        double doubleValue = GetDouble();
+        if (doubleValue > ulong.MaxValue || doubleValue < ulong.MinValue)
+        {
+            value = default;
+            return false;
+        }
+
+        value = (ulong)doubleValue;
+        return true;
+    }
+
+    /// <summary>
+    /// Check if can convert to long range (consider zero decimal)
+    /// </summary>
     public bool TryGetInt64ForJsonSchema(out long value)
+    {
+        if (!IsIntegerOrZeroDecimalNumber())
+        {
+            value = default;
+            return false;
+        }
+
+        double doubleValue = GetDouble();
+        if (doubleValue > long.MaxValue || doubleValue < long.MinValue)
+        {
+            value = default;
+            return false;
+        }
+
+        value = (long)doubleValue;
+        return true;
+    }
+
+    /// <summary>
+    /// Check if value is integer (consider zero decimal), without checking actual numeric range.
+    /// </summary>
+    private bool IsIntegerOrZeroDecimalNumber()
     {
         if (ValueKind != JsonValueKind.Number)
         {
-            value = default;
             return false;
         }
 
@@ -96,21 +164,19 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
             {
                 if (c != '0')
                 {
-                    value = default;
                     return false;
                 }
             }
         }
 
-        value = (long)GetDouble();
         return true;
     }
 
-    public bool Equals(JsonInstanceElement other)
+    public EquivalentResult Equivalent(JsonInstanceElement other)
     {
         if (ValueKind != other.ValueKind)
         {
-            return false;
+            return EquivalentResult.Fail($"Json kind not same, one is {ValueKind}, but another is {other.ValueKind}", _instanceLocation, other._instanceLocation);
         }
 
         switch (ValueKind)
@@ -118,35 +184,163 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
             case JsonValueKind.True:
             case JsonValueKind.False:
             case JsonValueKind.Null:
-                return true;
+                return EquivalentResult.Success();
 
             case JsonValueKind.String:
-                return GetString() == other.GetString();
+
+                string curString = GetString()!;
+                string otherString = other.GetString()!;
+
+                return curString == otherString
+                    ? EquivalentResult.Success()
+                    : EquivalentResult.Fail($"String content not same, one is '{curString}', but another is '{otherString}'", _instanceLocation, other._instanceLocation);
 
             case JsonValueKind.Number:
-
-                if (TryGetInt64ForJsonSchema(out long currentInt64Value) && other.TryGetInt64ForJsonSchema(out long otherInt64Value))
-                {
-                    return currentInt64Value == otherInt64Value;
-                }
-
-                const double tolerance = 0.000001;
-
-                double currentValue = GetDouble();
-                double actualTolerance = Math.Abs(currentValue) * tolerance;
-
-                return Math.Abs(currentValue - other.GetDouble()) <= actualTolerance;
+                return NumberEquivalent(other);
 
             case JsonValueKind.Array:
-                return EnumerateArray().SequenceEqual(other.EnumerateArray());
+                return SequenceEquivalent(other);
 
             case JsonValueKind.Object:
-                Dictionary<string, JsonInstanceElement> otherProperties = other.EnumerateObject().ToDictionary(prop => prop.Name, prop => prop.Value);
-                return EnumerateObject().Count() == otherProperties.Count
-                       && EnumerateObject().All(prop => otherProperties.TryGetValue(prop.Name, out JsonInstanceElement otherValue) && otherValue.Equals(prop.Value));
+                return ObjectEquivalent(other);
+
             default:
-                return false;
+                Debug.Fail("Should not go to this default block, because all JsonValueKinds should already be handled.");
+                throw new NotImplementedException("Should not go here, because all JsonValueKinds should already be handled.");
         }
+    }
+
+    private EquivalentResult NumberEquivalent(JsonInstanceElement other)
+    {
+        if (InternalJsonElement.TryGetInt64(out long thisLongValue))
+        {
+            // To compatible with json schema const definition, when failed to convert to long type directly, we need to consider zero decimal case.
+            if (other.InternalJsonElement.TryGetInt64(out long otherLongValue) || other.TryGetInt64ForJsonSchema(out otherLongValue))
+            {
+                return thisLongValue == otherLongValue
+                    ? EquivalentResult.Success()
+                    : EquivalentResult.Fail(NumberNotSameMessageTemplate(thisLongValue, otherLongValue), _instanceLocation, other._instanceLocation);
+            }
+
+            other.GetNumericValue(out double? doubleValue, out long? longValue, out ulong? ulongValue);
+
+            Debug.Assert(!longValue.HasValue);
+
+            return EquivalentResult.Fail(NumberNotSameMessageTemplate(thisLongValue, doubleValue.HasValue ? doubleValue.Value.ToString(CultureInfo.InvariantCulture) : ulongValue.GetValueOrDefault().ToString()), _instanceLocation, other._instanceLocation);
+        }
+
+        if (InternalJsonElement.TryGetUInt64(out ulong thisULongValue))
+        {
+            // To compatible with json schema const definition, when failed to convert to ulong type directly, we need to consider zero decimal case.
+            if (other.InternalJsonElement.TryGetUInt64(out ulong otherULongValue) || other.TryGetUInt64ForJsonSchema(out otherULongValue))
+            {
+                return thisULongValue == otherULongValue
+                    ? EquivalentResult.Success()
+                    : EquivalentResult.Fail(NumberNotSameMessageTemplate(thisULongValue, otherULongValue), _instanceLocation, other._instanceLocation);
+            }
+
+            other.GetNumericValue(out double? doubleValue, out long? longValue, out ulong? ulongValue);
+
+            Debug.Assert(!ulongValue.HasValue);
+
+            return EquivalentResult.Fail(NumberNotSameMessageTemplate(thisULongValue, doubleValue.HasValue ? doubleValue.Value.ToString(CultureInfo.InvariantCulture) : longValue.GetValueOrDefault()), _instanceLocation, other._instanceLocation);
+        }
+
+        if (InternalJsonElement.TryGetDouble(out double thisDoubleValue))
+        {
+            if (other.InternalJsonElement.TryGetDouble(out double otherDoubleValue))
+            {
+                const double tolerance = 0.000001;
+
+                double actualTolerance = Math.Abs(thisDoubleValue) * tolerance;
+
+                return Math.Abs(thisDoubleValue - otherDoubleValue) <= actualTolerance
+                    ? EquivalentResult.Success()
+                    : EquivalentResult.Fail(NumberNotSameMessageTemplate(thisDoubleValue, otherDoubleValue), _instanceLocation, other._instanceLocation);
+            }
+
+            other.GetNumericValue(out double? doubleValue, out long? longValue, out ulong? ulongValue);
+
+            Debug.Assert(!doubleValue.HasValue);
+
+            return EquivalentResult.Fail(NumberNotSameMessageTemplate(thisDoubleValue, longValue.HasValue ? longValue.Value.ToString() : ulongValue.GetValueOrDefault()), _instanceLocation, other._instanceLocation);
+        }
+
+        Debug.Fail("Should not go here, have considered all numeric types. Missed any other types ?");
+        throw new NotImplementedException("Should have considered all numeric types. Missed any other types ?");
+    }
+
+    internal static string NumberNotSameMessageTemplate(object thisValue, object otherValue)
+    {
+        return $"Number not same, one is {thisValue} but another is {otherValue}";
+    }
+
+    private EquivalentResult ObjectEquivalent(JsonInstanceElement other)
+    {
+        Debug.Assert(ValueKind == JsonValueKind.Object);
+        Debug.Assert(other.ValueKind == JsonValueKind.Object);
+
+        Dictionary<string, JsonInstanceElement> otherProperties = other.EnumerateObject().ToDictionary(prop => prop.Name, prop => prop.Value);
+
+        int thisPropertyCount = EnumerateObject().Count();
+        if (thisPropertyCount != otherProperties.Count)
+        {
+            return EquivalentResult.Fail($"Property count not same, one is {thisPropertyCount} but another is {otherProperties.Count}", _instanceLocation, other._instanceLocation);
+        }
+
+        foreach (JsonInstanceProperty thisProperty in EnumerateObject())
+        {
+            if (!otherProperties.TryGetValue(thisProperty.Name, out JsonInstanceElement otherPropertyValue))
+            {
+                return EquivalentResult.Fail($"Properties not match, one has property:{thisProperty.Name} but another not", _instanceLocation, other._instanceLocation);
+            }
+
+            EquivalentResult equivalentResult = thisProperty.Value.Equivalent(otherPropertyValue);
+            if (!equivalentResult.Result)
+            {
+                return equivalentResult;
+            }
+        }
+
+        return EquivalentResult.Success();
+    }
+
+    private EquivalentResult SequenceEquivalent(JsonInstanceElement other)
+    {
+        Debug.Assert(ValueKind == JsonValueKind.Array);
+        Debug.Assert(other.ValueKind == JsonValueKind.Array);
+
+        int thisCount = EnumerateArray().Count();
+        int otherCount = other.EnumerateArray().Count();
+
+        if (thisCount != otherCount)
+        {
+            return EquivalentResult.Fail($"Array length not same, one is {thisCount} but another is {otherCount}", _instanceLocation, other._instanceLocation);
+        }
+
+        using (IEnumerator<JsonInstanceElement> thisEnumerator = EnumerateArray().GetEnumerator())
+        using (IEnumerator<JsonInstanceElement> otherEnumerator = other.EnumerateArray().GetEnumerator())
+        {
+            while (thisEnumerator.MoveNext())
+            {
+                bool otherMoveNext = otherEnumerator.MoveNext();
+                Debug.Assert(otherMoveNext);
+
+                EquivalentResult elementEquivalentResult = thisEnumerator.Current.Equivalent(otherEnumerator.Current);
+
+                if (!elementEquivalentResult.Result)
+                {
+                    return elementEquivalentResult;
+                }
+            }
+        }
+
+        return EquivalentResult.Success();
+    }
+
+    public bool Equals(JsonInstanceElement other)
+    {
+        return Equivalent(other).Result;
     }
 
     public override bool Equals(object? obj)

@@ -737,14 +737,14 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<TestEnum>("1", ValidationResult.ValidResult);
         yield return TestSample.Create<TestEnum>("2", ValidationResult.ValidResult);
 
-        yield return TestSample.Create<TestEnum>("\"D\"", new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage(),
+        yield return TestSample.Create<TestEnum>("\"D\"", new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage("D"),
             ImmutableJsonPointer.Empty, 
             ImmutableJsonPointer.Create("/enum"),
             GetSchemaResourceBaseUri<TestEnum>(),
             GetSchemaResourceBaseUri<TestEnum>()));
 
         yield return TestSample.Create<TestEnum>("3", new ValidationResult(ResultCode.NotFoundInAllowedList, "enum",
-            EnumKeyword.ErrorMessage(),
+            EnumKeyword.ErrorMessage("3"),
             ImmutableJsonPointer.Empty, 
             ImmutableJsonPointer.Create("/enum"),
             GetSchemaResourceBaseUri<TestEnum>(),
@@ -927,7 +927,7 @@ public class JsonSchemaGeneratorTest
             {
               "Prop": [1, 2, 1]
             }
-            """, new ValidationResult(ResultCode.DuplicatedArrayItems, "uniqueItems", UniqueItemsKeyword.ErrorMessage(),
+            """, new ValidationResult(ResultCode.DuplicatedArrayItems, "uniqueItems", UniqueItemsKeyword.ErrorMessage("1", 0, 2),
             ImmutableJsonPointer.Create("/Prop")!,
             ImmutableJsonPointer.Create("/properties/Prop/uniqueItems"), 
             GetSchemaResourceBaseUri<UniqueItemsAttributeTestClass>(),
@@ -1405,7 +1405,7 @@ public class JsonSchemaGeneratorTest
   "Prop": 1
 }
 """,
-            new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", "Not found in allowed list",
+            new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage("1"),
                 ImmutableJsonPointer.Create("/Prop")!,
                 ImmutableJsonPointer.Create("/properties/Prop/enum"),
                 GetSchemaResourceBaseUri<StringEnumAttributeTestClass>(),
@@ -1417,7 +1417,7 @@ public class JsonSchemaGeneratorTest
   "Prop": "c"
 }
 """,
-            new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", "Not found in allowed list",
+            new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage("c"),
                 ImmutableJsonPointer.Create("/Prop")!,
                 ImmutableJsonPointer.Create("/properties/Prop/enum"),
                 GetSchemaResourceBaseUri<StringEnumAttributeTestClass>(),
@@ -1503,7 +1503,8 @@ public class JsonSchemaGeneratorTest
 {
  "Prop": 3
 }
-""", new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage(),
+""", new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", 
+            EnumKeyword.ErrorMessage("3"),
             ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/enum"),
             GetSchemaResourceBaseUri<IntegerEnumAttributeTestClass>(),
             GetSchemaResourceBaseUri<IntegerEnumAttributeTestClass>()

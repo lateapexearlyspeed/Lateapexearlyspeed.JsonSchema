@@ -33,7 +33,7 @@ internal class UniqueItemsKeyword : KeywordBase
             {
                 if (items[j] == curItem)
                 {
-                    return ValidationResult.CreateFailedResult(ResultCode.DuplicatedArrayItems, ErrorMessage(), options.ValidationPathStack, Name, instance.Location);
+                    return ValidationResult.CreateFailedResult(ResultCode.DuplicatedArrayItems, ErrorMessage(curItem.ToString(), i, j), options.ValidationPathStack, Name, instance.Location);
                 }
             }
         }
@@ -41,8 +41,8 @@ internal class UniqueItemsKeyword : KeywordBase
         return ValidationResult.ValidResult;
     }
 
-    public static string ErrorMessage()
+    public static string ErrorMessage(string instanceJson, int idx1, int idx2)
     {
-        return "There are duplicated array items";
+        return $"There are duplicated array items, index: {idx1} and {idx2}, data: {instanceJson}";
     }
 }

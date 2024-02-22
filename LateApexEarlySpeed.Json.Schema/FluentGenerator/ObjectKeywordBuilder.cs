@@ -38,27 +38,6 @@ public class ObjectKeywordBuilder : KeywordBuilder
         return this;
     }
 
-    public override List<KeywordBase> Build()
-    {
-        var propertiesKeyword = new PropertiesKeyword(_propertiesBuilderConfigurations
-            .ToDictionary<KeyValuePair<string, Action<JsonSchemaBuilder>>, string, JsonSchema>(kv => kv.Key, kv =>
-            {
-                var jsonSchemaBuilder = new JsonSchemaBuilder();
-                kv.Value(jsonSchemaBuilder);
-
-                return jsonSchemaBuilder.Build();
-            }));
-
-        var requiredKeyword = new RequiredKeyword(_requiredProperties.ToArray());
-        var noPropertiesKeyword = new NoPropertiesKeyword(_propertyBlackList.ToHashSet());
-
-        Keywords.Add(propertiesKeyword);
-        Keywords.Add(requiredKeyword);
-        Keywords.Add(noPropertiesKeyword);
-
-        return Keywords.ToList();
-    }
-
     public ObjectKeywordBuilder HasCustomValidation<T>(Func<T?, bool> validator, Func<T?, string> errorMessageFunc)
     {
         Keywords.Add(new CustomValidationKeyword<T>(validator, errorMessageFunc));
@@ -94,5 +73,26 @@ public class ObjectKeywordBuilder : KeywordBuilder
         _propertyBlackList.Add(property);
 
         return this;
+    }
+
+    public override List<KeywordBase> Build()
+    {
+        var propertiesKeyword = new PropertiesKeyword(_propertiesBuilderConfigurations
+            .ToDictionary<KeyValuePair<string, Action<JsonSchemaBuilder>>, string, JsonSchema>(kv => kv.Key, kv =>
+            {
+                var jsonSchemaBuilder = new JsonSchemaBuilder();
+                kv.Value(jsonSchemaBuilder);
+
+                return jsonSchemaBuilder.Build();
+            }));
+
+        var requiredKeyword = new RequiredKeyword(_requiredProperties.ToArray());
+        var noPropertiesKeyword = new NoPropertiesKeyword(_propertyBlackList.ToHashSet());
+
+        Keywords.Add(propertiesKeyword);
+        Keywords.Add(requiredKeyword);
+        Keywords.Add(noPropertiesKeyword);
+
+        return Keywords.ToList();
     }
 }

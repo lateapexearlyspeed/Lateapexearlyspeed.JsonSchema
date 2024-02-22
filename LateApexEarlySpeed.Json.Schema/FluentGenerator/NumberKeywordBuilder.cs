@@ -12,12 +12,37 @@ public class NumberKeywordBuilder : KeywordBuilder
 
     public NumberKeywordBuilder Equal(double value)
     {
+        return Equal<double>(value);
+    }
+
+    public NumberKeywordBuilder Equal(long value)
+    {
+        return Equal<long>(value);
+    }
+
+    public NumberKeywordBuilder Equal(ulong value)
+    {
+        return Equal<ulong>(value);
+    }
+
+    private NumberKeywordBuilder Equal<T>(T value) where T : unmanaged
+    {
         Keywords.Add(new ConstKeyword(JsonInstanceSerializer.SerializeToElement(value)));
 
         return this;
     }
 
     public NumberKeywordBuilder IsIn(double[] collection)
+    {
+        return IsIn<double>(collection);
+    }
+
+    public NumberKeywordBuilder IsIn(long[] collection)
+    {
+        return IsIn<long>(collection);
+    }
+
+    private NumberKeywordBuilder IsIn<T>(IEnumerable<T> collection) where T : unmanaged
     {
         Keywords.Add(new EnumKeyword(collection.Select(item => JsonInstanceSerializer.SerializeToElement(item)).ToList()));
 
@@ -89,7 +114,21 @@ public class NumberKeywordBuilder : KeywordBuilder
 
     public NumberKeywordBuilder HasCustomValidation(Func<double, bool> validator, Func<double, string> errorMessageFunc)
     {
-        Keywords.Add(new NumberCustomValidationKeyword(validator, errorMessageFunc));
+        Keywords.Add(new DoubleNumberCustomValidationKeyword(validator, errorMessageFunc));
+
+        return this;
+    }
+
+    public NumberKeywordBuilder HasCustomValidation(Func<long, bool> validator, Func<long, string> errorMessageFunc)
+    {
+        Keywords.Add(new LongNumberCustomValidationKeyword(validator, errorMessageFunc));
+
+        return this;
+    }
+
+    public NumberKeywordBuilder HasCustomValidation(Func<ulong, bool> validator, Func<ulong, string> errorMessageFunc)
+    {
+        Keywords.Add(new ULongNumberCustomValidationKeyword(validator, errorMessageFunc));
 
         return this;
     }

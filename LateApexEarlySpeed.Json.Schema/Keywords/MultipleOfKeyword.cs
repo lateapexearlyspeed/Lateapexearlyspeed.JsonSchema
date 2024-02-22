@@ -17,6 +17,11 @@ internal class MultipleOfKeyword : KeywordBase
 
     public MultipleOfKeyword(double multipleOf)
     {
+        if (multipleOf <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(multipleOf), multipleOf, $"Argument: '{nameof(multipleOf)}' expects positive number.");
+        }
+
         _multipleOf = multipleOf;
     }
 
