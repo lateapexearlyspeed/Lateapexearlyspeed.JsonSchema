@@ -8,7 +8,7 @@ on:
     # Sequence of patterns matched against refs/heads
     branches: [ "master", "TargetNetStandard21" ]
     # Sequence of patterns matched against refs/tags
-    tags: ["publish*"]
+    tags: ["publish-corelib*", "publish-efcore*"]
   pull_request:
     branches: [ "master" ]
 
@@ -41,9 +41,9 @@ jobs:
     - name: Run Benchmark
       run: dotnet LateApexEarlySpeed.Json.Schema.Benchmark/bin/Release/net6.0/publish/LateApexEarlySpeed.Json.Schema.Benchmark.dll
 
-  build-and-test-multiple-env:
+  build-and-test-multiple-env-for-corelib:
   
-    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/publish')
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/publish-corelib')
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-2022, macos-12]
@@ -69,10 +69,10 @@ jobs:
     - name: Run Benchmark
       run: dotnet LateApexEarlySpeed.Json.Schema.Benchmark/bin/Release/net6.0/publish/LateApexEarlySpeed.Json.Schema.Benchmark.dll
       
-  publish-nuget-pack:    
+  publish-nuget-pack-corelib:    
     
-    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/publish')
-    needs: build-and-test-multiple-env
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/publish-corelib')
+    needs: build-and-test-multiple-env-for-corelib
     runs-on: ubuntu-22.04
     permissions: write-all
     
@@ -104,11 +104,54 @@ jobs:
         secret: ${{ github.TOKEN }}
         approvers: lateapexearlyspeed
         minimum-approvals: 1
-        issue-title: "Publishing nuget pack ..."
+        issue-title: "Publishing nuget pack (corelib)..."
         issue-body: "Please approve or deny this nuget pack publish ..."
         exclude-workflow-initiator-as-approver: false
         additional-approved-words: ''
         additional-denied-words: ''
         
-    - name: Publish Nuget pack
+    - name: Publish Nuget pack (corelib)
       run: dotnet nuget push LateApexEarlySpeed.Json.Schema/bin/Release/NugetPackage/ --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --no-symbols
+      
+  publish-nuget-pack-efcore:    
+    
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/publish-efcore')
+    runs-on: ubuntu-22.04
+    permissions: write-all
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+    - name: Clean previous build output
+      run: dotnet clean -c Release
+    - name: Build
+      run: dotnet build -c Release
+    - name: Test
+      run: dotnet test --verbosity normal -c Release
+    
+    - name: Create Nuget pack
+      run: dotnet pack LateApexEarlySpeed.EntityFrameworkCore.Json.Schema/ -c Release
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Upload Nuget pack artifact
+        path: LateApexEarlySpeed.EntityFrameworkCore.Json.Schema/bin/Release/NugetPackage/
+        if-no-files-found: error
+    - uses: trstringer/manual-approval@v1
+      timeout-minutes: 30
+      with:
+        secret: ${{ github.TOKEN }}
+        approvers: lateapexearlyspeed
+        minimum-approvals: 1
+        issue-title: "Publishing nuget pack (efcore)..."
+        issue-body: "Please approve or deny this nuget pack publish ..."
+        exclude-workflow-initiator-as-approver: false
+        additional-approved-words: ''
+        additional-denied-words: ''
+        
+    - name: Publish Nuget pack (efcore)
+      run: dotnet nuget push LateApexEarlySpeed.EntityFrameworkCore.Json.Schema/bin/Release/NugetPackage/ --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --no-symbols
