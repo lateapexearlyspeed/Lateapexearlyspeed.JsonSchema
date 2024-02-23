@@ -8,7 +8,9 @@ internal class SchemaRecursionRecorder
     private readonly HashSet<(JsonSchema schema, ImmutableJsonPointer instanceLocation)> _schemaInstancesHash = new();
     private readonly Stack<(JsonSchema schema, ImmutableJsonPointer instanceLocation)> _schemaInstancesStack = new();
 
+#pragma warning disable CS1570
     /// <returns>If there was already <paramref name="schema"/> & <paramref name="instanceLocation"/> in recorder, return false</returns>
+#pragma warning restore CS1570
     public bool TryPushRecord(JsonSchema schema, ImmutableJsonPointer instanceLocation)
     {
         bool canAdd = _schemaInstancesHash.Add((schema, instanceLocation));

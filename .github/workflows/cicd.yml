@@ -134,13 +134,22 @@ jobs:
     - name: Test
       run: dotnet test --verbosity normal -c Release
     
-    - name: Create Nuget pack
-      run: dotnet pack LateApexEarlySpeed.EntityFrameworkCore.Json.Schema/ -c Release
+    - name: Create Nuget pack (v3)
+      run: dotnet pack LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema/ -c Release
     - uses: actions/upload-artifact@v3
       with:
         name: Upload Nuget pack artifact
-        path: LateApexEarlySpeed.EntityFrameworkCore.Json.Schema/bin/Release/NugetPackage/
+        path: LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema/bin/Release/NugetPackage/
         if-no-files-found: error
+        
+    - name: Create Nuget pack (v6)
+      run: dotnet pack LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema/ -c Release
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Upload Nuget pack artifact
+        path: LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema/bin/Release/NugetPackage/
+        if-no-files-found: error
+
     - uses: trstringer/manual-approval@v1
       timeout-minutes: 30
       with:
@@ -153,5 +162,8 @@ jobs:
         additional-approved-words: ''
         additional-denied-words: ''
         
-    - name: Publish Nuget pack (efcore)
-      run: dotnet nuget push LateApexEarlySpeed.EntityFrameworkCore.Json.Schema/bin/Release/NugetPackage/ --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --no-symbols
+    - name: Publish Nuget pack (efcore v3)
+      run: dotnet nuget push LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema/bin/Release/NugetPackage/ --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --no-symbols
+
+    - name: Publish Nuget pack (efcore v6)
+      run: dotnet nuget push LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema/bin/Release/NugetPackage/ --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --no-symbols

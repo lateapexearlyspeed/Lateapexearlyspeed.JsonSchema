@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LateApexEarlySpeed.Json.Sch
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LateApexEarlySpeed.Json.Schema", "LateApexEarlySpeed.Json.Schema\LateApexEarlySpeed.Json.Schema.csproj", "{9D130148-0B13-456B-94FF-96FE26934598}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LateApexEarlySpeed.EntityFrameworkCore.Json.Schema", "LateApexEarlySpeed.EntityFrameworkCore.Json.Schema\LateApexEarlySpeed.EntityFrameworkCore.Json.Schema.csproj", "{ED19C93A-2D42-4B8C-AB7F-8F080D2DAE20}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema", "LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema\LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema.csproj", "{2455E75B-3321-4D52-B04C-71609877DC09}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema", "LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema\LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema.csproj", "{B43B9381-4CEA-465F-BC64-7BECE092387A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +37,14 @@ Global
 		{9D130148-0B13-456B-94FF-96FE26934598}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9D130148-0B13-456B-94FF-96FE26934598}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9D130148-0B13-456B-94FF-96FE26934598}.Release|Any CPU.Build.0 = Release|Any CPU
-		{ED19C93A-2D42-4B8C-AB7F-8F080D2DAE20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ED19C93A-2D42-4B8C-AB7F-8F080D2DAE20}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ED19C93A-2D42-4B8C-AB7F-8F080D2DAE20}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ED19C93A-2D42-4B8C-AB7F-8F080D2DAE20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2455E75B-3321-4D52-B04C-71609877DC09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2455E75B-3321-4D52-B04C-71609877DC09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2455E75B-3321-4D52-B04C-71609877DC09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2455E75B-3321-4D52-B04C-71609877DC09}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B43B9381-4CEA-465F-BC64-7BECE092387A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B43B9381-4CEA-465F-BC64-7BECE092387A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B43B9381-4CEA-465F-BC64-7BECE092387A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B43B9381-4CEA-465F-BC64-7BECE092387A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

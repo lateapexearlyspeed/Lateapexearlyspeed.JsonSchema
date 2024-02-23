@@ -31,6 +31,9 @@ public class JsonSchemaBuilder
     private static InvalidOperationException CreateExceptionOfRebindKeywordBuilder() 
         => new($"{nameof(JsonSchemaBuilder)} instance only needs to be configured once.");
 
+    /// <summary>
+    /// Specify that current json node should not be Json Null
+    /// </summary>
     public void NotJsonNull()
     {
         if (_keywordBuilder is not null)
@@ -44,6 +47,9 @@ public class JsonSchemaBuilder
         _keywordBuilder = keywordBuilder;
     }
 
+    /// <summary>
+    /// Specify that current json node should be Json True
+    /// </summary>
     public void IsJsonTrue()
     {
         if (_keywordBuilder is not null)
@@ -54,6 +60,9 @@ public class JsonSchemaBuilder
         AssociateKeywordBuilder<TrueKeywordBuilder>();
     }
 
+    /// <summary>
+    /// Specify that current json node should be Json False
+    /// </summary>
     public void IsJsonFalse()
     {
         if (_keywordBuilder is not null)
@@ -64,6 +73,9 @@ public class JsonSchemaBuilder
         AssociateKeywordBuilder<FalseKeywordBuilder>();
     }
 
+    /// <summary>
+    /// Specify that current json node should be Boolean type
+    /// </summary>
     public void IsJsonBoolean()
     {
         if (_keywordBuilder is not null)
@@ -74,6 +86,10 @@ public class JsonSchemaBuilder
         AssociateKeywordBuilder<BooleanKeywordBuilder>();
     }
 
+    /// <summary>
+    /// Specify that current json node should be String type
+    /// </summary>
+    /// <returns></returns>
     public StringKeywordBuilder IsJsonString()
     {
         if (_keywordBuilder is not null)
@@ -84,6 +100,10 @@ public class JsonSchemaBuilder
         return AssociateKeywordBuilder<StringKeywordBuilder>();
     }
 
+    /// <summary>
+    /// Specify that current json node should be Number type
+    /// </summary>
+    /// <returns></returns>
     public NumberKeywordBuilder IsJsonNumber()
     {
         if (_keywordBuilder is not null)
@@ -94,6 +114,10 @@ public class JsonSchemaBuilder
         return AssociateKeywordBuilder<NumberKeywordBuilder>();
     }
 
+    /// <summary>
+    /// Specify that current json node should be Array type
+    /// </summary>
+    /// <returns></returns>
     public ArrayKeywordBuilder IsJsonArray()
     {
         if (_keywordBuilder is not null)
@@ -104,6 +128,10 @@ public class JsonSchemaBuilder
         return AssociateKeywordBuilder<ArrayKeywordBuilder>();
     }
 
+    /// <summary>
+    /// Specify that current json node should be Json Null
+    /// </summary>
+    /// <returns></returns>
     public NullKeywordBuilder IsJsonNull()
     {
         if (_keywordBuilder is not null)
@@ -114,6 +142,10 @@ public class JsonSchemaBuilder
         return AssociateKeywordBuilder<NullKeywordBuilder>();
     }
 
+    /// <summary>
+    /// Specify that current json node should be Object type
+    /// </summary>
+    /// <returns></returns>
     public ObjectKeywordBuilder IsJsonObject()
     {
         if (_keywordBuilder is not null)
@@ -124,6 +156,10 @@ public class JsonSchemaBuilder
         return AssociateKeywordBuilder<ObjectKeywordBuilder>();
     }
 
+    /// <summary>
+    /// Specify that current json node should match any of <paramref name="configureSchemaBuilders"/>
+    /// </summary>
+    /// <param name="configureSchemaBuilders">specified schema constraints</param>
     public void Or(params Action<JsonSchemaBuilder>[] configureSchemaBuilders)
     {
         if (_keywordBuilder is not null)
