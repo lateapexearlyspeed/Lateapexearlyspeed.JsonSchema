@@ -121,7 +121,7 @@ public class ObjectKeywordBuilder : KeywordBuilder
         return this;
     }
 
-    public override List<KeywordBase> Build()
+    internal override List<KeywordBase> Build()
     {
         var propertiesKeyword = new PropertiesKeyword(_propertiesBuilderConfigurations
             .ToDictionary<KeyValuePair<string, Action<JsonSchemaBuilder>>, string, JsonSchema>(kv => kv.Key, kv =>

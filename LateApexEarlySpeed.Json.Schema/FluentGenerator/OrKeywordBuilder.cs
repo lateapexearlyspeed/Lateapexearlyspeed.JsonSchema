@@ -12,7 +12,7 @@ public class OrKeywordBuilder : KeywordBuilder
         _configureSchemaBuilders = configureSchemaBuilders;
     }
 
-    public override List<KeywordBase> Build()
+    internal override List<KeywordBase> Build()
     {
         List<JsonSchema> bodyJsonSchema = _configureSchemaBuilders.Select(configure =>
         {

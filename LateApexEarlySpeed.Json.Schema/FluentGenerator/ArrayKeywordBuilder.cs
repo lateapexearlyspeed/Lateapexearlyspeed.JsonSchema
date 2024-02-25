@@ -167,7 +167,7 @@ public class ArrayKeywordBuilder : KeywordBuilder
         return this;
     }
 
-    public override List<KeywordBase> Build()
+    internal override List<KeywordBase> Build()
     {
         if (_itemsSchemaBuilderConfiguration is not null)
         {

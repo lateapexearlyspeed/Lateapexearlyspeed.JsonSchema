@@ -15,7 +15,7 @@ public class KeywordBuilder
         Keywords.Add(keyword);
     }
 
-    public virtual List<KeywordBase> Build()
+    internal virtual List<KeywordBase> Build()
     { 
         return Keywords.ToList();
     }
