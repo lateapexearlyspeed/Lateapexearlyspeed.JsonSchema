@@ -6,7 +6,9 @@ This repository provides following nuget packages about json schema:
 
 ## LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema & LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema
 
-Provide json level validation for EF core model's json column. 
+Json column in database give flexible possiblilty to store information, but it may introduce unexpected json data into db incorrectly. 
+
+This libreary provides json level validation for EF core model's json column in client side before sending DB request, the usage is similiar with EF core's existing model property configuration. 
 
 Use package 'LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema' for 'Microsoft.EntityFrameworkCore' v3, and package 'LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema' for 'Microsoft.EntityFrameworkCore' v6+.
 
@@ -76,7 +78,7 @@ Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while updatin
    at Microsoft.EntityFrameworkCore.DbContext.SaveChanges(Boolean acceptAllChangesOnSuccess)
 ```
 
-You can get column name, failed [location](https://datatracker.ietf.org/doc/html/rfc6901) in json body and failed reason.
+You can get column name, failed [location (by json pointer format)](https://datatracker.ietf.org/doc/html/rfc6901) in json body and failed reason.
 
 You don't have to specify all properties when configure, just configure necessary stuff your data requirement focuses on. The json part in data which is not configured will not be checked.
 
@@ -121,6 +123,8 @@ Available validations for json column:
   - Equivalent
   - HasNoProperty
 - Or
+
+There are HasCustomValidation() overloads which can be used to create custom validation logic unit.
 
 2. Just provide standard json schema (2020.12) when call HasJsonValidation():
 ```csharp
