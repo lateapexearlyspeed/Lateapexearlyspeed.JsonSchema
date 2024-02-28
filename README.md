@@ -1,8 +1,8 @@
-This repository provides following nuget packages about json schema:
+# This repository provides following nuget packages about json schema:
 
-- LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema
-- LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema
-- Lateapexearlyspeed.Json.Schema
+- [LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema](https://www.nuget.org/packages/LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema/)
+- [LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema](https://www.nuget.org/packages/LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema/)
+- [Lateapexearlyspeed.Json.Schema](https://www.nuget.org/packages/LateApexEarlySpeed.Json.Schema/)
 
 ## LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema & LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema
 
