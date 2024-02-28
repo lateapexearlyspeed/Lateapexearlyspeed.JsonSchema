@@ -25,7 +25,7 @@ Model:
 
 Configure json column with 2 ways:
 
-1. Fluent configuration
+### 1. Fluent configuration
 
 If not familiar with Standard Json schema, recommend using fluent configuration. The fluent configuration is designed not completely align with standard Json schema keywords interface. The standard Json schema is a powerful and flexiable language to specify json shape, but most developers may be more familiar with "stronger type" smell. For this, library's fluent configuration will (in most cases) firstly "ask" developers what json type they want, then continue "ask" subsequence validation requirements which are scoped based on known json type. 
 
@@ -126,7 +126,7 @@ Available validations for json column:
 
 There are HasCustomValidation() overloads which can be used to create custom validation logic unit.
 
-2. Just provide standard json schema (2020.12) when call HasJsonValidation():
+### 2. Just provide standard json schema (2020.12) when call HasJsonValidation():
 ```csharp
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
@@ -292,7 +292,7 @@ Note: "STJ" means "System.Text.Json" which is built-in json package in .net sdk,
 }
 ```
 
-## Basic Usage
+### Basic Usage
 
 ```
 Install-Package LateApexEarlySpeed.Json.Schema
@@ -320,7 +320,7 @@ else
 }
 ```
 
-## Output Information
+### Output Information
 
 When validation failed, you can check detailed error information by:
 
@@ -350,10 +350,10 @@ When validation failed, you can check detailed error information by:
     https://example.com/schemas/common
     ```
 
-## <a name="performance-tips"></a> Performance Tips
+### <a name="performance-tips"></a> Performance Tips
 Reuse instantiated JsonValidator instances (which basically represent json schema) to validate incoming json instance data if possible in your cases, to gain better performance.
 
-## External json schema document reference support
+### External json schema document reference support
 
 Besides of internal sub schema resource reference (inside current json schema document) support automatically, implementation supports external schema document reference support by:
 
@@ -372,7 +372,7 @@ await jsonValidator.AddHttpDocumentAsync(new Uri("http://this-is-json-schema-doc
 ValidationResult validationResult = jsonValidator.Validate(instance);
 ```
 
-## Custom keyword support
+### Custom keyword support
 
 Besides of standard keywords defined in json schema specification, library supports to create custom keyword for additional validation requirement. Eg:
 
@@ -435,7 +435,7 @@ internal class CustomKeywordJsonConverter : JsonConverter<CustomKeyword>
 }
 ```
 
-## Format support
+### Format support
 
 This library supports following formats currently: 
 - uri
@@ -469,17 +469,17 @@ FormatRegistry.AddFormatType<TestCustomFormatValidator>();
 
 ### Other extension usage doc is to be continued .
 
-## Limitation
+### Limitation
 
 - This implementation focuses on json schema validation, currently not support Annotation
 - Due to lack Annotation support, it also not support following keywords: unevaluatedProperties, unevaluatedItems
 - Not support content-encoded string currently
 
-# Validator generation from code
+## Validator generation from code
 
 Besides of user-provided json schema, this library also supports to generate validator from code.
 
-## Basic usage
+### Basic usage
 
 ```csharp
 JsonValidator validator = JsonSchemaGenerator.GenerateJsonValidator<TestClass>();
@@ -487,13 +487,13 @@ JsonValidator validator = JsonSchemaGenerator.GenerateJsonValidator<TestClass>()
 // Now use validator instance as normal
 ```
 
-## Supported .net types by now
+### Supported .net types by now
 
 Numeric types: byte, sbyte, short, ushort, int, uint, long, ulong, float, double, decimal.
 
 Boolean, String, Dictionary<string,TAny>, JsonElement, JsonDocument, JsonNode, JsonValue, JsonArray, JsonObject, generic type of IEnumerable<TAny>, Enum, Guid, Uri, DateTimeOffset, DateTime, Nullable value type (generic type of Nullable<TValue>), Custom object.
 
-## Supported validation attributes by now
+### Supported validation attributes by now
 
 Besides of generating validator by type, you can also indicate more constraint by Attributes, check their constructors arguments then you can get usage:
 
@@ -528,11 +528,11 @@ class TestClass
 }
 ```
 
-## Nullable consideration
+### Nullable consideration
 
 By default, this library will treat all .net reference types as be nullable. If you would mark some reference typed properties as be not nullable, annotate those properties with `[LateApexEarlySpeed.Json.Schema.Generator.NotNullAttribute]`
 
-## Required or ignored
+### Required or ignored
 
 By default, this library will validate value of specified properties when find out those properties from json.
 
@@ -542,7 +542,7 @@ If you would mark some properties as explicit ignored ones (that is, ignore vali
 
 This library uses .net core built-in attributes for these requirement, so that user code can have consistent experience.
 
-## Custom property name
+### Custom property name
 
 As what System.Text.Json supports for property name, this library supports user custom property name by attributes or options:
 
@@ -588,7 +588,7 @@ JsonValidator validator = JsonSchemaGenerator.GenerateJsonValidator(type, new Js
 
 Note: when specify both JsonPropertyNameAttribute on specific property and custom PropertyNamingPolicy in option, JsonPropertyNameAttribute will take higher priority over option for that property.
 
-# Issue report
+## Issue report
 
 Welcome to raise issue and wishlist, I will try to fix if make sense, thanks !
 
