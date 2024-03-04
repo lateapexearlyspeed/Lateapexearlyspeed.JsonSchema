@@ -9,12 +9,50 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
+    <PropertyGroup>
+    <Title>Provide fluent json assertion for Xunit</Title>
+    <Authors>Lateapexearlyspeed</Authors>
+    <Description>Provide fluent json assertion for Xunit</Description>
+    <PackageReadmeFile>nuget.readme.md</PackageReadmeFile>
+    <PackageIcon>nuget.icon.jpg</PackageIcon>
+    <PackageTags>Xunit;Json;Assertion;Assert;Test;Fluent</PackageTags>
+    <PackageOutputPath>bin\Release\NugetPackage</PackageOutputPath>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <FileVersion>1.0.0</FileVersion>
+    <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema</PackageProjectUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>6</WarningLevel>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <NoWarn>1701;1702;1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>6</WarningLevel>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <NoWarn>1701;1702;1591</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="xunit.assert" Version="2.4.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\LateApexEarlySpeed.Json.Schema\LateApexEarlySpeed.Json.Schema.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="nuget.icon.jpg">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+    <None Update="nuget.readme.md">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
   </ItemGroup>
 
 </Project>
