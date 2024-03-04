@@ -29,7 +29,9 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: |
+          3.1.x
+          6.0.x
     - name: Clean previous build output
       run: dotnet clean -c Release
     - name: Build
@@ -57,7 +59,9 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: |
+          3.1.x
+          6.0.x
     - name: Clean previous build output
       run: dotnet clean -c Release
     - name: Build
@@ -83,7 +87,9 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: |
+          3.1.x
+          6.0.x
     - name: Clean previous build output
       run: dotnet clean -c Release
     - name: Build
@@ -126,7 +132,9 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: |
+          3.1.x
+          6.0.x
     - name: Clean previous build output
       run: dotnet clean -c Release
     - name: Build
