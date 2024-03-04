@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LateApexEarlySpeed.XUnit.Assertion.Json\LateApexEarlySpeed.Xunit.Assertion.Json.csproj" />
+    <ProjectReference Include="..\LateApexEarlySpeed.Xunit.Assertion.Json\LateApexEarlySpeed.Xunit.Assertion.Json.csproj" />
   </ItemGroup>
 
 </Project>
