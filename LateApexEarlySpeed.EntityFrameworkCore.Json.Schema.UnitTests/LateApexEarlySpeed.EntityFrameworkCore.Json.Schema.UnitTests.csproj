@@ -8,6 +8,8 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <LangVersion>11.0</LangVersion>
+
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
@@ -34,6 +36,7 @@
     <PackageReference Include="coverlet.collector" Version="1.2.0" />
 
     <ProjectReference Include="..\LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema\LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema.csproj" />
+
   </ItemGroup>
 
 </Project>

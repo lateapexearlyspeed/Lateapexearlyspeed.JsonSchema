@@ -6,8 +6,17 @@ using Xunit.Sdk;
 
 namespace LateApexEarlySpeed.Xunit.Assertion.Json
 {
+    /// <summary>
+    /// Class to make assertion about json data
+    /// </summary>
     public static class JsonAssertion
     {
+        /// <summary>
+        /// Assert that <paramref name="actualJson"/> should meet requirement specified from <paramref name="expectedSchemaConfiguration"/>
+        /// </summary>
+        /// <param name="expectedSchemaConfiguration">Json data requirement</param>
+        /// <param name="actualJson">actual json text</param>
+        /// <exception cref="JsonAssertException">If assertion fails, will throw and report error reason and failed json location</exception>
         public static void Meet(Action<JsonSchemaBuilder> expectedSchemaConfiguration, string actualJson)
         {
             var jsonSchemaBuilder = new JsonSchemaBuilder();
@@ -21,6 +30,12 @@ namespace LateApexEarlySpeed.Xunit.Assertion.Json
             }
         }
 
+        /// <summary>
+        /// Assert that <paramref name="actualJson"/> should be json-level equivalent to <paramref name="expectedJson"/>
+        /// </summary>
+        /// <param name="expectedJson">Expected json structure</param>
+        /// <param name="actualJson">Actual json data</param>
+        /// <exception cref="JsonAssertException">If assertion fails, will throw and report error reason and failed json location</exception>
         public static void Equivalent(string expectedJson, string actualJson)
         {
             var jsonSchemaBuilder = new JsonSchemaBuilder();
