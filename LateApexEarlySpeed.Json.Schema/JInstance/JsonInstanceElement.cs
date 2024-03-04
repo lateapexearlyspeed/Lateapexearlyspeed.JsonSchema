@@ -193,7 +193,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 
                 return curString == otherString
                     ? EquivalentResult.Success()
-                    : EquivalentResult.Fail($"String content not same, one is '{curString}', but another is '{otherString}'", _instanceLocation, other._instanceLocation);
+                    : EquivalentResult.Fail(StringNotSameMessageTemplate(curString, otherString), _instanceLocation, other._instanceLocation);
 
             case JsonValueKind.Number:
                 return NumberEquivalent(other);
@@ -272,7 +272,12 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 
     internal static string NumberNotSameMessageTemplate(object thisValue, object otherValue)
     {
-        return $"Number not same, one is {thisValue} but another is {otherValue}";
+        return $"Number not same, one is '{thisValue}' but another is '{otherValue}'";
+    }
+
+    internal static string StringNotSameMessageTemplate(string thisValue, string otherValue)
+    {
+        return $"String content not same, one is '{thisValue}', but another is '{otherValue}'";
     }
 
     private EquivalentResult ObjectEquivalent(JsonInstanceElement other)

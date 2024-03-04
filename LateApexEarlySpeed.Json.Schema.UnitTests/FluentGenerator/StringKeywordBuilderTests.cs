@@ -1,5 +1,6 @@
 ﻿using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.FluentGenerator;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 using Xunit;
 
@@ -136,7 +137,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"def\"");
-        AssertValidationResult(validationResult, false, "String content not same, one is 'abc', but another is 'def'", ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("abc", "def"), ImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonString().Equal(string.Empty);
@@ -146,7 +147,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"def\"");
-        AssertValidationResult(validationResult, false, "String content not same, one is '', but another is 'def'", ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("", "def"), ImmutableJsonPointer.Empty);
     }
 
     private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, ImmutableJsonPointer? expectedInstanceLocation = null)

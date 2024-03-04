@@ -1,4 +1,5 @@
-﻿using LateApexEarlySpeed.Json.Schema.JSchema;
+﻿using LateApexEarlySpeed.Json.Schema.JInstance;
+using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.FluentGenerator;
@@ -154,6 +155,22 @@ public class JsonSchemaBuilder
         }
 
         return AssociateKeywordBuilder<ObjectKeywordBuilder>();
+    }
+
+    /// <summary>
+    /// Specify that current json node should be equivalent to <paramref name="jsonText"/>
+    /// </summary>
+    /// <param name="jsonText"></param>
+    public void Equivalent(string jsonText)
+    {
+        if (_keywordBuilder is not null)
+        {
+            throw CreateExceptionOfRebindKeywordBuilder();
+        }
+
+        var keywordBuilder = new KeywordBuilder();
+        keywordBuilder.Keywords.Add(new ConstKeyword(JsonInstanceSerializer.Deserialize(jsonText)));
+        _keywordBuilder = keywordBuilder;
     }
 
     /// <summary>

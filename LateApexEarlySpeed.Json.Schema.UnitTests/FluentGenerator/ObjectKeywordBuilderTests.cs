@@ -1,6 +1,7 @@
 ﻿using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.FluentGenerator;
 using LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 using Xunit;
 
@@ -39,7 +40,7 @@ public class ObjectKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("""{"A":1, "B":{"C":"d"}}""");
-        AssertValidationResult(validationResult, false, "String content not same, one is 'c', but another is 'd'", ImmutableJsonPointer.Create("/B/C"));
+        AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("c", "d"), ImmutableJsonPointer.Create("/B/C"));
     }
 
     [Fact]
@@ -95,7 +96,7 @@ public class ObjectKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("""{"A":{"B":[1, null, {"C":"bbb"}]}}""");
-        AssertValidationResult(validationResult, false, "String content not same, one is 'aaa', but another is 'bbb'", ImmutableJsonPointer.Create("/A/B/2/C"));
+        AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("aaa", "bbb"), ImmutableJsonPointer.Create("/A/B/2/C"));
     }
 
     [Fact]
