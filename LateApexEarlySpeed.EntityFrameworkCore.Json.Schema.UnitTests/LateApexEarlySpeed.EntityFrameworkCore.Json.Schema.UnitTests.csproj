@@ -9,7 +9,6 @@
     <IsTestProject>true</IsTestProject>
     <LangVersion>11.0</LangVersion>
 
-    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">

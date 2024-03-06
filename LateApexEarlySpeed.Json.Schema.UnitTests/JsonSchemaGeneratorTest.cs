@@ -873,18 +873,6 @@ public class JsonSchemaGeneratorTest
 
     private static IEnumerable<TestSample> CreateSamplesForRequiredAttribute()
     {
-        yield return TestSample.Create<JsonRequiredAttributeTestClass>("""
-            {
-              "Prop": 1
-            }
-            """, ValidationResult.ValidResult);
-
-        yield return TestSample.Create<JsonRequiredAttributeTestClass>("{}", new ValidationResult(ResultCode.NotFoundRequiredProperty, "required", RequiredKeyword.ErrorMessage("Prop"), 
-            ImmutableJsonPointer.Create("")!, 
-            ImmutableJsonPointer.Create("/required"),
-            GetSchemaResourceBaseUri<JsonRequiredAttributeTestClass>(),
-            GetSchemaResourceBaseUri<JsonRequiredAttributeTestClass>()));
-
         yield return TestSample.Create<RequiredAttributeForCustomNamedPropertyTestClass>("""
             {
               "NewPropName": 1
@@ -900,12 +888,6 @@ public class JsonSchemaGeneratorTest
             ImmutableJsonPointer.Create("/required"),
             GetSchemaResourceBaseUri<RequiredAttributeForCustomNamedPropertyTestClass>(),
             GetSchemaResourceBaseUri<RequiredAttributeForCustomNamedPropertyTestClass>()));
-    }
-
-    private class JsonRequiredAttributeTestClass
-    {
-        [JsonRequired]
-        public int Prop { get; set; }
     }
 
     private class RequiredAttributeForCustomNamedPropertyTestClass

@@ -80,7 +80,7 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
     private static RequiredKeyword? CreateRequiredKeyword(IEnumerable<MemberInfo> members, JsonSchemaGeneratorOptions options)
     {
         string[] requiredPropertyNames = members
-            .Where(prop => prop.GetCustomAttribute<JsonRequiredAttribute>() is not null || prop.GetCustomAttribute<RequiredAttribute>() is not null)
+            .Where(prop => prop.GetCustomAttribute<RequiredAttribute>() is not null)
             .Select(memberInfo => GetPropertyName(memberInfo, options)).ToArray();
         return requiredPropertyNames.Length == 0
             ? null
