@@ -48,7 +48,7 @@ JsonAssertion.Equivalent("""
                 """);
 ```
 
-This assertion library depends on core functionalities of library 'Lateapexearlyspeed.Json.Schema', check available validation methods in it.
+This assertion library depends on core functionalities of library 'Lateapexearlyspeed.Json.Schema', check available validation methods [here](#available-fluent-validation-methods).
 
 ## LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema & LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema
 
@@ -73,7 +73,7 @@ Configure json column with 2 ways:
 
 ### 1. Fluent configuration
 
-If not familiar with Standard Json schema, recommend using fluent configuration. The fluent configuration is designed not completely align with standard Json schema keywords interface. The standard Json schema is a powerful and flexiable language to specify json shape, but most developers may be more familiar with "stronger type" smell. For this, library's fluent configuration will (in most cases) firstly "ask" developers what json type they want, then continue "ask" subsequence validation requirements which are scoped based on known json type. 
+If not familiar with Standard Json schema, recommend using fluent configuration. Most developers may be more familiar with "stronger type" smell. Library's fluent configuration will (in most cases) firstly "ask" developers what json type they want, then continue "ask" subsequence validation requirements which are scoped based on known json type. 
 
 By doing that, developers may have more friendly method invoke chains and will not be easy to make mistake because some standard json schema keywords only have functionalities on specific type. Also, because validation methods is on specific json type builder, so those validation methods can be designed to accept concret .net type rather than raw json. 
 
@@ -128,49 +128,7 @@ You can get column name, failed [location (by json pointer format)](https://data
 
 You don't have to specify all properties when configure, just configure necessary stuff your data requirement focuses on. The json part in data which is not configured will not be checked.
 
-Available validations for json column:
-
-- NotJsonNull
-- IsJsonTrue
-- IsJsonFalse
-- IsJsonBoolean
-- IsJsonNull
-- IsJsonString:
-  - Equal
-  - IsIn
-  - HasMaxLength
-  - HasMinLength
-  - HasPattern
-  - HasCustomValidation
-- IsJsonNumber:
-  - Equal
-  - IsIn
-  - IsGreaterThan
-  - IsLessThan
-  - NotGreaterThan
-  - NotLessThan
-  - MultipleOf
-  - HasCustomValidation
-- IsJsonArray:
-  - SerializationEquivalent
-  - HasItems
-  - HasLength
-  - HasMaxLength
-  - HasMinLength
-  - HasUniqueItems
-  - HasCustomValidation
-  - Contains
-  - NotContains
-  - Equivalent
-- IsJsonObject:
-  - SerializationEquivalent
-  - HasProperty
-  - HasCustomValidation
-  - Equivalent
-  - HasNoProperty
-- Or
-
-There are HasCustomValidation() overloads which can be used to create custom validation logic unit.
+Available validations for json column: check 'Lateapexearlyspeed.Json.Schema' [here](#available-fluent-validation-methods).
 
 ### 2. Just provide standard json schema (2020.12) when call HasJsonValidation():
 ```csharp
@@ -520,6 +478,78 @@ FormatRegistry.AddFormatType<TestCustomFormatValidator>();
 - This implementation focuses on json schema validation, currently not support Annotation
 - Due to lack Annotation support, it also not support following keywords: unevaluatedProperties, unevaluatedItems
 - Not support content-encoded string currently
+
+## Fluent schema builder
+
+If not familiar with Standard Json schema, recommend using fluent configuration. The fluent configuration is designed not completely align with standard Json schema keywords interface. The standard Json schema is a powerful and flexiable language to specify json shape, but most developers may be more familiar with "stronger type" smell. For this, library's fluent configuration will (in most cases) firstly "ask" developers what json type they want, then continue "ask" subsequence validation requirements which are scoped based on known json type. 
+
+By doing that, developers may have more friendly method invoke chains and will not be easy to make mistake because some standard json schema keywords only have functionalities on specific type. Also, because validation methods is on specific json type builder, so those validation methods can be designed to accept concret .net type rather than raw json. 
+
+Lateapexearlyspeed.Json.Schema package extends standard keywords for some of fluent validation requirement and provide fluent validation.
+
+```csharp
+    var b = new JsonSchemaBuilder();
+    b.IsJsonObject()
+                .HasProperty("A", b => b.IsJsonString().HasMinLength(5))
+                .HasProperty("B", b => b.IsJsonNumber().IsGreaterThan(1).IsLessThan(10))
+                .HasProperty("C", b => b.IsJsonArray().HasMinLength(5).HasItems(b =>
+                {
+                    b.NotJsonNull();
+                }))
+                .HasProperty("D", b => b.Or(
+                        b => b.IsJsonFalse(),
+                        b => b.IsJsonNumber().Equal(0),
+                        b => b.IsJsonObject().HasCustomValidation((JsonElement element) => element.GetProperty("Prop").ValueKind == JsonValueKind.True, 
+                            jsonElement => $"Cannot pass my custom validation, data is {jsonElement}")
+                    )
+                );
+    JsonValidator jsonValidator = b.BuildValidator();
+    jsonValidator.Validate(...);
+```
+
+### <a name="available-fluent-validation-methods"></a> Available fluent validation methods
+
+- NotJsonNull
+- IsJsonTrue
+- IsJsonFalse
+- IsJsonBoolean
+- IsJsonNull
+- IsJsonString:
+  - Equal
+  - IsIn
+  - HasMaxLength
+  - HasMinLength
+  - HasPattern
+  - HasCustomValidation
+- IsJsonNumber:
+  - Equal
+  - IsIn
+  - IsGreaterThan
+  - IsLessThan
+  - NotGreaterThan
+  - NotLessThan
+  - MultipleOf
+  - HasCustomValidation
+- IsJsonArray:
+  - SerializationEquivalent
+  - HasItems
+  - HasLength
+  - HasMaxLength
+  - HasMinLength
+  - HasUniqueItems
+  - HasCustomValidation
+  - Contains
+  - NotContains
+  - Equivalent
+- IsJsonObject:
+  - SerializationEquivalent
+  - HasProperty
+  - HasCustomValidation
+  - Equivalent
+  - HasNoProperty
+- Or
+
+There are HasCustomValidation() overloads which can be used to create custom validation logic unit.
 
 ## Validator generation from code
 
