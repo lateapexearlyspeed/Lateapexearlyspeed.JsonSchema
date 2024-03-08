@@ -1,3 +1,18 @@
+<p align="center" width="100%">
+    <img width="33%" src="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/blob/master/LateApexEarlySpeed.Json.Schema/nuget.icon.jpg?raw=true">
+</p>
+
+## <center>**Lateapexearlyspeed.Json.Schema**</center>
+
+<center>To protect and validate your JSON</center>
+
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/cicd.yml)
+![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Json.Schema)
+
+<p align="center" width="100%">
+    <img width="33%" src="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/blob/master/splash-image.png?raw=true">
+</p>
+
 # This repository provides following nuget packages about json schema:
 
 - [LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema](https://www.nuget.org/packages/LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema/)
