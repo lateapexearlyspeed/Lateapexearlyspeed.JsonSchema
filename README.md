@@ -1,17 +1,15 @@
-<p align="center" width="100%">
-    <img width="33%" src="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/blob/master/LateApexEarlySpeed.Json.Schema/nuget.icon.jpg?raw=true">
+<p align="center">
+    <img height="60" src="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/blob/master/LateApexEarlySpeed.Json.Schema/nuget.icon.jpg?raw=true">
 </p>
+<h1 align="center">Lateapexearlyspeed.Json.Schema</h1>
+<p align="center">To protect and validate your JSON</p>
 
-## <center>**Lateapexearlyspeed.Json.Schema**</center>
-
-<center>To protect and validate your JSON</center>
+<p align="center">
+    <img width="100%" src="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/blob/master/splash-image.png?raw=true">
+</p>
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/cicd.yml)
 ![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Json.Schema)
-
-<p align="center" width="100%">
-    <img width="33%" src="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/blob/master/splash-image.png?raw=true">
-</p>
 
 # This repository provides following nuget packages about json schema:
 
