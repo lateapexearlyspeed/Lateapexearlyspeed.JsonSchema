@@ -19,25 +19,25 @@ The core library is 'Lateapexearlyspeed.Json.Schema' which is a simple and high 
 
 Based on the core library, there are Entityframework core extensions which has solution of json column validation to protect your database in application side and a Xunit assertion extensions which has powerful json assertion capability.
 
-# This repository provides following nuget packages about json validation:
+##### nuget packages:
 
 <table>
 <tbody>
 <tr>
 <td>Lateapexearlyspeed.Json.Schema<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.Json.Schema/"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.Json.Schema"></img></a></td>
-<td>Core library of json schema and other validation helpers - see <a href="https://json-schema.org">doc</a></td>
+<td>Core library of json schema and other validation helpers - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema#lateapexearlyspeedjsonschema-1">doc</a></td>
 </tr>
 <tr>
 <td>LateApexEarlySpeed.Xunit.Assertion.Json<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.Xunit.Assertion.Json"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.Xunit.Assertion.Json"></img></a></td>
-<td>Xunit assertion extension for json - see <a href="https://json-schema.org">doc</a></td>
+<td>Xunit assertion extension for json - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema#-lateapexearlyspeedxunitassertionjson">doc</a></td>
 </tr>
 <tr>
 <td>LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema/"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema"></img></a></td>
-<td>Json column validation for Entityframework core v6+ - see <a href="https://json-schema.org">doc</a></td>
+<td>Json column validation for Entityframework core v6+ - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema#-lateapexearlyspeedentityframeworkcorev6jsonschema--lateapexearlyspeedentityframeworkcorev3jsonschema">doc</a></td>
 </tr>
 <tr>
 <td>LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema/"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema"></img></a></td>
-<td>Json column validation for Entityframework core v3 - see <a href="https://json-schema.org">doc</a></td>
+<td>Json column validation for Entityframework core v3 - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema#-lateapexearlyspeedentityframeworkcorev6jsonschema--lateapexearlyspeedentityframeworkcorev3jsonschema">doc</a></td>
 </tr>
 </tbody>
 </table>
