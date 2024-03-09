@@ -29,7 +29,7 @@ nuget packages:
 </tr>
 <tr>
 <td>LateApexEarlySpeed.Xunit.Assertion.Json<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.Xunit.Assertion.Json"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.Xunit.Assertion.Json"></img></a></td>
-<td>Xunit assertion extension for json - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema#-lateapexearlyspeedxunitassertionjson">doc</a></td>
+<td>Xunit assertion extension for json - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema#lateapexearlyspeedxunitassertionjson">doc</a></td>
 </tr>
 <tr>
 <td>LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema/"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema"></img></a></td>
