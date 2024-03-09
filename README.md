@@ -33,11 +33,11 @@ nuget packages:
 </tr>
 <tr>
 <td>LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema/"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema"></img></a></td>
-<td>Json column validation for Entityframework core v6+ - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema#-lateapexearlyspeedentityframeworkcorev6jsonschema--lateapexearlyspeedentityframeworkcorev3jsonschema">doc</a></td>
+<td>Json column validation for Entityframework core v6+ - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema#lateapexearlyspeedentityframeworkcorev6jsonschema--lateapexearlyspeedentityframeworkcorev3jsonschema">doc</a></td>
 </tr>
 <tr>
 <td>LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema/"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema"></img></a></td>
-<td>Json column validation for Entityframework core v3 - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema#-lateapexearlyspeedentityframeworkcorev6jsonschema--lateapexearlyspeedentityframeworkcorev3jsonschema">doc</a></td>
+<td>Json column validation for Entityframework core v3 - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema#lateapexearlyspeedentityframeworkcorev6jsonschema--lateapexearlyspeedentityframeworkcorev3jsonschema">doc</a></td>
 </tr>
 </tbody>
 </table>
