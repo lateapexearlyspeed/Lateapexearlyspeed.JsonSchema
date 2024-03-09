@@ -185,153 +185,11 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 ## Lateapexearlyspeed.Json.Schema
 
-This is a high performance Json schema .Net implementation library based on [Json schema](https://json-schema.org/) - draft 2020.12 (latest one by 2023.12).
+This is a high performance Json schema .Net implementation library based on [Json schema](https://json-schema.org/) - draft 2020.12 (latest one by 2023.12). The json validation functionalities have passed [official json schema test-suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) for draft 2020.12 (except cases about limitation listed below)
 
-This library also supports validator generation from your class code, see below.
+This library also supports fluent validation and validator generation from your class code.
 
----
-The json validation functionalities have passed [official json schema test-suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) for draft 2020.12 (except cases about limitation listed below)
-
-**High performance** - this .Net library has good performance compared with existing more popular and excellent .Net implementations in common cases by BenchmarkDotnet result, but please verify in your use cases.
-
-*Some Benchmark result (note they are compared under same use pattern - see [Performance Tips](#performance-tips) ):*
-
-12th Gen Intel Core i7-12800H, 1 CPU, 20 logical and 14 physical cores
-
-  [Host]     : .NET 6.0.25 (6.0.2523.51912), X64 RyuJIT AVX2
-
-  DefaultJob : .NET 6.0.25 (6.0.2523.51912), X64 RyuJIT AVX2
-  
-*Valid data case:*
-| Method                             | Mean        | Error     | StdDev    | Gen0    | Gen1   | Allocated |
-|----------------------------------- |------------:|----------:|----------:|--------:|-------:|----------:|
-| ValidateByPopularSTJBasedValidator |    29.80 us |  0.584 us |  0.573 us |  4.4556 | 0.2441 |   55.1 KB |
-| ValidateByThisValidator            |    15.99 us |  0.305 us |  0.300 us |  1.9531 |      - |   24.2 KB |
-
-*Invalid data case:*
-| Method                             | Mean        | Error     | StdDev     | Median      | Gen0    | Gen1   | Allocated |
-|----------------------------------- |------------:|----------:|-----------:|------------:|--------:|-------:|----------:|
-| ValidateByPopularSTJBasedValidator |    65.04 us |  2.530 us |   7.341 us |    66.87 us |  4.5776 | 0.1221 |  56.42 KB |
-| ValidateByThisValidator            |    15.47 us |  1.160 us |   3.421 us |    17.14 us |  1.4954 |      - |  18.45 KB |
-
-Note: "STJ" means "System.Text.Json" which is built-in json package in .net sdk, this library is also based on it.
-
-*Benchmark Schema:*
-
-```
-{
-  "$id": "http://main",
-  "type": "object",
-
-  "additionalProperties": false,
-  "patternProperties": {
-    "propB*lean": {
-      "type": "boolean"
-    }
-  },
-  "dependentRequired": {
-    "propNull": [ "propBoolean", "propArray" ]
-  },
-  "dependentSchemas": {
-    "propNull": {
-      "type": "object"
-    }
-  },
-  "propertyNames": true,
-  "required": [ "propNull", "propBoolean" ],
-  "maxProperties": 100,
-  "minProperties": 0,
-  "properties": {
-    "propNull": {
-      "type": "null"
-    },
-    "propBoolean": {
-      "type": "boolean",
-      "allOf": [
-        true,
-        { "type": "boolean" }
-      ]
-    },
-    "propArray": {
-      "type": "array",
-      "anyOf": [ false, true ],
-      "contains": { "type": "integer" },
-      "maxContains": 100,
-      "minContains": 2,
-      "maxItems": 100,
-      "minItems": 1,
-      "prefixItems": [
-        { "type": "integer" }
-      ],
-      "items": { "type": "integer" },
-      "uniqueItems": true
-    },
-    "propNumber": {
-      "type": "number",
-      "if": {
-        "const": 1.5
-      },
-      "then": true,
-      "else": true,
-      "enum": [ 1.5, 0, 1 ]
-    },
-    "propString": {
-      "type": "string",
-      "maxLength": 100,
-      "minLength": 0,
-      "not": false,
-      "pattern": "abcde"
-    },
-    "propInteger": {
-      "$ref": "#/$defs/typeIsInteger",
-      "exclusiveMaximum": 100,
-      "exclusiveMinimum": 0,
-      "maximum": 100,
-      "minimum": 0,
-      "multipleOf": 0.5,
-      "oneOf": [ true, false ]
-    }
-  },
-  "$defs": {
-    "typeIsInteger": { "$ref": "http://inside#/$defs/typeIsInteger" },
-    "toTestAnchor": {
-      "$anchor": "test-anchor"
-    },
-    "toTestAnotherResourceRef": {
-      "$id": "http://inside",
-      "$defs": {
-        "typeIsInteger": { "type": "integer" }
-      }
-    }
-  }
-}
-```
-
-*Valid benchmark data:*
-
-```
-{
-  "propNull": null,
-  "propBoolean": true,
-  "propArray": [ 1, 2, 3, 4, 5 ],
-  "propNumber": 1.5,
-  "propString": "abcde",
-  "propInteger": 1
-}
-```
-
-*Invalid benchmark data:*
-
-```
-{
-  "propNull": null,
-  "propBoolean": true,
-  "propArray": [ 1, 2, 3, 4, 4 ], // Two '4', duplicated
-  "propNumber": 1.5,
-  "propString": "abcde",
-  "propInteger": 1
-}
-```
+**High performance** - this .Net library has good performance compared with existing more popular and excellent .Net implementations in common cases by BenchmarkDotnet [result](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Performance).
 
 ### Basic Usage
 
@@ -390,9 +248,6 @@ When validation failed, you can check detailed error information by:
     ```
     https://example.com/schemas/common
     ```
-
-### <a name="performance-tips"></a> Performance Tips
-Reuse instantiated JsonValidator instances (which basically represent json schema) to validate incoming json instance data if possible in your cases, to gain better performance.
 
 ### External json schema document reference support
 
