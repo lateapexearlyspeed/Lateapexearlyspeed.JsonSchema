@@ -9,7 +9,10 @@
 </p>
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/cicd.yml)
-![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Json.Schema)
+![GitHub top language](https://img.shields.io/github/languages/top/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema)
+![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Json.Schema?label=LateApexEarlySpeed.Json.Schema)
+![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Xunit.Assertion.Json?label=LateApexEarlySpeed.Xunit.Assertion.Json)
+![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema?label=LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema)
 
 # What is all in Lateapexearlyspeed.JsonSchema
 
@@ -62,15 +65,6 @@ ValidationResult validationResult = jsonValidator.Validate(instance);
 if (validationResult.IsValid)
 {
     Console.WriteLine("good");
-}
-else
-{
-    Console.WriteLine($"Failed keyword: {validationResult.Keyword}");
-    Console.WriteLine($"ResultCode: {validationResult.ResultCode}");
-    Console.WriteLine($"Error message: {validationResult.ErrorMessage}");
-    Console.WriteLine($"Failed instance location: {validationResult.InstanceLocation}");
-    Console.WriteLine($"Failed relative keyword location: {validationResult.RelativeKeywordLocation}");
-    Console.WriteLine($"Failed schema resource base uri: {validationResult.SchemaResourceBaseUri}");
 }
 ```
 
@@ -187,12 +181,6 @@ Model:
 Configure json column with 2 ways:
 
 ### 1. Fluent configuration
-
-If not familiar with Standard Json schema, recommend using fluent configuration. Most developers may be more familiar with "stronger type" smell. Library's fluent configuration will (in most cases) firstly "ask" developers what json type they want, then continue "ask" subsequence validation requirements which are scoped based on known json type. 
-
-By doing that, developers may have more friendly method invoke chains and will not be easy to make mistake because some standard json schema keywords only have functionalities on specific type. Also, because validation methods is on specific json type builder, so those validation methods can be designed to accept concret .net type rather than raw json. 
-
-Lateapexearlyspeed.Json.Schema package extends standard keywords for some of fluent validation requirement and provide fluent validation, this library depends on it.
 
 ```csharp
 protected override void OnModelCreating(ModelBuilder modelBuilder)
