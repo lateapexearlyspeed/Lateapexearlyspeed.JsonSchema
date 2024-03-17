@@ -1,4 +1,6 @@
-namespace LateApexEarlySpeed.Xunit.Assertion.Json.UnitTests
+using LateApexEarlySpeed.Xunit.Assertion.Json;
+
+namespace LateApexEarlySpeed.Assertion.Json.UnitTests
 {
     public class JsonAssertionTests
     {
