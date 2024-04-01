@@ -28,7 +28,7 @@ public class OrKeywordBuilderTests
         AssertValidationResult(validationResult, false, ContainsKeyword.ErrorMessage("""[{}, 1]"""), ImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
-        jsonSchemaBuilder.IsJsonObject().HasProperty("A", b => b.Or(
+        jsonSchemaBuilder.ObjectHasProperty("A", b => b.Or(
             b => b.IsJsonString(),
             b => b.IsJsonNull()
         ));

@@ -82,20 +82,19 @@ By doing that, developers may have more friendly method invoke chains and will n
 
 ```csharp
     var b = new JsonSchemaBuilder();
-    b.IsJsonObject()
-                .HasProperty("A", b => b.IsJsonString().HasMinLength(5))
-                .HasProperty("B", b => b.IsJsonNumber().IsGreaterThan(1).IsLessThan(10))
-                .HasProperty("C", b => b.IsJsonArray().HasMinLength(5).HasItems(b =>
-                {
-                    b.NotJsonNull();
-                }))
-                .HasProperty("D", b => b.Or(
-                        b => b.IsJsonFalse(),
-                        b => b.IsJsonNumber().Equal(0),
-                        b => b.IsJsonObject().HasCustomValidation((JsonElement element) => element.GetProperty("Prop").ValueKind == JsonValueKind.True, 
-                            jsonElement => $"Cannot pass my custom validation, data is {jsonElement}")
-                    )
-                );
+    b.ObjectHasProperty("A", b => b.IsJsonString().HasMinLength(5))
+    .HasProperty("B", b => b.IsJsonNumber().IsGreaterThan(1).IsLessThan(10))
+    .HasProperty("C", b => b.IsJsonArray().HasMinLength(5).HasItems(b =>
+    {
+        b.NotJsonNull();
+    }))
+    .HasProperty("D", b => b.Or(
+        b => b.IsJsonFalse(),
+        b => b.IsJsonNumber().Equal(0),
+        b => b.IsJsonObject().HasCustomValidation((JsonElement element) => element.GetProperty("Prop").ValueKind == JsonValueKind.True, 
+            jsonElement => $"Cannot pass my custom validation, data is {jsonElement}")
+        )
+    );
     JsonValidator jsonValidator = b.BuildValidator();
     jsonValidator.Validate(...);
 ```
@@ -123,10 +122,8 @@ However, imagine what you would test is other factors besides of equivalent on w
 This library can assert json node data in any node location, not only against whole json. Also, you won't write multiple assertion code lines for different json node, you just need to have one JsonAssertion.Meet(...) method then inside it, you specify what you would test, all in one place. When assertion failed, library will throw detailed assert exception which reports failed json node location. 
 
 ```csharp
-JsonAssertion.Meet(b =>
-                        b.IsJsonObject()
-                            .HasProperty("p1", b => b.IsJsonObject())
-                            .HasProperty("p2", b => b.IsJsonNumber().IsLessThan(5)),
+JsonAssertion.Meet(b => b.ObjectHasProperty("p1", b => b.IsJsonObject())
+                         .HasProperty("p2", b => b.IsJsonNumber().IsLessThan(5)),
                 """
                 {
                   "p1": {},
@@ -188,20 +185,19 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
     modelBuilder.Entity<Blog>()
         .Property(b => b.JsonContent).HasJsonValidation(b =>
         {
-            b.IsJsonObject()
-                .HasProperty("A", b => b.IsJsonString().HasMinLength(5))
-                .HasProperty("B", b => b.IsJsonNumber().IsGreaterThan(1).IsLessThan(10))
-                .HasProperty("C", b => b.IsJsonArray().HasMinLength(5).HasItems(b =>
-                {
-                    b.NotJsonNull();
-                }))
-                .HasProperty("D", b => b.Or(
-                        b => b.IsJsonFalse(),
-                        b => b.IsJsonNumber().Equal(0),
-                        b => b.IsJsonObject().HasCustomValidation((JsonElement element) => element.GetProperty("Prop").ValueKind == JsonValueKind.True, 
-                            jsonElement => $"Cannot pass my custom validation, data is {jsonElement}")
-                    )
-                );
+            b.ObjectHasProperty("A", b => b.IsJsonString().HasMinLength(5))
+             .HasProperty("B", b => b.IsJsonNumber().IsGreaterThan(1).IsLessThan(10))
+             .HasProperty("C", b => b.IsJsonArray().HasMinLength(5).HasItems(b =>
+            {
+                b.NotJsonNull();
+            }))
+            .HasProperty("D", b => b.Or(
+                b => b.IsJsonFalse(),
+                b => b.IsJsonNumber().Equal(0),
+                b => b.IsJsonObject().HasCustomValidation((JsonElement element) => element.GetProperty("Prop").ValueKind == JsonValueKind.True, 
+                    jsonElement => $"Cannot pass my custom validation, data is {jsonElement}")
+                )
+            );
         });
 }
 ```

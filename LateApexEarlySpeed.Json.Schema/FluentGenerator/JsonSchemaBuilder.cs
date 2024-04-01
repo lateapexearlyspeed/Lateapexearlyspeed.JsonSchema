@@ -158,6 +158,24 @@ public class JsonSchemaBuilder
     }
 
     /// <summary>
+    /// Specify that current json node should be Object type and this json object should have specified <paramref name="property"/> and its property value should match schema of <paramref name="configureBuilder"/>
+    /// </summary>
+    /// <param name="property">Property name</param>
+    /// <param name="configureBuilder">Schema for specified <paramref name="property"/>'s value</param>
+    public ObjectKeywordBuilder ObjectHasProperty(string property, Action<JsonSchemaBuilder> configureBuilder)
+    {
+        if (_keywordBuilder is not null)
+        {
+            throw CreateExceptionOfRebindKeywordBuilder();
+        }
+
+        ObjectKeywordBuilder objectKeywordBuilder = AssociateKeywordBuilder<ObjectKeywordBuilder>();
+        objectKeywordBuilder.HasProperty(property, configureBuilder);
+
+        return objectKeywordBuilder;
+    }
+
+    /// <summary>
     /// Specify that current json node should be equivalent to <paramref name="jsonText"/>
     /// </summary>
     /// <param name="jsonText"></param>

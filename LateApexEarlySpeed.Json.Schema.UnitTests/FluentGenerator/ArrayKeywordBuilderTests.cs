@@ -82,7 +82,7 @@ public class ArrayKeywordBuilderTests
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonArray().HasCustomValidation(_ => true, _ => "bad msg").HasMaxLength(uint.MaxValue)
-            .HasItems(b => b.IsJsonObject().HasProperty("A", b => b.IsJsonString().HasMaxLength(5)));
+            .HasItems(b => b.ObjectHasProperty("A", b => b.IsJsonString().HasMaxLength(5)));
         JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
 
         ValidationResult validationResult = jsonValidator.Validate("""
@@ -221,7 +221,7 @@ public class ArrayKeywordBuilderTests
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonArray().HasUniqueItems().HasCustomValidation(
-            _ => true, _ => "bad msg").Contains(b => b.IsJsonObject().HasProperty("A", b => b.IsJsonNumber().Equal(1)));
+            _ => true, _ => "bad msg").Contains(b => b.ObjectHasProperty("A", b => b.IsJsonNumber().Equal(1)));
         JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
 
         ValidationResult validationResult = jsonValidator.Validate("""
@@ -240,7 +240,7 @@ public class ArrayKeywordBuilderTests
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonArray().HasUniqueItems().HasCustomValidation(
-            _ => true, _ => "bad msg").NotContains(b => b.IsJsonObject().HasProperty("A", b => b.IsJsonNumber().Equal(1)));
+            _ => true, _ => "bad msg").NotContains(b => b.ObjectHasProperty("A", b => b.IsJsonNumber().Equal(1)));
         JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
 
         ValidationResult validationResult = jsonValidator.Validate("""

@@ -72,10 +72,43 @@ public class ObjectKeywordBuilderTests
     }
 
     [Fact]
+    public void Validate_ObjectHasProperty()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.ObjectHasProperty("A", a => a.IsJsonNumber().Equal(1))
+            .HasProperty("B", b => b.IsJsonString().Equal("bbb"));
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("""
+            {
+              "A": 1,
+              "B": "bbb"
+            }
+            """);
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("""
+            {
+              "A": 2,
+              "B": "bbb"
+            }
+            """);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1, 2), ImmutableJsonPointer.Create("/A"));
+
+        validationResult = jsonValidator.Validate("""
+            {
+              "A": 1,
+              "B": "zzz"
+            }
+            """);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("bbb", "zzz"), ImmutableJsonPointer.Create("/B"));
+    }
+
+    [Fact]
     public void Validate_HasCustomValidation_WithObjectArgument()
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();
-        jsonSchemaBuilder.IsJsonObject().HasProperty("A", b => b.IsJsonObject().HasCustomValidation(typeof(TestClass), obj => ((TestClass)obj).A == "aaa", obj => ((TestClass)obj).A!));
+        jsonSchemaBuilder.ObjectHasProperty("A", b => b.IsJsonObject().HasCustomValidation(typeof(TestClass), obj => ((TestClass)obj).A == "aaa", obj => ((TestClass)obj).A!));
         JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
 
         ValidationResult validationResult = jsonValidator.Validate("""{"A":{"A":"aaa"}}""");
@@ -89,7 +122,7 @@ public class ObjectKeywordBuilderTests
     public void Validate_Equivalent()
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();
-        jsonSchemaBuilder.IsJsonObject().HasProperty("A", b => b.IsJsonObject().Equivalent("""{"B":[1, null, {"C":"aaa"}]}"""));
+        jsonSchemaBuilder.ObjectHasProperty("A", b => b.IsJsonObject().Equivalent("""{"B":[1, null, {"C":"aaa"}]}"""));
         JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
 
         ValidationResult validationResult = jsonValidator.Validate("""{"A":{"B":[1, null, {"C":"aaa"}]}}""");
@@ -103,7 +136,7 @@ public class ObjectKeywordBuilderTests
     public void Validate_HasNoProperty()
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();
-        jsonSchemaBuilder.IsJsonObject().HasProperty("A", b => b.IsJsonObject().HasNoProperty("C"));
+        jsonSchemaBuilder.ObjectHasProperty("A", b => b.IsJsonObject().HasNoProperty("C"));
         JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
 
         ValidationResult validationResult = jsonValidator.Validate("""{"A":{"B":null}}""");
