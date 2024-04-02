@@ -37,10 +37,7 @@ public class JsonSchemaBuilder
     /// </summary>
     public void NotJsonNull()
     {
-        if (_keywordBuilder is not null)
-        {
-            throw CreateExceptionOfRebindKeywordBuilder();
-        }
+        ThrowIfRebindKeywordBuilder();
 
         var keywordBuilder = new KeywordBuilder();
         keywordBuilder.Keywords.Add(new TypeKeyword(InstanceType.Object, InstanceType.Array, InstanceType.Boolean, InstanceType.Number, InstanceType.String));
@@ -53,10 +50,7 @@ public class JsonSchemaBuilder
     /// </summary>
     public void IsJsonTrue()
     {
-        if (_keywordBuilder is not null)
-        {
-            throw CreateExceptionOfRebindKeywordBuilder();
-        }
+        ThrowIfRebindKeywordBuilder();
 
         AssociateKeywordBuilder<TrueKeywordBuilder>();
     }
@@ -66,10 +60,7 @@ public class JsonSchemaBuilder
     /// </summary>
     public void IsJsonFalse()
     {
-        if (_keywordBuilder is not null)
-        {
-            throw CreateExceptionOfRebindKeywordBuilder();
-        }
+        ThrowIfRebindKeywordBuilder();
 
         AssociateKeywordBuilder<FalseKeywordBuilder>();
     }
@@ -79,10 +70,7 @@ public class JsonSchemaBuilder
     /// </summary>
     public void IsJsonBoolean()
     {
-        if (_keywordBuilder is not null)
-        {
-            throw CreateExceptionOfRebindKeywordBuilder();
-        }
+        ThrowIfRebindKeywordBuilder();
 
         AssociateKeywordBuilder<BooleanKeywordBuilder>();
     }
@@ -93,12 +81,21 @@ public class JsonSchemaBuilder
     /// <returns></returns>
     public StringKeywordBuilder IsJsonString()
     {
-        if (_keywordBuilder is not null)
-        {
-            throw CreateExceptionOfRebindKeywordBuilder();
-        }
+        ThrowIfRebindKeywordBuilder();
 
         return AssociateKeywordBuilder<StringKeywordBuilder>();
+    }
+
+    /// <summary>
+    /// Specify that current json node should be String type and the string content should equal to <paramref name="value"/>
+    /// </summary>
+    /// <param name="value">Normal string content</param>
+    public StringKeywordBuilder StringEqual(string value)
+    {
+        ThrowIfRebindKeywordBuilder();
+
+        StringKeywordBuilder stringKeywordBuilder = AssociateKeywordBuilder<StringKeywordBuilder>();
+        return stringKeywordBuilder.Equal(value);
     }
 
     /// <summary>
@@ -107,10 +104,7 @@ public class JsonSchemaBuilder
     /// <returns></returns>
     public NumberKeywordBuilder IsJsonNumber()
     {
-        if (_keywordBuilder is not null)
-        {
-            throw CreateExceptionOfRebindKeywordBuilder();
-        }
+        ThrowIfRebindKeywordBuilder();
 
         return AssociateKeywordBuilder<NumberKeywordBuilder>();
     }
@@ -121,10 +115,7 @@ public class JsonSchemaBuilder
     /// <returns></returns>
     public ArrayKeywordBuilder IsJsonArray()
     {
-        if (_keywordBuilder is not null)
-        {
-            throw CreateExceptionOfRebindKeywordBuilder();
-        }
+        ThrowIfRebindKeywordBuilder();
 
         return AssociateKeywordBuilder<ArrayKeywordBuilder>();
     }
@@ -135,10 +126,7 @@ public class JsonSchemaBuilder
     /// <returns></returns>
     public NullKeywordBuilder IsJsonNull()
     {
-        if (_keywordBuilder is not null)
-        {
-            throw CreateExceptionOfRebindKeywordBuilder();
-        }
+        ThrowIfRebindKeywordBuilder();
 
         return AssociateKeywordBuilder<NullKeywordBuilder>();
     }
@@ -149,10 +137,7 @@ public class JsonSchemaBuilder
     /// <returns></returns>
     public ObjectKeywordBuilder IsJsonObject()
     {
-        if (_keywordBuilder is not null)
-        {
-            throw CreateExceptionOfRebindKeywordBuilder();
-        }
+        ThrowIfRebindKeywordBuilder();
 
         return AssociateKeywordBuilder<ObjectKeywordBuilder>();
     }
@@ -164,15 +149,10 @@ public class JsonSchemaBuilder
     /// <param name="configureBuilder">Schema for specified <paramref name="property"/>'s value</param>
     public ObjectKeywordBuilder ObjectHasProperty(string property, Action<JsonSchemaBuilder> configureBuilder)
     {
-        if (_keywordBuilder is not null)
-        {
-            throw CreateExceptionOfRebindKeywordBuilder();
-        }
+        ThrowIfRebindKeywordBuilder();
 
         ObjectKeywordBuilder objectKeywordBuilder = AssociateKeywordBuilder<ObjectKeywordBuilder>();
-        objectKeywordBuilder.HasProperty(property, configureBuilder);
-
-        return objectKeywordBuilder;
+        return objectKeywordBuilder.HasProperty(property, configureBuilder);
     }
 
     /// <summary>
@@ -181,10 +161,7 @@ public class JsonSchemaBuilder
     /// <param name="jsonText"></param>
     public void Equivalent(string jsonText)
     {
-        if (_keywordBuilder is not null)
-        {
-            throw CreateExceptionOfRebindKeywordBuilder();
-        }
+        ThrowIfRebindKeywordBuilder();
 
         var keywordBuilder = new KeywordBuilder();
         keywordBuilder.Keywords.Add(new ConstKeyword(JsonInstanceSerializer.Deserialize(jsonText)));
@@ -197,10 +174,7 @@ public class JsonSchemaBuilder
     /// <param name="configureSchemaBuilders">specified schema constraints</param>
     public void Or(params Action<JsonSchemaBuilder>[] configureSchemaBuilders)
     {
-        if (_keywordBuilder is not null)
-        {
-            throw CreateExceptionOfRebindKeywordBuilder();
-        }
+        ThrowIfRebindKeywordBuilder();
 
         _keywordBuilder = new OrKeywordBuilder(configureSchemaBuilders);
     }
@@ -232,5 +206,13 @@ public class JsonSchemaBuilder
         _keywordBuilder = keywordBuilder;
 
         return keywordBuilder;
+    }
+
+    private void ThrowIfRebindKeywordBuilder()
+    {
+        if (_keywordBuilder is not null)
+        {
+            throw CreateExceptionOfRebindKeywordBuilder();
+        }
     }
 }

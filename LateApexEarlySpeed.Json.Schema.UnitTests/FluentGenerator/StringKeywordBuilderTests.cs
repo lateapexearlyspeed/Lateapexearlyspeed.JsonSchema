@@ -150,6 +150,23 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("", "def"), ImmutableJsonPointer.Empty);
     }
 
+    [Fact]
+    public void Validate_StringEqual()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.StringEqual("abc").IsIn(new[] { "abc", "def" });
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("\"abc\"");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("\"def\"");
+        AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("abc", "def"), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("null");
+        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Null), ImmutableJsonPointer.Empty);
+    }
+
     private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, ImmutableJsonPointer? expectedInstanceLocation = null)
     {
         Assert.Equal(expectedValidStatus, actualValidationResult.IsValid);
