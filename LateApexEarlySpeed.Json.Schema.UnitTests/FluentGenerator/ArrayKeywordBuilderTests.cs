@@ -97,6 +97,24 @@ public class ArrayKeywordBuilderTests
     }
 
     [Fact]
+    public void Validate_ArrayHasItems()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.ArrayHasItems(b => b.ObjectHasProperty("A", a => a.IsJsonString().HasMaxLength(5))).HasCustomValidation(_ => true, _ => "bad msg");
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("""
+            [{"A":"aaaaa"}, {"A":""}]
+            """);
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("""
+            [{"A":""}, {"A":"aaaaaa"}]
+            """);
+        AssertValidationResult(validationResult, false, MaxLengthKeyword.ErrorMessage(6, 5), ImmutableJsonPointer.Create("/1/A"));
+    }
+
+    [Fact]
     public void Validate_HasLength()
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();

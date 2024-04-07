@@ -121,6 +121,17 @@ public class JsonSchemaBuilder
     }
 
     /// <summary>
+    /// Specify that current json node should be Array type and all of its elements should match schema constraint of <paramref name="configureBuilder"/>
+    /// </summary>
+    /// <param name="configureBuilder">Configuration to specify schema metadata</param>
+    public ArrayKeywordBuilder ArrayHasItems(Action<JsonSchemaBuilder> configureBuilder)
+    {
+        ThrowIfRebindKeywordBuilder();
+
+        return AssociateKeywordBuilder<ArrayKeywordBuilder>().HasItems(configureBuilder);
+    }
+
+    /// <summary>
     /// Specify that current json node should be Json Null
     /// </summary>
     /// <returns></returns>
