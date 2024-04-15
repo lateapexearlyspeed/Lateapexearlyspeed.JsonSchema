@@ -254,6 +254,25 @@ public class ArrayKeywordBuilderTests
     }
 
     [Fact]
+    public void Validate_ArrayContains()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.ArrayContains(b => b.ObjectHasProperty("A", a => a.IsJsonNumber().Equal(1)))
+            .HasUniqueItems().HasCustomValidation(_ => true, _ => "bad msg");
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("""
+            [{"A": 1}, 5]
+            """);
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("""
+            [{"A": 2}, 5]
+            """);
+        AssertValidationResult(validationResult, false, ContainsKeyword.ErrorMessage("""[{"A": 2}, 5]"""), ImmutableJsonPointer.Empty);
+    }
+
+    [Fact]
     public void Validate_NotContains()
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();

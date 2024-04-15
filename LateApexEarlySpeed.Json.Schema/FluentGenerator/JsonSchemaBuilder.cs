@@ -132,6 +132,18 @@ public class JsonSchemaBuilder
     }
 
     /// <summary>
+    /// Specify that current json node should be json array and it should contain any of element matching specified schema constraint from <paramref name="configureBuilder"/>
+    /// </summary>
+    /// <param name="configureBuilder">Schema metadata configuration for array element</param>
+    /// <returns></returns>
+    public ArrayKeywordBuilder ArrayContains(Action<JsonSchemaBuilder> configureBuilder)
+    {
+        ThrowIfRebindKeywordBuilder();
+
+        return AssociateKeywordBuilder<ArrayKeywordBuilder>().Contains(configureBuilder);
+    }
+
+    /// <summary>
     /// Specify that current json node should be Json Null
     /// </summary>
     /// <returns></returns>
