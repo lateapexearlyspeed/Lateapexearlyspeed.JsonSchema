@@ -107,6 +107,21 @@ public class StringKeywordBuilderTests
     }
 
     [Fact]
+    public void Validate_StringHasPattern()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.StringHasPattern(".a.").HasMaxLength(1000).HasMinLength(0).IsIn(new[] { "a", "ab", "1a2" });
+
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("\"1a2\"");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("\"a\"");
+        AssertValidationResult(validationResult, false, PatternKeyword.ErrorMessage(".a.", "a"), ImmutableJsonPointer.Empty);
+    }
+
+    [Fact]
     public void Validate_IsIn()
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();

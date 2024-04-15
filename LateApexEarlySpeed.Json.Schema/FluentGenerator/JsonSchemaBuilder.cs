@@ -94,8 +94,19 @@ public class JsonSchemaBuilder
     {
         ThrowIfRebindKeywordBuilder();
 
-        StringKeywordBuilder stringKeywordBuilder = AssociateKeywordBuilder<StringKeywordBuilder>();
-        return stringKeywordBuilder.Equal(value);
+        return AssociateKeywordBuilder<StringKeywordBuilder>().Equal(value);
+    }
+
+    /// <summary>
+    /// Specify that current json node should be json string and it should match specified <paramref name="pattern"/>
+    /// </summary>
+    /// <param name="pattern"></param>
+    /// <returns></returns>
+    public StringKeywordBuilder StringHasPattern(string pattern)
+    {
+        ThrowIfRebindKeywordBuilder();
+
+        return AssociateKeywordBuilder<StringKeywordBuilder>().HasPattern(pattern);
     }
 
     /// <summary>
