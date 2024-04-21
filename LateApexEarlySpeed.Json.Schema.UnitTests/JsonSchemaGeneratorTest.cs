@@ -161,6 +161,8 @@ public class JsonSchemaGeneratorTest
         samples = samples.Concat(CreateSamplesForUniqueItemsAttribute());
         samples = samples.Concat(CreateSamplesForPropertyNameAttribute());
         samples = samples.Concat(CreateSamplesForNotNullAttribute());
+        samples = samples.Concat(CreateSamplesForEnumWithJsonStringEnumConverter());
+        samples = samples.Concat(CreateSamplesForEnumPropertyWithJsonStringEnumConverter());
         
         return samples;
     }
@@ -757,6 +759,100 @@ public class JsonSchemaGeneratorTest
         A,
         B,
         C
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForEnumWithJsonStringEnumConverter()
+    {
+        yield return TestSample.Create<TestEnumWithJsonStringEnumConverter>("\"A\"", ValidationResult.ValidResult);
+        yield return TestSample.Create<TestEnumWithJsonStringEnumConverter>("\"B\"", ValidationResult.ValidResult);
+        yield return TestSample.Create<TestEnumWithJsonStringEnumConverter>("\"C\"", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<TestEnumWithJsonStringEnumConverter>("\"D\"", new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage("D"),
+            ImmutableJsonPointer.Empty,
+            ImmutableJsonPointer.Create("/enum"),
+            GetSchemaResourceBaseUri<TestEnumWithJsonStringEnumConverter>(),
+            GetSchemaResourceBaseUri<TestEnumWithJsonStringEnumConverter>()));
+
+        yield return TestSample.Create<TestEnumWithJsonStringEnumConverter>("0", new ValidationResult(ResultCode.NotFoundInAllowedList, "enum",
+            EnumKeyword.ErrorMessage("0"),
+            ImmutableJsonPointer.Empty,
+            ImmutableJsonPointer.Create("/enum"),
+            GetSchemaResourceBaseUri<TestEnumWithJsonStringEnumConverter>(),
+            GetSchemaResourceBaseUri<TestEnumWithJsonStringEnumConverter>()
+        ));
+
+        yield return TestSample.Create<TestEnumWithJsonStringEnumConverter>("3", new ValidationResult(ResultCode.NotFoundInAllowedList, "enum",
+            EnumKeyword.ErrorMessage("3"),
+            ImmutableJsonPointer.Empty,
+            ImmutableJsonPointer.Create("/enum"),
+            GetSchemaResourceBaseUri<TestEnumWithJsonStringEnumConverter>(),
+            GetSchemaResourceBaseUri<TestEnumWithJsonStringEnumConverter>()
+        ));
+    }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    private enum TestEnumWithJsonStringEnumConverter
+    {
+        A,
+        B,
+        C
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForEnumPropertyWithJsonStringEnumConverter()
+    {
+        yield return TestSample.Create<EnumPropertyTestClass>("""
+            {
+              "TestEnum": "A"
+            }
+            """, ValidationResult.ValidResult);
+
+        yield return TestSample.Create<EnumPropertyTestClass>("""
+            {
+              "TestEnum": "B"
+            }
+            """, ValidationResult.ValidResult);
+
+        yield return TestSample.Create<EnumPropertyTestClass>("""
+            {
+              "TestEnum": "C"
+            }
+            """, ValidationResult.ValidResult);
+
+        yield return TestSample.Create<EnumPropertyTestClass>("""
+            {
+              "TestEnum": "D"
+            }
+            """, new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage("D"),
+            ImmutableJsonPointer.Create("/TestEnum")!,
+            ImmutableJsonPointer.Create("/properties/TestEnum/allOf/0/enum"),
+            GetSchemaResourceBaseUri<EnumPropertyTestClass>(),
+            GetSchemaResourceBaseUri<EnumPropertyTestClass>()));
+
+        yield return TestSample.Create<EnumPropertyTestClass>("""
+            {
+              "TestEnum": "0"
+            }
+            """, new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage("0"),
+            ImmutableJsonPointer.Create("/TestEnum")!,
+            ImmutableJsonPointer.Create("/properties/TestEnum/allOf/0/enum"),
+            GetSchemaResourceBaseUri<EnumPropertyTestClass>(),
+            GetSchemaResourceBaseUri<EnumPropertyTestClass>()));
+
+        yield return TestSample.Create<EnumPropertyTestClass>("""
+            {
+              "TestEnum": "3"
+            }
+            """, new ValidationResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage("3"),
+            ImmutableJsonPointer.Create("/TestEnum")!,
+            ImmutableJsonPointer.Create("/properties/TestEnum/allOf/0/enum"),
+            GetSchemaResourceBaseUri<EnumPropertyTestClass>(),
+            GetSchemaResourceBaseUri<EnumPropertyTestClass>()));
+    }
+
+    private class EnumPropertyTestClass
+    {
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public TestEnum TestEnum { get; set; }
     }
 
     private static IEnumerable<TestSample> CreateSamplesForGuid()

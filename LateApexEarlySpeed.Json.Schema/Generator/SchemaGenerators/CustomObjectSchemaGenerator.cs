@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 
 namespace LateApexEarlySpeed.Json.Schema.Generator.SchemaGenerators;
 
@@ -54,10 +55,23 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
                 propertySchema = SchemaGenerationHelper.GenerateSchemaReference(memberType, keywordsOfMember, options.MainDocumentBaseUri!);
             }
 
+            List<KeywordBase>? keywordsForAdditionalAttributes = null;
+
             if (memberInfo.GetCustomAttribute<NotNullAttribute>() is not null)
             {
                 var typeKeyword = new TypeKeyword(InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array);
-                var allOfKeyword = new AllOfKeyword(new List<JsonSchema> { propertySchema, new BodyJsonSchema(new List<KeywordBase> { typeKeyword }) });
+                keywordsForAdditionalAttributes = new List<KeywordBase>(2) { typeKeyword };
+            }
+
+            if (memberType.IsEnum && EnumSchemaGenerationCandidate.HasJsonStringEnumConverter(memberInfo))
+            {
+                keywordsForAdditionalAttributes ??= new List<KeywordBase>(1);
+                keywordsForAdditionalAttributes.Add(new EnumKeyword(memberType.GetEnumNames().Select(JsonInstanceSerializer.SerializeToElement).ToList()));
+            }
+
+            if (keywordsForAdditionalAttributes is not null)
+            {
+                var allOfKeyword = new AllOfKeyword(new List<JsonSchema> { propertySchema, new BodyJsonSchema(keywordsForAdditionalAttributes) });
 
                 propertySchema = new BodyJsonSchema(new List<KeywordBase> { allOfKeyword });
             }

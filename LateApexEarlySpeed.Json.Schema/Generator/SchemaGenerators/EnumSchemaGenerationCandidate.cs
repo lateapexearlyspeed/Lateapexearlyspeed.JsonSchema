@@ -1,4 +1,6 @@
-﻿using LateApexEarlySpeed.Json.Schema.Common;
+﻿using System.Reflection;
+using System.Text.Json.Serialization;
+using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
@@ -15,13 +17,29 @@ internal class EnumSchemaGenerationCandidate : ISchemaGenerationCandidate
     public BodyJsonSchema Generate(Type typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         IEnumerable<JsonInstanceElement> allowedStringEnums = typeToConvert.GetEnumNames().Select(name => JsonInstanceSerializer.SerializeToElement(name));
-        IEnumerable<JsonInstanceElement> allowedNumberEnums = typeToConvert.GetEnumValues().Select(JsonInstanceSerializer.SerializeToElement);
-        var enumKeyword = new EnumKeyword(allowedStringEnums.Concat(allowedNumberEnums).ToList());
+
+        IEnumerable<JsonInstanceElement> enumCollection;
+        if (HasJsonStringEnumConverter(typeToConvert))
+        {
+            enumCollection = allowedStringEnums;
+        }
+        else
+        {
+            IEnumerable<JsonInstanceElement> allowedNumberEnums = typeToConvert.GetEnumValues().Select(JsonInstanceSerializer.SerializeToElement);
+            enumCollection = allowedStringEnums.Concat(allowedNumberEnums);
+        }
+        
+        var enumKeyword = new EnumKeyword(enumCollection.ToList());
 
         var keywords = new List<KeywordBase> { enumKeyword };
         keywords.AddRange(keywordsFromProperty);
         keywords.AddRange(SchemaGenerationHelper.GenerateKeywordsFromType(typeToConvert));
 
         return new BodyJsonSchema(keywords);
+    }
+
+    public static bool HasJsonStringEnumConverter(MemberInfo memberInfo)
+    {
+        return memberInfo.GetCustomAttribute<JsonConverterAttribute>()?.ConverterType == typeof(JsonStringEnumConverter);
     }
 }
