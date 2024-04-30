@@ -75,24 +75,7 @@ internal class BodyJsonSchema : JsonSchema
 
     private List<KeywordBase> MergeKeywords(List<KeywordBase> keywords)
     {
-        if (keywords.Count == 0 || keywords.Count == 1)
-        {
-            return keywords;
-        }
-
-        bool hasDuplicatedKeyword = false;
-        HashSet<string> keywordHash = new HashSet<string>(keywords.Count);
-        foreach (KeywordBase keyword in keywords)
-        {
-            if (!keywordHash.Add(keyword.Name))
-            {
-                hasDuplicatedKeyword = true;
-                break;
-            }
-        }
-
-        // Fast return to avoid further object allocations
-        if (!hasDuplicatedKeyword)
+        if (FindFirstDuplicatedKeyword(keywords) is null)
         {
             return keywords;
         }
@@ -116,7 +99,7 @@ internal class BodyJsonSchema : JsonSchema
         List<KeywordBase> duplicatedKeywords = new List<KeywordBase>();
         foreach (KeyValuePair<string, List<KeywordBase>> keywordGroup in keywordGroups)
         {
-            if (keywordGroup.Key == KeywordBase.GetKeywordName<AllOfKeyword>())
+            if (keywordGroup.Key == KeywordBase.GetKeywordName<AllOfKeyword>()) // found 'allOf' keyword(s)
             {
                 duplicatedKeywords.AddRange(keywordGroup.Value);
             }
@@ -238,5 +221,25 @@ internal class BodyJsonSchema : JsonSchema
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id)
     {
         return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, id, _defsKeyword);
+    }
+
+    /// <returns>One of duplicated keyword if duplication occurs; null otherwise.</returns>
+    public static KeywordBase? FindFirstDuplicatedKeyword(List<KeywordBase> keywords)
+    {
+        if (keywords.Count == 0 || keywords.Count == 1)
+        {
+            return null;
+        }
+
+        var keywordHash = new HashSet<string>(keywords.Count);
+        foreach (KeywordBase keyword in keywords)
+        {
+            if (!keywordHash.Add(keyword.Name))
+            {
+                return keyword;
+            }
+        }
+
+        return null;
     }
 }

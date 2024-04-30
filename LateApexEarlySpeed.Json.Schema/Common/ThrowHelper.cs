@@ -31,6 +31,12 @@ internal class ThrowHelper
     }
 
     [Pure]
+    public static JsonException CreateJsonSchemaHasDuplicatedKeywordsJsonException(string duplicatedKeywordName)
+    {
+        return new JsonException($"Json schema contains more than one keyword:'{duplicatedKeywordName}'");
+    }
+
+    [Pure]
     public static JsonException CreateKeywordHasEmptyJsonArrayJsonException<TKeyword>() where TKeyword : KeywordBase
     {
         return new JsonException(CreateKeywordPrefixContent<TKeyword>() + " expects non-empty json array.");

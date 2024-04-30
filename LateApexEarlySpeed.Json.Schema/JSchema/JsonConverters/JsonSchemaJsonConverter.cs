@@ -189,6 +189,12 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         var conditionalValidator = new ConditionalValidator(predictSchema, positiveSchema, negativeSchema);
         schemaContainerValidators.Add(conditionalValidator);
 
+        // Although BodyJsonSchema supports merging duplicated keywords, but it is done by changing json schema tree structure. (That is:
+        // when there is duplicated keywords, schema structure will be changed)
+        // In json schema deserialization case, it is possible that original schema contains "json path" reference, so here we cannot 
+        // dare to change original json schema structure at risk of missing reference.
+        ThrowIfKeywordsHasDuplication(validationKeywords);
+
         if (typeToConvert == typeof(IJsonSchemaDocument))
         {
             schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, id, defsKeyword);
@@ -211,6 +217,15 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         }
 
         return (T)(object)schema;
+    }
+
+    private static void ThrowIfKeywordsHasDuplication(List<KeywordBase> keywords)
+    {
+        KeywordBase? duplicatedKeyword = BodyJsonSchema.FindFirstDuplicatedKeyword(keywords);
+        if (duplicatedKeyword is not null)
+        {
+            throw ThrowHelper.CreateJsonSchemaHasDuplicatedKeywordsJsonException(duplicatedKeyword.Name);
+        }
     }
 
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
