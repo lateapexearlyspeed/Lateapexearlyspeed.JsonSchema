@@ -1,11 +1,13 @@
 ﻿using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
 
 public abstract class NamedValidationNode : IValidationNode
 {
-    public string? Name { get; set; }
+    [DisallowNull]
+    public virtual string? Name { get; set; }
 
     public virtual ValidationResult Validate(JsonInstanceElement instance, JsonSchemaOptions options)
     {

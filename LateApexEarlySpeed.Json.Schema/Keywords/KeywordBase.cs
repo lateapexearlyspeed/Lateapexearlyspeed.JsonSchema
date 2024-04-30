@@ -12,6 +12,9 @@ public abstract class KeywordBase : NamedValidationNode
     // private static readonly string NameForKeywordType;
     private static readonly ConcurrentDictionary<Type, string> NameForKeywordTypes = new();
 
+    /// <remarks><see cref="Name"/> here is always instantiated by constructor, so override it to make it 'non-nullable'</remarks>
+    public sealed override string Name { get; set; }
+
     protected KeywordBase()
     {
         Type currentKeywordType = GetType();

@@ -56,7 +56,7 @@ internal class BodyJsonSchema : JsonSchema
 
     public BodyJsonSchema(List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor, DefsKeyword? defsKeyword)
     {
-        _keywords = keywords;
+        _keywords = MergeKeywords(keywords);
 
         Debug.Assert(schemaContainerValidators.All(
                 validator
@@ -71,6 +71,72 @@ internal class BodyJsonSchema : JsonSchema
 
         Anchor = anchor;
         DynamicAnchor = dynamicAnchor;
+    }
+
+    private List<KeywordBase> MergeKeywords(List<KeywordBase> keywords)
+    {
+        if (keywords.Count == 0 || keywords.Count == 1)
+        {
+            return keywords;
+        }
+
+        bool hasDuplicatedKeyword = false;
+        HashSet<string> keywordHash = new HashSet<string>(keywords.Count);
+        foreach (KeywordBase keyword in keywords)
+        {
+            if (!keywordHash.Add(keyword.Name))
+            {
+                hasDuplicatedKeyword = true;
+                break;
+            }
+        }
+
+        // Fast return to avoid further object allocations
+        if (!hasDuplicatedKeyword)
+        {
+            return keywords;
+        }
+
+        Dictionary<string, List<KeywordBase>> keywordGroups = new Dictionary<string, List<KeywordBase>>(keywords.Count);
+        foreach (KeywordBase keyword in keywords)
+        {
+            if (!keywordGroups.TryGetValue(keyword.Name, out List<KeywordBase>? group))
+            {
+                // Assume there is no much duplication cases, so initialize 'group' with capacity of 1
+                group = new List<KeywordBase>(1);
+                keywordGroups[keyword.Name] = group;
+            }
+
+            group.Add(keyword);
+        }
+
+        List<KeywordBase> result = new List<KeywordBase>(keywords.Count);
+
+        // this includes all duplicated keywords
+        List<KeywordBase> duplicatedKeywords = new List<KeywordBase>();
+        foreach (KeyValuePair<string, List<KeywordBase>> keywordGroup in keywordGroups)
+        {
+            if (keywordGroup.Key == KeywordBase.GetKeywordName<AllOfKeyword>())
+            {
+                duplicatedKeywords.AddRange(keywordGroup.Value);
+            }
+            else if (keywordGroup.Value.Count > 1) // found duplicated keyword group
+            {
+                duplicatedKeywords.AddRange(keywordGroup.Value);
+            }
+            else
+            {
+                result.Add(keywordGroup.Value[0]);
+            }
+        }
+
+        Debug.Assert(duplicatedKeywords.Count != 0);
+
+        // Combine all duplicated keywords into ONE 'allOf' keyword
+        var allOfKeyword = new AllOfKeyword(duplicatedKeywords.Select(k => new BodyJsonSchema(new List<KeywordBase>(1) { k })).Cast<JsonSchema>().ToList());
+        result.Add(allOfKeyword);
+
+        return result;
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
