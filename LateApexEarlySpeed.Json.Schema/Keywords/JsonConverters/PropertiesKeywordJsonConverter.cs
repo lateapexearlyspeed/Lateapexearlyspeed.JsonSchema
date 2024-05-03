@@ -37,7 +37,7 @@ internal class PropertiesKeywordJsonConverter : JsonConverter<PropertiesKeyword>
 
     public override void Write(Utf8JsonWriter writer, PropertiesKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        JsonSerializer.Serialize(writer, value.PropertiesSchemas, options);
     }
 
     public override bool HandleNull => true;

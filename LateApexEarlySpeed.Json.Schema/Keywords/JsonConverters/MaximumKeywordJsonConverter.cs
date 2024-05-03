@@ -32,7 +32,7 @@ internal class MaximumKeywordJsonConverter : JsonConverter<MaximumKeyword>
 
     public override void Write(Utf8JsonWriter writer, MaximumKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        JsonSerializer.Serialize(writer, value.BenchmarkValue, options);
     }
 
     public override bool HandleNull => true;

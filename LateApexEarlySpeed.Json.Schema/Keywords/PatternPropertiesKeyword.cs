@@ -21,6 +21,8 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
             kv => (new LazyCompiledRegex(kv.Key), kv.Value));
     }
 
+    public Dictionary<string, JsonSchema> PatternSchemas => _patternSchemas.ToDictionary(kv => kv.Key, kv => kv.Value.schema);
+
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.Object)

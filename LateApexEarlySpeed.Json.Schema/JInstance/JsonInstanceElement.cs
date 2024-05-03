@@ -374,6 +374,15 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
     }
 
     /// <summary>
+    /// Writes the element to the specified writer as a JSON value.
+    /// </summary>
+    /// <param name="writer">The writer to which to write the element.</param>
+    public void WriteTo(Utf8JsonWriter writer)
+    {
+        InternalJsonElement.WriteTo(writer);
+    }
+
+    /// <summary>
     /// Gets a string representation for the current value appropriate to the value type.
     /// </summary>
     public override string ToString()

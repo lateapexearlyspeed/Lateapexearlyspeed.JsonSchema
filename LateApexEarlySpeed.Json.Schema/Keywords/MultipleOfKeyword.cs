@@ -13,7 +13,7 @@ internal class MultipleOfKeyword : KeywordBase
 {
     private const double Tolerance = 0.00001;
 
-    private readonly double _multipleOf;
+    public double MultipleOf { get; }
 
     public MultipleOfKeyword(double multipleOf)
     {
@@ -22,27 +22,27 @@ internal class MultipleOfKeyword : KeywordBase
             throw new ArgumentOutOfRangeException(nameof(multipleOf), multipleOf, $"Argument: '{nameof(multipleOf)}' expects positive number.");
         }
 
-        _multipleOf = multipleOf;
+        MultipleOf = multipleOf;
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        Debug.Assert(_multipleOf > 0);
+        Debug.Assert(MultipleOf > 0);
 
-        if (instance.ValueKind != JsonValueKind.Number || _multipleOf <= 1e-8)
+        if (instance.ValueKind != JsonValueKind.Number || MultipleOf <= 1e-8)
         {
             return ValidationResult.ValidResult;
         }
 
         double instanceValue = instance.GetDouble();
-        double remainder = Math.Abs(instanceValue % _multipleOf);
+        double remainder = Math.Abs(instanceValue % MultipleOf);
 
         // See https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/arithmetic-operators#floating-point-remainder
         // and 'Precision in Comparisons' part of https://learn.microsoft.com/en-us/dotnet/api/system.double.equals
-        double actualTolerance = _multipleOf * Tolerance;
-        return remainder < actualTolerance || Math.Abs(remainder - _multipleOf) < actualTolerance 
+        double actualTolerance = MultipleOf * Tolerance;
+        return remainder < actualTolerance || Math.Abs(remainder - MultipleOf) < actualTolerance 
             ? ValidationResult.ValidResult 
-            : ValidationResult.CreateFailedResult(ResultCode.FailedToMultiple, ErrorMessage(instanceValue, _multipleOf), options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.CreateFailedResult(ResultCode.FailedToMultiple, ErrorMessage(instanceValue, MultipleOf), options.ValidationPathStack, Name, instance.Location);
     }
 
     public static string ErrorMessage(double instanceValue, double multipleOf)

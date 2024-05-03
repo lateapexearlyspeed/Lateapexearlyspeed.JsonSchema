@@ -14,7 +14,7 @@ internal class SingleSchemaJsonConverter<T> : JsonConverter<T> where T : ISingle
 
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        JsonSerializer.Serialize(writer, value.Schema, options);
     }
 
     public override bool HandleNull => true;

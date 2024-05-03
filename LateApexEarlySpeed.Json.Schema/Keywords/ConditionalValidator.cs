@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
@@ -12,35 +11,35 @@ internal class ConditionalValidator : ISchemaContainerValidationNode
     public const string ThenKeywordName = "then";
     public const string ElseKeywordName = "else";
 
-    private readonly JsonSchema? _predictEvaluator;
-    private readonly JsonSchema _positiveValidator;
-    private readonly JsonSchema _negativeValidator;
+    public JsonSchema? PredictEvaluator { get; }
+    public JsonSchema PositiveValidator { get; }
+    public JsonSchema NegativeValidator { get; }
 
     public ConditionalValidator(JsonSchema? predictEvaluator, JsonSchema? positiveValidator, JsonSchema? negativeValidator)
     {
-        _predictEvaluator = predictEvaluator;
-        if (_predictEvaluator is not null)
+        PredictEvaluator = predictEvaluator;
+        if (PredictEvaluator is not null)
         {
-            _predictEvaluator.Name = IfKeywordName;
+            PredictEvaluator.Name = IfKeywordName;
         }
 
-        _positiveValidator = positiveValidator ?? BooleanJsonSchema.True;
-        _positiveValidator.Name = ThenKeywordName;
+        PositiveValidator = positiveValidator ?? BooleanJsonSchema.True;
+        PositiveValidator.Name = ThenKeywordName;
 
-        _negativeValidator = negativeValidator ?? BooleanJsonSchema.True;
-        _negativeValidator.Name = ElseKeywordName;
+        NegativeValidator = negativeValidator ?? BooleanJsonSchema.True;
+        NegativeValidator.Name = ElseKeywordName;
     }
 
     public ValidationResult Validate(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        if (_predictEvaluator is null)
+        if (PredictEvaluator is null)
         {
             return ValidationResult.ValidResult;
         }
 
-        return _predictEvaluator.Validate(instance, options).IsValid
-            ? _positiveValidator.Validate(instance, options)
-            : _negativeValidator.Validate(instance, options);
+        return PredictEvaluator.Validate(instance, options).IsValid
+            ? PositiveValidator.Validate(instance, options)
+            : NegativeValidator.Validate(instance, options);
     }
 
     public ISchemaContainerElement? GetSubElement(string name)
@@ -48,11 +47,11 @@ internal class ConditionalValidator : ISchemaContainerValidationNode
         switch (name)
         {
             case IfKeywordName:
-                return _predictEvaluator;
+                return PredictEvaluator;
             case ThenKeywordName:
-                return _positiveValidator;
+                return PositiveValidator;
             case ElseKeywordName:
-                return _negativeValidator;
+                return NegativeValidator;
             default:
                 return null;
         }
@@ -60,13 +59,13 @@ internal class ConditionalValidator : ISchemaContainerValidationNode
 
     public IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
-        if (_predictEvaluator is not null)
+        if (PredictEvaluator is not null)
         {
-            yield return _predictEvaluator;
+            yield return PredictEvaluator;
         }
         
-        yield return _positiveValidator;
-        yield return _negativeValidator;
+        yield return PositiveValidator;
+        yield return NegativeValidator;
     }
 
     public bool IsSchemaType => false;

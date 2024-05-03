@@ -6,7 +6,7 @@ namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
 internal class BooleanJsonSchemaDocument : IJsonSchemaDocument
 {
-    private readonly bool _alwaysValid;
+    public bool AlwaysValid { get; }
 
     public static IJsonSchemaDocument True { get; } = new BooleanJsonSchemaDocument(true);
 
@@ -14,11 +14,11 @@ internal class BooleanJsonSchemaDocument : IJsonSchemaDocument
 
     private BooleanJsonSchemaDocument(bool alwaysValid)
     {
-        _alwaysValid = alwaysValid;
+        AlwaysValid = alwaysValid;
     }
 
     public ValidationResult DoValidation(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return _alwaysValid ? ValidationResult.ValidResult : ValidationResult.CreateFailedResult(ResultCode.AlwaysFailedJsonSchema, "Boolean false json schema document occurs", null, null, instance.Location);
+        return AlwaysValid ? ValidationResult.ValidResult : ValidationResult.CreateFailedResult(ResultCode.AlwaysFailedJsonSchema, "Boolean false json schema document occurs", null, null, instance.Location);
     }
 }

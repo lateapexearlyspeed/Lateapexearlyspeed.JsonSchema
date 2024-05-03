@@ -9,7 +9,13 @@ internal class ThrowHelper
     [Pure]
     public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException<TKeyword>(JsonValueKind expectedJsonKind) where TKeyword : KeywordBase
     {
-        return new JsonException(CreateKeywordPrefixContent<TKeyword>() + $" expects json kind: {expectedJsonKind}");
+        return CreateKeywordHasInvalidJsonValueKindJsonException(KeywordBase.GetKeywordName<TKeyword>(), expectedJsonKind);
+    }
+
+    [Pure]
+    public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException(string keywordName, JsonValueKind expectedJsonKind)
+    {
+        return new JsonException(CreateKeywordPrefixContent(keywordName) + $" expects json kind: {expectedJsonKind}");
     }
 
     [Pure]

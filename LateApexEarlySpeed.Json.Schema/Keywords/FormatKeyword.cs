@@ -10,12 +10,13 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(FormatKeywordJsonConverter))]
 public class FormatKeyword : KeywordBase
 {
-    private readonly string _format;
+    public string Format { get; }
+
     private readonly FormatValidator? _formatValidator;
 
     public FormatKeyword(string format)
     {
-        _format = format;
+        Format = format;
         _formatValidator = FormatValidator.Create(format);
     }
 
@@ -28,7 +29,7 @@ public class FormatKeyword : KeywordBase
 
         return _formatValidator.Validate(instance.GetString()!)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.InvalidFormat, ErrorMessage(_format), options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.CreateFailedResult(ResultCode.InvalidFormat, ErrorMessage(Format), options.ValidationPathStack, Name, instance.Location);
     }
 
     public static string ErrorMessage(string format)

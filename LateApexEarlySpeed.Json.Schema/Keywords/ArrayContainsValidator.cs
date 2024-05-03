@@ -13,15 +13,15 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
     public const string MaxContainsKeywordName = "maxContains";
     public const string MinContainsKeywordName = "minContains";
 
-    private readonly JsonSchema _containsSchema;
-    private readonly uint? _minContains;
-    private readonly uint? _maxContains;
+    public JsonSchema ContainsSchema { get; }
+    public uint? MinContains { get; }
+    public uint? MaxContains { get; }
 
     public ArrayContainsValidator(JsonSchema containsSchema, uint? minContains, uint? maxContains)
     {
-        _containsSchema = containsSchema;
-        _minContains = minContains;
-        _maxContains = maxContains;
+        ContainsSchema = containsSchema;
+        MinContains = minContains;
+        MaxContains = maxContains;
     }
 
     public ValidationResult Validate(JsonInstanceElement instance, JsonSchemaOptions options)
@@ -31,41 +31,41 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
             return ValidationResult.ValidResult;
         }
 
-        if (!_minContains.HasValue && !_maxContains.HasValue)
+        if (!MinContains.HasValue && !MaxContains.HasValue)
         {
             return ValidateWithoutMinContainsAndMaxContains(instance, options);
         }
 
-        if (_maxContains.HasValue)
+        if (MaxContains.HasValue)
         {
             return ValidateWithMaxContains(instance, options);
         }
 
-        Debug.Assert(!_maxContains.HasValue);
-        Debug.Assert(_minContains.HasValue);
+        Debug.Assert(!MaxContains.HasValue);
+        Debug.Assert(MinContains.HasValue);
 
         return ValidateWithoutMaxContains(instance, options);
     }
 
     private ValidationResult ValidateWithoutMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        if (_minContains == 0)
+        if (MinContains == 0)
         {
             return ValidationResult.ValidResult;
         }
 
         int validatedItemCount = 0;
 
-        Debug.Assert(_containsSchema is not null);
+        Debug.Assert(ContainsSchema is not null);
 
         foreach (JsonInstanceElement instanceItem in instance.EnumerateArray())
         {
-            if (_containsSchema.Validate(instanceItem, options).IsValid)
+            if (ContainsSchema.Validate(instanceItem, options).IsValid)
             {
                 validatedItemCount++;
             }
 
-            if (validatedItemCount >= _minContains)
+            if (validatedItemCount >= MinContains)
             {
                 return ValidationResult.ValidResult;
             }
@@ -78,24 +78,24 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
     {
         int validatedItemCount = 0;
 
-        Debug.Assert(_containsSchema is not null);
+        Debug.Assert(ContainsSchema is not null);
 
         foreach (JsonInstanceElement instanceItem in instance.EnumerateArray())
         {
-            if (_containsSchema.Validate(instanceItem, options).IsValid)
+            if (ContainsSchema.Validate(instanceItem, options).IsValid)
             {
                 validatedItemCount++;
             }
 
-            if (validatedItemCount > _maxContains)
+            if (validatedItemCount > MaxContains)
             {
                 return CreateFailedValidationResultWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMaxContainsErrorMessage(), MaxContainsKeywordName, options.ValidationPathStack, instance.Location);
             }
         }
 
-        if (_minContains.HasValue)
+        if (MinContains.HasValue)
         {
-            if (validatedItemCount < _minContains)
+            if (validatedItemCount < MinContains)
             {
                 return CreateFailedValidationResultWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMinContainsErrorMessage(), MinContainsKeywordName, options.ValidationPathStack, instance.Location);
             }
@@ -112,21 +112,21 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
     }
 
     private string GetFailedMaxContainsErrorMessage()
-        => $"Validated array items count is greater than specified '{_maxContains}'";
+        => $"Validated array items count is greater than specified '{MaxContains}'";
 
     private string GetFailedMinContainsErrorMessage()
-        => $"Validated array items count is less than specified '{_minContains}'";
+        => $"Validated array items count is less than specified '{MinContains}'";
 
     private string GetFailedContainsErrorMessage()
         => "Not found any validated array items";
 
     private ValidationResult ValidateWithoutMinContainsAndMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        Debug.Assert(_containsSchema is not null);
+        Debug.Assert(ContainsSchema is not null);
 
         foreach (JsonInstanceElement instanceItem in instance.EnumerateArray())
         {
-            if (_containsSchema.Validate(instanceItem, options).IsValid)
+            if (ContainsSchema.Validate(instanceItem, options).IsValid)
             {
                 return ValidationResult.ValidResult;
             }
@@ -147,13 +147,13 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
     public ISchemaContainerElement? GetSubElement(string name)
     {
         return name == ContainsKeywordName 
-            ? _containsSchema 
+            ? ContainsSchema 
             : null;
     }
 
     public IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
-        yield return _containsSchema;
+        yield return ContainsSchema;
     }
 
     public bool IsSchemaType => false;

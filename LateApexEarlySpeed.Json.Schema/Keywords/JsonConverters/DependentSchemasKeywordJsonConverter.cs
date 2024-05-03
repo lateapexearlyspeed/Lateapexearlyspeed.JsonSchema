@@ -24,7 +24,7 @@ internal class DependentSchemasKeywordJsonConverter : JsonConverter<DependentSch
 
     public override void Write(Utf8JsonWriter writer, DependentSchemasKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        JsonSerializer.Serialize(writer, value.DependentSchemas, options);
     }
 
     public override bool HandleNull => true;

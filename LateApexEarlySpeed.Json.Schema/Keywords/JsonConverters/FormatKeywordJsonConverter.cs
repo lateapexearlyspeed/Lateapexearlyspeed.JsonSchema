@@ -18,7 +18,7 @@ public class FormatKeywordJsonConverter : JsonConverter<FormatKeyword>
 
     public override void Write(Utf8JsonWriter writer, FormatKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        writer.WriteStringValue(value.Format);
     }
 
     public override bool HandleNull => true;

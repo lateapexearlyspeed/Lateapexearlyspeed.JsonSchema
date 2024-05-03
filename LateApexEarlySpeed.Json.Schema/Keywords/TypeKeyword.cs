@@ -20,18 +20,18 @@ internal class TypeKeyword : KeywordBase
         { InstanceType.String, JsonValueKind.String }
     };
 
-    private readonly InstanceType[] _instanceTypes;
+    public InstanceType[] InstanceTypes { get; }
 
     public TypeKeyword(params InstanceType[] instanceTypes)
     {
-        _instanceTypes = instanceTypes;
+        InstanceTypes = instanceTypes;
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        Debug.Assert(_instanceTypes.Length != 0);
+        Debug.Assert(InstanceTypes.Length != 0);
 
-        foreach (InstanceType instanceType in _instanceTypes)
+        foreach (InstanceType instanceType in InstanceTypes)
         {
             if (IsValidAgainstType(instance, instanceType))
             {
@@ -44,7 +44,7 @@ internal class TypeKeyword : KeywordBase
 
     private string GetErrorMessage(JsonValueKind actualKind)
     {
-        return $"Expect type(s): '{string.Join('|', _instanceTypes)}' but actual is '{actualKind}'";
+        return $"Expect type(s): '{string.Join('|', InstanceTypes)}' but actual is '{actualKind}'";
     }
 
     private bool IsValidAgainstType(JsonInstanceElement instance, InstanceType expectedInstanceType)

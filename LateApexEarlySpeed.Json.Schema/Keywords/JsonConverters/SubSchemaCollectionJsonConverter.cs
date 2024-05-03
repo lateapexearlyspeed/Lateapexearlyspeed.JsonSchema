@@ -40,7 +40,7 @@ internal class SubSchemaCollectionJsonConverter<T> : JsonConverter<T> where T : 
 
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        JsonSerializer.Serialize(writer, value.SubSchemas, options);
     }
 
     public override bool HandleNull => true;

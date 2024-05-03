@@ -6,11 +6,11 @@ namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
 internal class BooleanJsonSchema : JsonSchema
 {
-    private readonly bool _alwaysValid;
+    public bool AlwaysValid { get; }
 
     protected BooleanJsonSchema(bool alwaysValid)
     {
-        _alwaysValid = alwaysValid;
+        AlwaysValid = alwaysValid;
     }
 
     public static BooleanJsonSchema True => new(true);
@@ -19,7 +19,7 @@ internal class BooleanJsonSchema : JsonSchema
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return _alwaysValid 
+        return AlwaysValid 
             ? ValidationResult.ValidResult 
             : ValidationResult.CreateFailedResult(ResultCode.AlwaysFailedJsonSchema, "Boolean false json schema occurs", options.ValidationPathStack, null, instance.Location);
     }

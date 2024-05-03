@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 
@@ -25,7 +26,9 @@ internal class SchemaReferenceKeywordJsonConverter : JsonConverter<SchemaReferen
 
     public override void Write(Utf8JsonWriter writer, SchemaReferenceKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        Debug.Assert(value.FullUriRef is not null);
+
+        writer.WriteStringValue(value.FullUriRef.ToString());
     }
 
     public override bool HandleNull => true;

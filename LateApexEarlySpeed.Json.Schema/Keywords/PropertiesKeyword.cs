@@ -12,7 +12,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(PropertiesKeywordJsonConverter))]
 internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
 {
-    private readonly Dictionary<string, JsonSchema> _propertiesSchemas;
+    public Dictionary<string, JsonSchema> PropertiesSchemas { get; }
 
     public PropertiesKeyword(Dictionary<string, JsonSchema> propertiesSchemas)
     {
@@ -21,7 +21,7 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
             schema.Name = propName;
         }
 
-        _propertiesSchemas = propertiesSchemas;
+        PropertiesSchemas = propertiesSchemas;
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
@@ -33,7 +33,7 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
 
         foreach (JsonInstanceProperty instanceProperty in instance.EnumerateObject())
         {
-            if (_propertiesSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? schema))
+            if (PropertiesSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? schema))
             {
                 ValidationResult result = schema.Validate(instanceProperty.Value, options);
                 if (!result.IsValid)
@@ -48,12 +48,12 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
 
     public ISchemaContainerElement? GetSubElement(string name)
     {
-        return _propertiesSchemas.GetValueOrDefault(name);
+        return PropertiesSchemas.GetValueOrDefault(name);
     }
 
     public IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
-        return _propertiesSchemas.Values;
+        return PropertiesSchemas.Values;
     }
 
     public bool IsSchemaType => false;
@@ -65,6 +65,6 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
 
     public bool ContainsPropertyName(string propertyName)
     {
-        return _propertiesSchemas.ContainsKey(propertyName);
+        return PropertiesSchemas.ContainsKey(propertyName);
     }
 }

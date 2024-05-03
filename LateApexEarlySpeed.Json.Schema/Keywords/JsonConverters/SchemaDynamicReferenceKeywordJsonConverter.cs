@@ -25,7 +25,7 @@ internal class SchemaDynamicReferenceKeywordJsonConverter : JsonConverter<Schema
 
     public override void Write(Utf8JsonWriter writer, SchemaDynamicReferenceKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        writer.WriteStringValue(value.RawRefValue.ToString());
     }
 
     public override bool HandleNull => true;
