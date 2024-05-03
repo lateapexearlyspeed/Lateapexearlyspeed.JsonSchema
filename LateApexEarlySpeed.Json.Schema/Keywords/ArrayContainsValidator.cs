@@ -104,7 +104,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
         {
             if (validatedItemCount == 0)
             {
-                return CreateFailedValidationResultWithLocation(ResultCode.NotFoundAnyValidatedArrayItem, GetFailedContainsErrorMessage(), ContainsKeywordName, options.ValidationPathStack, instance.Location);
+                return CreateFailedValidationResultWithLocation(ResultCode.NotFoundAnyValidatedArrayItem, GetFailedContainsErrorMessage(instance.ToString()), ContainsKeywordName, options.ValidationPathStack, instance.Location);
             }
         }
 
@@ -117,8 +117,8 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
     private string GetFailedMinContainsErrorMessage()
         => $"Validated array items count is less than specified '{MinContains}'";
 
-    private string GetFailedContainsErrorMessage()
-        => "Not found any validated array items";
+    internal static string GetFailedContainsErrorMessage(string instanceJson)
+        => $"Not found any validated array items, array instance: {instanceJson}";
 
     private ValidationResult ValidateWithoutMinContainsAndMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
     {
@@ -132,7 +132,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
             }
         }
 
-        return CreateFailedValidationResultWithLocation(ResultCode.NotFoundAnyValidatedArrayItem, GetFailedContainsErrorMessage(), ContainsKeywordName, options.ValidationPathStack, instance.Location);
+        return CreateFailedValidationResultWithLocation(ResultCode.NotFoundAnyValidatedArrayItem, GetFailedContainsErrorMessage(instance.ToString()), ContainsKeywordName, options.ValidationPathStack, instance.Location);
     }
 
     private ValidationResult CreateFailedValidationResultWithLocation(ResultCode resultCode, string errorMessage, string locationName, ValidationPathStack validationPathStack, ImmutableJsonPointer instanceLocation)

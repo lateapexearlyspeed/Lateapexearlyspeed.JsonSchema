@@ -15,8 +15,20 @@ public class KeywordBuilder
         Keywords.Add(keyword);
     }
 
-    internal virtual List<KeywordBase> Build()
+    internal virtual KeywordCollection Build()
     { 
-        return Keywords.ToList();
+        return new KeywordCollection(Keywords.ToList());
     }
+}
+
+internal readonly struct KeywordCollection
+{
+    public KeywordCollection(List<KeywordBase> keywords, ArrayContainsValidator? arrayContainsValidator = null)
+    {
+        Keywords = keywords;
+        ArrayContainsValidator = arrayContainsValidator;
+    }
+
+    public List<KeywordBase> Keywords { get; }
+    public ArrayContainsValidator? ArrayContainsValidator { get; }
 }

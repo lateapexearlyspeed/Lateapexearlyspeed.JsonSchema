@@ -167,7 +167,7 @@ public class ArrayKeywordBuilder : KeywordBuilder
         return this;
     }
 
-    internal override List<KeywordBase> Build()
+    internal override KeywordCollection Build()
     {
         if (_itemsSchemaBuilderConfiguration is not null)
         {
@@ -177,12 +177,14 @@ public class ArrayKeywordBuilder : KeywordBuilder
             Keywords.Add(new ItemsKeyword {Schema = jsonSchemaBuilder.Build() });
         }
 
+        ArrayContainsValidator? arrayContainsValidator = null;
+
         if (_containsSchemaBuilderConfiguration is not null)
         {
             var jsonSchemaBuilder = new JsonSchemaBuilder();
             _containsSchemaBuilderConfiguration(jsonSchemaBuilder);
 
-            Keywords.Add(new ContainsKeyword(jsonSchemaBuilder.Build()));
+            arrayContainsValidator = new ArrayContainsValidator(jsonSchemaBuilder.Build(), null, null);
         }
 
         if (_notContainsSchemaBuilderConfiguration is not null)
@@ -193,6 +195,6 @@ public class ArrayKeywordBuilder : KeywordBuilder
             Keywords.Add(new NotContainsKeyword(jsonSchemaBuilder.Build()));
         }
 
-        return Keywords.ToList();
+        return new KeywordCollection(Keywords.ToList(), arrayContainsValidator);
     }
 }
