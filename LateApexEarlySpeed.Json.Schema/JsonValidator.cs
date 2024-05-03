@@ -66,4 +66,17 @@ public class JsonValidator
             return _mainSchemaDoc.DoValidation(instance.RootInstanceElement(), options);
         }
     }
+
+    /// <summary>
+    /// Generate standard json schema text from its underlying main json schema document
+    /// </summary>
+    /// <returns>The json schema text constructed from standard json schema spec keywords (version 2020.12)</returns>
+    /// <remarks>
+    /// If there is extending keyword type in <see cref="JsonValidator"/> (for example constructing <see cref="JsonValidator"/> by some custom builder methods or attributes),
+    /// this method will throw exception because extending keyword is out of scope of standard json schema spec.
+    /// </remarks>
+    public string GetStandardJsonSchemaText()
+    {
+        return JsonSerializer.Serialize(_mainSchemaDoc);
+    }
 }

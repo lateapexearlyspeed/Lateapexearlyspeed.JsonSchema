@@ -79,6 +79,12 @@ internal class ThrowHelper
     }
 
     [Pure]
+    public static NotSupportedException CreateExtendedKeywordCannotSerializeToStandardJsonSchemaException<TKeyword>() where TKeyword : KeywordBase
+    {
+        return new NotSupportedException(CreateKeywordPrefixContent<TKeyword>() + " is extended keyword type so cannot be serialized to standard json schema.");
+    }
+
+    [Pure]
     public static JsonException CreateKeywordHasInvalidNonNegativeIntegerJsonException(string keywordName)
     {
         return new JsonException(CreateKeywordPrefixContent(keywordName) + " expects non-negative integer.");

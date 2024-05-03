@@ -50,6 +50,32 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
             _testOutputHelper.WriteLine($"Test description: {testDescription}");
 
+            JsonValidator jsonValidator = await CreateJsonValidatorWithExternalDocumentSupportAsync(schema, testCaseDescription);
+
+            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ValidateFormat = false}).IsValid);
+        }
+
+        [Theory]
+        [MemberData(nameof(JsonSchemaTestSuiteForDraft2020))]
+        public async Task GetStandardJsonSchemaText_InputFromJsonSchemaTestSuite(string schema, string instance, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        {
+            _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
+            _testOutputHelper.WriteLine($"Test description: {testDescription}");
+
+            // Prepare original jsonValidator
+            JsonValidator jsonValidator = await CreateJsonValidatorWithExternalDocumentSupportAsync(schema, testCaseDescription);
+
+            // Generate json schema text from jsonValidator
+            string generatedSchemaText = jsonValidator.GetStandardJsonSchemaText();
+
+            // Generate jsonValidator from previous generated json schema text
+            jsonValidator = await CreateJsonValidatorWithExternalDocumentSupportAsync(generatedSchemaText, testCaseDescription);
+
+            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions { ValidateFormat = false }).IsValid);
+        }
+
+        private async Task<JsonValidator> CreateJsonValidatorWithExternalDocumentSupportAsync(string schema, string testCaseDescription)
+        {
             var jsonValidator = new JsonValidator(schema);
             foreach (string schemaDocument in _externalSchemaDocuments)
             {
@@ -64,7 +90,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                 }
             }
 
-            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ValidateFormat = false}).IsValid);
+            return jsonValidator;
         }
 
         [Theory]
