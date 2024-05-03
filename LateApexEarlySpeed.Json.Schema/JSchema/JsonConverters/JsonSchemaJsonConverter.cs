@@ -176,12 +176,13 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         var schemaContainerValidators = new List<ISchemaContainerValidationNode>(2);
         if (containsSchema is not null)
         {
-            var arrayContainsValidator = new ArrayContainsValidator(containsSchema, minContains, maxContains);
-            schemaContainerValidators.Add(arrayContainsValidator);
+            schemaContainerValidators.Add(new ArrayContainsValidator(containsSchema, minContains, maxContains));
         }
 
-        var conditionalValidator = new ConditionalValidator(predictSchema, positiveSchema, negativeSchema);
-        schemaContainerValidators.Add(conditionalValidator);
+        if (predictSchema is not null || positiveSchema is not null || negativeSchema is not null)
+        {
+            schemaContainerValidators.Add(new ConditionalValidator(predictSchema, positiveSchema, negativeSchema));
+        }
 
         // Although BodyJsonSchema supports merging duplicated keywords, but it is done by changing json schema tree structure. (That is:
         // when there is duplicated keywords, schema structure will be changed)
@@ -227,21 +228,32 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
     {
         Debug.Assert(value is not null);
 
-        Type actualType = value.GetType();
-
-        if (actualType == typeof(BooleanJsonSchemaDocument))
+        if (value is BooleanJsonSchemaDocument booleanJsonSchemaDocument)
         {
-            writer.WriteBooleanValue(((BooleanJsonSchemaDocument)(object)value).AlwaysValid);
+            writer.WriteBooleanValue(booleanJsonSchemaDocument.AlwaysValid);
         }
-        else if (actualType == typeof(BooleanJsonSchema))
+        else if (value is BooleanJsonSchema booleanJsonSchema)
         {
-            writer.WriteBooleanValue(((BooleanJsonSchema)(object)value).AlwaysValid);
+            writer.WriteBooleanValue(booleanJsonSchema.AlwaysValid);
         }
-        else if (actualType == typeof(BodyJsonSchema))
+        else
         {
             writer.WriteStartObject();
 
-            BodyJsonSchema schema = (BodyJsonSchema)(object)value;
+            BodyJsonSchema schema;
+            if (value is JsonSchemaResource schemaResource)
+            {
+                Debug.Assert(value.GetType() == typeof(JsonSchemaResource) || value.GetType() == typeof(BodyJsonSchemaDocument));
+
+                writer.WriteString(IdKeyword.Keyword, schemaResource.BaseUri!.ToString());
+                schema = schemaResource;
+            }
+            else
+            {
+                Debug.Assert(value.GetType() == typeof(BodyJsonSchema));
+
+                schema = (BodyJsonSchema)(object)value;
+            }
 
             // Keyword part:
             foreach (KeywordBase keyword in schema.Keywords)
