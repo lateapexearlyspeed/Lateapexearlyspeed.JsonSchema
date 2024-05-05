@@ -14,11 +14,11 @@ internal class ExtendedKeywordJsonConverter : JsonConverterFactory
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
-        Type converterType = typeof(CustomValidationKeywordJsonConverter1Inner<>).MakeGenericType(typeToConvert);
+        Type converterType = typeof(ExtendedKeywordJsonConverterInner<>).MakeGenericType(typeToConvert);
         return (JsonConverter)Activator.CreateInstance(converterType);
     }
 
-    private class CustomValidationKeywordJsonConverter1Inner<TKeyword> : JsonConverter<TKeyword> where TKeyword : KeywordBase
+    private class ExtendedKeywordJsonConverterInner<TKeyword> : JsonConverter<TKeyword> where TKeyword : KeywordBase
     {
         public override TKeyword Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

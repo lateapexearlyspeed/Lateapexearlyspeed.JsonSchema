@@ -75,8 +75,9 @@ public class JsonValidator
     /// If there is extending keyword type in <see cref="JsonValidator"/> (for example constructing <see cref="JsonValidator"/> by some custom builder methods or attributes),
     /// this method will throw exception because extending keyword is out of scope of standard json schema spec.
     /// </remarks>
-    public string GetStandardJsonSchemaText()
+    /// <exception cref="NotSupportedException">There is extending keyword type in <see cref="JsonValidator"/> (for example constructing <see cref="JsonValidator"/> by some custom builder methods or attributes)</exception>
+    public string GetStandardJsonSchemaText(JsonSerializerOptions? options = null)
     {
-        return JsonSerializer.Serialize(_mainSchemaDoc);
+        return JsonSerializer.Serialize(_mainSchemaDoc, options);
     }
 }
