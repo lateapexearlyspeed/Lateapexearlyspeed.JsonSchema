@@ -177,6 +177,14 @@ public class ArrayKeywordBuilder : KeywordBuilder
             Keywords.Add(new ItemsKeyword {Schema = jsonSchemaBuilder.Build() });
         }
 
+        if (_notContainsSchemaBuilderConfiguration is not null)
+        {
+            var jsonSchemaBuilder = new JsonSchemaBuilder();
+            _notContainsSchemaBuilderConfiguration(jsonSchemaBuilder);
+
+            Keywords.Add(new NotContainsKeyword(jsonSchemaBuilder.Build()));
+        }
+
         ArrayContainsValidator? arrayContainsValidator = null;
 
         if (_containsSchemaBuilderConfiguration is not null)
@@ -185,14 +193,6 @@ public class ArrayKeywordBuilder : KeywordBuilder
             _containsSchemaBuilderConfiguration(jsonSchemaBuilder);
 
             arrayContainsValidator = new ArrayContainsValidator(jsonSchemaBuilder.Build(), null, null);
-        }
-
-        if (_notContainsSchemaBuilderConfiguration is not null)
-        {
-            var jsonSchemaBuilder = new JsonSchemaBuilder();
-            _notContainsSchemaBuilderConfiguration(jsonSchemaBuilder);
-
-            Keywords.Add(new NotContainsKeyword(jsonSchemaBuilder.Build()));
         }
 
         return new KeywordCollection(Keywords.ToList(), arrayContainsValidator);
