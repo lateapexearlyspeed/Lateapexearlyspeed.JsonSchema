@@ -9,7 +9,13 @@ internal class ThrowHelper
     [Pure]
     public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException<TKeyword>(JsonValueKind expectedJsonKind) where TKeyword : KeywordBase
     {
-        return new JsonException(CreateKeywordPrefixContent<TKeyword>() + $" expects json kind: {expectedJsonKind}");
+        return CreateKeywordHasInvalidJsonValueKindJsonException(KeywordBase.GetKeywordName<TKeyword>(), expectedJsonKind);
+    }
+
+    [Pure]
+    public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException(string keywordName, JsonValueKind expectedJsonKind)
+    {
+        return new JsonException(CreateKeywordPrefixContent(keywordName) + $" expects json kind: {expectedJsonKind}");
     }
 
     [Pure]
@@ -28,6 +34,12 @@ internal class ThrowHelper
     public static JsonException CreateJsonSchemaHasInvalidJsonValueKindJsonException(params JsonValueKind[] expectedJsonKinds)
     {
         return new JsonException($"Json schema expects json kinds: \"{string.Join(",", expectedJsonKinds)}\"");
+    }
+
+    [Pure]
+    public static JsonException CreateJsonSchemaHasDuplicatedKeywordsJsonException(string duplicatedKeywordName)
+    {
+        return new JsonException($"Json schema contains more than one keyword:'{duplicatedKeywordName}'");
     }
 
     [Pure]
@@ -64,6 +76,12 @@ internal class ThrowHelper
     public static JsonException CreateKeywordHasInvalidPositiveNumberJsonException<TKeyword>() where TKeyword : KeywordBase
     {
         return new JsonException(CreateKeywordPrefixContent<TKeyword>() + " expects positive number.");
+    }
+
+    [Pure]
+    public static NotSupportedException CreateExtendedKeywordCannotSerializeToStandardJsonSchemaException<TKeyword>() where TKeyword : KeywordBase
+    {
+        return new NotSupportedException(CreateKeywordPrefixContent<TKeyword>() + " is extended keyword type so cannot be serialized to standard json schema.");
     }
 
     [Pure]

@@ -250,7 +250,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [{"A": 2}, 5]
             """);
-        AssertValidationResult(validationResult, false, ContainsKeyword.ErrorMessage("""[{"A": 2}, 5]"""), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedContainsErrorMessage("""[{"A": 2}, 5]"""), ImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -269,7 +269,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [{"A": 2}, 5]
             """);
-        AssertValidationResult(validationResult, false, ContainsKeyword.ErrorMessage("""[{"A": 2}, 5]"""), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedContainsErrorMessage("""[{"A": 2}, 5]"""), ImmutableJsonPointer.Empty);
     }
 
     [Fact]

@@ -7,18 +7,19 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 internal class TypeKeywordJsonConverter : JsonConverter<TypeKeyword>
 {
+    private static readonly JsonSerializerOptions InstanceTypeSerializerOptions = new() { Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, false) } };
+
     public override TypeKeyword Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         InstanceType[] instanceTypes;
-        var newOptions = new JsonSerializerOptions { Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, false) } };
 
         if (reader.TokenType == JsonTokenType.String)
         {
-            instanceTypes = new[] { JsonSerializer.Deserialize<InstanceType>(ref reader, newOptions) };
+            instanceTypes = new[] { JsonSerializer.Deserialize<InstanceType>(ref reader, InstanceTypeSerializerOptions) };
         }
         else if (reader.TokenType == JsonTokenType.StartArray)
         {
-            InstanceType[]? types = JsonSerializer.Deserialize<InstanceType[]>(ref reader, newOptions);
+            InstanceType[]? types = JsonSerializer.Deserialize<InstanceType[]>(ref reader, InstanceTypeSerializerOptions);
 
             Debug.Assert(types is not null);
             instanceTypes = types;
@@ -33,7 +34,14 @@ internal class TypeKeywordJsonConverter : JsonConverter<TypeKeyword>
 
     public override void Write(Utf8JsonWriter writer, TypeKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        if (value.InstanceTypes.Length == 1)
+        {
+            JsonSerializer.Serialize(writer, value.InstanceTypes[0], InstanceTypeSerializerOptions);
+        }
+        else
+        {
+            JsonSerializer.Serialize(writer, value.InstanceTypes, InstanceTypeSerializerOptions);
+        }
     }
 
     public override bool HandleNull => true;

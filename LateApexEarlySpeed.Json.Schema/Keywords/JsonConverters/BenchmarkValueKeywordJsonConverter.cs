@@ -20,7 +20,7 @@ internal class BenchmarkValueKeywordJsonConverter<TBenchmarkValueKeyword> : Json
 
     public override void Write(Utf8JsonWriter writer, TBenchmarkValueKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        writer.WriteNumberValue(value.BenchmarkValue);
     }
 
     public override bool HandleNull => true;

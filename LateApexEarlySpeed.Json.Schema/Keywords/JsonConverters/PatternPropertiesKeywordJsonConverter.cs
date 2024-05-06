@@ -32,7 +32,7 @@ internal class PatternPropertiesKeywordJsonConverter : JsonConverter<PatternProp
 
     public override void Write(Utf8JsonWriter writer, PatternPropertiesKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        JsonSerializer.Serialize(writer, value.PatternSchemas, options);
     }
 
     public override bool HandleNull => true;

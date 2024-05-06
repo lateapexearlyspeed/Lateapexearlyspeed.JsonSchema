@@ -10,16 +10,16 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(UniqueItemsKeywordJsonConverter))]
 internal class UniqueItemsKeyword : KeywordBase
 {
-    private readonly bool _enabled;
+    public bool Enabled { get; }
 
     public UniqueItemsKeyword(bool enabled)
     {
-        _enabled = enabled;
+        Enabled = enabled;
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        if (!_enabled || instance.ValueKind != JsonValueKind.Array)
+        if (!Enabled || instance.ValueKind != JsonValueKind.Array)
         {
             return ValidationResult.ValidResult;
         }

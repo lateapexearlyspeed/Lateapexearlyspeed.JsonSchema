@@ -24,7 +24,7 @@ internal class MultipleOfKeywordJsonConverter : JsonConverter<MultipleOfKeyword>
 
     public override void Write(Utf8JsonWriter writer, MultipleOfKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        writer.WriteNumberValue(value.MultipleOf);
     }
 
     public override bool HandleNull => true;

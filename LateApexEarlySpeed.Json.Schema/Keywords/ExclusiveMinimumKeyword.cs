@@ -37,6 +37,8 @@ internal class ExclusiveMinimumKeyword : NumberRangeKeywordBase
             _benchmark = benchmark;
         }
 
+        public override object BenchmarkValue => _benchmark;
+
         protected override bool IsInRange(double instanceValue)
         {
             return instanceValue > _benchmark;
@@ -66,6 +68,8 @@ internal class ExclusiveMinimumKeyword : NumberRangeKeywordBase
         {
             _benchmark = benchmark;
         }
+
+        public override object BenchmarkValue => _benchmark;
 
         protected override bool IsInRange(double instanceValue)
         {
@@ -101,6 +105,8 @@ internal class ExclusiveMinimumKeyword : NumberRangeKeywordBase
             _benchmark = benchmark;
         }
 
+        public override object BenchmarkValue => _benchmark;
+
         protected override bool IsInRange(double instanceValue)
         {
             return instanceValue > _benchmark;
@@ -135,12 +141,12 @@ internal class ExclusiveMinimumKeyword : NumberRangeKeywordBase
 
         protected override bool IsInRange(decimal instanceValue)
         {
-            return instanceValue > BenchmarkValue;
+            return instanceValue > Benchmark;
         }
 
         protected override string GetErrorMessage(object instanceValue)
         {
-            return ErrorMessage(instanceValue, BenchmarkValue);
+            return ErrorMessage(instanceValue, Benchmark);
         }
     }
 }

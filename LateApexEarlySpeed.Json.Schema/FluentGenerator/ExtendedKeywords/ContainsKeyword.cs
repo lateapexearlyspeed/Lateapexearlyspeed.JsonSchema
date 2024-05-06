@@ -1,5 +1,7 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords.JsonConverters;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
@@ -7,6 +9,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords;
 namespace LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 
 [Keyword("ext-contains")]
+[JsonConverter(typeof(ExtendedKeywordJsonConverter))]
 internal class ContainsKeyword : KeywordBase
 {
     private readonly JsonSchema _schema;

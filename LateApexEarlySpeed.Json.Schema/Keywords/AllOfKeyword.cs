@@ -8,10 +8,12 @@ using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-[Keyword("allOf")]
+[Keyword(Keyword)]
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<AllOfKeyword>))]
 internal class AllOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContainerElement
 {
+    public const string Keyword = "allOf";
+
     private readonly List<JsonSchema> _subSchemas = null!;
 
     public AllOfKeyword()

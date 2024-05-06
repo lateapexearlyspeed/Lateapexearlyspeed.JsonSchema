@@ -1,4 +1,5 @@
-﻿using LateApexEarlySpeed.Json.Schema.JInstance;
+﻿using LateApexEarlySpeed.Json.Schema.Common.interfaces;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 
@@ -157,12 +158,11 @@ public class JsonSchemaBuilder
     /// <summary>
     /// Specify that current json node should be Json Null
     /// </summary>
-    /// <returns></returns>
-    public NullKeywordBuilder IsJsonNull()
+    public void IsJsonNull()
     {
         ThrowIfRebindKeywordBuilder();
 
-        return AssociateKeywordBuilder<NullKeywordBuilder>();
+        AssociateKeywordBuilder<NullKeywordBuilder>();
     }
 
     /// <summary>
@@ -217,9 +217,13 @@ public class JsonSchemaBuilder
     {
         if (_keywordBuilder is not null)
         {
-            List<KeywordBase> keywords = _keywordBuilder.Build();
+            KeywordCollection keywordCollection = _keywordBuilder.Build();
 
-            return new BodyJsonSchema(keywords);
+            return new BodyJsonSchema(keywordCollection.Keywords, 
+                keywordCollection.ArrayContainsValidator is null
+                  ? new List<ISchemaContainerValidationNode>(0)
+                  : new List<ISchemaContainerValidationNode>(1){keywordCollection.ArrayContainsValidator},
+                null, null, null, null, null);
         }
 
         return new BodyJsonSchema(new List<KeywordBase>(0));

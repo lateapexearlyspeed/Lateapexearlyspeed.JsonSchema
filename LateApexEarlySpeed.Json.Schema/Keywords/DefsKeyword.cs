@@ -1,6 +1,7 @@
-﻿using LateApexEarlySpeed.Json.Schema.Common;
+﻿using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JSchema;
+using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
@@ -9,26 +10,27 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 /// so this library defines it should be json pointer encoded
 /// Update about above specification: Defs ref should be treated as same as normal json pointer path, so it must be json pointer encoded.
 /// </summary>
+[JsonConverter(typeof(DefsKeywordJsonConverter))]
 internal class DefsKeyword : ISchemaContainerElement
 {
     public const string Keyword = "$defs";
 
-    private readonly Dictionary<string, JsonSchema> _definitions;
+    public Dictionary<string, JsonSchema> Definitions { get; }
 
     /// <param name="definitions">Keys of it are short def name which is unescaped content</param>
     public DefsKeyword(Dictionary<string, JsonSchema> definitions)
     {
-        _definitions = definitions;
+        Definitions = definitions;
     }
 
     public ISchemaContainerElement? GetSubElement(string name)
     {
-        return _definitions.GetValueOrDefault(name);
+        return Definitions.GetValueOrDefault(name);
     }
 
     public IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
-        return _definitions.Values;
+        return Definitions.Values;
     }
 
     public bool IsSchemaType => false;

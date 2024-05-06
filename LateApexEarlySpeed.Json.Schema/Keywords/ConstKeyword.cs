@@ -17,6 +17,8 @@ internal class ConstKeyword : KeywordBase
         _constValue = constValue;
     }
 
+    public JsonInstanceElement ConstValue => _constValue;
+
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         EquivalentResult equivalentResult = _constValue.Equivalent(instance);

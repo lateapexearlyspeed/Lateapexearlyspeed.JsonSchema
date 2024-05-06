@@ -585,7 +585,7 @@ public class JsonSchemaGeneratorTest
             }
             """, new ValidationResult(ResultCode.NumberOutOfRange, "minimum", MinimumKeyword.ErrorMessage(1, 2),
             ImmutableJsonPointer.Create("/NewFieldName")!,
-            ImmutableJsonPointer.Create("/properties/NewFieldName/minimum"),
+            ImmutableJsonPointer.Create("/properties/NewFieldName/allOf/0/minimum"),
             GetSchemaResourceBaseUri<CustomClass>(),
             GetSchemaResourceBaseUri<CustomClass>()));
 
@@ -1145,7 +1145,7 @@ public class JsonSchemaGeneratorTest
   "Prop": 2.50001
 }
 """, new ValidationResult(ResultCode.NumberOutOfRange, "maximum", MaximumKeyword.ErrorMessage(2.50001, 2.5),
-            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/maximum"),
+            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/allOf/0/maximum"),
             GetSchemaResourceBaseUri<MaximumAttributeTestClass>(),
             GetSchemaResourceBaseUri<MaximumAttributeTestClass>()
         ));
@@ -1176,7 +1176,7 @@ public class JsonSchemaGeneratorTest
   "Prop": 2.499999
 }
 """, new ValidationResult(ResultCode.NumberOutOfRange, "minimum", MinimumKeyword.ErrorMessage(2.499999, 2.5),
-            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/minimum"),
+            ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/allOf/0/minimum"),
             GetSchemaResourceBaseUri<MinimumAttributeTestClass>(),
             GetSchemaResourceBaseUri<MinimumAttributeTestClass>()
         ));

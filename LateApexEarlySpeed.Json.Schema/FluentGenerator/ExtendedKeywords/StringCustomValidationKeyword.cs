@@ -1,11 +1,14 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords.JsonConverters;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 
 [Keyword("ext-custom-StringValidation")]
+[JsonConverter(typeof(ExtendedKeywordJsonConverter))]
 public class StringCustomValidationKeyword : KeywordBase
 {
     private readonly Func<string, bool> _validator;

@@ -13,7 +13,7 @@ internal class ConstKeywordJsonConverter : JsonConverter<ConstKeyword>
 
     public override void Write(Utf8JsonWriter writer, ConstKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        value.ConstValue.WriteTo(writer);
     }
 
     public override bool HandleNull => true;

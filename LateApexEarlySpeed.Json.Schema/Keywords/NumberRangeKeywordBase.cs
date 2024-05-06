@@ -9,6 +9,8 @@ internal abstract class NumberRangeKeywordBase : KeywordBase
 {
     private readonly IBenchmarkChecker _benchmarkChecker;
 
+    public object BenchmarkValue => _benchmarkChecker.BenchmarkValue;
+
     protected NumberRangeKeywordBase(IBenchmarkChecker benchmarkChecker)
     {
         _benchmarkChecker = benchmarkChecker;
@@ -46,6 +48,8 @@ internal abstract class NumberRangeKeywordBase : KeywordBase
             return IsInRange(instanceDoubleValue.Value);
         }
 
+        public abstract object BenchmarkValue { get; }
+
         protected abstract bool IsInRange(double instanceValue);
         protected abstract bool IsInRange(long instanceValue);
         protected abstract bool IsInRange(ulong instanceValue);
@@ -73,12 +77,14 @@ internal abstract class NumberRangeKeywordBase : KeywordBase
 
     protected abstract class DecimalBenchmarkCheckerBase : IBenchmarkChecker
     {
-        protected readonly decimal BenchmarkValue;
+        protected readonly decimal Benchmark;
 
         protected DecimalBenchmarkCheckerBase(decimal benchmark)
         {
-            BenchmarkValue = benchmark;
+            Benchmark = benchmark;
         }
+
+        public object BenchmarkValue => Benchmark;
 
         public bool IsInRange(JsonInstanceElement instance)
         {
@@ -123,6 +129,11 @@ internal abstract class NumberRangeKeywordBase : KeywordBase
 
     protected interface IBenchmarkChecker
     {
+        /// <summary>
+        /// This represents numeric benchmark value, the possible numeric types are: long, ulong, double, decimal
+        /// </summary>
+        object BenchmarkValue { get; }
+
         bool IsInRange(JsonInstanceElement instance);
 
         string GetErrorMessage(JsonInstanceElement instance);

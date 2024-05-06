@@ -1,10 +1,13 @@
-﻿using LateApexEarlySpeed.Json.Schema.Common;
+﻿using System.Text.Json.Serialization;
+using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords.JsonConverters;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 
 [Keyword("ext-custom-ObjectValidation")]
+[JsonConverter(typeof(ExtendedKeywordJsonConverter))]
 internal class CustomValidationKeyword<T> : KeywordBase
 {
     private readonly Func<T?, bool> _validator;

@@ -54,7 +54,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
         SchemaReferenceKeyword? schemaReference = null;
         SchemaDynamicReferenceKeyword? schemaDynamicReference = null;
-        Dictionary<string, JsonSchema>? defs = null;
+        DefsKeyword? defsKeyword = null;
         Uri? id = null;
         string? anchor = null;
         string? dynamicAnchor = null;
@@ -139,7 +139,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
             else if (keywordName == DefsKeyword.Keyword)
             {
-                defs = JsonSerializer.Deserialize<Dictionary<string, JsonSchema>>(ref reader)!;
+                defsKeyword = JsonSerializer.Deserialize<DefsKeyword>(ref reader)!;
             }
             else if (keywordName == IdKeyword.Keyword)
             {
@@ -173,22 +173,24 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             itemsKeyword.PrefixItemsKeyword = prefixItemsKeyword;
         }
 
-        JsonSchema schema;
-
-        DefsKeyword? defsKeyword = defs is null
-            ? null
-            : new DefsKeyword(defs);
-
         var schemaContainerValidators = new List<ISchemaContainerValidationNode>(2);
         if (containsSchema is not null)
         {
-            var arrayContainsValidator = new ArrayContainsValidator(containsSchema, minContains, maxContains);
-            schemaContainerValidators.Add(arrayContainsValidator);
+            schemaContainerValidators.Add(new ArrayContainsValidator(containsSchema, minContains, maxContains));
         }
 
-        var conditionalValidator = new ConditionalValidator(predictSchema, positiveSchema, negativeSchema);
-        schemaContainerValidators.Add(conditionalValidator);
+        if (predictSchema is not null || positiveSchema is not null || negativeSchema is not null)
+        {
+            schemaContainerValidators.Add(new ConditionalValidator(predictSchema, positiveSchema, negativeSchema));
+        }
 
+        // Although BodyJsonSchema supports merging duplicated keywords, but it is done by changing json schema tree structure. (That is:
+        // when there is duplicated keywords, schema structure will be changed)
+        // In json schema deserialization case, it is possible that original schema contains "json path" reference, so here we cannot 
+        // dare to change original json schema structure at risk of missing reference.
+        ThrowIfKeywordsHasDuplication(validationKeywords);
+
+        JsonSchema schema;
         if (typeToConvert == typeof(IJsonSchemaDocument))
         {
             schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, id, defsKeyword);
@@ -213,9 +215,135 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         return (T)(object)schema;
     }
 
+    private static void ThrowIfKeywordsHasDuplication(List<KeywordBase> keywords)
+    {
+        KeywordBase? duplicatedKeyword = BodyJsonSchema.FindFirstDuplicatedKeyword(keywords);
+        if (duplicatedKeyword is not null)
+        {
+            throw ThrowHelper.CreateJsonSchemaHasDuplicatedKeywordsJsonException(duplicatedKeyword.Name);
+        }
+    }
+
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        Debug.Assert(value is not null);
+
+        if (value is BooleanJsonSchemaDocument booleanJsonSchemaDocument)
+        {
+            writer.WriteBooleanValue(booleanJsonSchemaDocument.AlwaysValid);
+        }
+        else if (value is BooleanJsonSchema booleanJsonSchema)
+        {
+            writer.WriteBooleanValue(booleanJsonSchema.AlwaysValid);
+        }
+        else
+        {
+            writer.WriteStartObject();
+
+            BodyJsonSchema schema;
+            if (value is JsonSchemaResource schemaResource)
+            {
+                Debug.Assert(value.GetType() == typeof(JsonSchemaResource) || value.GetType() == typeof(BodyJsonSchemaDocument));
+
+                writer.WriteString(IdKeyword.Keyword, schemaResource.BaseUri!.ToString());
+                schema = schemaResource;
+            }
+            else
+            {
+                Debug.Assert(value.GetType() == typeof(BodyJsonSchema));
+
+                schema = (BodyJsonSchema)(object)value;
+            }
+
+            // Keyword part:
+            foreach (KeywordBase keyword in schema.Keywords)
+            {
+                writer.WritePropertyName(keyword.Name);
+                JsonSerializer.Serialize(writer, keyword, keyword.GetType(), options);
+            }
+
+            // defs part:
+            if (schema.DefsKeyword is not null)
+            {
+                writer.WritePropertyName(DefsKeyword.Keyword);
+                JsonSerializer.Serialize(writer, schema.DefsKeyword, options);
+            }
+
+            // Reference & DynamicReference part:
+            if (schema.SchemaReference is not null)
+            {
+                writer.WritePropertyName(SchemaReferenceKeyword.Keyword);
+                JsonSerializer.Serialize(writer, schema.SchemaReference, options);
+            }
+
+            if (schema.SchemaDynamicReference is not null)
+            {
+                writer.WritePropertyName(SchemaDynamicReferenceKeyword.Keyword);
+                JsonSerializer.Serialize(writer, schema.SchemaDynamicReference, options);
+            }
+
+            // Anchor & DynamicAnchor part:
+            if (schema.Anchor is not null)
+            {
+                writer.WritePropertyName(AnchorKeyword.Keyword);
+                writer.WriteStringValue(schema.Anchor);
+            }
+
+            if (schema.DynamicAnchor is not null)
+            {
+                writer.WritePropertyName(DynamicAnchorKeyword.Keyword);
+                writer.WriteStringValue(schema.DynamicAnchor);
+            }
+
+            // ArrayContainsValidator & ConditionalValidator part:
+            foreach (ISchemaContainerValidationNode schemaContainerValidator in schema.SchemaContainerValidators)
+            {
+                Debug.Assert(schemaContainerValidator is ArrayContainsValidator || schemaContainerValidator is ConditionalValidator);
+
+                if (schemaContainerValidator is ArrayContainsValidator arrayContainsValidator)
+                {
+                    WriteArrayContainsValidator(writer, arrayContainsValidator, options);
+                }
+                else
+                {
+                    Debug.Assert(schemaContainerValidator is ConditionalValidator);
+                    WriteConditionalValidator(writer, (ConditionalValidator)schemaContainerValidator, options);
+                }
+            }
+
+            writer.WriteEndObject();
+        }
+    }
+
+    private static void WriteConditionalValidator(Utf8JsonWriter writer, ConditionalValidator value, JsonSerializerOptions options)
+    {
+        if (value.PredictEvaluator is not null)
+        {
+            writer.WritePropertyName(ConditionalValidator.IfKeywordName);
+            JsonSerializer.Serialize(writer, value.PredictEvaluator, options);
+        }
+
+        writer.WritePropertyName(ConditionalValidator.ThenKeywordName);
+        JsonSerializer.Serialize(writer, value.PositiveValidator, options);
+
+        writer.WritePropertyName(ConditionalValidator.ElseKeywordName);
+        JsonSerializer.Serialize(writer, value.NegativeValidator, options);
+    }
+
+    private static void WriteArrayContainsValidator(Utf8JsonWriter writer, ArrayContainsValidator value, JsonSerializerOptions options)
+    {
+        writer.WritePropertyName(ArrayContainsValidator.ContainsKeywordName);
+        JsonSerializer.Serialize(writer, value.ContainsSchema, options);
+
+        if (value.MaxContains.HasValue)
+        {
+            writer.WriteNumber(ArrayContainsValidator.MaxContainsKeywordName, value.MaxContains.Value);
+        }
+
+        if (value.MinContains.HasValue)
+        {
+            writer.WriteNumber(ArrayContainsValidator.MinContainsKeywordName, value.MinContains.Value);
+        }
     }
 
     public override bool HandleNull => true;

@@ -26,7 +26,7 @@ internal class PatternKeywordJsonConverter : JsonConverter<PatternKeyword>
 
     public override void Write(Utf8JsonWriter writer, PatternKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        writer.WriteStringValue(value.Pattern);
     }
 
     public override bool HandleNull => true;

@@ -17,6 +17,8 @@ internal class PatternKeyword : KeywordBase
         _pattern = new LazyCompiledRegex(pattern);
     }
 
+    public string Pattern => _pattern.ToString();
+
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.String)

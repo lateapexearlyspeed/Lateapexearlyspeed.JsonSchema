@@ -12,7 +12,7 @@ public class OrKeywordBuilder : KeywordBuilder
         _configureSchemaBuilders = configureSchemaBuilders;
     }
 
-    internal override List<KeywordBase> Build()
+    internal override KeywordCollection Build()
     {
         List<JsonSchema> bodyJsonSchema = _configureSchemaBuilders.Select(configure =>
         {
@@ -23,6 +23,6 @@ public class OrKeywordBuilder : KeywordBuilder
 
         Keywords.Add(new AnyOfKeyword(bodyJsonSchema));
 
-        return Keywords.ToList();
+        return new KeywordCollection(Keywords.ToList());
     }
 }

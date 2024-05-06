@@ -23,7 +23,7 @@ internal class UniqueItemsKeywordJsonConverter : JsonConverter<UniqueItemsKeywor
 
     public override void Write(Utf8JsonWriter writer, UniqueItemsKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        writer.WriteBooleanValue(value.Enabled);
     }
 
     public override bool HandleNull => true;

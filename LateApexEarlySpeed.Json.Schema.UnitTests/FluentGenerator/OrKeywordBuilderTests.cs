@@ -1,6 +1,5 @@
 ﻿using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.FluentGenerator;
-using LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 using Xunit;
 
@@ -25,7 +24,7 @@ public class OrKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("""[{}, 1]""");
-        AssertValidationResult(validationResult, false, ContainsKeyword.ErrorMessage("""[{}, 1]"""), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedContainsErrorMessage("""[{}, 1]"""), ImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.ObjectHasProperty("A", b => b.Or(

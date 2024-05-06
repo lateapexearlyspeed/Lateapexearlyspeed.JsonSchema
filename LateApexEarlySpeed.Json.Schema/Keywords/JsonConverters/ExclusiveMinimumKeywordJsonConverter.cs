@@ -32,7 +32,7 @@ internal class ExclusiveMinimumKeywordJsonConverter : JsonConverter<ExclusiveMin
 
     public override void Write(Utf8JsonWriter writer, ExclusiveMinimumKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        JsonSerializer.Serialize(writer, value.BenchmarkValue, options);
     }
 
     public override bool HandleNull => true;

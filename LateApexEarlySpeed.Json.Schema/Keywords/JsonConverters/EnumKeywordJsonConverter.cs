@@ -42,7 +42,14 @@ internal class EnumKeywordJsonConverter : JsonConverter<EnumKeyword>
 
     public override void Write(Utf8JsonWriter writer, EnumKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        writer.WriteStartArray();
+
+        foreach (JsonInstanceElement element in value.EnumList)
+        {
+            element.WriteTo(writer);
+        }
+
+        writer.WriteEndArray();
     }
 
     public override bool HandleNull => true;

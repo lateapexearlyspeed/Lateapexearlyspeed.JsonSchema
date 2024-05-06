@@ -27,7 +27,7 @@ internal class DependentRequiredKeywordJsonConverter : JsonConverter<DependentRe
 
     public override void Write(Utf8JsonWriter writer, DependentRequiredKeyword value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        JsonSerializer.Serialize(writer, value.DependentProperties, options);
     }
 
     public override bool HandleNull => true;
