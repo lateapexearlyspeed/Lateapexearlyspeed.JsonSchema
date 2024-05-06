@@ -113,6 +113,28 @@ JsonValidator validator = JsonSchemaGenerator.GenerateJsonValidator<TestClass>()
 
 More detailed info and custom usage about validator generation from code, please check [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Validator-generation-from-type)
 
+### Output standard Json schema text from JsonValidator
+
+As we can see as above, there are multiple ways to construct JsonValidator to do validation from: standard Json schema, fluent builder & .net types.
+
+Now this library can also output standard Json schema text from JsonValidator instance.
+
+```csharp
+string standardJsonSchema = jsonValidator.GetStandardJsonSchemaText();
+```
+
+**Note:** to support flexible fluent builder and ".net type code first" construction manners, internally this library tries best to still use standard keywords but some Build methods have to involve "extend" keywords, so when you have built a JsonValidator instance by using those Build methods,  ```GetStandardJsonSchemaText()``` on this instance will not be supported because these extend keywords cannot apply to standard Json schema and recorgnized by other application:
+
+```csharp
+var builder = new JsonSchemaBuilder();
+builder.IsJsonNumber().HasCustomValidation((double _) => true, _ => "");
+JsonValidator jsonValidator = builder.BuildValidator();
+
+Assert.Throws<NotSupportedException>(() => jsonValidator.GetStandardJsonSchemaText());
+```
+
+Extend keyword involved build method list is [here](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Output-standard-Json-schema-text-from-JsonValidator).
+
 ## LateApexEarlySpeed.Xunit.Assertion.Json
 
 There were already json related test assertion libraries, most ones were asserting json's equivalent.
