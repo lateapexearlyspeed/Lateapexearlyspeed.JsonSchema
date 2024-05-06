@@ -158,12 +158,11 @@ public class JsonSchemaBuilder
     /// <summary>
     /// Specify that current json node should be Json Null
     /// </summary>
-    /// <returns></returns>
-    public NullKeywordBuilder IsJsonNull()
+    public void IsJsonNull()
     {
         ThrowIfRebindKeywordBuilder();
 
-        return AssociateKeywordBuilder<NullKeywordBuilder>();
+        AssociateKeywordBuilder<NullKeywordBuilder>();
     }
 
     /// <summary>
