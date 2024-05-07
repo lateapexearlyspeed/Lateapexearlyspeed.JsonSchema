@@ -1,15 +1,15 @@
 ﻿using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 using LateApexEarlySpeed.Json.Schema.JInstance;
+using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.FluentGenerator;
 
 public class ArrayKeywordBuilder : KeywordBuilder
 {
-    private Action<JsonSchemaBuilder>? _itemsSchemaBuilderConfiguration;
-    private Action<JsonSchemaBuilder>? _containsSchemaBuilderConfiguration;
-    private Action<JsonSchemaBuilder>? _notContainsSchemaBuilderConfiguration;
+    private ArrayContainsValidator? _arrayContainsValidator;
+    private readonly List<JsonSchema> _schemas = new();
 
     public ArrayKeywordBuilder() : base(new TypeKeyword(InstanceType.Array))
     {
@@ -47,7 +47,35 @@ public class ArrayKeywordBuilder : KeywordBuilder
     /// <returns></returns>
     public ArrayKeywordBuilder HasItems(Action<JsonSchemaBuilder> configureBuilder)
     {
-        _itemsSchemaBuilderConfiguration = configureBuilder;
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        configureBuilder(jsonSchemaBuilder);
+
+        Keywords.Add(new ItemsKeyword { Schema = jsonSchemaBuilder.Build() });
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specify that current json array should contain exactly a given number of elements, which should match schema constraints provided by <paramref name="elementInspectors"/>
+    /// </summary>
+    /// <param name="elementInspectors">The element inspectors, which specify each element in turn. The total number of element inspectors must exactly match the number of elements in current json array</param>
+    /// <returns></returns>
+    public ArrayKeywordBuilder HasCollection(params Action<JsonSchemaBuilder>[] elementInspectors)
+    {
+        var schemaBuilder = new JsonSchemaBuilder();
+        var prefixItemsKeyword = new PrefixItemsKeyword
+        {
+            SubSchemas = elementInspectors.Select<Action<JsonSchemaBuilder>, JsonSchema>(inspector =>
+            {
+                var builder = new JsonSchemaBuilder();
+                inspector(builder);
+
+                return builder.Build();
+            }).ToList()
+        };
+        schemaBuilder.IsJsonArray().HasLength((uint)elementInspectors.Length).Keywords.Add(prefixItemsKeyword);
+
+        _schemas.Add(schemaBuilder.Build());
 
         return this;
     }
@@ -136,7 +164,10 @@ public class ArrayKeywordBuilder : KeywordBuilder
     /// <returns></returns>
     public ArrayKeywordBuilder Contains(Action<JsonSchemaBuilder> configureBuilder)
     {
-        _containsSchemaBuilderConfiguration = configureBuilder;
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        configureBuilder(jsonSchemaBuilder);
+
+        _arrayContainsValidator = new ArrayContainsValidator(jsonSchemaBuilder.Build(), null, null);
 
         return this;
     }
@@ -148,7 +179,10 @@ public class ArrayKeywordBuilder : KeywordBuilder
     /// <returns></returns>
     public ArrayKeywordBuilder NotContains(Action<JsonSchemaBuilder> configureBuilder)
     {
-        _notContainsSchemaBuilderConfiguration = configureBuilder;
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        configureBuilder(jsonSchemaBuilder);
+
+        Keywords.Add(new NotContainsKeyword(jsonSchemaBuilder.Build()));
 
         return this;
     }
@@ -169,32 +203,11 @@ public class ArrayKeywordBuilder : KeywordBuilder
 
     internal override KeywordCollection Build()
     {
-        if (_itemsSchemaBuilderConfiguration is not null)
+        if (_schemas.Count != 0)
         {
-            var jsonSchemaBuilder = new JsonSchemaBuilder();
-            _itemsSchemaBuilderConfiguration(jsonSchemaBuilder);
-
-            Keywords.Add(new ItemsKeyword {Schema = jsonSchemaBuilder.Build() });
+            Keywords.Add(new AllOfKeyword(_schemas));
         }
 
-        if (_notContainsSchemaBuilderConfiguration is not null)
-        {
-            var jsonSchemaBuilder = new JsonSchemaBuilder();
-            _notContainsSchemaBuilderConfiguration(jsonSchemaBuilder);
-
-            Keywords.Add(new NotContainsKeyword(jsonSchemaBuilder.Build()));
-        }
-
-        ArrayContainsValidator? arrayContainsValidator = null;
-
-        if (_containsSchemaBuilderConfiguration is not null)
-        {
-            var jsonSchemaBuilder = new JsonSchemaBuilder();
-            _containsSchemaBuilderConfiguration(jsonSchemaBuilder);
-
-            arrayContainsValidator = new ArrayContainsValidator(jsonSchemaBuilder.Build(), null, null);
-        }
-
-        return new KeywordCollection(Keywords.ToList(), arrayContainsValidator);
+        return new KeywordCollection(Keywords.ToList(), _arrayContainsValidator);
     }
 }
