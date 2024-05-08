@@ -17,8 +17,13 @@ internal class NotKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSche
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         return Schema.Validate(instance, options).IsValid 
-            ? ValidationResult.CreateFailedResult(ResultCode.SubSchemaPassedUnexpected, "Instance is validated by subSchema which is not allowed", options.ValidationPathStack, Name, instance.Location)
+            ? ValidationResult.CreateFailedResult(ResultCode.SubSchemaPassedUnexpected, ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location)
             : ValidationResult.ValidResult;
+    }
+
+    public static string ErrorMessage(string instanceText)
+    {
+        return $"Instance is validated by subSchema which is not allowed, instance data: '{instanceText}'";
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

@@ -1,5 +1,6 @@
 ﻿using LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 using LateApexEarlySpeed.Json.Schema.JInstance;
+using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.FluentGenerator;
@@ -66,6 +67,18 @@ public class StringKeywordBuilder : KeywordBuilder
     public StringKeywordBuilder HasPattern(string pattern)
     {
         Keywords.Add(new PatternKeyword(pattern));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specify that current json string should not match specified <paramref name="pattern"/>
+    /// </summary>
+    /// <param name="pattern">The regex pattern that current json string should not match.</param>
+    /// <returns></returns>
+    public StringKeywordBuilder NotMatch(string pattern)
+    {
+        Keywords.Add(new NotKeyword{Schema = new BodyJsonSchema(new List<KeywordBase>{new PatternKeyword(pattern)})});
 
         return this;
     }

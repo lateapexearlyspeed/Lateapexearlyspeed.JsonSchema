@@ -122,6 +122,35 @@ public class StringKeywordBuilderTests
     }
 
     [Fact]
+    public void Validate_NotMatch()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonString().NotMatch(".a.");
+
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("\"a\"");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("\"1a2\"");
+        AssertValidationResult(validationResult, false, NotKeyword.ErrorMessage("1a2"), ImmutableJsonPointer.Empty);
+
+        jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonString().NotMatch(".a.").NotMatch(".b.");
+
+        jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        validationResult = jsonValidator.Validate("\"c\"");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("\"1a2\"");
+        AssertValidationResult(validationResult, false, NotKeyword.ErrorMessage("1a2"), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("\"1b2\"");
+        AssertValidationResult(validationResult, false, NotKeyword.ErrorMessage("1b2"), ImmutableJsonPointer.Empty);
+    }
+
+    [Fact]
     public void Validate_IsIn()
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();

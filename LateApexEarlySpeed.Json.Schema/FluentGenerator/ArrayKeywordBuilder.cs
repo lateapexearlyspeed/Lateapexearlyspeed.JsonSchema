@@ -63,16 +63,14 @@ public class ArrayKeywordBuilder : KeywordBuilder
     public ArrayKeywordBuilder HasCollection(params Action<JsonSchemaBuilder>[] elementInspectors)
     {
         var schemaBuilder = new JsonSchemaBuilder();
-        var prefixItemsKeyword = new PrefixItemsKeyword
+        List<JsonSchema> subSchemas = elementInspectors.Select<Action<JsonSchemaBuilder>, JsonSchema>(inspector =>
         {
-            SubSchemas = elementInspectors.Select<Action<JsonSchemaBuilder>, JsonSchema>(inspector =>
-            {
-                var builder = new JsonSchemaBuilder();
-                inspector(builder);
+            var builder = new JsonSchemaBuilder();
+            inspector(builder);
 
-                return builder.Build();
-            }).ToList()
-        };
+            return builder.Build();
+        }).ToList();
+        var prefixItemsKeyword = new PrefixItemsKeyword(subSchemas);
         schemaBuilder.IsJsonArray().HasLength((uint)elementInspectors.Length).Keywords.Add(prefixItemsKeyword);
 
         _schemas.Add(schemaBuilder.Build());

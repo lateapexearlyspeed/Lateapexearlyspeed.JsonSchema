@@ -13,7 +13,30 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<PrefixItemsKeyword>))]
 internal class PrefixItemsKeyword : KeywordBase, ISchemaContainerElement, ISubSchemaCollection
 {
-    public List<JsonSchema> SubSchemas { get; init; } = null!;
+    private readonly List<JsonSchema> _subSchemas = null!;
+
+    public PrefixItemsKeyword()
+    {
+    }
+
+    public PrefixItemsKeyword(List<JsonSchema> subSchemas)
+    {
+        SubSchemas = subSchemas;
+    }
+
+    public List<JsonSchema> SubSchemas
+    {
+        get => _subSchemas;
+
+        init
+        {
+            _subSchemas = value;
+            for (int i = 0; i < _subSchemas.Count; i++)
+            {
+                _subSchemas[i].Name = i.ToString();
+            }
+        }
+    }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
