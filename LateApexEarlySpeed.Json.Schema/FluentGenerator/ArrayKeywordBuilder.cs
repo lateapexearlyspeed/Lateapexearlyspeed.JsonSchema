@@ -186,6 +186,15 @@ public class ArrayKeywordBuilder : KeywordBuilder
     }
 
     /// <summary>
+    /// Specify that current json array should be an empty array (length of it is 0)
+    /// </summary>
+    /// <returns></returns>
+    public ArrayKeywordBuilder Empty()
+    {
+        return HasLength(0);
+    }
+
+    /// <summary>
     /// Specify that current json array should be equivalent to <paramref name="jsonText"/>
     /// </summary>
     /// <param name="jsonText"></param>

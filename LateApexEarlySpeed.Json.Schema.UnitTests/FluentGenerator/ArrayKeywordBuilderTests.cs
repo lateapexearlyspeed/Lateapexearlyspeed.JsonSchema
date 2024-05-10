@@ -330,6 +330,24 @@ public class ArrayKeywordBuilderTests
         AssertValidationResult(validationResult, false,  "Properties not match, one has property:A but another not", ImmutableJsonPointer.Create("/0"));
     }
 
+    [Fact]
+    public void Validate_Empty()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonArray().HasCustomValidation(_ => true, _ => "bad msg").Empty();
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("""
+            []
+            """);
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("""
+            [1]
+            """);
+        AssertValidationResult(validationResult, false, MaxItemsKeyword.ErrorMessage(1, 0), ImmutableJsonPointer.Empty);
+    }
+
     private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, ImmutableJsonPointer? expectedInstanceLocation = null)
     {
         Assert.Equal(expectedValidStatus, actualValidationResult.IsValid);

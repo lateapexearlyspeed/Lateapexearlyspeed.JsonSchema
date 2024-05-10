@@ -72,7 +72,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests.FluentGenerator
         {
             var builder = new JsonSchemaBuilder();
 
-            builder.ArrayContains(a => a.IsJsonString()).Contains(a => a.IsJsonString()).Equivalent("null").HasItems(a => a.IsJsonString()).HasLength(1).HasMaxLength(2)
+            builder.ArrayContains(a => a.IsJsonString()).Contains(a => a.IsJsonString()).Equivalent("null").HasItems(a => a.IsJsonString()).HasLength(1).HasMaxLength(2).Empty()
                 .HasMinLength(1).HasUniqueItems().SerializationEquivalent(new object?[] { new { A = 1 } }).SerializationEquivalent(new[] { 1 })
                 .HasCollection(b => b.IsJsonString());
 
