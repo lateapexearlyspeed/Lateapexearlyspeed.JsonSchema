@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
@@ -8,7 +9,6 @@ namespace LateApexEarlySpeed.Json.Schema.FluentGenerator;
 
 public class ArrayKeywordBuilder : KeywordBuilder
 {
-    private ArrayContainsValidator? _arrayContainsValidator;
     private readonly List<JsonSchema> _schemas = new();
 
     public ArrayKeywordBuilder() : base(new TypeKeyword(InstanceType.Array))
@@ -165,7 +165,10 @@ public class ArrayKeywordBuilder : KeywordBuilder
         var jsonSchemaBuilder = new JsonSchemaBuilder();
         configureBuilder(jsonSchemaBuilder);
 
-        _arrayContainsValidator = new ArrayContainsValidator(jsonSchemaBuilder.Build(), null, null);
+        var arrayContainsValidator = new ArrayContainsValidator(jsonSchemaBuilder.Build(), null, null);
+
+        _schemas.Add(new BodyJsonSchema(new List<KeywordBase>(0), 
+            new List<ISchemaContainerValidationNode>(0){arrayContainsValidator}, null, null, null, null, null));
 
         return this;
     }
@@ -195,6 +198,42 @@ public class ArrayKeywordBuilder : KeywordBuilder
     }
 
     /// <summary>
+    /// Specify that current json array should not be an empty array (length of it should not be 0)
+    /// </summary>
+    /// <returns></returns>
+    public ArrayKeywordBuilder NotEmpty()
+    {
+        return HasMinLength(1);
+    }
+
+    /// <summary>
+    /// Specify that current json array should contain only a single element.
+    /// </summary>
+    /// <returns></returns>
+    public ArrayKeywordBuilder Single()
+    {
+        return HasLength(1);
+    }
+
+    /// <summary>
+    /// Specify that current json array should contain only a single element which matches specified schema constraint from <paramref name="configureBuilder"/>
+    /// </summary>
+    /// <param name="configureBuilder">Schema metadata configuration for array element</param>
+    /// <returns></returns>
+    public ArrayKeywordBuilder Single(Action<JsonSchemaBuilder> configureBuilder)
+    {
+        var builder = new JsonSchemaBuilder();
+        configureBuilder(builder);
+        BodyJsonSchema subSchema = builder.Build();
+        var arrayContainsValidator = new ArrayContainsValidator(subSchema, 1, 1);
+
+        _schemas.Add(new BodyJsonSchema(new List<KeywordBase>(0), new List<ISchemaContainerValidationNode>(1){arrayContainsValidator}, 
+            null, null, null, null, null));
+
+        return this;
+    }
+
+    /// <summary>
     /// Specify that current json array should be equivalent to <paramref name="jsonText"/>
     /// </summary>
     /// <param name="jsonText"></param>
@@ -215,6 +254,6 @@ public class ArrayKeywordBuilder : KeywordBuilder
             Keywords.Add(new AllOfKeyword(_schemas));
         }
 
-        return new KeywordCollection(Keywords.ToList(), _arrayContainsValidator);
+        return new KeywordCollection(Keywords.ToList());
     }
 }

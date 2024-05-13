@@ -312,6 +312,54 @@ public class ArrayKeywordBuilderTests
     }
 
     [Fact]
+    public void Validate_Single()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonArray().HasCustomValidation(
+            _ => true, _ => "bad msg").Single();
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("""
+            [{"A": 1}]
+            """);
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("""
+            [{"A": 1}, 2]
+            """);
+        AssertValidationResult(validationResult, false, MaxItemsKeyword.ErrorMessage(2, 1), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("""
+            []
+            """);
+        AssertValidationResult(validationResult, false, MinItemsKeyword.ErrorMessage(0, 1), ImmutableJsonPointer.Empty);
+    }
+
+    [Fact]
+    public void Validate_Single_With_ConfigureBuilderArgument()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonArray().HasCustomValidation(
+            _ => true, _ => "bad msg").Single(b => b.ObjectHasProperty("A", b => b.IsJsonNumber().Equal(1)));
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("""
+            [{"A": 1}, 5]
+            """);
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("""
+            [{"A": 2}, 5]
+            """);
+        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedMinContainsErrorMessage("""[{"A": 2}, 5]""", 1), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("""
+            [{"A": 1}, 5, {"A": 1}]
+            """);
+        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedMaxContainsErrorMessage("""[{"A": 1}, 5, {"A": 1}]""", 1), ImmutableJsonPointer.Empty);
+    }
+
+    [Fact]
     public void Validate_Equivalent()
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();
@@ -346,6 +394,29 @@ public class ArrayKeywordBuilderTests
             [1]
             """);
         AssertValidationResult(validationResult, false, MaxItemsKeyword.ErrorMessage(1, 0), ImmutableJsonPointer.Empty);
+    }
+
+    [Fact]
+    public void Validate_NotEmpty()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonArray().HasCustomValidation(_ => true, _ => "bad msg").NotEmpty();
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("""
+            [1]
+            """);
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("""
+            [1, {}]
+            """);
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("""
+            []
+            """);
+        AssertValidationResult(validationResult, false, MinItemsKeyword.ErrorMessage(0, 1), ImmutableJsonPointer.Empty);
     }
 
     private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, ImmutableJsonPointer? expectedInstanceLocation = null)

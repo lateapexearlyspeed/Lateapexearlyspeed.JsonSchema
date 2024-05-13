@@ -95,4 +95,30 @@ public class StringKeywordBuilder : KeywordBuilder
 
         return this;
     }
+
+    /// <summary>
+    /// Specify that current json string should end with specified <paramref name="endString"/>
+    /// </summary>
+    /// <param name="endString">The string expected to be at the end of the string</param>
+    /// <returns></returns>
+    public StringKeywordBuilder EndsWith(string endString)
+    {
+        return EndsWith(endString, StringComparison.CurrentCulture);
+    }
+
+    /// <summary>
+    /// Specify that current json string should end with specified <paramref name="endString"/>
+    /// </summary>
+    /// <param name="endString">The string expected to be at the end of the string</param>
+    /// <param name="comparisonType">One of the enumeration values that determines how strings are compared</param>
+    /// <returns></returns>
+    public StringKeywordBuilder EndsWith(string endString, StringComparison comparisonType)
+    {
+        return HasCustomValidation(instance => instance.EndsWith(endString, comparisonType), instance => EndsWithErrorMessage(instance, endString));
+    }
+
+    internal static string EndsWithErrorMessage(string instanceText, string expectedEndString)
+    {
+        return $"Instance: '{instanceText}' not end with '{expectedEndString}'";
+    }
 }

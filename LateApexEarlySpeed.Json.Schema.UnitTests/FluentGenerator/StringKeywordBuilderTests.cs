@@ -122,6 +122,35 @@ public class StringKeywordBuilderTests
     }
 
     [Fact]
+    public void Validate_EndsWith()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonString().HasCustomValidation(_ => true, _ => string.Empty).EndsWith("abc");
+
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("\"111abc\"");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("\"111abC\"");
+        AssertValidationResult(validationResult, false, StringKeywordBuilder.EndsWithErrorMessage("111abC", "abc"), ImmutableJsonPointer.Empty);
+
+        jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonString().HasCustomValidation(_ => true, _ => string.Empty).EndsWith("abc", StringComparison.OrdinalIgnoreCase);
+
+        jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        validationResult = jsonValidator.Validate("\"111abc\"");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("\"111ABC\"");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("\"111def\"");
+        AssertValidationResult(validationResult, false, StringKeywordBuilder.EndsWithErrorMessage("111def", "abc"), ImmutableJsonPointer.Empty);
+    }
+
+    [Fact]
     public void Validate_NotMatch()
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();

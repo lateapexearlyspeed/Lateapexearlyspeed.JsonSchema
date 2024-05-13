@@ -72,7 +72,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests.FluentGenerator
         {
             var builder = new JsonSchemaBuilder();
 
-            builder.ArrayContains(a => a.IsJsonString()).Contains(a => a.IsJsonString()).Equivalent("null").HasItems(a => a.IsJsonString()).HasLength(1).HasMaxLength(2).Empty()
+            builder.ArrayContains(a => a.IsJsonString()).Contains(a => a.IsJsonString()).Single().Single(i => i.IsJsonString()).Equivalent("null").HasItems(a => a.IsJsonString()).HasLength(1).HasMaxLength(2).Empty().NotEmpty()
                 .HasMinLength(1).HasUniqueItems().SerializationEquivalent(new object?[] { new { A = 1 } }).SerializationEquivalent(new[] { 1 })
                 .HasCollection(b => b.IsJsonString());
 
@@ -282,6 +282,14 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests.FluentGenerator
             builder.IsJsonString().HasCustomValidation(_ => true, _ => "");
 
             JsonValidator jsonValidator = builder.BuildValidator();
+
+            Assert.Throws<NotSupportedException>(() => jsonValidator.GetStandardJsonSchemaText());
+
+            builder = new JsonSchemaBuilder();
+
+            builder.IsJsonString().EndsWith("abc");
+
+            jsonValidator = builder.BuildValidator();
 
             Assert.Throws<NotSupportedException>(() => jsonValidator.GetStandardJsonSchemaText());
         }

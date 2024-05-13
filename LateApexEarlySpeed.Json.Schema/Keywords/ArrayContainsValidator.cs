@@ -49,6 +49,8 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
 
     private ValidationResult ValidateWithoutMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
     {
+        Debug.Assert(MinContains.HasValue);
+
         if (MinContains == 0)
         {
             return ValidationResult.ValidResult;
@@ -71,7 +73,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
             }
         }
 
-        return CreateFailedValidationResultWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMinContainsErrorMessage(), MinContainsKeywordName, options.ValidationPathStack, instance.Location);
+        return CreateFailedValidationResultWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMinContainsErrorMessage(instance.ToString(), MinContains.Value), MinContainsKeywordName, options.ValidationPathStack, instance.Location);
     }
 
     private ValidationResult ValidateWithMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
@@ -89,7 +91,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
 
             if (validatedItemCount > MaxContains)
             {
-                return CreateFailedValidationResultWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMaxContainsErrorMessage(), MaxContainsKeywordName, options.ValidationPathStack, instance.Location);
+                return CreateFailedValidationResultWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMaxContainsErrorMessage(instance.ToString(), MaxContains.Value), MaxContainsKeywordName, options.ValidationPathStack, instance.Location);
             }
         }
 
@@ -97,7 +99,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
         {
             if (validatedItemCount < MinContains)
             {
-                return CreateFailedValidationResultWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMinContainsErrorMessage(), MinContainsKeywordName, options.ValidationPathStack, instance.Location);
+                return CreateFailedValidationResultWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMinContainsErrorMessage(instance.ToString(), MinContains.Value), MinContainsKeywordName, options.ValidationPathStack, instance.Location);
             }
         }
         else
@@ -111,11 +113,11 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
         return ValidationResult.ValidResult;
     }
 
-    private string GetFailedMaxContainsErrorMessage()
-        => $"Validated array items count is greater than specified '{MaxContains}'";
+    internal static string GetFailedMaxContainsErrorMessage(string instanceJson, uint maxContains)
+        => $"Validated array items count is greater than specified '{maxContains}', array instance: {instanceJson}";
 
-    private string GetFailedMinContainsErrorMessage()
-        => $"Validated array items count is less than specified '{MinContains}'";
+    internal static string GetFailedMinContainsErrorMessage(string instanceJson, uint minContains)
+        => $"Validated array items count is less than specified '{minContains}', array instance: {instanceJson}";
 
     internal static string GetFailedContainsErrorMessage(string instanceJson)
         => $"Not found any validated array items, array instance: {instanceJson}";
