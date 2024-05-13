@@ -97,6 +97,32 @@ public class StringKeywordBuilder : KeywordBuilder
     }
 
     /// <summary>
+    /// Specify that current json string should start with specified <paramref name="startString"/>
+    /// </summary>
+    /// <param name="startString">The string expected to be at the start of the string</param>
+    /// <returns></returns>
+    public StringKeywordBuilder StartsWith(string startString)
+    {
+        return StartsWith(startString, StringComparison.CurrentCulture);
+    }
+
+    /// <summary>
+    /// Specify that current json string should start with specified <paramref name="startString"/>
+    /// </summary>
+    /// <param name="startString">The string expected to be at the start of the string</param>
+    /// <param name="comparisonType">One of the enumeration values that determines how strings are compared</param>
+    /// <returns></returns>
+    public StringKeywordBuilder StartsWith(string startString, StringComparison comparisonType)
+    {
+        return HasCustomValidation(instance => instance.StartsWith(startString, comparisonType), instance => StartsWithErrorMessage(instance, startString));
+    }
+
+    internal static string StartsWithErrorMessage(string instanceText, string expectedStartString)
+    {
+        return $"Instance: '{instanceText}' not start with '{expectedStartString}'";
+    }
+
+    /// <summary>
     /// Specify that current json string should end with specified <paramref name="endString"/>
     /// </summary>
     /// <param name="endString">The string expected to be at the end of the string</param>

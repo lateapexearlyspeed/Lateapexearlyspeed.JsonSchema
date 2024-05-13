@@ -287,6 +287,14 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests.FluentGenerator
 
             builder = new JsonSchemaBuilder();
 
+            builder.IsJsonString().StartsWith("abc");
+
+            jsonValidator = builder.BuildValidator();
+
+            Assert.Throws<NotSupportedException>(() => jsonValidator.GetStandardJsonSchemaText());
+
+            builder = new JsonSchemaBuilder();
+
             builder.IsJsonString().EndsWith("abc");
 
             jsonValidator = builder.BuildValidator();
