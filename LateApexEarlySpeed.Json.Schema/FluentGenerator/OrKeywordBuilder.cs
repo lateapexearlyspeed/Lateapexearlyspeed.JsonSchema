@@ -14,15 +14,15 @@ public class OrKeywordBuilder : KeywordBuilder
 
     internal override KeywordCollection Build()
     {
-        List<JsonSchema> bodyJsonSchema = _configureSchemaBuilders.Select(configure =>
+        IEnumerable<BodyJsonSchema> bodyJsonSchema = _configureSchemaBuilders.Select(configure =>
         {
             var jsonSchemaBuilder = new JsonSchemaBuilder();
             configure(jsonSchemaBuilder);
             return jsonSchemaBuilder.Build();
-        }).ToList<JsonSchema>();
+        });
 
         Keywords.Add(new AnyOfKeyword(bodyJsonSchema));
 
-        return new KeywordCollection(Keywords.ToList());
+        return new KeywordCollection(Keywords);
     }
 }

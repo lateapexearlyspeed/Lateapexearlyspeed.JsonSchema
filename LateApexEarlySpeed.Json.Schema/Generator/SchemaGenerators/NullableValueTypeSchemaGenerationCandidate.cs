@@ -19,10 +19,7 @@ internal class NullableValueTypeSchemaGenerationCandidate : ISchemaGenerationCan
 
         BodyJsonSchema underlyingSchema = JsonSchemaGenerator.GenerateSchema(underlyingType, keywordsFromProperty, options);
 
-        BodyJsonSchema nullTypeSchema = new BodyJsonSchema(new List<KeywordBase>
-        {
-            new TypeKeyword(InstanceType.Null)
-        });
+        var nullTypeSchema = new BodyJsonSchema(new KeywordBase[] { new TypeKeyword(InstanceType.Null) });
 
         if (underlyingSchema is JsonSchemaResource schemaResource)
         {
@@ -30,8 +27,8 @@ internal class NullableValueTypeSchemaGenerationCandidate : ISchemaGenerationCan
             underlyingSchema = SchemaGenerationHelper.GenerateSchemaReference(underlyingType, keywordsFromProperty, options.MainDocumentBaseUri!);
         }
 
-        var anyOfKeyword = new AnyOfKeyword(new List<JsonSchema> { nullTypeSchema, underlyingSchema });
+        var anyOfKeyword = new AnyOfKeyword(new [] { nullTypeSchema, underlyingSchema });
 
-        return new BodyJsonSchema(new List<KeywordBase> { anyOfKeyword });
+        return new BodyJsonSchema(new KeywordBase[] { anyOfKeyword });
     }
 }

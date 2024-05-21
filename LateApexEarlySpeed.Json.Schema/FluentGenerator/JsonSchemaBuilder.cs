@@ -30,9 +30,6 @@ public class JsonSchemaBuilder
         return dateTimeOffsetKeywordBuilder;
     }
 
-    private static InvalidOperationException CreateExceptionOfRebindKeywordBuilder() 
-        => new($"{nameof(JsonSchemaBuilder)} instance only needs to be configured once.");
-
     /// <summary>
     /// Specify that current json node should not be Json Null
     /// </summary>
@@ -221,12 +218,12 @@ public class JsonSchemaBuilder
 
             return new BodyJsonSchema(keywordCollection.Keywords, 
                 keywordCollection.ArrayContainsValidator is null
-                  ? new List<ISchemaContainerValidationNode>(0)
-                  : new List<ISchemaContainerValidationNode>(1){keywordCollection.ArrayContainsValidator},
+                  ? Enumerable.Empty<ISchemaContainerValidationNode>() 
+                  : new ISchemaContainerValidationNode[] {keywordCollection.ArrayContainsValidator},
                 null, null, null, null, null);
         }
 
-        return new BodyJsonSchema(new List<KeywordBase>(0));
+        return new BodyJsonSchema(Enumerable.Empty<KeywordBase>());
     }
 
     public JsonValidator BuildValidator()
@@ -253,4 +250,7 @@ public class JsonSchemaBuilder
             throw CreateExceptionOfRebindKeywordBuilder();
         }
     }
+
+    private static InvalidOperationException CreateExceptionOfRebindKeywordBuilder()
+        => new($"{nameof(JsonSchemaBuilder)} instance only needs to be configured once.");
 }

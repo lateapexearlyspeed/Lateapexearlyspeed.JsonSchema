@@ -15,6 +15,6 @@ internal class UriSchemaGenerationCandidate : ISchemaGenerationCandidate
         var typeKeyword = new TypeKeyword(InstanceType.String, InstanceType.Null);
         var formatKeyword = new FormatKeyword(UriReferenceFormatValidator.FormatName);
 
-        return new BodyJsonSchema(new List<KeywordBase>(keywordsFromProperty) { typeKeyword, formatKeyword });
+        return new BodyJsonSchema(keywordsFromProperty.Append(typeKeyword).Append(formatKeyword));
     }
 }

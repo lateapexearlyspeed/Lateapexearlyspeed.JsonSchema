@@ -12,16 +12,16 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(PropertiesKeywordJsonConverter))]
 internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
 {
-    public Dictionary<string, JsonSchema> PropertiesSchemas { get; }
+    public IReadOnlyDictionary<string, JsonSchema> PropertiesSchemas { get; }
 
-    public PropertiesKeyword(Dictionary<string, JsonSchema> propertiesSchemas)
+    public PropertiesKeyword(IDictionary<string, JsonSchema> propertiesSchemas)
     {
-        foreach (var (propName, schema) in propertiesSchemas)
+        PropertiesSchemas = new Dictionary<string, JsonSchema>(propertiesSchemas);
+
+        foreach (var (propName, schema) in PropertiesSchemas)
         {
             schema.Name = propName;
         }
-
-        PropertiesSchemas = propertiesSchemas;
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)

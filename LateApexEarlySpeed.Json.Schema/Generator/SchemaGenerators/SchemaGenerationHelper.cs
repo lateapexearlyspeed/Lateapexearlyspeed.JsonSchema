@@ -10,27 +10,27 @@ internal static class SchemaGenerationHelper
 {
     public static BodyJsonSchema GenerateSchemaForUnsignedInteger(IEnumerable<KeywordBase> keywordsFromProperty, ulong max)
     {
-        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Integer)).Append(new MinimumKeyword(0)).Append(new MaximumKeyword(max)).ToList());
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Integer)).Append(new MinimumKeyword(0)).Append(new MaximumKeyword(max)));
     }
 
     public static BodyJsonSchema GenerateSchemaForSignedInteger(IEnumerable<KeywordBase> keywordsFromProperty, long min, long max)
     {
-        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Integer)).Append(new MinimumKeyword(min)).Append(new MaximumKeyword(max)).ToList());
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Integer)).Append(new MinimumKeyword(min)).Append(new MaximumKeyword(max)));
     }
 
     public static BodyJsonSchema GenerateSchemaForDouble(IEnumerable<KeywordBase> keywordsFromProperty, double min, double max)
     {
-        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Number)).Append(new MinimumKeyword(min)).Append(new MaximumKeyword(max)).ToList());
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Number)).Append(new MinimumKeyword(min)).Append(new MaximumKeyword(max)));
     }
 
     public static BodyJsonSchema GenerateSchemaForDecimal(IEnumerable<KeywordBase> keywordsFromProperty)
     {
-        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Number)).Append(new MinimumKeyword(decimal.MinValue)).Append(new MaximumKeyword(decimal.MaxValue)).ToList());
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Number)).Append(new MinimumKeyword(decimal.MinValue)).Append(new MaximumKeyword(decimal.MaxValue)));
     }
 
     public static BodyJsonSchema GenerateSchemaReference(Type type, IEnumerable<KeywordBase> keywordsFromProperty, Uri baseUri)
     {
-        return new BodyJsonSchema(keywordsFromProperty.ToList(), new List<ISchemaContainerValidationNode>(0), new SchemaReferenceKeyword(CreateRefUri(type, baseUri)), null, null, null, null);
+        return new BodyJsonSchema(keywordsFromProperty, Enumerable.Empty<ISchemaContainerValidationNode>(), new SchemaReferenceKeyword(CreateRefUri(type, baseUri)), null, null, null, null);
     }
 
     private static Uri CreateRefUri(Type type, Uri baseUri)
@@ -43,7 +43,7 @@ internal static class SchemaGenerationHelper
 
     public static BodyJsonSchema GenerateSchemaForJsonType(InstanceType instanceType, IEnumerable<KeywordBase> keywordsFromProperty)
     {
-        return new BodyJsonSchema(new List<KeywordBase>(keywordsFromProperty) { new TypeKeyword(instanceType) });
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(instanceType)));
     }
 
     /// <summary>

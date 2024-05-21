@@ -17,10 +17,10 @@ public class LengthRangeAttribute : Attribute, IKeywordGenerator
 
     public KeywordBase CreateKeyword(Type type)
     {
-        return new AllOfKeyword(new List<JsonSchema>
+        return new AllOfKeyword(new []
         {
-            new BodyJsonSchema(new List<KeywordBase> { CreateKeywordForMin(type) }),
-            new BodyJsonSchema(new List<KeywordBase> { CreateKeywordForMax(type) })
+            new BodyJsonSchema(new[] { CreateKeywordForMin(type) }),
+            new BodyJsonSchema(new[] { CreateKeywordForMax(type) })
         });
     }
 

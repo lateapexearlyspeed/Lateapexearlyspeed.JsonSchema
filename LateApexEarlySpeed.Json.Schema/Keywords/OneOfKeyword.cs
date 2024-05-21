@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.Contracts;
+using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -12,7 +13,26 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<OneOfKeyword>))]
 internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContainerElement
 {
-    public List<JsonSchema> SubSchemas { get; init; } = null!;
+    private readonly JsonSchema[] _subSchemas = null!;
+
+    public IReadOnlyList<JsonSchema> SubSchemas
+    {
+        get => _subSchemas;
+        init => _subSchemas = CreateSubSchema(value);
+    }
+
+    [Pure]
+    private static JsonSchema[] CreateSubSchema(IEnumerable<JsonSchema> subSchemas)
+    {
+        JsonSchema[] result = subSchemas.ToArray();
+
+        for (int i = 0; i < result.Length; i++)
+        {
+            result[i].Name = i.ToString();
+        }
+
+        return result;
+    }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {

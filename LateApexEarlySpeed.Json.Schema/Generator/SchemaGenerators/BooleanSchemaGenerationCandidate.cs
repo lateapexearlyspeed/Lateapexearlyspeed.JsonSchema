@@ -12,6 +12,6 @@ internal class BooleanSchemaGenerationCandidate : ISchemaGenerationCandidate
 
     public BodyJsonSchema Generate(Type typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
-        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Boolean)).ToList());
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.Boolean)));
     }
 }

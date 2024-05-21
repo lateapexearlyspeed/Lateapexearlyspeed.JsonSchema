@@ -69,7 +69,7 @@ public class NumberKeywordBuilder : KeywordBuilder
 
     private NumberKeywordBuilder IsIn<T>(IEnumerable<T> collection) where T : unmanaged
     {
-        Keywords.Add(new EnumKeyword(collection.Select(item => JsonInstanceSerializer.SerializeToElement(item)).ToList()));
+        Keywords.Add(new EnumKeyword(collection.Select(item => JsonInstanceSerializer.SerializeToElement(item))));
 
         return this;
     }

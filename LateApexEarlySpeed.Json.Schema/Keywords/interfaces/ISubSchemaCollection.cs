@@ -4,5 +4,5 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 internal interface ISubSchemaCollection
 {
-    List<JsonSchema> SubSchemas { get; init; }
+    IReadOnlyList<JsonSchema> SubSchemas { get; init; }
 }

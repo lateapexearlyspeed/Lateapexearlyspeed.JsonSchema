@@ -14,6 +14,6 @@ internal class ArbitraryJsonTypesSchemaGenerationCandidate : ISchemaGenerationCa
 
     public BodyJsonSchema Generate(Type typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
-        return new BodyJsonSchema(keywordsFromProperty.ToList());
+        return new BodyJsonSchema(keywordsFromProperty);
     }
 }

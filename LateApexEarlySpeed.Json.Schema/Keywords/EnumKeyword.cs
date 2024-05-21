@@ -9,16 +9,18 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(EnumKeywordJsonConverter))]
 internal class EnumKeyword : KeywordBase
 {
-    public List<JsonInstanceElement> EnumList { get; }
+    private readonly List<JsonInstanceElement> _enumList;
 
-    public EnumKeyword(List<JsonInstanceElement> enumList)
+    public IReadOnlyList<JsonInstanceElement> EnumList => _enumList;
+
+    public EnumKeyword(IEnumerable<JsonInstanceElement> enumList)
     {
-        EnumList = enumList;
+        _enumList = enumList.ToList();
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return EnumList.Contains(instance)
+        return _enumList.Contains(instance)
             ? ValidationResult.ValidResult
             : ValidationResult.CreateFailedResult(ResultCode.NotFoundInAllowedList, ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location);
     }

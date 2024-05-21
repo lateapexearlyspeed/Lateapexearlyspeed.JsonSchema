@@ -215,7 +215,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         return (T)(object)schema;
     }
 
-    private static void ThrowIfKeywordsHasDuplication(List<KeywordBase> keywords)
+    private static void ThrowIfKeywordsHasDuplication(ICollection<KeywordBase> keywords)
     {
         KeywordBase? duplicatedKeyword = BodyJsonSchema.FindFirstDuplicatedKeyword(keywords);
         if (duplicatedKeyword is not null)

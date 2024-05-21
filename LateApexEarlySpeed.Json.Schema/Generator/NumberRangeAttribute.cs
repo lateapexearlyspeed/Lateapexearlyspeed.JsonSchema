@@ -17,10 +17,10 @@ public class NumberRangeAttribute : Attribute, IKeywordGenerator
 
     public KeywordBase CreateKeyword(Type type)
     {
-        return new AllOfKeyword(new List<JsonSchema>
+        return new AllOfKeyword(new[]
         {
-            new BodyJsonSchema(new List<KeywordBase> { new MinimumKeyword(_min) }),
-            new BodyJsonSchema(new List<KeywordBase> { new MaximumKeyword(_max) })
+            new BodyJsonSchema(new[] { new MinimumKeyword(_min) }),
+            new BodyJsonSchema(new[] { new MaximumKeyword(_max) })
         });
     }
 }

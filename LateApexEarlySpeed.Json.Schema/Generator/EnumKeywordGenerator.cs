@@ -14,6 +14,6 @@ internal class EnumKeywordGenerator<T> where T : notnull
 
     public KeywordBase CreateKeyword()
     {
-        return new EnumKeyword(_allowedValues.Select(value => JsonInstanceSerializer.SerializeToElement(value)).ToList());
+        return new EnumKeyword(_allowedValues.Select(value => JsonInstanceSerializer.SerializeToElement(value)));
     }
 }

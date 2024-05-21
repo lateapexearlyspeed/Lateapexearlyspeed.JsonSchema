@@ -30,7 +30,7 @@ public class StringKeywordBuilder : KeywordBuilder
     /// <returns></returns>
     public StringKeywordBuilder IsIn(IEnumerable<string> collection)
     {
-        Keywords.Add(new EnumKeyword(collection.Select(JsonInstanceSerializer.SerializeToElement).ToList()));
+        Keywords.Add(new EnumKeyword(collection.Select(JsonInstanceSerializer.SerializeToElement)));
 
         return this;
     }
@@ -78,7 +78,7 @@ public class StringKeywordBuilder : KeywordBuilder
     /// <returns></returns>
     public StringKeywordBuilder NotMatch(string pattern)
     {
-        Keywords.Add(new NotKeyword{Schema = new BodyJsonSchema(new List<KeywordBase>{new PatternKeyword(pattern)})});
+        Keywords.Add(new NotKeyword{Schema = new BodyJsonSchema(new KeywordBase[] {new PatternKeyword(pattern)})});
 
         return this;
     }

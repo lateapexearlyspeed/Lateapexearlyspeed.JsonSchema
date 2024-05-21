@@ -12,6 +12,6 @@ internal class StringSchemaGenerationCandidate : ISchemaGenerationCandidate
 
     public BodyJsonSchema Generate(Type typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
-        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.String, InstanceType.Null)).ToList());
+        return new BodyJsonSchema(keywordsFromProperty.Append(new TypeKeyword(InstanceType.String, InstanceType.Null)));
     }
 }

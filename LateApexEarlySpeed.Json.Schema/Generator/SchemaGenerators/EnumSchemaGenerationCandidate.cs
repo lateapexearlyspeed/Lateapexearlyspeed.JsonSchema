@@ -29,7 +29,7 @@ internal class EnumSchemaGenerationCandidate : ISchemaGenerationCandidate
             enumCollection = allowedStringEnums.Concat(allowedNumberEnums);
         }
         
-        var enumKeyword = new EnumKeyword(enumCollection.ToList());
+        var enumKeyword = new EnumKeyword(enumCollection);
 
         var keywords = new List<KeywordBase> { enumKeyword };
         keywords.AddRange(keywordsFromProperty);

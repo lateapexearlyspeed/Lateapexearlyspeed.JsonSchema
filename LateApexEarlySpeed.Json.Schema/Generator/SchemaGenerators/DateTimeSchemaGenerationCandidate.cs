@@ -1,5 +1,4 @@
-﻿using LateApexEarlySpeed.Json.Schema.FluentGenerator;
-using LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
+﻿using LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 
@@ -17,6 +16,6 @@ internal class DateTimeSchemaGenerationCandidate : ISchemaGenerationCandidate
         var typeKeyword = new TypeKeyword(InstanceType.String);
         var dateTimeFormatExtensionKeyword = new DateTimeFormatExtensionKeyword();
 
-        return new BodyJsonSchema(new List<KeywordBase>(keywordsFromProperty) { typeKeyword, dateTimeFormatExtensionKeyword });
+        return new BodyJsonSchema(keywordsFromProperty.Append(typeKeyword).Append(dateTimeFormatExtensionKeyword));
     }
 }

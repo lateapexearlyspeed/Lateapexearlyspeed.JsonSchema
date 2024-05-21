@@ -15,6 +15,6 @@ internal class GuidSchemaGenerationCandidate : ISchemaGenerationCandidate
         var typeKeyword = new TypeKeyword(InstanceType.String);
         var formatKeyword = new FormatKeyword(GuidFormatValidator.FormatName);
 
-        return new BodyJsonSchema(new List<KeywordBase>(keywordsFromProperty) { typeKeyword, formatKeyword });
+        return new BodyJsonSchema(keywordsFromProperty.Append(typeKeyword).Append(formatKeyword));
     }
 }

@@ -66,14 +66,14 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
             if (memberType.IsEnum && EnumSchemaGenerationCandidate.HasJsonStringEnumConverter(memberInfo))
             {
                 keywordsForAdditionalAttributes ??= new List<KeywordBase>(1);
-                keywordsForAdditionalAttributes.Add(new EnumKeyword(memberType.GetEnumNames().Select(JsonInstanceSerializer.SerializeToElement).ToList()));
+                keywordsForAdditionalAttributes.Add(new EnumKeyword(memberType.GetEnumNames().Select(JsonInstanceSerializer.SerializeToElement)));
             }
 
             if (keywordsForAdditionalAttributes is not null)
             {
-                var allOfKeyword = new AllOfKeyword(new List<JsonSchema> { propertySchema, new BodyJsonSchema(keywordsForAdditionalAttributes) });
+                var allOfKeyword = new AllOfKeyword(new[] { propertySchema, new BodyJsonSchema(keywordsForAdditionalAttributes) });
 
-                propertySchema = new BodyJsonSchema(new List<KeywordBase> { allOfKeyword });
+                propertySchema = new BodyJsonSchema(new KeywordBase[] { allOfKeyword });
             }
 
             propertiesSchemas[GetPropertyName(memberInfo, options)] = propertySchema;

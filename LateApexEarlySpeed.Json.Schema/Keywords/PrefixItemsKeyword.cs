@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics.Contracts;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -13,29 +14,35 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<PrefixItemsKeyword>))]
 internal class PrefixItemsKeyword : KeywordBase, ISchemaContainerElement, ISubSchemaCollection
 {
-    private readonly List<JsonSchema> _subSchemas = null!;
+    private readonly JsonSchema[] _subSchemas = null!;
 
     public PrefixItemsKeyword()
     {
     }
 
-    public PrefixItemsKeyword(List<JsonSchema> subSchemas)
+    public PrefixItemsKeyword(IEnumerable<JsonSchema> subSchemas)
     {
-        SubSchemas = subSchemas;
+        _subSchemas = CreateSubSchema(subSchemas);
     }
 
-    public List<JsonSchema> SubSchemas
+    public IReadOnlyList<JsonSchema> SubSchemas
     {
         get => _subSchemas;
 
-        init
+        init => _subSchemas = CreateSubSchema(value);
+    }
+
+    [Pure]
+    private static JsonSchema[] CreateSubSchema(IEnumerable<JsonSchema> subSchemas)
+    {
+        JsonSchema[] result = subSchemas.ToArray();
+
+        for (int i = 0; i < result.Length; i++)
         {
-            _subSchemas = value;
-            for (int i = 0; i < _subSchemas.Count; i++)
-            {
-                _subSchemas[i].Name = i.ToString();
-            }
+            result[i].Name = i.ToString();
         }
+
+        return result;
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)

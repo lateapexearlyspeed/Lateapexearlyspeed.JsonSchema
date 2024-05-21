@@ -132,7 +132,7 @@ public class ObjectKeywordBuilder : KeywordBuilder
                 return jsonSchemaBuilder.Build();
             }));
 
-        var requiredKeyword = new RequiredKeyword(_requiredProperties.ToArray());
+        var requiredKeyword = new RequiredKeyword(_requiredProperties);
 
         Keywords.Add(propertiesKeyword);
         Keywords.Add(requiredKeyword);
@@ -143,6 +143,6 @@ public class ObjectKeywordBuilder : KeywordBuilder
         }
         
 
-        return new KeywordCollection(Keywords.ToList());
+        return new KeywordCollection(Keywords);
     }
 }

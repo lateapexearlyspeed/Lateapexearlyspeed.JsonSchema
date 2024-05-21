@@ -17,7 +17,7 @@ public class KeywordBuilder
 
     internal virtual KeywordCollection Build()
     { 
-        return new KeywordCollection(Keywords.ToList());
+        return new KeywordCollection(Keywords);
     }
 }
 

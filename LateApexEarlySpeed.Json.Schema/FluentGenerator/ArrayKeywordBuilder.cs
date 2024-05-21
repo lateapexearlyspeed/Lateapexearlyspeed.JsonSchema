@@ -63,13 +63,13 @@ public class ArrayKeywordBuilder : KeywordBuilder
     public ArrayKeywordBuilder HasCollection(params Action<JsonSchemaBuilder>[] elementInspectors)
     {
         var schemaBuilder = new JsonSchemaBuilder();
-        List<JsonSchema> subSchemas = elementInspectors.Select<Action<JsonSchemaBuilder>, JsonSchema>(inspector =>
+        IEnumerable<BodyJsonSchema> subSchemas = elementInspectors.Select(inspector =>
         {
             var builder = new JsonSchemaBuilder();
             inspector(builder);
 
             return builder.Build();
-        }).ToList();
+        });
         var prefixItemsKeyword = new PrefixItemsKeyword(subSchemas);
         schemaBuilder.IsJsonArray().HasLength((uint)elementInspectors.Length).Keywords.Add(prefixItemsKeyword);
 
@@ -167,8 +167,8 @@ public class ArrayKeywordBuilder : KeywordBuilder
 
         var arrayContainsValidator = new ArrayContainsValidator(jsonSchemaBuilder.Build(), null, null);
 
-        _schemas.Add(new BodyJsonSchema(new List<KeywordBase>(0), 
-            new List<ISchemaContainerValidationNode>(0){arrayContainsValidator}, null, null, null, null, null));
+        _schemas.Add(new BodyJsonSchema(Enumerable.Empty<KeywordBase>(), 
+            new ISchemaContainerValidationNode[] {arrayContainsValidator}, null, null, null, null, null));
 
         return this;
     }
@@ -227,7 +227,7 @@ public class ArrayKeywordBuilder : KeywordBuilder
         BodyJsonSchema subSchema = builder.Build();
         var arrayContainsValidator = new ArrayContainsValidator(subSchema, 1, 1);
 
-        _schemas.Add(new BodyJsonSchema(new List<KeywordBase>(0), new List<ISchemaContainerValidationNode>(1){arrayContainsValidator}, 
+        _schemas.Add(new BodyJsonSchema(Enumerable.Empty<KeywordBase>(), new ISchemaContainerValidationNode[] {arrayContainsValidator}, 
             null, null, null, null, null));
 
         return this;
@@ -254,6 +254,6 @@ public class ArrayKeywordBuilder : KeywordBuilder
             Keywords.Add(new AllOfKeyword(_schemas));
         }
 
-        return new KeywordCollection(Keywords.ToList());
+        return new KeywordCollection(Keywords);
     }
 }

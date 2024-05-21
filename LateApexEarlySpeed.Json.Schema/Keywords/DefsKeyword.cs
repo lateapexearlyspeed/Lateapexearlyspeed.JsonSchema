@@ -15,12 +15,12 @@ internal class DefsKeyword : ISchemaContainerElement
 {
     public const string Keyword = "$defs";
 
-    public Dictionary<string, JsonSchema> Definitions { get; }
+    public IReadOnlyDictionary<string, JsonSchema> Definitions { get; }
 
     /// <param name="definitions">Keys of it are short def name which is unescaped content</param>
-    public DefsKeyword(Dictionary<string, JsonSchema> definitions)
+    public DefsKeyword(IDictionary<string, JsonSchema> definitions)
     {
-        Definitions = definitions;
+        Definitions = new Dictionary<string, JsonSchema>(definitions);
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

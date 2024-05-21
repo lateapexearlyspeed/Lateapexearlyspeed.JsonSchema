@@ -8,6 +8,9 @@ namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
 internal class BodyJsonSchema : JsonSchema
 {
+    private readonly ISchemaContainerValidationNode[] _schemaContainerValidators;
+    private readonly IReadOnlyList<KeywordBase> _keywords;
+
     // {
     //     "$schema": "https://json-schema.org/draft/2020-12/schema",
     //     "$id": "http://example.com/a.json",
@@ -38,9 +41,9 @@ internal class BodyJsonSchema : JsonSchema
     /// </summary>
     public DefsKeyword? DefsKeyword { get; }
 
-    public List<ISchemaContainerValidationNode> SchemaContainerValidators { get; }
+    public IReadOnlyList<ISchemaContainerValidationNode> SchemaContainerValidators => _schemaContainerValidators;
 
-    public List<KeywordBase> Keywords { get; }
+    public IReadOnlyList<KeywordBase> Keywords => _keywords;
 
     public SchemaReferenceKeyword? SchemaReference { get; }
 
@@ -50,20 +53,20 @@ internal class BodyJsonSchema : JsonSchema
 
     public string? DynamicAnchor { get; }
 
-    public BodyJsonSchema(List<KeywordBase> keywords) : this(keywords, new List<ISchemaContainerValidationNode>(0), null, null, null, null, null)
+    public BodyJsonSchema(IEnumerable<KeywordBase> keywords) : this(keywords, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null)
     {
 
     }
 
-    public BodyJsonSchema(List<KeywordBase> keywords, List<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor, DefsKeyword? defsKeyword)
+    public BodyJsonSchema(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor, DefsKeyword? defsKeyword)
     {
-        Keywords = MergeKeywords(keywords);
+        _keywords = MergeKeywords(keywords.ToArray());
 
         Debug.Assert(schemaContainerValidators.All(
                 validator
                     => validator.GetType() == typeof(ConditionalValidator)
                     || validator.GetType() == typeof(ArrayContainsValidator)));
-        SchemaContainerValidators = schemaContainerValidators;
+        _schemaContainerValidators = schemaContainerValidators.ToArray();
 
         SchemaReference = schemaReference;
         SchemaDynamicReference = schemaDynamicReference;
@@ -77,14 +80,14 @@ internal class BodyJsonSchema : JsonSchema
     /// <summary>
     /// Put all duplicated keywords and original 'allOf' keyword(s) into one newly created 'allOf' keyword, so that de-dup them
     /// </summary>
-    private static List<KeywordBase> MergeKeywords(List<KeywordBase> keywords)
+    private static IReadOnlyList<KeywordBase> MergeKeywords(KeywordBase[] keywords)
     {
         if (FindFirstDuplicatedKeyword(keywords) is null)
         {
             return keywords;
         }
 
-        var keywordGroups = new Dictionary<string, List<KeywordBase>>(keywords.Count);
+        var keywordGroups = new Dictionary<string, List<KeywordBase>>(keywords.Length);
         foreach (KeywordBase keyword in keywords)
         {
             if (!keywordGroups.TryGetValue(keyword.Name, out List<KeywordBase>? group))
@@ -97,7 +100,7 @@ internal class BodyJsonSchema : JsonSchema
             group.Add(keyword);
         }
 
-        var result = new List<KeywordBase>(keywords.Count);
+        var result = new List<KeywordBase>(keywords.Length);
 
         // this includes all duplicated keywords (including 'allOf' keyword)
         var duplicatedKeywords = new List<KeywordBase>();
@@ -120,7 +123,7 @@ internal class BodyJsonSchema : JsonSchema
         Debug.Assert(duplicatedKeywords.Count != 0);
 
         // Combine all duplicated keywords into ONE new 'allOf' keyword
-        var allOfKeyword = new AllOfKeyword(duplicatedKeywords.Select(k => new BodyJsonSchema(new List<KeywordBase>(1) { k })).Cast<JsonSchema>().ToList());
+        var allOfKeyword = new AllOfKeyword(duplicatedKeywords.Select(k => new BodyJsonSchema(new[] { k })) );
         result.Add(allOfKeyword);
 
         return result;
@@ -128,7 +131,7 @@ internal class BodyJsonSchema : JsonSchema
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        IEnumerable<IValidationNode> validationNodes = Keywords.Concat<IValidationNode>(SchemaContainerValidators);
+        IEnumerable<IValidationNode> validationNodes = _keywords.Concat<IValidationNode>(_schemaContainerValidators);
 
         if (SchemaReference is not null)
         {
@@ -154,7 +157,7 @@ internal class BodyJsonSchema : JsonSchema
 
     public override ISchemaContainerElement? GetSubElement(string name)
     {
-        foreach (KeywordBase keyword in Keywords)
+        foreach (KeywordBase keyword in _keywords)
         {
             if (keyword.Name == name && keyword is ISchemaContainerElement schemaContainerElement)
             {
@@ -162,7 +165,7 @@ internal class BodyJsonSchema : JsonSchema
             }
         }
 
-        foreach (ISchemaContainerValidationNode schemaContainer in SchemaContainerValidators)
+        foreach (ISchemaContainerValidationNode schemaContainer in _schemaContainerValidators)
         {
             ISchemaContainerElement? schemaContainerElement = schemaContainer.GetSubElement(name);
             if (schemaContainerElement is not null)
@@ -181,7 +184,7 @@ internal class BodyJsonSchema : JsonSchema
 
     public override IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
-        foreach (KeywordBase validationKeyword in Keywords)
+        foreach (KeywordBase validationKeyword in _keywords)
         {
             if (validationKeyword is ISchemaContainerElement element)
             {
@@ -189,7 +192,7 @@ internal class BodyJsonSchema : JsonSchema
             }
         }
 
-        IEnumerable<ISchemaContainerElement> schemaContainers = SchemaContainerValidators;
+        IEnumerable<ISchemaContainerElement> schemaContainers = _schemaContainerValidators;
         if (DefsKeyword is not null)
         {
             schemaContainers = schemaContainers.Append(DefsKeyword);
@@ -219,16 +222,16 @@ internal class BodyJsonSchema : JsonSchema
 
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id, DefsKeyword defsKeyword)
     {
-        return new BodyJsonSchemaDocument(Keywords, SchemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, id, defsKeyword);
+        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, id, defsKeyword);
     }
 
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id)
     {
-        return new BodyJsonSchemaDocument(Keywords, SchemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, id, DefsKeyword);
+        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, id, DefsKeyword);
     }
 
     /// <returns>One of duplicated keyword if duplication occurs; null otherwise.</returns>
-    public static KeywordBase? FindFirstDuplicatedKeyword(List<KeywordBase> keywords)
+    public static KeywordBase? FindFirstDuplicatedKeyword(ICollection<KeywordBase> keywords)
     {
         if (keywords.Count == 0 || keywords.Count == 1)
         {
