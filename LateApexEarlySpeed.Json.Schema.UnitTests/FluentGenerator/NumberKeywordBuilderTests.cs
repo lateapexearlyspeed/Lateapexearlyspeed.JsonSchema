@@ -526,10 +526,10 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("2.5");
-        AssertValidationResult(validationResult, false, MultipleOfKeyword.ErrorMessage(2.5, 2), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ULongMultipleOfChecker.ErrorMessage(2.5, 2), ImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-2.5");
-        AssertValidationResult(validationResult, false, MultipleOfKeyword.ErrorMessage(-2.5, 2), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ULongMultipleOfChecker.ErrorMessage(-2.5, 2), ImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonNumber().HasCustomValidation((double _) => true, value => $"bad msg: {value}")
@@ -546,10 +546,56 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("2.499");
-        AssertValidationResult(validationResult, false, MultipleOfKeyword.ErrorMessage(2.499, 1.25), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, DoubleMultipleOfChecker.ErrorMessage(2.499, 1.25), ImmutableJsonPointer.Empty);
+
+        jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonNumber().HasCustomValidation((double _) => true, value => $"bad msg: {value}")
+            .IsGreaterThan(long.MinValue).MultipleOf(1.25m);
+        jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        validationResult = jsonValidator.Validate("0");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("2.5");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("-2.5");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("2.499");
+        AssertValidationResult(validationResult, false, DecimalMultipleOfChecker.ErrorMessage(2.499m, 1.25m), ImmutableJsonPointer.Empty);
+
+        jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonNumber().MultipleOf(0.001m);
+        jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        validationResult = jsonValidator.Validate("0.001");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("114201340.72");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("314201340.72");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("8355604201340.72");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("8355604201340.729");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("18355604201340.729");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("118355604201340.729");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("8355604201340.7201");
+        AssertValidationResult(validationResult, false, DecimalMultipleOfChecker.ErrorMessage(8355604201340.7201m, 0.001m), ImmutableJsonPointer.Empty);
 
         Assert.Throws<ArgumentOutOfRangeException>("multipleOf", () => new JsonSchemaBuilder().IsJsonNumber().MultipleOf(0));
-        Assert.Throws<ArgumentOutOfRangeException>("multipleOf", () => new JsonSchemaBuilder().IsJsonNumber().MultipleOf(-1));
+        Assert.Throws<ArgumentOutOfRangeException>("multipleOf", () => new JsonSchemaBuilder().IsJsonNumber().MultipleOf(-1.0));
+        Assert.Throws<ArgumentOutOfRangeException>("multipleOf", () => new JsonSchemaBuilder().IsJsonNumber().MultipleOf(-1.0m));
     }
 
     [Fact]

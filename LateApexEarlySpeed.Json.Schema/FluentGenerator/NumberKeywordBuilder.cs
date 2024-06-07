@@ -174,8 +174,29 @@ public class NumberKeywordBuilder : KeywordBuilder
     /// Specify that current json number should be multiple of <paramref name="multipleOf"/>
     /// </summary>
     /// <param name="multipleOf"></param>
-    /// <returns></returns>
     public NumberKeywordBuilder MultipleOf(double multipleOf)
+    {
+        Keywords.Add(new MultipleOfKeyword(multipleOf));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specify that current json number should be multiple of <paramref name="multipleOf"/>
+    /// </summary>
+    /// <param name="multipleOf"></param>
+    public NumberKeywordBuilder MultipleOf(decimal multipleOf)
+    {
+        Keywords.Add(new MultipleOfKeyword(multipleOf));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specify that current json number should be multiple of <paramref name="multipleOf"/>
+    /// </summary>
+    /// <param name="multipleOf"></param>
+    public NumberKeywordBuilder MultipleOf(ulong multipleOf)
     {
         Keywords.Add(new MultipleOfKeyword(multipleOf));
 

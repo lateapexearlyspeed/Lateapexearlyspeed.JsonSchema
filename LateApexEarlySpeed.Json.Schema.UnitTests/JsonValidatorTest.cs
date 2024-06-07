@@ -204,6 +204,31 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             Assert.Equal(new Uri("http://main"), validationResult.SubSchemaRefFullUri);
         }
 
+        [Theory]
+        [InlineData("0.001", "0.001", true)]
+        [InlineData("114201340.72", "0.001", true)]
+        [InlineData("314201340.72", "0.001", true)]
+        [InlineData("8355604201340.72", "0.001", true)]
+        [InlineData("8355604201340.729", "0.001", true)]
+        [InlineData("18355604201340.729", "0.001", true)]
+        [InlineData("118355604201340.729", "0.001", true)]
+        [InlineData("8355604201340.7201", "0.001", false)]
+
+        [InlineData("-0.0001", "0.0001", true)]
+        [InlineData("-114201340.7201", "0.0001", true)]
+        [InlineData("-314201340.7201", "0.0001", true)]
+        [InlineData("-8355604201340.7201", "0.0001", true)]
+        [InlineData("-18355604201340.7201", "0.0001", true)]
+        [InlineData("-118355604201340.7201", "0.0001", true)]
+        [InlineData("-8355604201340.72001", "0.0001", false)]
+        public void Validate_MultipleOf(string jsonInstance, string multipleOf, bool expectedValidationResult)
+        {
+            var jsonValidator = new JsonValidator($$"""{"multipleOf": {{multipleOf}} }""");
+            bool actualValidationResult = jsonValidator.Validate(jsonInstance).IsValid;
+
+            Assert.Equal(expectedValidationResult, actualValidationResult);
+        }
+
         /// <summary>
         /// Refer to: https://github.com/json-schema-org/JSON-Schema-Test-Suite#terminology
         /// </summary>
