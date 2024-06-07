@@ -13,6 +13,26 @@ internal class MultipleOfKeywordJsonConverter : JsonConverter<MultipleOfKeyword>
             throw ThrowHelper.CreateKeywordHasInvalidJsonValueKindJsonException<MultipleOfKeyword>(JsonValueKind.Number);
         }
 
+        if (reader.TryGetUInt64(out ulong ulongMultipleOf))
+        {
+            if (ulongMultipleOf == 0)
+            {
+                throw ThrowHelper.CreateKeywordHasInvalidPositiveNumberJsonException<MultipleOfKeyword>();
+            }
+
+            return new MultipleOfKeyword(ulongMultipleOf);
+        }
+
+        if (reader.TryGetDecimal(out decimal decimalMultipleOf))
+        {
+            if (decimalMultipleOf <= 0)
+            {
+                throw ThrowHelper.CreateKeywordHasInvalidPositiveNumberJsonException<MultipleOfKeyword>();
+            }
+
+            return new MultipleOfKeyword(decimalMultipleOf);
+        }
+
         double multipleOf = reader.GetDouble();
         if (multipleOf <= 0)
         {
@@ -24,7 +44,7 @@ internal class MultipleOfKeywordJsonConverter : JsonConverter<MultipleOfKeyword>
 
     public override void Write(Utf8JsonWriter writer, MultipleOfKeyword value, JsonSerializerOptions options)
     {
-        writer.WriteNumberValue(value.MultipleOf);
+        value.WriteMultipleOfValue(writer);
     }
 
     public override bool HandleNull => true;

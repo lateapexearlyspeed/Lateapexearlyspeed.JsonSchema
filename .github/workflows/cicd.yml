@@ -6,7 +6,7 @@ name: cicd
 on:
   push:
     # Sequence of patterns matched against refs/heads
-    branches: [ "master", "CanOutputMainSchemaDocument" ]
+    branches: [ "master", "Issue-**" ]
     # Sequence of patterns matched against refs/tags
     tags: ["publish-corelib*", "publish-efcore*", "publish-xunit*"]
   pull_request:

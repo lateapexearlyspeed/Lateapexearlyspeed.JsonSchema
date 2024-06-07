@@ -1556,7 +1556,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": 4.3
 }
-""", new ValidationResult(ResultCode.FailedToMultiple, "multipleOf", MultipleOfKeyword.ErrorMessage(4.3, 1.5),
+""", new ValidationResult(ResultCode.FailedToMultiple, "multipleOf", DoubleMultipleOfChecker.ErrorMessage(4.3, 1.5),
             ImmutableJsonPointer.Create("/Prop")!, ImmutableJsonPointer.Create("/properties/Prop/multipleOf"),
             GetSchemaResourceBaseUri<MultipleOfAttributeTestClass>(),
             GetSchemaResourceBaseUri<MultipleOfAttributeTestClass>()
