@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
@@ -58,7 +59,7 @@ internal class MultipleOfKeyword : KeywordBase
         MultipleOfResult multipleOfResult = _multipleOfChecker.Check(instance.InternalJsonElement);
         return multipleOfResult.IsSuccess
             ? ValidationResult.ValidResult 
-            : ValidationResult.CreateFailedResult(ResultCode.FailedToMultiple, multipleOfResult.ErrorMessage!, options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.CreateFailedResult(ResultCode.FailedToMultiple, multipleOfResult.ErrorMessage, options.ValidationPathStack, Name, instance.Location);
     }
 }
 
@@ -218,9 +219,10 @@ internal interface IMultipleOfChecker
 
 internal readonly ref struct MultipleOfResult
 {
-    public readonly bool IsSuccess;
+    [MemberNotNullWhen(false, nameof(ErrorMessage))]
+    public bool IsSuccess { get; }
 
-    public readonly string? ErrorMessage;
+    public string? ErrorMessage { get; }
 
     private MultipleOfResult(bool isSuccess, string? errorMessage)
     {
