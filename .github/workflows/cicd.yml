@@ -113,7 +113,6 @@ jobs:
     
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/publish-efcore')
     runs-on: ubuntu-22.04
-    environment: 'PublishPackages'
     permissions: write-all
     
     steps:
@@ -159,7 +158,6 @@ jobs:
     
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/publish-xunit')
     runs-on: ubuntu-22.04
-    environment: 'PublishPackages'
     permissions: write-all
     
     steps:
