@@ -78,6 +78,7 @@ jobs:
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/publish-corelib')
     needs: build-and-test-multiple-env-for-corelib
     runs-on: ubuntu-22.04
+    environment: 'PublishPackages'
     permissions: write-all
     
     steps:
@@ -104,18 +105,7 @@ jobs:
         name: Upload Nuget pack artifact
         path: LateApexEarlySpeed.Json.Schema/bin/Release/NugetPackage/
         if-no-files-found: error
-    - uses: trstringer/manual-approval@v1
-      timeout-minutes: 30
-      with:
-        secret: ${{ github.TOKEN }}
-        approvers: lateapexearlyspeed
-        minimum-approvals: 1
-        issue-title: "Publishing nuget pack (corelib)..."
-        issue-body: "Please approve or deny this nuget pack publish ..."
-        exclude-workflow-initiator-as-approver: false
-        additional-approved-words: ''
-        additional-denied-words: ''
-        
+
     - name: Publish Nuget pack (corelib)
       run: dotnet nuget push LateApexEarlySpeed.Json.Schema/bin/Release/NugetPackage/ --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --no-symbols
       
@@ -123,6 +113,7 @@ jobs:
     
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/publish-efcore')
     runs-on: ubuntu-22.04
+    environment: 'PublishPackages'
     permissions: write-all
     
     steps:
@@ -157,18 +148,6 @@ jobs:
         name: Upload Nuget pack artifact
         path: LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema/bin/Release/NugetPackage/
         if-no-files-found: error
-
-    - uses: trstringer/manual-approval@v1
-      timeout-minutes: 30
-      with:
-        secret: ${{ github.TOKEN }}
-        approvers: lateapexearlyspeed
-        minimum-approvals: 1
-        issue-title: "Publishing nuget pack (efcore)..."
-        issue-body: "Please approve or deny this nuget pack publish ..."
-        exclude-workflow-initiator-as-approver: false
-        additional-approved-words: ''
-        additional-denied-words: ''
         
     - name: Publish Nuget pack (efcore v3)
       run: dotnet nuget push LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema/bin/Release/NugetPackage/ --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --no-symbols
@@ -180,6 +159,7 @@ jobs:
     
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/publish-xunit')
     runs-on: ubuntu-22.04
+    environment: 'PublishPackages'
     permissions: write-all
     
     steps:
@@ -206,18 +186,6 @@ jobs:
         name: Upload Nuget pack artifact
         path: LateApexEarlySpeed.Xunit.Assertion.Json/bin/Release/NugetPackage/
         if-no-files-found: error
-
-    - uses: trstringer/manual-approval@v1
-      timeout-minutes: 30
-      with:
-        secret: ${{ github.TOKEN }}
-        approvers: lateapexearlyspeed
-        minimum-approvals: 1
-        issue-title: "Publishing nuget pack (efcore)..."
-        issue-body: "Please approve or deny this nuget pack publish ..."
-        exclude-workflow-initiator-as-approver: false
-        additional-approved-words: ''
-        additional-denied-words: ''
         
     - name: Publish Nuget pack
       run: dotnet nuget push LateApexEarlySpeed.Xunit.Assertion.Json/bin/Release/NugetPackage/ --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --no-symbols
