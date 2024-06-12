@@ -32,11 +32,17 @@ jobs:
         dotnet-version: |
           3.1.x
           6.0.x
-    - name: Clean previous build output
+    - name: Clean previous build output (Debug)
+      run: dotnet clean -c Debug
+    - name: Build (Debug)
+      run: dotnet build -c Debug
+    - name: Test (Debug)
+      run: dotnet test --verbosity normal -c Debug
+    - name: Clean previous build output (Release)
       run: dotnet clean -c Release
-    - name: Build
+    - name: Build (Release)
       run: dotnet build -c Release
-    - name: Test
+    - name: Test (Release)
       run: dotnet test --verbosity normal -c Release
     - name: Publish Benchmark
       run: dotnet publish -c Release LateApexEarlySpeed.Json.Schema.Benchmark/
@@ -62,11 +68,17 @@ jobs:
         dotnet-version: |
           3.1.x
           6.0.x
-    - name: Clean previous build output
+    - name: Clean previous build output (Debug)
+      run: dotnet clean -c Debug
+    - name: Build (Debug)
+      run: dotnet build -c Debug
+    - name: Test (Debug)
+      run: dotnet test --verbosity normal -c Debug
+    - name: Clean previous build output (Release)
       run: dotnet clean -c Release
-    - name: Build
+    - name: Build (Release)
       run: dotnet build -c Release
-    - name: Test
+    - name: Test (Release)
       run: dotnet test --verbosity normal -c Release
     - name: Publish Benchmark
       run: dotnet publish -c Release LateApexEarlySpeed.Json.Schema.Benchmark/
