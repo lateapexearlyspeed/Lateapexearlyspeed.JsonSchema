@@ -26,7 +26,7 @@ namespace LateApexEarlySpeed.Xunit.Assertion.Json
 
             if (!validationResult.IsValid)
             {
-                throw new JsonAssertException($"{nameof(JsonAssertion)}.{nameof(Meet)}() Failure: {validationResult.ErrorMessage}, location (in json pointer format): '{validationResult.InstanceLocation}'");
+                throw new JsonAssertException($"{nameof(JsonAssertion)}.{nameof(Meet)}() Failure: {validationResult.ErrorMessage}, location (in json pointer format): \"{validationResult.InstanceLocation}\"");
             }
         }
 
@@ -45,7 +45,7 @@ namespace LateApexEarlySpeed.Xunit.Assertion.Json
 
             if (!validationResult.IsValid)
             {
-                throw new JsonAssertException($"{nameof(JsonAssertion)}.{nameof(Equivalent)}() Failure: {validationResult.ErrorMessage}, location (in json pointer format): '{validationResult.InstanceLocation}'");
+                throw new JsonAssertException($"{nameof(JsonAssertion)}.{nameof(Equivalent)}() Failure: {validationResult.ErrorMessage}, location (in json pointer format): \"{validationResult.InstanceLocation}\"");
             }
         }
     }

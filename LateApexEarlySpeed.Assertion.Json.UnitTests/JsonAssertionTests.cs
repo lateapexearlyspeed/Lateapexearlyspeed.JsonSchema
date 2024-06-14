@@ -36,7 +36,7 @@ namespace LateApexEarlySpeed.Assertion.Json.UnitTests
                 """);
             });
 
-            Assert.Equal("JsonAssertion.Meet() Failure: Number not same, one is '5' but another is '4.9', location (in json pointer format): '/p2'", jsonAssertException.Message);
+            Assert.Equal("JsonAssertion.Meet() Failure: Number not same, one is '5' but another is '4.9', location (in json pointer format): \"/p2\"", jsonAssertException.Message);
         }
 
         [Fact]
@@ -75,7 +75,7 @@ namespace LateApexEarlySpeed.Assertion.Json.UnitTests
                 """);
             });
 
-            Assert.Equal("JsonAssertion.Equivalent() Failure: Number not same, one is '2' but another is '3', location (in json pointer format): '/b'", jsonAssertException.Message);
+            Assert.Equal("JsonAssertion.Equivalent() Failure: Number not same, one is '2' but another is '3', location (in json pointer format): \"/b\"", jsonAssertException.Message);
         }
     }
 }
