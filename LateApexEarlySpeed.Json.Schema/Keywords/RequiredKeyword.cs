@@ -10,12 +10,14 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(RequiredKeywordJsonConverter))]
 internal class RequiredKeyword : KeywordBase
 {
+    private readonly bool _propertyNameIgnoreCase;
     private readonly string[] _requiredProperties;
 
     public IReadOnlyList<string> RequiredProperties => _requiredProperties;
 
-    public RequiredKeyword(IEnumerable<string> requiredProperties)
+    public RequiredKeyword(IEnumerable<string> requiredProperties, bool propertyNameIgnoreCase)
     {
+        _propertyNameIgnoreCase = propertyNameIgnoreCase;
         _requiredProperties = requiredProperties.ToArray();
     }
 
@@ -31,7 +33,8 @@ internal class RequiredKeyword : KeywordBase
             return ValidationResult.ValidResult;
         }
 
-        HashSet<string> instanceProperties = instance.EnumerateObject().Select(prop => prop.Name).ToHashSet();
+        HashSet<string> instanceProperties = instance.EnumerateObject().Select(prop => prop.Name)
+            .ToHashSet(_propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
         foreach (string requiredProperty in _requiredProperties)
         {
             if (!instanceProperties.Contains(requiredProperty))

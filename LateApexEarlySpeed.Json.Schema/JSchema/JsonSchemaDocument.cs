@@ -6,9 +6,30 @@ namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
 internal static class JsonSchemaDocument
 {
-    public static IJsonSchemaDocument CreateDocAndUpdateGlobalResourceRegistry(ReadOnlySpan<char> schema, SchemaResourceRegistry globalSchemaResourceRegistry)
+    private static readonly JsonSerializerOptions DefaultJsonSerializerOptions;
+
+    static JsonSchemaDocument()
     {
-        IJsonSchemaDocument doc = JsonSerializer.Deserialize<IJsonSchemaDocument>(schema)!;
+        DefaultJsonSerializerOptions = new JsonSerializerOptions();
+        DefaultJsonSerializerOptions.AddJsonValidatorOptions(JsonValidatorOptions.Default);
+    }
+
+    public static IJsonSchemaDocument CreateDocAndUpdateGlobalResourceRegistry(ReadOnlySpan<char> schema, SchemaResourceRegistry globalSchemaResourceRegistry, JsonValidatorOptions options)
+    {
+        JsonSerializerOptions jsonSerializerOptions;
+
+        // Try to reuse DefaultJsonSerializerOptions
+        if (options.Equals(JsonValidatorOptions.Default))
+        {
+            jsonSerializerOptions = DefaultJsonSerializerOptions;
+        }
+        else
+        {
+            jsonSerializerOptions = new JsonSerializerOptions();
+            jsonSerializerOptions.AddJsonValidatorOptions(options);
+        }
+
+        IJsonSchemaDocument doc = JsonSerializer.Deserialize<IJsonSchemaDocument>(schema, jsonSerializerOptions)!;
 
         if (doc is BodyJsonSchemaDocument bodyDoc)
         {

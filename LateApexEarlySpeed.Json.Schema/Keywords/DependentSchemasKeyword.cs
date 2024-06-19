@@ -12,7 +12,17 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(DependentSchemasKeywordJsonConverter))]
 internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement
 {
-    public Dictionary<string, JsonSchema> DependentSchemas { get; init; } = null!;
+    public DependentSchemasKeyword(IDictionary<string, JsonSchema> dependentSchemas, bool propertyNameIgnoreCase)
+    {
+        DependentSchemas = new Dictionary<string, JsonSchema>(dependentSchemas, propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
+
+        foreach (var (propertyName, schema) in DependentSchemas)
+        {
+            schema.Name = propertyName;
+        }
+    }
+
+    public IReadOnlyDictionary<string, JsonSchema> DependentSchemas { get; }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {

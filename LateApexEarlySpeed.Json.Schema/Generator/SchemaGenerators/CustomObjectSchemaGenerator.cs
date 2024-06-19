@@ -79,7 +79,7 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
             propertiesSchemas[GetPropertyName(memberInfo, options)] = propertySchema;
         }
 
-        return new PropertiesKeyword(propertiesSchemas);
+        return new PropertiesKeyword(propertiesSchemas, false);
     }
 
     private static string GetPropertyName(MemberInfo memberInfo, JsonSchemaGeneratorOptions options)
@@ -98,7 +98,7 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
             .Select(memberInfo => GetPropertyName(memberInfo, options)).ToArray();
         return requiredPropertyNames.Length == 0
             ? null
-            : new RequiredKeyword(requiredPropertyNames);
+            : new RequiredKeyword(requiredPropertyNames, false);
     }
 
     /// <summary>

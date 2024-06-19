@@ -8,7 +8,7 @@ internal class DependentRequiredKeywordJsonConverter : JsonConverter<DependentRe
 {
     public override DependentRequiredKeyword Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        Dictionary<string, string[]>? dependentProperties = JsonSerializer.Deserialize<Dictionary<string, string[]>>(ref reader);
+        Dictionary<string, string[]>? dependentProperties = JsonSerializer.Deserialize<Dictionary<string, string[]>>(ref reader, options);
         if (dependentProperties is null)
         {
             throw ThrowHelper.CreateKeywordHasInvalidJsonValueKindJsonException<DependentRequiredKeyword>(JsonValueKind.Object);

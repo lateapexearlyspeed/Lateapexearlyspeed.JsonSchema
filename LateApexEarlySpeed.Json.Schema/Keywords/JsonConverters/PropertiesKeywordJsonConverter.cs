@@ -24,7 +24,7 @@ internal class PropertiesKeywordJsonConverter : JsonConverter<PropertiesKeyword>
 
             reader.Read();
 
-            JsonSchema? propertySchema = JsonSerializer.Deserialize<JsonSchema>(ref reader);
+            JsonSchema? propertySchema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options);
             
             Debug.Assert(propertySchema is not null);
             propertiesSchemas.Add(propertyName, propertySchema);
@@ -32,7 +32,7 @@ internal class PropertiesKeywordJsonConverter : JsonConverter<PropertiesKeyword>
             reader.Read();
         }
 
-        return new PropertiesKeyword(propertiesSchemas);
+        return new PropertiesKeyword(propertiesSchemas, options.GetJsonValidatorOptions().PropertyNameCaseInsensitive);
     }
 
     public override void Write(Utf8JsonWriter writer, PropertiesKeyword value, JsonSerializerOptions options)

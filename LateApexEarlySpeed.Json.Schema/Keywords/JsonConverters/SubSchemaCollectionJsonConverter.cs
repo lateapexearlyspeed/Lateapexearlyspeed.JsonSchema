@@ -21,7 +21,7 @@ internal class SubSchemaCollectionJsonConverter<T> : JsonConverter<T> where T : 
         var subSchemas = new List<JsonSchema>();
         while (reader.TokenType != JsonTokenType.EndArray)
         {
-            JsonSchema? subSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader);
+            JsonSchema? subSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options);
 
             Debug.Assert(subSchema is not null);
 

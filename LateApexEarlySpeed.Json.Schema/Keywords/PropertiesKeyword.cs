@@ -14,9 +14,9 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
 {
     public IReadOnlyDictionary<string, JsonSchema> PropertiesSchemas { get; }
 
-    public PropertiesKeyword(IDictionary<string, JsonSchema> propertiesSchemas)
+    public PropertiesKeyword(IDictionary<string, JsonSchema> propertiesSchemas, bool propertyNameIgnoreCase)
     {
-        PropertiesSchemas = new Dictionary<string, JsonSchema>(propertiesSchemas);
+        PropertiesSchemas = new Dictionary<string, JsonSchema>(propertiesSchemas, propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
 
         foreach (var (propName, schema) in PropertiesSchemas)
         {

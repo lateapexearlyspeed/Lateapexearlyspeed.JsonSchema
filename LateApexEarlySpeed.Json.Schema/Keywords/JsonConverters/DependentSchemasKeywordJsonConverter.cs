@@ -9,17 +9,13 @@ internal class DependentSchemasKeywordJsonConverter : JsonConverter<DependentSch
 {
     public override DependentSchemasKeyword Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        Dictionary<string, JsonSchema>? dependentSchemas = JsonSerializer.Deserialize<Dictionary<string, JsonSchema>>(ref reader);
+        Dictionary<string, JsonSchema>? dependentSchemas = JsonSerializer.Deserialize<Dictionary<string, JsonSchema>>(ref reader, options);
         if (dependentSchemas is null)
         {
             throw ThrowHelper.CreateKeywordHasInvalidJsonValueKindJsonException<DependentSchemasKeyword>(JsonValueKind.Object);
         }
 
-        foreach (KeyValuePair<string, JsonSchema> dependentSchema in dependentSchemas)
-        {
-            dependentSchema.Value.Name = dependentSchema.Key;
-        }
-        return new DependentSchemasKeyword { DependentSchemas = dependentSchemas };
+        return new DependentSchemasKeyword(dependentSchemas, options.GetJsonValidatorOptions().PropertyNameCaseInsensitive);
     }
 
     public override void Write(Utf8JsonWriter writer, DependentSchemasKeyword value, JsonSerializerOptions options)
