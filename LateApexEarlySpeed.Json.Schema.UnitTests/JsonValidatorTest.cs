@@ -300,6 +300,96 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                     """,
                     false, "/a/b", "/properties/A/properties/B/type"
                 };
+
+                yield return new object?[]
+                {
+                    """
+                    {
+                      "properties": {
+                        "A": {
+                               "dependentSchemas": { 
+                                 "B": { "maxProperties": 1 } 
+                        }
+                      }
+                      }
+                    }
+                    """,
+                    """ 
+                    {
+                      "a": {
+                        "c": 0,
+                        "d": 1
+                      }
+                    }
+                    """,
+                    true, null, null
+                };
+
+                yield return new object?[]
+                {
+                    """
+                    {
+                      "properties": {
+                        "A": {
+                               "dependentSchemas": { 
+                                 "B": { "maxProperties": 1 } 
+                        }
+                      }
+                      }
+                    }
+                    """,
+                    """ 
+                    {
+                      "a": {
+                        "b": 0,
+                        "c": 1
+                      }
+                    }
+                    """,
+                    false, "/a", "/properties/A/dependentSchemas/B/maxProperties"
+                };
+
+                yield return new object?[]
+                {
+                    """
+                    {
+                      "properties": {
+                        "A": {
+                               "required": [ "B" ]
+                        }
+                      }
+                    }
+                    """,
+                    """ 
+                    {
+                      "a": {
+                        "b": 0
+                      }
+                    }
+                    """,
+                    true, null, null
+                };
+
+                yield return new object?[]
+                {
+                    """
+                    {
+                      "properties": {
+                        "A": {
+                               "required": [ "B" ]
+                        }
+                      }
+                    }
+                    """,
+                    """ 
+                    {
+                      "a": {
+                        "c": 0
+                      }
+                    }
+                    """,
+                    false, "/a", "/properties/A/required"
+                };
             }
         }
 
