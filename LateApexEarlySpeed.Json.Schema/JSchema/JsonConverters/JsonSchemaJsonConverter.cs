@@ -68,7 +68,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
             if (keywordType is not null)
             {
-                KeywordBase? keyword = JsonSerializer.Deserialize(ref reader, keywordType) as KeywordBase;
+                KeywordBase? keyword = JsonSerializer.Deserialize(ref reader, keywordType, options) as KeywordBase;
 
                 Debug.Assert(keyword != null);
                 validationKeywords.Add(keyword);
@@ -97,19 +97,19 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
             else if (keywordName == ConditionalValidator.IfKeywordName)
             {
-                predictSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader);
+                predictSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options);
             }
             else if (keywordName == ConditionalValidator.ThenKeywordName)
             {
-                positiveSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader);
+                positiveSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options);
             }
             else if (keywordName == ConditionalValidator.ElseKeywordName)
             {
-                negativeSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader);
+                negativeSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options);
             }
             else if (keywordName == ArrayContainsValidator.ContainsKeywordName)
             {
-                containsSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader);
+                containsSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options);
             }
             else if (keywordName == ArrayContainsValidator.MaxContainsKeywordName)
             {
@@ -131,15 +131,15 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
             else if (keywordName == SchemaReferenceKeyword.Keyword)
             {
-                schemaReference = JsonSerializer.Deserialize<SchemaReferenceKeyword>(ref reader);
+                schemaReference = JsonSerializer.Deserialize<SchemaReferenceKeyword>(ref reader, options);
             }
             else if (keywordName == SchemaDynamicReferenceKeyword.Keyword)
             {
-                schemaDynamicReference = JsonSerializer.Deserialize<SchemaDynamicReferenceKeyword>(ref reader);
+                schemaDynamicReference = JsonSerializer.Deserialize<SchemaDynamicReferenceKeyword>(ref reader, options);
             }
             else if (keywordName == DefsKeyword.Keyword)
             {
-                defsKeyword = JsonSerializer.Deserialize<DefsKeyword>(ref reader)!;
+                defsKeyword = JsonSerializer.Deserialize<DefsKeyword>(ref reader, options)!;
             }
             else if (keywordName == IdKeyword.Keyword)
             {

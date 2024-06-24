@@ -13,9 +13,9 @@ internal class NoPropertiesKeyword : KeywordBase
 {
     private readonly HashSet<string> _propertyBlackList;
 
-    public NoPropertiesKeyword(HashSet<string> propertyBlackList)
+    public NoPropertiesKeyword(IEnumerable<string> propertyBlackList, bool propertyNameIgnoreCase)
     {
-        _propertyBlackList = propertyBlackList;
+        _propertyBlackList = new HashSet<string>(propertyBlackList, propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)

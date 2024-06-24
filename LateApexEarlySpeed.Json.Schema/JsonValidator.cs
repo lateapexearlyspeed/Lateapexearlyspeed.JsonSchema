@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics.Contracts;
+using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
@@ -14,6 +15,7 @@ public class JsonValidator
 
     private readonly IJsonSchemaDocument _mainSchemaDoc;
     private readonly SchemaResourceRegistry _globalSchemaResourceRegistry = new();
+    private readonly JsonValidatorOptions _jsonValidatorOptions;
 
     static JsonValidator()
     {
@@ -23,26 +25,38 @@ public class JsonValidator
         HttpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
     }
 
-    public JsonValidator(string jsonSchema) : this(jsonSchema.AsSpan())
+    public JsonValidator(string jsonSchema, JsonValidatorOptions? options = null) : this(jsonSchema.AsSpan(), options)
     {
     }
 
-    public JsonValidator(ReadOnlySpan<char> jsonSchema)
+    public JsonValidator(ReadOnlySpan<char> jsonSchema, JsonValidatorOptions? options = null)
     {
-        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, _globalSchemaResourceRegistry);
+        _jsonValidatorOptions = InitializeJsonValidatorOptions(options);
+
+        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, _globalSchemaResourceRegistry, _jsonValidatorOptions);
     }
 
-    internal JsonValidator(BodyJsonSchemaDocument mainSchemaDoc)
+    internal JsonValidator(BodyJsonSchemaDocument mainSchemaDoc, JsonValidatorOptions? options = null)
     {
+        _jsonValidatorOptions = InitializeJsonValidatorOptions(options);
+
         JsonSchemaDocument.UpdateDocWithGlobalResourceRegistry(mainSchemaDoc, _globalSchemaResourceRegistry);
         _mainSchemaDoc = mainSchemaDoc;
+    }
+
+    [Pure]
+    private static JsonValidatorOptions InitializeJsonValidatorOptions(JsonValidatorOptions? options)
+    {
+        return options is null || options.Equals(JsonValidatorOptions.Default) 
+            ? JsonValidatorOptions.Default 
+            : options;
     }
 
     public void AddExternalDocument(string externalJsonSchema) => AddExternalDocument(externalJsonSchema.AsSpan());
 
     public void AddExternalDocument(ReadOnlySpan<char> externalJsonSchema)
     {
-        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalJsonSchema, _globalSchemaResourceRegistry);
+        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalJsonSchema, _globalSchemaResourceRegistry, _jsonValidatorOptions);
     }
 
     public async Task AddHttpDocumentAsync(Uri remoteUri)

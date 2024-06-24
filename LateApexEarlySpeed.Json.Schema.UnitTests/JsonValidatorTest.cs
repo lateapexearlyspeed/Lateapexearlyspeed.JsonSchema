@@ -229,6 +229,170 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             Assert.Equal(expectedValidationResult, actualValidationResult);
         }
 
+        [Theory]
+        [MemberData(nameof(TestDataForPropertyNameIgnoreCase))]
+        public void Validate_PropertyNameIgnoreCase(string jsonSchema, string jsonInstance, bool expectedIsValid, string? expectedInstanceLocation, string? expectedKeywordLocation)
+        {
+            ValidationResult validationResult = new JsonValidator(jsonSchema, new JsonValidatorOptions{PropertyNameCaseInsensitive = true}).Validate(jsonInstance);
+
+            Assert.Equal(expectedIsValid, validationResult.IsValid);
+            Assert.Equal(expectedInstanceLocation, validationResult.InstanceLocation?.ToString());
+            Assert.Equal(expectedKeywordLocation, validationResult.RelativeKeywordLocation?.ToString());
+        }
+
+        public static IEnumerable<object?[]> TestDataForPropertyNameIgnoreCase
+        {
+            get
+            {
+                yield return new object?[]
+                {
+                    """
+                    {
+                      "properties": {
+                        "A": {"type": "string"}
+                      }
+                    }
+                    """,
+                    """ 
+                    {
+                      "a": "abc"
+                    }
+                    """,
+                    true, null, null
+                };
+
+                yield return new object?[]
+                {
+                    """
+                    {
+                      "properties": {
+                        "A": {"type": "string"}
+                      }
+                    }
+                    """,
+                    """ 
+                    {
+                      "a": 123
+                    }
+                    """,
+                    false, "/a", "/properties/A/type"
+                };
+
+                yield return new object?[]
+                {
+                    """
+                    {
+                      "properties": {
+                        "A": {
+                               "properties": { 
+                                 "B": {"type": "string"} 
+                        }
+                      }
+                      }
+                    }
+                    """,
+                    """ 
+                    {
+                      "a": {
+                        "b": 123
+                      }
+                    }
+                    """,
+                    false, "/a/b", "/properties/A/properties/B/type"
+                };
+
+                yield return new object?[]
+                {
+                    """
+                    {
+                      "properties": {
+                        "A": {
+                               "dependentSchemas": { 
+                                 "B": { "maxProperties": 1 } 
+                        }
+                      }
+                      }
+                    }
+                    """,
+                    """ 
+                    {
+                      "a": {
+                        "c": 0,
+                        "d": 1
+                      }
+                    }
+                    """,
+                    true, null, null
+                };
+
+                yield return new object?[]
+                {
+                    """
+                    {
+                      "properties": {
+                        "A": {
+                               "dependentSchemas": { 
+                                 "B": { "maxProperties": 1 } 
+                        }
+                      }
+                      }
+                    }
+                    """,
+                    """ 
+                    {
+                      "a": {
+                        "b": 0,
+                        "c": 1
+                      }
+                    }
+                    """,
+                    false, "/a", "/properties/A/dependentSchemas/B/maxProperties"
+                };
+
+                yield return new object?[]
+                {
+                    """
+                    {
+                      "properties": {
+                        "A": {
+                               "required": [ "B" ]
+                        }
+                      }
+                    }
+                    """,
+                    """ 
+                    {
+                      "a": {
+                        "b": 0
+                      }
+                    }
+                    """,
+                    true, null, null
+                };
+
+                yield return new object?[]
+                {
+                    """
+                    {
+                      "properties": {
+                        "A": {
+                               "required": [ "B" ]
+                        }
+                      }
+                    }
+                    """,
+                    """ 
+                    {
+                      "a": {
+                        "c": 0
+                      }
+                    }
+                    """,
+                    false, "/a", "/properties/A/required"
+                };
+            }
+        }
+
         /// <summary>
         /// Refer to: https://github.com/json-schema-org/JSON-Schema-Test-Suite#terminology
         /// </summary>

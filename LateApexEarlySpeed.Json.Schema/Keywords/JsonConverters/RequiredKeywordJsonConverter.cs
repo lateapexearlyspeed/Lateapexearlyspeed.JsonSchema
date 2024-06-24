@@ -8,7 +8,7 @@ internal class RequiredKeywordJsonConverter : JsonConverter<RequiredKeyword>
 {
     public override RequiredKeyword Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        string[]? requiredProperties = JsonSerializer.Deserialize<string[]>(ref reader);
+        string[]? requiredProperties = JsonSerializer.Deserialize<string[]>(ref reader, options);
         if (requiredProperties is null)
         {
             throw ThrowHelper.CreateKeywordHasInvalidJsonValueKindJsonException<RequiredKeyword>(JsonValueKind.Array);
@@ -19,7 +19,7 @@ internal class RequiredKeywordJsonConverter : JsonConverter<RequiredKeyword>
             throw ThrowHelper.CreateKeywordHasDuplicatedJsonArrayElementsJsonException<RequiredKeyword>();
         }
 
-        return new RequiredKeyword(requiredProperties);
+        return new RequiredKeyword(requiredProperties, options.GetJsonValidatorOptions().PropertyNameCaseInsensitive);
     }
 
     public override void Write(Utf8JsonWriter writer, RequiredKeyword value, JsonSerializerOptions options)

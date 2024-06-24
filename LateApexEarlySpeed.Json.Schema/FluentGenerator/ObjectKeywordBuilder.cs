@@ -130,16 +130,16 @@ public class ObjectKeywordBuilder : KeywordBuilder
                 kv.Value(jsonSchemaBuilder);
 
                 return jsonSchemaBuilder.Build();
-            }));
+            }), false);
 
-        var requiredKeyword = new RequiredKeyword(_requiredProperties);
+        var requiredKeyword = new RequiredKeyword(_requiredProperties, false);
 
         Keywords.Add(propertiesKeyword);
         Keywords.Add(requiredKeyword);
 
         if (_propertyBlackList.Count != 0)
         {
-            Keywords.Add(new NoPropertiesKeyword(_propertyBlackList.ToHashSet()));
+            Keywords.Add(new NoPropertiesKeyword(_propertyBlackList, false));
         }
         
 

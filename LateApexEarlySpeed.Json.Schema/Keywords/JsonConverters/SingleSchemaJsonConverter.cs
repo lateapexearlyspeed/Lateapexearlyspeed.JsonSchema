@@ -9,7 +9,7 @@ internal class SingleSchemaJsonConverter<T> : JsonConverter<T> where T : ISingle
 {
     public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        return new T { Schema = JsonSerializer.Deserialize<JsonSchema>(ref reader)! };
+        return new T { Schema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options)! };
     }
 
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
