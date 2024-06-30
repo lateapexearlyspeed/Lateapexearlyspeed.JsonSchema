@@ -125,6 +125,50 @@ public class NumberKeywordBuilderTests
     }
 
     [Fact]
+    public void Validate_IsGreaterThan_WithDecimalTypeArgument()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonNumber().HasCustomValidation((double _) => true, value => $"bad msg: {value}").IsGreaterThan(1.00000001m);
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("1.0000000100001");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("1.1");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("2");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("5");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("123321");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("1.00000001");
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(1.00000001m, 1.00000001m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("1.00000000999999");
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(1.00000000999999m, 1.00000001m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("1");
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(1, 1.00000001m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("0.005");
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(0.005, 1.00000001m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("-123");
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(-123, 1.00000001m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate($"{long.MinValue}");
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(long.MinValue, 1.00000001m), ImmutableJsonPointer.Empty);
+    }
+
+    [Fact]
     public void Validate_IsGreaterThan_WithLongTypeArgument()
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();
@@ -260,6 +304,56 @@ public class NumberKeywordBuilderTests
     }
 
     [Fact]
+    public void Validate_IsLessThan_WithDecimalTypeArgument()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonNumber().HasCustomValidation((double _) => true, value => $"bad msg: {value}").IsLessThan(100.0000000005m);
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("100.0000000004999999");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("100");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{ulong.MinValue}");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{long.MinValue}");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{decimal.MinValue}");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{double.MinValue}");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("0");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("1.2");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(ulong.MaxValue, 100.0000000005m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate($"{long.MaxValue}");
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(long.MaxValue, 100.0000000005m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate($"{double.MaxValue}");
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(double.MaxValue, 100.0000000005m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("101");
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(101, 100.0000000005m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("100.0000000005");
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(100.0000000005m, 100.0000000005m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("100.00000000050000001");
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(100.00000000050000001m, 100.0000000005m), ImmutableJsonPointer.Empty);
+    }
+
+    [Fact]
     public void Validate_NotGreaterThan_WithDoubleTypeArgument()
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();
@@ -304,6 +398,56 @@ public class NumberKeywordBuilderTests
 
         validationResult = jsonValidator.Validate("100.005001");
         AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(100.005001, 100.005), ImmutableJsonPointer.Empty);
+    }
+
+    [Fact]
+    public void Validate_NotGreaterThan_WithDecimalTypeArgument()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonNumber().HasCustomValidation((double _) => true, value => $"bad msg: {value}").NotGreaterThan(100.00000005m);
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("100.00000005");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("100.000000049999999999");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("100");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{ulong.MinValue}");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{long.MinValue}");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{double.MinValue}");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{decimal.MinValue}");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("0");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("1.2");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(ulong.MaxValue, 100.00000005m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate($"{long.MaxValue}");
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(long.MaxValue, 100.00000005m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate($"{double.MaxValue}");
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(double.MaxValue, 100.00000005m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("101");
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(101, 100.00000005m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("100.00000005000000001");
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(100.00000005000000001m, 100.00000005m), ImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -401,6 +545,68 @@ public class NumberKeywordBuilderTests
 
         validationResult = jsonValidator.Validate($"{double.MinValue}");
         AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(double.MinValue, 1.0001), ImmutableJsonPointer.Empty);
+    }
+
+    [Fact]
+    public void Validate_NotLessThan_WithDecimalTypeArgument()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonNumber().HasCustomValidation((double _) => true, value => $"bad msg: {value}").NotLessThan(1.0000000001m);
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("1.0000000001000000000001");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("1.0000000001");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("1.1");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("2");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("5");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("123321");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{long.MaxValue}");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{double.MaxValue}");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate($"{decimal.MaxValue}");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("1");
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(1, 1.0000000001m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("0.005");
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(0.005, 1.0000000001m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("-123");
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(-123, 1.0000000001m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate($"{long.MinValue}");
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(long.MinValue, 1.0000000001m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate($"{ulong.MinValue}");
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(ulong.MinValue, 1.0000000001m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate($"{double.MinValue}");
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(double.MinValue, 1.0000000001m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate($"{decimal.MinValue}");
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(decimal.MinValue, 1.0000000001m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("1.000000000099999999999999999");
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(1.000000000099999999999999999m, 1.0000000001m), ImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -622,6 +828,32 @@ public class NumberKeywordBuilderTests
 
         validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
         AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05, (double)ulong.MaxValue), ImmutableJsonPointer.Empty);
+    }
+
+    [Fact]
+    public void Validate_Equal_WithDecimalTypeArgument()
+    {
+        var jsonSchemaBuilder = new JsonSchemaBuilder();
+        jsonSchemaBuilder.IsJsonNumber().Equal(1.000000000005m);
+        JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
+
+        ValidationResult validationResult = jsonValidator.Validate("1.000000000005");
+        AssertValidationResult(validationResult, true);
+
+        validationResult = jsonValidator.Validate("1.000000000004999");
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005, 1.000000000004999), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("-10");
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005, -10), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate($"{long.MinValue}");
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005, long.MinValue), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate($"{decimal.MaxValue}");
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005, decimal.MaxValue), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005, ulong.MaxValue), ImmutableJsonPointer.Empty);
     }
 
     [Fact]

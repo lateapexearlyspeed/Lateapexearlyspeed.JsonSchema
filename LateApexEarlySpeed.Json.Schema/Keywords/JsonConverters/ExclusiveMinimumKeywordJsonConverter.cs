@@ -14,20 +14,25 @@ internal class ExclusiveMinimumKeywordJsonConverter : JsonConverter<ExclusiveMin
             throw ThrowHelper.CreateKeywordHasInvalidJsonValueKindJsonException<ExclusiveMinimumKeyword>(JsonValueKind.Number);
         }
 
-        reader.GetNumericValue(out double? doubleValue, out long? longValue, out ulong? unsignedLongValue);
-
-        if (doubleValue.HasValue)
-        {
-            return new ExclusiveMinimumKeyword(doubleValue.Value);
-        }
+        reader.GetNumericValue(out long? longValue, out ulong? unsignedLongValue, out decimal? decimalValue, out double? doubleValue);
 
         if (longValue.HasValue)
         {
             return new ExclusiveMinimumKeyword(longValue.Value);
         }
 
-        Debug.Assert(unsignedLongValue.HasValue);
-        return new ExclusiveMinimumKeyword(unsignedLongValue.Value);
+        if (unsignedLongValue.HasValue)
+        {
+            return new ExclusiveMinimumKeyword(unsignedLongValue.Value);
+        }
+
+        if (decimalValue.HasValue)
+        {
+            return new ExclusiveMinimumKeyword(decimalValue.Value);
+        }
+
+        Debug.Assert(doubleValue.HasValue);
+        return new ExclusiveMinimumKeyword(doubleValue.Value);
     }
 
     public override void Write(Utf8JsonWriter writer, ExclusiveMinimumKeyword value, JsonSerializerOptions options)

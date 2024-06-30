@@ -102,8 +102,8 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests.FluentGenerator
         {
             var builder = new JsonSchemaBuilder();
 
-            builder.IsJsonNumber().Equal(1.5d).Equal(100L).Equal(1000UL).IsGreaterThan(1.5d).IsGreaterThan(100L).IsIn(new[] { 1.5d }).IsIn(new[] { 100L })
-                .IsLessThan(1.5d).IsLessThan(100L).NotGreaterThan(1.5d).NotGreaterThan(100L).NotLessThan(1.5d).NotLessThan(100L).MultipleOf(1.5d);
+            builder.IsJsonNumber().Equal(1.5m).Equal(1.5d).Equal(100L).Equal(1000UL).IsGreaterThan(1.5m).IsGreaterThan(1.5d).IsGreaterThan(100L).IsIn(new[] { 1.5d }).IsIn(new[] { 100L })
+                .IsLessThan(1.5m).IsLessThan(1.5d).IsLessThan(100L).NotGreaterThan(1.5m).NotGreaterThan(1.5d).NotGreaterThan(100L).NotLessThan(1.5m).NotLessThan(1.5d).NotLessThan(100L).MultipleOf(1.5d);
 
             JsonValidator jsonValidator = builder.BuildValidator();
 

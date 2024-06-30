@@ -144,6 +144,11 @@ internal class ExclusiveMaximumKeyword : NumberRangeKeywordBase
             return instanceValue < Benchmark;
         }
 
+        protected override bool IsInRange(double instanceValue)
+        {
+            return instanceValue < (double)Benchmark;
+        }
+
         protected override string GetErrorMessage(object instanceValue)
         {
             return ErrorMessage(instanceValue, Benchmark);

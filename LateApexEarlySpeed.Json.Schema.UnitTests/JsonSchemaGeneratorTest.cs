@@ -429,10 +429,10 @@ public class JsonSchemaGeneratorTest
         {
             double instanceData = (double)decimal.MaxValue * 2;
 
-            yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), new ValidationResult(ResultCode.NumberOutOfRange, "minimum",
-                $"Instance value: '{instanceData}' cannot be converted to decimal.",
+            yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), new ValidationResult(ResultCode.NumberOutOfRange, "maximum",
+                MaximumKeyword.ErrorMessage(instanceData, decimal.MaxValue),
                 ImmutableJsonPointer.Empty,
-                ImmutableJsonPointer.Create("/minimum"),
+                ImmutableJsonPointer.Create("/maximum"),
                 GetSchemaResourceBaseUri<T>(),
                 GetSchemaResourceBaseUri<T>()
             ));
@@ -440,7 +440,7 @@ public class JsonSchemaGeneratorTest
             instanceData = (double)decimal.MinValue * 2;
             
             yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), new ValidationResult(ResultCode.NumberOutOfRange, "minimum",
-                $"Instance value: '{instanceData}' cannot be converted to decimal.",
+                MinimumKeyword.ErrorMessage(instanceData, decimal.MinValue),
                 ImmutableJsonPointer.Empty,
                 ImmutableJsonPointer.Create("/minimum"),
                 GetSchemaResourceBaseUri<T>(),

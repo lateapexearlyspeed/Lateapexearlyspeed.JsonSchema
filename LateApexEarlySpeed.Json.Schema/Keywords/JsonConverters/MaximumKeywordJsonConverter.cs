@@ -14,20 +14,25 @@ internal class MaximumKeywordJsonConverter : JsonConverter<MaximumKeyword>
             throw ThrowHelper.CreateKeywordHasInvalidJsonValueKindJsonException<MaximumKeyword>(JsonValueKind.Number);
         }
 
-        reader.GetNumericValue(out double? doubleValue, out long? longValue, out ulong? unsignedLongValue);
-
-        if (doubleValue.HasValue)
-        {
-            return new MaximumKeyword(doubleValue.Value);
-        }
+        reader.GetNumericValue(out long? longValue, out ulong? unsignedLongValue, out decimal? decimalValue, out double? doubleValue);
 
         if (longValue.HasValue)
         {
             return new MaximumKeyword(longValue.Value);
         }
 
-        Debug.Assert(unsignedLongValue.HasValue);
-        return new MaximumKeyword(unsignedLongValue.Value);
+        if (unsignedLongValue.HasValue)
+        {
+            return new MaximumKeyword(unsignedLongValue.Value);
+        }
+
+        if (decimalValue.HasValue)
+        {
+            return new MaximumKeyword(decimalValue.Value);
+        }
+
+        Debug.Assert(doubleValue.HasValue);
+        return new MaximumKeyword(doubleValue.Value);
     }
 
     public override void Write(Utf8JsonWriter writer, MaximumKeyword value, JsonSerializerOptions options)

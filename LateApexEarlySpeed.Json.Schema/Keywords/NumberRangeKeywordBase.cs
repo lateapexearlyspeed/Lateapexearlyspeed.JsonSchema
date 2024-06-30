@@ -88,40 +88,19 @@ internal abstract class NumberRangeKeywordBase : KeywordBase
 
         public bool IsInRange(JsonInstanceElement instance)
         {
-            if (!instance.TryGetDecimal(out decimal value))
-            {
-                return false;
-            }
-
-            return IsInRange(value);
+            return instance.TryGetDecimal(out decimal value) 
+                ? IsInRange(value) 
+                : IsInRange(instance.GetDouble());
         }
 
         protected abstract bool IsInRange(decimal instanceValue);
+        protected abstract bool IsInRange(double instanceValue);
 
         public string GetErrorMessage(JsonInstanceElement instance)
         {
-            if (instance.TryGetDecimal(out decimal value))
-            {
-                return GetErrorMessage(value);
-            }
-
-            object numericValue;
-            instance.GetNumericValue(out double? doubleValue, out long? longValue, out ulong? ulongValue);
-            if (longValue.HasValue)
-            {
-                numericValue = longValue.Value;
-            }
-            else if (ulongValue.HasValue)
-            {
-                numericValue = ulongValue.Value;
-            }
-            else
-            {
-                Debug.Assert(doubleValue.HasValue);
-                numericValue = doubleValue.Value;
-            }
-
-            return $"Instance value: '{numericValue}' cannot be converted to decimal.";
+            return instance.TryGetDecimal(out decimal value) 
+                ? GetErrorMessage(value) 
+                : GetErrorMessage(instance.GetDouble());
         }
 
         protected abstract string GetErrorMessage(object instanceValue);

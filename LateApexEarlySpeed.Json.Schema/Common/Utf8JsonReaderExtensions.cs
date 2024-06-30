@@ -60,29 +60,45 @@ internal static class Utf8JsonReaderExtensions
     }
 
     /// <summary>
-    /// This method will check the numeric range and convert to corresponding type. The matching order is: long -> ulong -> double.
+    /// This method will check the numeric range and convert to corresponding type. The matching order is: long -> ulong -> decimal -> double.
     /// This method will ensure one parameter will be set as <see cref="Nullable{T}.HasValue"/> unless exception thrown.
     /// </summary>
-    public static void GetNumericValue(this Utf8JsonReader reader, out double? doubleValue, out long? longValue, out ulong? unsignedLongValue)
+    public static void GetNumericValue(this Utf8JsonReader reader, out long? longValue, out ulong? unsignedLongValue, out decimal? decimalValue, out double? doubleValue)
     {
         if (reader.TryGetInt64(out long tmpLong))
         {
             longValue = tmpLong;
-            doubleValue = null;
+            
             unsignedLongValue = null;
+            decimalValue = null;
+            doubleValue = null;
             return;
         }
 
         if (reader.TryGetUInt64(out ulong tmpULong))
         {
             unsignedLongValue = tmpULong;
-            doubleValue = null;
+
             longValue = null;
+            decimalValue = null;
+            doubleValue = null;
+            return;
+        }
+
+        if (reader.TryGetDecimal(out decimal tmpDecimal))
+        {
+            decimalValue = tmpDecimal;
+
+            longValue = null;
+            unsignedLongValue = null;
+            doubleValue = null;
             return;
         }
 
         doubleValue = reader.GetDouble();
+        
         longValue = null;
         unsignedLongValue = null;
+        decimalValue = null;
     }
 }

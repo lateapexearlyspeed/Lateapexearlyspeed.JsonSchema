@@ -25,6 +25,16 @@ public class NumberKeywordBuilder : KeywordBuilder
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
+    public NumberKeywordBuilder Equal(decimal value)
+    {
+        return Equal<decimal>(value);
+    }
+
+    /// <summary>
+    /// Specify that current json number should equal to <paramref name="value"/>
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
     public NumberKeywordBuilder Equal(long value)
     {
         return Equal<long>(value);
@@ -79,9 +89,81 @@ public class NumberKeywordBuilder : KeywordBuilder
     /// </summary>
     /// <param name="min"></param>
     /// <returns></returns>
+    public NumberKeywordBuilder IsGreaterThan(long min)
+    {
+        Keywords.Add(new ExclusiveMinimumKeyword(min));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specify that current json number should be greater than <paramref name="min"/>
+    /// </summary>
+    /// <param name="min"></param>
+    /// <returns></returns>
+    public NumberKeywordBuilder IsGreaterThan(ulong min)
+    {
+        Keywords.Add(new ExclusiveMinimumKeyword(min));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specify that current json number should be greater than <paramref name="min"/>
+    /// </summary>
+    /// <param name="min"></param>
+    /// <returns></returns>
+    public NumberKeywordBuilder IsGreaterThan(decimal min)
+    {
+        Keywords.Add(new ExclusiveMinimumKeyword(min));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specify that current json number should be greater than <paramref name="min"/>
+    /// </summary>
+    /// <param name="min"></param>
+    /// <returns></returns>
     public NumberKeywordBuilder IsGreaterThan(double min)
     {
         Keywords.Add(new ExclusiveMinimumKeyword(min));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specify that current json number should be less than <paramref name="max"/>
+    /// </summary>
+    /// <param name="max"></param>
+    /// <returns></returns>
+    public NumberKeywordBuilder IsLessThan(long max)
+    {
+        Keywords.Add(new ExclusiveMaximumKeyword(max));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specify that current json number should be less than <paramref name="max"/>
+    /// </summary>
+    /// <param name="max"></param>
+    /// <returns></returns>
+    public NumberKeywordBuilder IsLessThan(ulong max)
+    {
+        Keywords.Add(new ExclusiveMaximumKeyword(max));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specify that current json number should be less than <paramref name="max"/>
+    /// </summary>
+    /// <param name="max"></param>
+    /// <returns></returns>
+    public NumberKeywordBuilder IsLessThan(decimal max)
+    {
+        Keywords.Add(new ExclusiveMaximumKeyword(max));
 
         return this;
     }
@@ -99,25 +181,37 @@ public class NumberKeywordBuilder : KeywordBuilder
     }
 
     /// <summary>
-    /// Specify that current json number should be greater than <paramref name="min"/>
+    /// Specify that current json number should not be greater than <paramref name="max"/>
     /// </summary>
-    /// <param name="min"></param>
+    /// <param name="max"></param>
     /// <returns></returns>
-    public NumberKeywordBuilder IsGreaterThan(long min)
+    public NumberKeywordBuilder NotGreaterThan(long max)
     {
-        Keywords.Add(new ExclusiveMinimumKeyword(min));
+        Keywords.Add(new MaximumKeyword(max));
 
         return this;
     }
 
     /// <summary>
-    /// Specify that current json number should be less than <paramref name="max"/>
+    /// Specify that current json number should not be greater than <paramref name="max"/>
     /// </summary>
     /// <param name="max"></param>
     /// <returns></returns>
-    public NumberKeywordBuilder IsLessThan(long max)
+    public NumberKeywordBuilder NotGreaterThan(ulong max)
     {
-        Keywords.Add(new ExclusiveMaximumKeyword(max));
+        Keywords.Add(new MaximumKeyword(max));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specify that current json number should not be greater than <paramref name="max"/>
+    /// </summary>
+    /// <param name="max"></param>
+    /// <returns></returns>
+    public NumberKeywordBuilder NotGreaterThan(decimal max)
+    {
+        Keywords.Add(new MaximumKeyword(max));
 
         return this;
     }
@@ -139,21 +233,9 @@ public class NumberKeywordBuilder : KeywordBuilder
     /// </summary>
     /// <param name="min"></param>
     /// <returns></returns>
-    public NumberKeywordBuilder NotLessThan(double min)
+    public NumberKeywordBuilder NotLessThan(long min)
     {
         Keywords.Add(new MinimumKeyword(min));
-
-        return this;
-    }
-
-    /// <summary>
-    /// Specify that current json number should not be greater than <paramref name="max"/>
-    /// </summary>
-    /// <param name="max"></param>
-    /// <returns></returns>
-    public NumberKeywordBuilder NotGreaterThan(long max)
-    {
-        Keywords.Add(new MaximumKeyword(max));
 
         return this;
     }
@@ -163,7 +245,31 @@ public class NumberKeywordBuilder : KeywordBuilder
     /// </summary>
     /// <param name="min"></param>
     /// <returns></returns>
-    public NumberKeywordBuilder NotLessThan(long min)
+    public NumberKeywordBuilder NotLessThan(ulong min)
+    {
+        Keywords.Add(new MinimumKeyword(min));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specify that current json number should not be less than <paramref name="min"/>
+    /// </summary>
+    /// <param name="min"></param>
+    /// <returns></returns>
+    public NumberKeywordBuilder NotLessThan(decimal min)
+    {
+        Keywords.Add(new MinimumKeyword(min));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Specify that current json number should not be less than <paramref name="min"/>
+    /// </summary>
+    /// <param name="min"></param>
+    /// <returns></returns>
+    public NumberKeywordBuilder NotLessThan(double min)
     {
         Keywords.Add(new MinimumKeyword(min));
 
