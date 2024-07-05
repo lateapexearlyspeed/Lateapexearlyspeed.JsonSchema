@@ -112,15 +112,33 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
             return false;
         }
 
-        double doubleValue = GetDouble();
-        if (doubleValue > ulong.MaxValue || doubleValue < ulong.MinValue)
+        if (TryGetUInt64(out ulong ulongValue))
         {
+            value = ulongValue;
+            return true;
+        }
+
+        if (TryGetDecimal(out decimal decimalValue))
+        {
+            if (decimalValue >= ulong.MinValue && decimalValue <= ulong.MaxValue)
+            {
+                value = (ulong)decimalValue;
+                return true;
+            }
+
             value = default;
             return false;
         }
 
-        value = (ulong)doubleValue;
-        return true;
+        double doubleValue = GetDouble();
+        if (doubleValue >= ulong.MinValue && doubleValue <= ulong.MaxValue)
+        {
+            value = (ulong)doubleValue;
+            return true;
+        }
+
+        value = default;
+        return false;
     }
 
     /// <summary>
@@ -134,15 +152,33 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
             return false;
         }
 
-        double doubleValue = GetDouble();
-        if (doubleValue > long.MaxValue || doubleValue < long.MinValue)
+        if (TryGetInt64(out long longValue))
         {
+            value = longValue;
+            return true;
+        }
+
+        if (TryGetDecimal(out decimal decimalValue))
+        {
+            if (decimalValue >= long.MinValue && decimalValue <= long.MaxValue)
+            {
+                value = (long)decimalValue;
+                return true;
+            }
+
             value = default;
             return false;
         }
 
-        value = (long)doubleValue;
-        return true;
+        double doubleValue = GetDouble();
+        if (doubleValue >= long.MinValue && doubleValue <= long.MaxValue)
+        {
+            value = (long)doubleValue;
+            return true;
+        }
+
+        value = default;
+        return false;
     }
 
     /// <summary>
@@ -246,24 +282,35 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
             return EquivalentResult.Fail(NumberNotSameMessageTemplate(thisULongValue, doubleValue.HasValue ? doubleValue.Value.ToString(CultureInfo.InvariantCulture) : longValue.GetValueOrDefault()), _instanceLocation, other._instanceLocation);
         }
 
-        if (InternalJsonElement.TryGetDouble(out double thisDoubleValue))
+        if (InternalJsonElement.TryGetDecimal(out decimal thisDecimalValue))
         {
-            if (other.InternalJsonElement.TryGetDouble(out double otherDoubleValue))
+            if (other.TryGetDecimal(out decimal otherDecimalValue))
             {
-                const double tolerance = 0.000001;
+                const decimal tolerance = 0.0000000000000000000000001m;
 
-                double actualTolerance = Math.Abs(thisDoubleValue) * tolerance;
+                decimal actualTolerance = Math.Abs(thisDecimalValue) * tolerance;
 
-                return Math.Abs(thisDoubleValue - otherDoubleValue) <= actualTolerance
+                return Math.Abs(thisDecimalValue - otherDecimalValue) <= actualTolerance
                     ? EquivalentResult.Success()
-                    : EquivalentResult.Fail(NumberNotSameMessageTemplate(thisDoubleValue, otherDoubleValue), _instanceLocation, other._instanceLocation);
+                    : EquivalentResult.Fail(NumberNotSameMessageTemplate(thisDecimalValue, otherDecimalValue), _instanceLocation, other._instanceLocation);
             }
 
-            other.GetNumericValue(out double? doubleValue, out long? longValue, out ulong? ulongValue);
+            double otherDoubleValue = other.GetDouble();
 
-            Debug.Assert(!doubleValue.HasValue);
+            return EquivalentResult.Fail(NumberNotSameMessageTemplate(thisDecimalValue, otherDoubleValue), _instanceLocation, other._instanceLocation);
+        }
 
-            return EquivalentResult.Fail(NumberNotSameMessageTemplate(thisDoubleValue, longValue.HasValue ? longValue.Value.ToString() : ulongValue.GetValueOrDefault()), _instanceLocation, other._instanceLocation);
+        if (InternalJsonElement.TryGetDouble(out double thisDoubleValue))
+        {
+            const double tolerance = 0.000001;
+            
+            double otherDoubleValue = other.GetDouble();
+
+            double actualTolerance = Math.Abs(thisDoubleValue) * tolerance;
+
+            return Math.Abs(thisDoubleValue - otherDoubleValue) <= actualTolerance
+                ? EquivalentResult.Success()
+                : EquivalentResult.Fail(NumberNotSameMessageTemplate(thisDoubleValue, otherDoubleValue), _instanceLocation, other._instanceLocation);
         }
 
         Debug.Fail("Should not go here, have considered all numeric types. Missed any other types ?");

@@ -808,26 +808,29 @@ public class NumberKeywordBuilderTests
     public void Validate_Equal_WithDoubleTypeArgument()
     {
         var jsonSchemaBuilder = new JsonSchemaBuilder();
-        jsonSchemaBuilder.IsJsonNumber().Equal(1.05);
+        jsonSchemaBuilder.IsJsonNumber().Equal(1.05E32);
         JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
 
-        ValidationResult validationResult = jsonValidator.Validate("1.05");
+        ValidationResult validationResult = jsonValidator.Validate("1.05E32");
         AssertValidationResult(validationResult, true);
+        
+        validationResult = jsonValidator.Validate("1.05001E32");
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, 1.05001E32), ImmutableJsonPointer.Empty);
 
-        validationResult = jsonValidator.Validate("1.04999");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05, 1.04999), ImmutableJsonPointer.Empty);
+        validationResult = jsonValidator.Validate("1.04999E32");
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, 1.04999E32), ImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-10");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05, -10), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, -10), ImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MinValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05, (double)long.MinValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, (double)long.MinValue), ImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{double.MaxValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05, double.MaxValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, double.MaxValue), ImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05, (double)ulong.MaxValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, (double)ulong.MaxValue), ImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -841,19 +844,22 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("1.000000000004999");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005, 1.000000000004999), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, 1.000000000004999m), ImmutableJsonPointer.Empty);
+
+        validationResult = jsonValidator.Validate("1.0000000000050000000001");
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, 1.0000000000050000000001m), ImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-10");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005, -10), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, -10), ImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MinValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005, long.MinValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, long.MinValue), ImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{decimal.MaxValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005, decimal.MaxValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, decimal.MaxValue), ImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005, ulong.MaxValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, ulong.MaxValue), ImmutableJsonPointer.Empty);
     }
 
     [Fact]
