@@ -70,10 +70,11 @@ internal class SchemaReferenceKeyword : KeywordBase
     }
 
     /// <returns>Uri from <paramref name="fullUri"/> without fragment</returns>
-    private static Uri GetBaseUri(Uri fullUri)
+    private static string GetBaseUri(Uri fullUri)
     {
         string baseUri = fullUri.GetLeftPart(UriPartial.Query);
-        return new Uri(baseUri);
+        // return new Uri(baseUri);
+        return baseUri;
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)

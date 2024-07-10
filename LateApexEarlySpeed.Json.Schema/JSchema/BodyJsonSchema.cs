@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -131,7 +132,14 @@ internal class BodyJsonSchema : JsonSchema
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        IEnumerable<IValidationNode> validationNodes = _keywords.Concat<IValidationNode>(_schemaContainerValidators);
+        ValidationResult result = ValidateWithValidationNodes(_keywords, instance, options);
+        if (!result.IsValid)
+        {
+            return result;
+        }
+
+        // IEnumerable<IValidationNode> validationNodes = _keywords.Concat<IValidationNode>(_schemaContainerValidators);
+        IEnumerable<IValidationNode> validationNodes = _schemaContainerValidators;
 
         if (SchemaReference is not null)
         {
@@ -143,16 +151,36 @@ internal class BodyJsonSchema : JsonSchema
             validationNodes = validationNodes.Append(SchemaDynamicReference);
         }
 
-        foreach (IValidationNode validationNode in validationNodes)
+        result = ValidateWithValidationNodes(validationNodes, instance, options);
+        if (!result.IsValid)
         {
-            ValidationResult result = validationNode.Validate(instance, options);
-            if (!result.IsValid)
-            {
-                return result;
-            }
+            return result;
         }
 
+        // foreach (IValidationNode validationNode in validationNodes)
+        // {
+        //     ValidationResult result = validationNode.Validate(instance, options);
+        //     if (!result.IsValid)
+        //     {
+        //         return result;
+        //     }
+        // }
+
         return ValidationResult.ValidResult;
+
+        static ValidationResult ValidateWithValidationNodes(IEnumerable<IValidationNode> validationNodes, JsonInstanceElement instance, JsonSchemaOptions options)
+        {
+            foreach (IValidationNode validationNode in validationNodes)
+            {
+                ValidationResult result = validationNode.Validate(instance, options);
+                if (!result.IsValid)
+                {
+                    return result;
+                }
+            }
+
+            return ValidationResult.ValidResult;
+        }
     }
 
     public override ISchemaContainerElement? GetSubElement(string name)
