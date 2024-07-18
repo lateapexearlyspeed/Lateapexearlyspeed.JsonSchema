@@ -12,16 +12,12 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(PatternPropertiesKeywordJsonConverter))]
 internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
 {
-    private readonly Dictionary<string, (LazyCompiledRegex regex, JsonSchema schema)> _patternSchemas;
-
     public PatternPropertiesKeyword(Dictionary<string, JsonSchema> patternSchemas)
     {
-        _patternSchemas = patternSchemas.ToDictionary(
-            kv => kv.Key, 
-            kv => (new LazyCompiledRegex(kv.Key), kv.Value));
+        PatternSchemas = new Dictionary<string, JsonSchema>(patternSchemas);
     }
 
-    public Dictionary<string, JsonSchema> PatternSchemas => _patternSchemas.ToDictionary(kv => kv.Key, kv => kv.Value.schema);
+    public IReadOnlyDictionary<string, JsonSchema> PatternSchemas { get; }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
@@ -35,11 +31,11 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
             string propertyName = jsonProperty.Name;
             JsonInstanceElement propertyValue = jsonProperty.Value;
 
-            foreach ((LazyCompiledRegex regex, JsonSchema schema) patternSchema in _patternSchemas.Values)
+            foreach (KeyValuePair<string, JsonSchema> patternSchema in PatternSchemas)
             {
-                if (patternSchema.regex.IsMatch(propertyName))
+                if (RegexMatcher.IsMatch(patternSchema.Key, propertyName))
                 {
-                    ValidationResult validationResult = patternSchema.schema.Validate(propertyValue, options);
+                    ValidationResult validationResult = patternSchema.Value.Validate(propertyValue, options);
                     if (!validationResult.IsValid)
                     {
                         return validationResult;
@@ -53,14 +49,14 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
 
     public ISchemaContainerElement? GetSubElement(string name)
     {
-        return _patternSchemas.TryGetValue(name, out (LazyCompiledRegex regex, JsonSchema schema) regexAndSchema) 
-            ? regexAndSchema.schema 
+        return PatternSchemas.TryGetValue(name, out JsonSchema schema) 
+            ? schema
             : null;
     }
 
     public IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
-        return _patternSchemas.Values.Select(regexAndSchema => regexAndSchema.schema);
+        return PatternSchemas.Values;
     }
 
     public bool IsSchemaType => false;
@@ -72,6 +68,6 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
 
     public bool ContainsMatchedPattern(string propertyName)
     {
-        return _patternSchemas.Values.Any(regexAndSchema => regexAndSchema.regex.IsMatch(propertyName));
+        return PatternSchemas.Any(regexAndSchema => RegexMatcher.IsMatch(regexAndSchema.Key, propertyName));
     }
 }

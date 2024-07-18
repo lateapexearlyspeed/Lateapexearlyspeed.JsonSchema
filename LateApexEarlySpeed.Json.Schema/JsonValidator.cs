@@ -94,4 +94,19 @@ public class JsonValidator
     {
         return JsonSerializer.Serialize(_mainSchemaDoc, options);
     }
+
+    public static int DefaultRegexCacheSize
+    {
+        set => RegexMatcher.DefaultRegexProvider.CacheSize = value;
+    }
+
+    public static int DefaultRegexCacheRemovalSelectSize
+    {
+        set => RegexMatcher.DefaultRegexProvider.RemovalSelectSize = value;
+    }
+
+    public static IRegexProvider RegexProvider
+    {
+        set => RegexMatcher.RegexProvider = value;
+    }
 }
