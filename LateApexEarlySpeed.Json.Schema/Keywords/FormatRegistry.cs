@@ -34,7 +34,27 @@ public static class FormatRegistry
         });
     }
 
+    /// <summary>
+    /// Add new format type <typeparamref name="TFormatValidator"/> to <see cref="FormatRegistry"/>
+    /// </summary>
+    /// <typeparam name="TFormatValidator">New format type to be added</typeparam>
+    /// <exception cref="ArgumentException">An format type with the same name already exists in the <see cref="FormatRegistry"/></exception>
     public static void AddFormatType<TFormatValidator>() where TFormatValidator : FormatValidator
+    {
+        FormatValidatorTypes.Add(GetFormatName<TFormatValidator>(), typeof(TFormatValidator));
+    }
+
+    /// <summary>
+    /// Set new format type <typeparamref name="TFormatValidator"/> to <see cref="FormatRegistry"/>.
+    /// If specified format name does not exist, it is added; otherwise it is updated with new format type.
+    /// </summary>
+    /// <typeparam name="TFormatValidator">New format type to be set</typeparam>
+    public static void SetFormatType<TFormatValidator>() where TFormatValidator : FormatValidator
+    {
+        FormatValidatorTypes[GetFormatName<TFormatValidator>()] = typeof(TFormatValidator);
+    }
+
+    private static string GetFormatName<TFormatValidator>() where TFormatValidator : FormatValidator
     {
         Type type = typeof(TFormatValidator);
         FormatAttribute? formatAttribute = type.GetCustomAttribute<FormatAttribute>();
@@ -43,7 +63,7 @@ public static class FormatRegistry
             throw new ArgumentException($"Type argument: {type.FullName} should contain {nameof(FormatAttribute)}.", nameof(TFormatValidator));
         }
 
-        FormatValidatorTypes.Add(formatAttribute.Name, type);
+        return formatAttribute.Name;
     }
 
     /// <returns>Return <see cref="Type"/> for <paramref name="format"/> keyword if registered; otherwise return null</returns>

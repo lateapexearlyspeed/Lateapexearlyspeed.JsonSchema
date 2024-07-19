@@ -1,6 +1,7 @@
 ﻿using LateApexEarlySpeed.Json.Schema.Keywords;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Xunit;
 
 namespace LateApexEarlySpeed.Json.Schema.UnitTests;
 
@@ -10,7 +11,12 @@ public class JsonValidatorTestFixture
     {
         ExternalSchemaDocuments = PrepareRefRemoteDocuments();
 
-        FormatRegistry.AddFormatType<TestCustomFormatValidator>();
+        FormatRegistry.AddFormatType<TrueToFalseFormatValidator>();
+        
+        // Test to add duplicated format names
+        FormatRegistry.SetFormatType<TrueToTrueFormatValidator>();
+        Assert.Throws<ArgumentException>(FormatRegistry.AddFormatType<TrueToFalseFormatValidator>);
+        Assert.Throws<ArgumentException>(FormatRegistry.AddFormatType<DateTimeFormatValidator>);
     }
 
     public IEnumerable<string> ExternalSchemaDocuments { get; }
