@@ -140,6 +140,77 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance).IsValid);
         }
 
+        /// <summary>
+        /// These test cases are to validate https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/issues/45
+        /// </summary>
+        [Theory]
+        [InlineData("2024-07-23T15:56:20+10:00")]
+        [InlineData("2024-07-23T15:56:20.1+10:00")]
+        [InlineData("2024-07-23T15:56:20.0+10:00")]
+        [InlineData("2024-07-23T15:56:20.10+10:00")]
+        [InlineData("2024-07-23T15:56:20.123+10:00")]
+        [InlineData("2024-07-23T15:56:20.1234567+10:00")]
+        [InlineData("2024-07-23T15:56:20-10:00")]
+        [InlineData("2024-07-23T15:56:20.1-10:00")]
+        [InlineData("2024-07-23T15:56:20.0-10:00")]
+        [InlineData("2024-07-23T15:56:20.10-10:00")]
+        [InlineData("2024-07-23T15:56:20.123-10:00")]
+        [InlineData("2024-07-23T15:56:20.1234567-10:00")]
+        [InlineData("2024-07-23T15:56:20Z")]
+        [InlineData("2024-07-23T15:56:20.1Z")]
+        [InlineData("2024-07-23T15:56:20.0Z")]
+        [InlineData("2024-07-23T15:56:20.10Z")]
+        [InlineData("2024-07-23T15:56:20.123Z")]
+        [InlineData("2024-07-23T15:56:20.1234567Z")]
+        public void Validate_ValidDateTimeFormat_ShouldPassValidation(string validDateTimeValue)
+        {
+            string schema = """
+             {
+               "type": "string",
+               "format": "date-time"
+             }
+             """;
+
+            var jsonValidator = new JsonValidator(schema);
+
+            string jsonInstance = $"\"{validDateTimeValue}\"";
+            Assert.True(jsonValidator.Validate(jsonInstance).IsValid);
+        }
+
+        [Theory]
+        [InlineData("15:56:20+10:00")]
+        [InlineData("15:56:20.1+10:00")]
+        [InlineData("15:56:20.0+10:00")]
+        [InlineData("15:56:20.10+10:00")]
+        [InlineData("15:56:20.123+10:00")]
+        [InlineData("15:56:20.1234567+10:00")]
+        [InlineData("15:56:20-10:00")]
+        [InlineData("15:56:20.1-10:00")]
+        [InlineData("15:56:20.0-10:00")]
+        [InlineData("15:56:20.10-10:00")]
+        [InlineData("15:56:20.123-10:00")]
+        [InlineData("15:56:20.1234567-10:00")]
+        [InlineData("15:56:20Z")]
+        [InlineData("15:56:20.1Z")]
+        [InlineData("15:56:20.0Z")]
+        [InlineData("15:56:20.10Z")]
+        [InlineData("15:56:20.123Z")]
+        [InlineData("15:56:20.1234567Z")]
+        public void Validate_ValidTimeFormat_ShouldPassValidation(string validTimeValue)
+        {
+            string schema = """
+             {
+               "type": "string",
+               "format": "time"
+             }
+             """;
+
+            var jsonValidator = new JsonValidator(schema);
+
+            string jsonInstance = $"\"{validTimeValue}\"";
+            Assert.True(jsonValidator.Validate(jsonInstance).IsValid);
+        }
+
         public static IEnumerable<object[]> JsonSchemaTestSuiteForDraft2020
         {
             get

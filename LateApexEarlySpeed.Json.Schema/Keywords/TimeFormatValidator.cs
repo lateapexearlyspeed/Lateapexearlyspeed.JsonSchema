@@ -7,13 +7,10 @@ internal class TimeFormatValidator : FormatValidator
 {
     private static readonly string[] Formats = new[]
     {
-        "HH:mm:ss.fzzz",
-        "HH:mm:ss.fZ",
-        "HH:mm:sszzz",
-        "HH:mm:ssZ",
+        "HH:mm:ss.FFFFFFFzzz",
+        "HH:mm:ss.FFFFFFFZ",
 
-        "HH:mm:ss.f",
-        "HH:mm:ss",
+        "HH:mm:ss.FFFFFFF"
     };
 
     public override bool Validate(string content)

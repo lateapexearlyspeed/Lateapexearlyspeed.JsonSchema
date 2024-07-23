@@ -9,10 +9,8 @@ internal class DateTimeFormatValidator : FormatValidator
 
     private static readonly string[] Formats = new[]
     {
-        "yyyy-MM-ddTHH:mm:ss.fzzz",
-        "yyyy-MM-ddTHH:mm:ss.fZ",
-        "yyyy-MM-ddTHH:mm:sszzz",
-        "yyyy-MM-ddTHH:mm:ssZ"
+        "yyyy-MM-ddTHH:mm:ss.FFFFFFFzzz",
+        "yyyy-MM-ddTHH:mm:ss.FFFFFFFZ"
     };
 
     public override bool Validate(string content)
