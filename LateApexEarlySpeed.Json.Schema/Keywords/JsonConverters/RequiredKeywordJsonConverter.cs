@@ -19,7 +19,7 @@ internal class RequiredKeywordJsonConverter : JsonConverter<RequiredKeyword>
             throw ThrowHelper.CreateKeywordHasDuplicatedJsonArrayElementsJsonException<RequiredKeyword>();
         }
 
-        return new RequiredKeyword(requiredProperties, options.GetJsonValidatorOptions().PropertyNameCaseInsensitive);
+        return new RequiredKeyword(requiredProperties, JsonValidatorOptionsJsonSerializerOptionsMapper.ToJsonValidatorOptions(options).PropertyNameCaseInsensitive);
     }
 
     public override void Write(Utf8JsonWriter writer, RequiredKeyword value, JsonSerializerOptions options)
