@@ -7,10 +7,15 @@ internal class GlobalRegexCache
 {
     private long _lastAccessTime;
     private readonly ConcurrentDictionary<string, RegexNode> _regexDic = new(1, 31);
-    private readonly List<RegexNode> _regexList = new();
+    private readonly List<RegexNode> _regexList;
     private int _removalStartIdx;
     private int _cacheSize = 15;
     private int _removalSelectSize = 30;
+
+    public GlobalRegexCache()
+    {
+        _regexList = new(_cacheSize);
+    }
 
     public LazyCompiledRegex Get(string pattern)
     {
