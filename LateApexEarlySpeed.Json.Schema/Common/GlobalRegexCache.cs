@@ -3,14 +3,14 @@ using System.Diagnostics;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
 
-internal class RegexCache : IRegexProvider
+internal class GlobalRegexCache
 {
     private long _lastAccessTime;
-    private readonly ConcurrentDictionary<string, RegexNode> _regexDic = new(1, 32);
+    private readonly ConcurrentDictionary<string, RegexNode> _regexDic = new(1, 31);
     private readonly List<RegexNode> _regexList = new();
     private int _removalStartIdx;
-    private int _cacheSize;
-    private int _removalSelectSize;
+    private int _cacheSize = 15;
+    private int _removalSelectSize = 30;
 
     public LazyCompiledRegex Get(string pattern)
     {

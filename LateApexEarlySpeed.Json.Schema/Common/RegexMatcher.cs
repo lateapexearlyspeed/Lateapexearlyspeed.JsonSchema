@@ -1,25 +1,25 @@
-﻿namespace LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Keywords;
+
+namespace LateApexEarlySpeed.Json.Schema.Common;
 
 internal static class RegexMatcher
 {
-    static RegexMatcher()
+    private static readonly PerKeywordRegexCache PerKeywordRegexProvider = new();
+    
+    public static GlobalRegexCache GlobalRegexProvider { get; } = new();
+
+    public static RegexLifetime RegexLifetime { get; set; } = RegexLifetime.Global;
+
+    public static bool IsMatch(string pattern, KeywordBase keywordInstance, string input)
     {
-        RegexProvider = DefaultRegexProvider;
-    }
-
-    public static RegexCache DefaultRegexProvider { get; } = new();
-
-    public static IRegexProvider RegexProvider { get; set; }
-
-    public static bool IsMatch(string pattern, string input)
-    {
-        LazyCompiledRegex regex = RegexProvider.Get(pattern);
-
+        LazyCompiledRegex regex = RegexLifetime == RegexLifetime.Global ? GlobalRegexProvider.Get(pattern) : PerKeywordRegexProvider.Get(keywordInstance, pattern);
+        
         return regex.IsMatch(input);
     }
 }
 
-public interface IRegexProvider
+public enum RegexLifetime
 {
-    LazyCompiledRegex Get(string pattern);
+    Global,
+    Instance
 }

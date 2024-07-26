@@ -95,18 +95,21 @@ public class JsonValidator
         return JsonSerializer.Serialize(_mainSchemaDoc, options);
     }
 
-    public static int DefaultRegexCacheSize
-    {
-        set => RegexMatcher.DefaultRegexProvider.CacheSize = value;
-    }
+    // public static int GlobalRegexCacheSize
+    // {
+    //     get => RegexMatcher.GlobalRegexProvider.CacheSize;
+    //     set => RegexMatcher.GlobalRegexProvider.CacheSize = value;
+    // }
+    //
+    // public static int GlobalRegexCacheRemovalSelectSize
+    // {
+    //     get => RegexMatcher.GlobalRegexProvider.RemovalSelectSize;
+    //     set => RegexMatcher.GlobalRegexProvider.RemovalSelectSize = value;
+    // }
 
-    public static int DefaultRegexCacheRemovalSelectSize
+    public static RegexLifetime RegexLifetime
     {
-        set => RegexMatcher.DefaultRegexProvider.RemovalSelectSize = value;
-    }
-
-    public static IRegexProvider RegexProvider
-    {
-        set => RegexMatcher.RegexProvider = value;
+        get => RegexMatcher.RegexLifetime;
+        set => RegexMatcher.RegexLifetime = value;
     }
 }
