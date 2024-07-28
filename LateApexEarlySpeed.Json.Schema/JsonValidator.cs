@@ -94,4 +94,13 @@ public class JsonValidator
     {
         return JsonSerializer.Serialize(_mainSchemaDoc, options);
     }
+
+    /// <summary>
+    /// Gets or sets the maximum number of entries in the static cache of regular expressions for JSON Schema
+    /// </summary>
+    public static int GlobalRegexCacheSize
+    {
+        get => RegexMatcher.GlobalRegexProvider.CacheSize;
+        set => RegexMatcher.GlobalRegexProvider.CacheSize = value;
+    }
 }

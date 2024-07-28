@@ -10,14 +10,12 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(PatternKeywordJsonConverter))]
 internal class PatternKeyword : KeywordBase
 {
-    private readonly LazyCompiledRegex _pattern;
-
     public PatternKeyword(string pattern)
     {
-        _pattern = new LazyCompiledRegex(pattern);
+        Pattern = pattern;
     }
 
-    public string Pattern => _pattern.ToString();
+    public string Pattern { get; }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
@@ -27,9 +25,9 @@ internal class PatternKeyword : KeywordBase
         }
 
         string instanceText = instance.GetString()!;
-        return _pattern.IsMatch(instanceText)
+        return RegexMatcher.IsMatch(Pattern, instanceText)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.RegexNotMatch, ErrorMessage(_pattern.ToString(), instanceText), options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.CreateFailedResult(ResultCode.RegexNotMatch, ErrorMessage(Pattern, instanceText), options.ValidationPathStack, Name, instance.Location);
     }
 
     public static string ErrorMessage(string pattern, string instanceText)
