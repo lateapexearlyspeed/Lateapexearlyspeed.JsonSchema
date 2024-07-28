@@ -95,21 +95,12 @@ public class JsonValidator
         return JsonSerializer.Serialize(_mainSchemaDoc, options);
     }
 
-    // public static int GlobalRegexCacheSize
-    // {
-    //     get => RegexMatcher.GlobalRegexProvider.CacheSize;
-    //     set => RegexMatcher.GlobalRegexProvider.CacheSize = value;
-    // }
-    //
-    // public static int GlobalRegexCacheRemovalSelectSize
-    // {
-    //     get => RegexMatcher.GlobalRegexProvider.RemovalSelectSize;
-    //     set => RegexMatcher.GlobalRegexProvider.RemovalSelectSize = value;
-    // }
-
-    public static RegexLifetime RegexLifetime
+    /// <summary>
+    /// Gets or sets the maximum number of entries in the static cache of regular expressions for JSON Schema
+    /// </summary>
+    public static int GlobalRegexCacheSize
     {
-        get => RegexMatcher.RegexLifetime;
-        set => RegexMatcher.RegexLifetime = value;
+        get => RegexMatcher.GlobalRegexProvider.CacheSize;
+        set => RegexMatcher.GlobalRegexProvider.CacheSize = value;
     }
 }

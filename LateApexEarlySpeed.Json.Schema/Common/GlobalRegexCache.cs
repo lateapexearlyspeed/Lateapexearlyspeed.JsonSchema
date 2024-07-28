@@ -5,12 +5,15 @@ namespace LateApexEarlySpeed.Json.Schema.Common;
 
 internal class GlobalRegexCache
 {
-    private long _lastAccessTime;
     private readonly ConcurrentDictionary<string, RegexNode> _regexDic = new(1, 31);
     private readonly List<RegexNode> _regexList;
+
+    private volatile RegexNode? _lastAccessNode;
     private int _removalStartIdx;
     private int _cacheSize = 15;
-    private int _removalSelectSize = 30;
+    private const int RemovalSelectSize = 30;
+
+    private object SyncObj => _regexDic;
 
     public GlobalRegexCache()
     {
@@ -19,16 +22,28 @@ internal class GlobalRegexCache
 
     public LazyCompiledRegex Get(string pattern)
     {
-        if (_regexDic.TryGetValue(pattern, out RegexNode node))
-        {
-            node.LastAccessTime = Interlocked.Increment(ref _lastAccessTime);
+        long lastAccessTime = 0;
 
-            return node.Regex;
+        if (_lastAccessNode is not null)
+        {
+            RegexNode lastAccessNode = _lastAccessNode;
+
+            if (lastAccessNode.Pattern == pattern)
+            {
+                return lastAccessNode.Regex;
+            }
+
+            lastAccessTime = Volatile.Read(ref lastAccessNode.LastAccessTime);
         }
 
-        node = Add(pattern);
-        node.LastAccessTime = Interlocked.Increment(ref _lastAccessTime);
-        
+        if (!_regexDic.TryGetValue(pattern, out RegexNode node))
+        {
+            node = Add(pattern);
+        }
+
+        Volatile.Write(ref node.LastAccessTime, lastAccessTime + 1);
+        _lastAccessNode = node;
+
         return node.Regex;
     }
 
@@ -36,7 +51,7 @@ internal class GlobalRegexCache
     {
         RegexNode? node = new RegexNode(pattern, new LazyCompiledRegex(pattern)); // Create regex instance outside lock because regex creation costs more time
 
-        lock (_regexDic)
+        lock (SyncObj)
         {
             if (_regexList.Count >= CacheSize)
             {
@@ -77,7 +92,7 @@ internal class GlobalRegexCache
 
         for (int i = startIdx + 1; i <= endIdx; i++)
         {
-            if (_regexList[i].LastAccessTime < _regexList[oldestNodeIdx].LastAccessTime)
+            if (Volatile.Read(ref _regexList[i].LastAccessTime) < Volatile.Read(ref _regexList[oldestNodeIdx].LastAccessTime))
             {
                 oldestNodeIdx = i;
             }
@@ -90,39 +105,45 @@ internal class GlobalRegexCache
 
     public int CacheSize
     {
-        get => _cacheSize;
+        get => Volatile.Read(ref _cacheSize);
+
         set {
             if (value <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(value), value, $"{nameof(CacheSize)} should be greater than 0");
             }
 
-            lock (_regexDic)
+            lock (SyncObj)
             {
+                if (value == _cacheSize)
+                {
+                    return;
+                }
+
+                if (value < _regexList.Count)
+                {
+                    for (int i = value; i < _regexList.Count; i++)
+                    {
+                        RegexNode node = _regexList[i];
+                        _regexDic.TryRemove(node.Pattern, out _);
+                    }
+
+                    _regexList.RemoveRange(value, _regexList.Count - value);
+
+                    Debug.Assert(_regexDic.Count == value);
+                    Debug.Assert(_regexList.Count == value);
+                }
+
+                _regexList.Capacity = value;
                 _cacheSize = value;
-            }
-        }
-    }
-
-    public int RemovalSelectSize
-    {
-        get => _removalSelectSize;
-        set
-        {
-            if (value <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), value, $"{nameof(RemovalSelectSize)} should be greater than 0");
-            }
-
-            lock (_regexDic)
-            {
-                _removalSelectSize = value;
             }
         }
     }
 
     private class RegexNode
     {
+        public long LastAccessTime;
+
         public RegexNode(string pattern, LazyCompiledRegex regex)
         {
             Pattern = pattern;
@@ -131,6 +152,5 @@ internal class GlobalRegexCache
 
         public string Pattern { get; }
         public LazyCompiledRegex Regex { get; }
-        public long LastAccessTime { get; set; }
     }
 }
