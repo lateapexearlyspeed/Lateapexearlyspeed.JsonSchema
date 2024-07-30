@@ -33,7 +33,7 @@ public class GlobalRegexCacheTests
 
             LazyCompiledRegex[] regexList = await Task.WhenAll(tasks);
             Assert.Single(regexList.Distinct()); // To verify same pattern string will generate singleton regex
-            Assert.True(regexList.First().IsMatch(pattern));
+            Assert.True(regexList.Distinct().Single().IsMatch(pattern));
         }
     }
 }

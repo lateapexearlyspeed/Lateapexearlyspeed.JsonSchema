@@ -36,18 +36,21 @@ internal class GlobalRegexCache
             lastAccessTime = Volatile.Read(ref lastAccessNode.LastAccessTime);
         }
 
-        if (!_regexDic.TryGetValue(pattern, out RegexNode node))
+        if (_regexDic.TryGetValue(pattern, out RegexNode node))
         {
-            node = Add(pattern);
+            Volatile.Write(ref node.LastAccessTime, lastAccessTime + 1);
         }
-
-        Volatile.Write(ref node.LastAccessTime, lastAccessTime + 1);
+        else
+        {
+            node = Add(pattern, lastAccessTime);
+        }
+        
         _lastAccessNode = node;
 
         return node.Regex;
     }
 
-    private RegexNode Add(string pattern)
+    private RegexNode Add(string pattern, long lastAccessTime)
     {
         RegexNode? node = new RegexNode(pattern, new LazyCompiledRegex(pattern)); // Create regex instance outside lock because regex creation costs more time
 
@@ -77,11 +80,14 @@ internal class GlobalRegexCache
             if (_regexDic.TryAdd(pattern, node))
             {
                 _regexList.Add(node);
-                return node;
+            }
+            else
+            {
+                node = _regexDic.GetValueOrDefault(pattern);
+                Debug.Assert(node is not null);
             }
 
-            node = _regexDic.GetValueOrDefault(pattern);
-            Debug.Assert(node is not null);
+            Volatile.Write(ref node.LastAccessTime, lastAccessTime + 1);
             return node;
         }
     }
@@ -99,6 +105,7 @@ internal class GlobalRegexCache
         }
 
         RegexNode nodeToRemove = _regexList[oldestNodeIdx];
+
         _regexList.RemoveAt(oldestNodeIdx);
         _regexDic.TryRemove(nodeToRemove.Pattern, out _);
     }
