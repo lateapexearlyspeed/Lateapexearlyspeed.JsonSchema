@@ -53,6 +53,11 @@ internal class GlobalRegexCache
 
         lock (SyncObj)
         {
+            if (_regexDic.TryGetValue(pattern, out RegexNode? existingNode))
+            {
+                return existingNode;
+            }
+
             if (_regexList.Count >= CacheSize)
             {
                 if (_regexList.Count > RemovalSelectSize)
