@@ -36,21 +36,18 @@ internal class GlobalRegexCache
             lastAccessTime = Volatile.Read(ref lastAccessNode.LastAccessTime);
         }
 
-        if (_regexDic.TryGetValue(pattern, out RegexNode node))
+        if (!_regexDic.TryGetValue(pattern, out RegexNode node))
         {
-            Volatile.Write(ref node.LastAccessTime, lastAccessTime + 1);
+            node = Add(pattern);
         }
-        else
-        {
-            node = Add(pattern, lastAccessTime);
-        }
-        
+
+        Volatile.Write(ref node.LastAccessTime, lastAccessTime + 1);
         _lastAccessNode = node;
 
         return node.Regex;
     }
 
-    private RegexNode Add(string pattern, long lastAccessTime)
+    private RegexNode Add(string pattern)
     {
         RegexNode? node = new RegexNode(pattern, new LazyCompiledRegex(pattern)); // Create regex instance outside lock because regex creation costs more time
 
@@ -80,14 +77,12 @@ internal class GlobalRegexCache
             if (_regexDic.TryAdd(pattern, node))
             {
                 _regexList.Add(node);
-            }
-            else
-            {
-                node = _regexDic.GetValueOrDefault(pattern);
-                Debug.Assert(node is not null);
+                return node;
             }
 
-            Volatile.Write(ref node.LastAccessTime, lastAccessTime + 1);
+            node = _regexDic.GetValueOrDefault(pattern);
+            Debug.Assert(node is not null);
+
             return node;
         }
     }
