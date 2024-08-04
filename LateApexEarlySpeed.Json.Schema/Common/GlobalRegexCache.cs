@@ -5,7 +5,7 @@ namespace LateApexEarlySpeed.Json.Schema.Common;
 
 internal class GlobalRegexCache
 {
-    private readonly ConcurrentDictionary<string, RegexNode> _regexDic = new(1, 31);
+    private readonly ConcurrentDictionary<Key, RegexNode> _regexDic = new(1, 31);
     private readonly List<RegexNode> _regexList;
 
     private volatile RegexNode? _lastAccessNode;
@@ -20,15 +20,15 @@ internal class GlobalRegexCache
         _regexList = new(_cacheSize);
     }
 
-    public LazyCompiledRegex Get(string pattern)
+    public LazyCompiledRegex Get(string pattern, TimeSpan matchTimeout)
     {
+        var key = new Key(pattern, matchTimeout);
+
         long lastAccessTime = 0;
 
-        if (_lastAccessNode is not null)
+        if (_lastAccessNode is { } lastAccessNode)
         {
-            RegexNode lastAccessNode = _lastAccessNode;
-
-            if (lastAccessNode.Pattern == pattern)
+            if (lastAccessNode.Key == key)
             {
                 return lastAccessNode.Regex;
             }
@@ -36,9 +36,9 @@ internal class GlobalRegexCache
             lastAccessTime = Volatile.Read(ref lastAccessNode.LastAccessTime);
         }
 
-        if (!_regexDic.TryGetValue(pattern, out RegexNode node))
+        if (!_regexDic.TryGetValue(key, out RegexNode node))
         {
-            node = Add(pattern);
+            node = Add(key);
         }
 
         Volatile.Write(ref node.LastAccessTime, lastAccessTime + 1);
@@ -47,13 +47,13 @@ internal class GlobalRegexCache
         return node.Regex;
     }
 
-    private RegexNode Add(string pattern)
+    private RegexNode Add(Key key)
     {
-        RegexNode? node = new RegexNode(pattern, new LazyCompiledRegex(pattern)); // Create regex instance outside lock because regex creation costs more time
+        var node = new RegexNode(key, new LazyCompiledRegex(key.Pattern, key.MatchTimeout)); // Create regex instance outside lock because regex creation costs more time
 
         lock (SyncObj)
         {
-            if (_regexDic.TryGetValue(pattern, out RegexNode? existingNode))
+            if (_regexDic.TryGetValue(key, out RegexNode? existingNode))
             {
                 return existingNode;
             }
@@ -79,15 +79,10 @@ internal class GlobalRegexCache
                 }
             }
 
-            if (_regexDic.TryAdd(pattern, node))
-            {
-                _regexList.Add(node);
-                return node;
-            }
-
-            node = _regexDic.GetValueOrDefault(pattern);
-            Debug.Assert(node is not null);
-
+            bool tryAdd = _regexDic.TryAdd(key, node);
+            Debug.Assert(tryAdd);
+            _regexList.Add(node);
+            
             return node;
         }
     }
@@ -107,7 +102,7 @@ internal class GlobalRegexCache
         RegexNode nodeToRemove = _regexList[oldestNodeIdx];
 
         _regexList.RemoveAt(oldestNodeIdx);
-        _regexDic.TryRemove(nodeToRemove.Pattern, out _);
+        _regexDic.TryRemove(nodeToRemove.Key, out _);
     }
 
     public int CacheSize
@@ -132,7 +127,7 @@ internal class GlobalRegexCache
                     for (int i = value; i < _regexList.Count; i++)
                     {
                         RegexNode node = _regexList[i];
-                        _regexDic.TryRemove(node.Pattern, out _);
+                        _regexDic.TryRemove(node.Key, out _);
                     }
 
                     _regexList.RemoveRange(value, _regexList.Count - value);
@@ -147,17 +142,54 @@ internal class GlobalRegexCache
         }
     }
 
+    private readonly struct Key : IEquatable<Key>
+    {
+        public Key(string pattern, TimeSpan matchTimeout)
+        {
+            Pattern = pattern;
+            MatchTimeout = matchTimeout;
+        }
+
+        public string Pattern { get; }
+        public TimeSpan MatchTimeout { get; }
+
+        public bool Equals(Key other)
+        {
+            return Pattern == other.Pattern && MatchTimeout.Equals(other.MatchTimeout);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is Key other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Pattern, MatchTimeout);
+        }
+
+        public static bool operator ==(Key left, Key right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Key left, Key right)
+        {
+            return !left.Equals(right);
+        }
+    }
+
     private class RegexNode
     {
         public long LastAccessTime;
 
-        public RegexNode(string pattern, LazyCompiledRegex regex)
+        public RegexNode(Key key, LazyCompiledRegex regex)
         {
-            Pattern = pattern;
+            Key = key;
             Regex = regex;
         }
 
-        public string Pattern { get; }
+        public Key Key { get; }
         public LazyCompiledRegex Regex { get; }
     }
 }

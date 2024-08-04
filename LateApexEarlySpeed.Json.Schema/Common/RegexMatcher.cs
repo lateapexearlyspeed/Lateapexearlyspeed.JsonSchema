@@ -4,9 +4,9 @@ internal static class RegexMatcher
 {
     public static GlobalRegexCache GlobalRegexProvider { get; } = new();
 
-    public static bool IsMatch(string pattern, string input)
+    public static bool IsMatch(string pattern, string input, TimeSpan matchTimeout)
     {
-        LazyCompiledRegex regex = GlobalRegexProvider.Get(pattern);
+        LazyCompiledRegex regex = GlobalRegexProvider.Get(pattern, matchTimeout);
         
         return regex.IsMatch(input);
     }

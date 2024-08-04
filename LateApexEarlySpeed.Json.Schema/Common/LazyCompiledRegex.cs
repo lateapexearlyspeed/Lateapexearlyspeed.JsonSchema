@@ -9,6 +9,7 @@ internal class LazyCompiledRegex
     private const int FinalStateCount = -1;
 
     private readonly string _pattern;
+    private readonly TimeSpan _matchTimeout;
 
     /// <summary>
     /// When current value exceeds <see cref="CountToCompileRegex"/>, it will turn to <see cref="FinalStateCount"/>, which represents final-state
@@ -16,10 +17,11 @@ internal class LazyCompiledRegex
     private volatile int _counter;
     private volatile Regex _regex;
 
-    public LazyCompiledRegex([StringSyntax(StringSyntaxAttribute.Regex, "options")] string pattern)
+    public LazyCompiledRegex([StringSyntax(StringSyntaxAttribute.Regex, "options")] string pattern, TimeSpan matchTimeout)
     {
         _pattern = pattern;
-        _regex = RegexFactory.Create(pattern, RegexOptions.None);
+        _matchTimeout = matchTimeout;
+        _regex = RegexFactory.Create(pattern, RegexOptions.None, matchTimeout);
     }
 
     /// <summary>
@@ -54,7 +56,7 @@ internal class LazyCompiledRegex
         // Time to compile regex
         if (localCount >= CountToCompileRegex)
         {
-            _regex = RegexFactory.Create(_pattern, RegexOptions.Compiled);
+            _regex = RegexFactory.Create(_pattern, RegexOptions.Compiled, _matchTimeout);
             _counter = FinalStateCount;
 
             return _regex.IsMatch(input);

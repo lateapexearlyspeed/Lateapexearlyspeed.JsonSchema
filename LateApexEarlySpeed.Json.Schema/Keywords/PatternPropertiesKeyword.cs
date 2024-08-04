@@ -33,7 +33,7 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
 
             foreach (KeyValuePair<string, JsonSchema> patternSchema in PatternSchemas)
             {
-                if (RegexMatcher.IsMatch(patternSchema.Key, propertyName))
+                if (RegexMatcher.IsMatch(patternSchema.Key, propertyName, options.RegexMatchTimeout))
                 {
                     ValidationResult validationResult = patternSchema.Value.Validate(propertyValue, options);
                     if (!validationResult.IsValid)
@@ -66,8 +66,8 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
         throw new InvalidOperationException();
     }
 
-    public bool ContainsMatchedPattern(string propertyName)
+    public bool ContainsMatchedPattern(string propertyName, TimeSpan matchTimeout)
     {
-        return PatternSchemas.Any(regexAndSchema => RegexMatcher.IsMatch(regexAndSchema.Key, propertyName));
+        return PatternSchemas.Any(regexAndSchema => RegexMatcher.IsMatch(regexAndSchema.Key, propertyName, matchTimeout));
     }
 }

@@ -8,7 +8,18 @@ public class JsonSchemaOptions
     internal SchemaResourceRegistry? SchemaResourceRegistry { get; set; }
     internal SchemaRecursionRecorder SchemaRecursionRecorder { get; } = new();
     public ValidationPathStack ValidationPathStack { get; } = new();
+
+    /// <summary>
+    /// Gets or sets a value that defines whether JSON schema validates with 'format' keyword.
+    /// </summary>
+    /// <returns>true if JSON schema should validate with 'format' keyword; otherwise, false. The default is true.</returns>
     public bool ValidateFormat { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value that specifies how long a pattern matching method should attempt a match before it times out.
+    /// </summary>
+    /// <returns>A time-out interval, or <see cref="System.Text.RegularExpressions.Regex.InfiniteMatchTimeout"/> to indicate that the pattern matching method should not time out. The default is <see cref="RegexFactory.DefaultMatchTimeout"/>.</returns>
+    public TimeSpan RegexMatchTimeout { get; set; } = RegexFactory.DefaultMatchTimeout;
 
     /// <summary>
     /// User entry point to create <see cref="JsonSchemaOptions"/> instance
@@ -27,6 +38,7 @@ public class JsonSchemaOptions
         if (options is not null)
         {
             ValidateFormat = options.ValidateFormat;
+            RegexMatchTimeout = options.RegexMatchTimeout;
         }
     }
 }

@@ -37,7 +37,7 @@ internal class AdditionalPropertiesKeyword : KeywordBase, ISchemaContainerElemen
                 continue;
             }
 
-            bool containsMatchedPattern = PatternPropertiesKeyword is not null && PatternPropertiesKeyword.ContainsMatchedPattern(propertyName);
+            bool containsMatchedPattern = PatternPropertiesKeyword is not null && PatternPropertiesKeyword.ContainsMatchedPattern(propertyName, options.RegexMatchTimeout);
             
             if (!containsMatchedPattern)
             {
