@@ -42,10 +42,26 @@ public static class ValidationKeywordRegistry
         KeywordsDictionary = builtInKeywordTypes.ToDictionary(KeywordBase.GetKeywordName);
     }
 
+    /// <summary>
+    /// Add new keyword type <typeparamref name="TKeyword"/> to <see cref="ValidationKeywordRegistry"/>
+    /// </summary>
+    /// <typeparam name="TKeyword">New keyword type to be added</typeparam>
+    /// <exception cref="ArgumentException">An keyword type with the same keyword name already exists in the <see cref="ValidationKeywordRegistry"/></exception>
     public static void AddKeyword<TKeyword>() where TKeyword : KeywordBase
     {
         Type keywordType = typeof(TKeyword);
         KeywordsDictionary.Add(KeywordBase.GetKeywordName(keywordType), keywordType);
+    }
+
+    /// <summary>
+    /// Set new keyword type <typeparamref name="TKeyword"/> to <see cref="ValidationKeywordRegistry"/>.
+    /// If specified keyword name does not exist, it is added; otherwise it is updated with new keyword type.
+    /// </summary>
+    /// <typeparam name="TKeyword">New keyword type to be set</typeparam>
+    public static void SetKeyword<TKeyword>() where TKeyword : KeywordBase
+    {
+        Type keywordType = typeof(TKeyword);
+        KeywordsDictionary[KeywordBase.GetKeywordName(keywordType)] = keywordType;
     }
 
     public static Type? GetKeyword(string keywordName)
