@@ -74,7 +74,7 @@ External json schema document reference support, please check [wiki](https://git
 
 Custom keyword support, please check [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Custom-keyword-support)
 
-More schema validation options like case-insensitive property names matching, please check [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/More-validation-options)
+More schema validation options like case-insensitive property names matching, Regex cache and so on, please check [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/More-validation-options)
 
 ### Fluent schema builder
 
