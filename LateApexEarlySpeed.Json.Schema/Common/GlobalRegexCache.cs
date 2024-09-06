@@ -36,7 +36,7 @@ internal class GlobalRegexCache
             lastAccessTime = Volatile.Read(ref lastAccessNode.LastAccessTime);
         }
 
-        if (!_regexDic.TryGetValue(key, out RegexNode node))
+        if (!_regexDic.TryGetValue(key, out RegexNode? node))
         {
             node = Add(key);
         }

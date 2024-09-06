@@ -49,7 +49,7 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
 
     public ISchemaContainerElement? GetSubElement(string name)
     {
-        return PatternSchemas.TryGetValue(name, out JsonSchema schema) 
+        return PatternSchemas.TryGetValue(name, out JsonSchema? schema) 
             ? schema
             : null;
     }

@@ -15,7 +15,7 @@ internal class ExtendedKeywordJsonConverter : JsonConverterFactory
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
         Type converterType = typeof(ExtendedKeywordJsonConverterInner<>).MakeGenericType(typeToConvert);
-        return (JsonConverter)Activator.CreateInstance(converterType);
+        return (JsonConverter)Activator.CreateInstance(converterType)!;
     }
 
     private class ExtendedKeywordJsonConverterInner<TKeyword> : JsonConverter<TKeyword> where TKeyword : KeywordBase

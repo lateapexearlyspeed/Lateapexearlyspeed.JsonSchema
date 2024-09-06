@@ -16,8 +16,9 @@ internal class CollectionSchemaGenerationCandidate : ISchemaGenerationCandidate
         List<KeywordBase> keywords = new List<KeywordBase> { new TypeKeyword(InstanceType.Array, InstanceType.Null) };
         keywords.AddRange(keywordsFromProperty);
 
-        Debug.Assert(typeToConvert.GetInterface("IEnumerable`1") is not null);
-        Type elementType = typeToConvert.GetInterface("IEnumerable`1").GetGenericArguments()[0];
+        Type? enumerableInterface = typeToConvert.GetInterface("IEnumerable`1");
+        Debug.Assert(enumerableInterface is not null);
+        Type elementType = enumerableInterface.GetGenericArguments()[0];
         JsonSchema elementSchema = JsonSchemaGenerator.GenerateSchema(elementType, Enumerable.Empty<KeywordBase>(), options);
 
         JsonSchema itemsSchema;

@@ -12,7 +12,7 @@ public abstract class FormatValidator
             return null;
         }
 
-        object instance = Activator.CreateInstance(formatType);
+        object instance = Activator.CreateInstance(formatType)!;
 
         Debug.Assert(instance is FormatValidator);
         return instance as FormatValidator;
