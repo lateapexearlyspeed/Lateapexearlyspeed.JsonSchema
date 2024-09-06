@@ -6,11 +6,11 @@ name: cicd
 on:
   push:
     # Sequence of patterns matched against refs/heads
-    branches: [ "master", "Issue-**" ]
+    branches: [ "master", "release/6.0", "Issue-**" ]
     # Sequence of patterns matched against refs/tags
     tags: ["publish-corelib*", "publish-xunit*"]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "release/6.0" ]
 
 jobs:
   build-and-test-one-env:
