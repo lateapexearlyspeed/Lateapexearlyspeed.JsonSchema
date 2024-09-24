@@ -56,8 +56,33 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
             }
 
             List<KeywordBase>? keywordsForAdditionalAttributes = null;
-
+            
+            bool isMemberNullable = true;
             if (memberInfo.GetCustomAttribute<NotNullAttribute>() is not null)
+            {
+                isMemberNullable = false;
+            }
+            else if (!options.IgnoreNullableReferenceTypeAnnotation)
+            {
+                NullabilityInfo memberNullabilityInfo;
+
+                if (memberInfo.MemberType == MemberTypes.Property)
+                {
+                    memberNullabilityInfo = new NullabilityInfoContext().Create((PropertyInfo)memberInfo);
+                }
+                else
+                {
+                    Debug.Assert(memberInfo.MemberType == MemberTypes.Field);
+                    memberNullabilityInfo = new NullabilityInfoContext().Create((FieldInfo)memberInfo);
+                }
+
+                if (memberNullabilityInfo.WriteState == NullabilityState.NotNull)
+                {
+                    isMemberNullable = false;
+                }
+            }
+
+            if (!isMemberNullable)
             {
                 var typeKeyword = new TypeKeyword(InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array);
                 keywordsForAdditionalAttributes = new List<KeywordBase>(2) { typeKeyword };

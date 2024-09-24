@@ -23,13 +23,16 @@ public class JsonSchemaGeneratorOptions
         if (options is not null)
         {
             PropertyNamingPolicy = options.PropertyNamingPolicy;
+            IgnoreNullableReferenceTypeAnnotation = options.IgnoreNullableReferenceTypeAnnotation;
         }
     }
 
     internal TypeSchemaDefinitions SchemaDefinitions { get; } = new();
     internal Uri? MainDocumentBaseUri { get; set; }
     internal TypeGenerationRecorder TypeGenerationRecorder { get; } = new();
+
     public JsonSchemaNamingPolicy PropertyNamingPolicy { get; set; } = JsonSchemaNamingPolicy.SharedDefault;
+    public bool IgnoreNullableReferenceTypeAnnotation { get; set; }
 }
 
 public static class JsonSchemaGenerator
