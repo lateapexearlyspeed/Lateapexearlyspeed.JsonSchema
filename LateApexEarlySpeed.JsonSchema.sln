@@ -15,6 +15,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LateApexEarlySpeed.Xunit.As
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LateApexEarlySpeed.Assertion.Json.UnitTests", "LateApexEarlySpeed.Assertion.Json.UnitTests\LateApexEarlySpeed.Assertion.Json.UnitTests.csproj", "{AFBEA2D1-2583-42B8-9DA5-2ADFBEA8C7A8}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LateApexEarlySpeed.Nullability.Generic", "LateApexEarlySpeed.Nullability.Generic\LateApexEarlySpeed.Nullability.Generic.csproj", "{5E3F2E80-9000-47BD-B740-45524BBFA5F2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LateApexEarlySpeed.Nullability.Generic.UnitTests", "LateApexEarlySpeed.Nullability.Generic.UnitTests\LateApexEarlySpeed.Nullability.Generic.UnitTests.csproj", "{B5940464-09C2-4477-A121-CDFEC5655B7D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +49,14 @@ Global
 		{AFBEA2D1-2583-42B8-9DA5-2ADFBEA8C7A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFBEA2D1-2583-42B8-9DA5-2ADFBEA8C7A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFBEA2D1-2583-42B8-9DA5-2ADFBEA8C7A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E3F2E80-9000-47BD-B740-45524BBFA5F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E3F2E80-9000-47BD-B740-45524BBFA5F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E3F2E80-9000-47BD-B740-45524BBFA5F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E3F2E80-9000-47BD-B740-45524BBFA5F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5940464-09C2-4477-A121-CDFEC5655B7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5940464-09C2-4477-A121-CDFEC5655B7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5940464-09C2-4477-A121-CDFEC5655B7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5940464-09C2-4477-A121-CDFEC5655B7D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
