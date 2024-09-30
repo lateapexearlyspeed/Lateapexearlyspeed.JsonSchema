@@ -32,7 +32,7 @@ public partial class NullabilityFieldInfo
     /// <summary>
     /// Gets the nullability type of current field.
     /// </summary>
-    public NullabilityType NullabilityAnnotationFieldType
+    public NullabilityType NullabilityFieldType
     {
         get
         {

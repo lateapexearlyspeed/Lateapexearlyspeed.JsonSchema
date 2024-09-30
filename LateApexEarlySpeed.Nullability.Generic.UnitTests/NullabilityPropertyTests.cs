@@ -20,7 +20,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityReadState);
             Assert.Equal(NullabilityState.Unknown, propertyInfo.NullabilityWriteState);
 
-            NullabilityType propertyType = propertyInfo.NullabilityAnnotationPropertyType;
+            NullabilityType propertyType = propertyInfo.NullabilityPropertyType;
             Assert.Equal(NullabilityState.NotNull, propertyType.NullabilityState);
             Assert.Equal(typeof(TestStruct), propertyType.Type);
 
@@ -31,7 +31,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityReadState);
             Assert.Equal(NullabilityState.Unknown, propertyInfo.NullabilityWriteState);
 
-            propertyType = propertyInfo.NullabilityAnnotationPropertyType;
+            propertyType = propertyInfo.NullabilityPropertyType;
             Assert.Equal(NullabilityState.NotNull, propertyType.NullabilityState);
             Assert.Equal(typeof(int), propertyType.Type);
         }
@@ -51,7 +51,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(NullabilityState.Unknown, propertyInfo.NullabilityReadState);
             Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityWriteState);
 
-            NullabilityType propertyType = propertyInfo.NullabilityAnnotationPropertyType;
+            NullabilityType propertyType = propertyInfo.NullabilityPropertyType;
             Assert.Equal(NullabilityState.NotNull, propertyType.NullabilityState);
             Assert.Equal(typeof(TestStruct), propertyType.Type);
 
@@ -62,7 +62,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(NullabilityState.Unknown, propertyInfo.NullabilityReadState);
             Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityWriteState);
 
-            propertyType = propertyInfo.NullabilityAnnotationPropertyType;
+            propertyType = propertyInfo.NullabilityPropertyType;
             Assert.Equal(NullabilityState.NotNull, propertyType.NullabilityState);
             Assert.Equal(typeof(int), propertyType.Type);
         }
@@ -82,7 +82,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityReadState);
             Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityWriteState);
 
-            NullabilityType propertyType = propertyInfo.NullabilityAnnotationPropertyType;
+            NullabilityType propertyType = propertyInfo.NullabilityPropertyType;
             Assert.Equal(NullabilityState.NotNull, propertyType.NullabilityState);
             Assert.Equal(typeof(TestStruct), propertyType.Type);
 
@@ -93,7 +93,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityReadState);
             Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityWriteState);
 
-            propertyType = propertyInfo.NullabilityAnnotationPropertyType;
+            propertyType = propertyInfo.NullabilityPropertyType;
             Assert.Equal(NullabilityState.NotNull, propertyType.NullabilityState);
             Assert.Equal(typeof(int), propertyType.Type);
         }
@@ -114,7 +114,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(NullabilityState.Nullable, propertyInfo.NullabilityReadState);
             Assert.Equal(NullabilityState.Unknown, propertyInfo.NullabilityWriteState);
 
-            NullabilityType propertyType = propertyInfo.NullabilityAnnotationPropertyType;
+            NullabilityType propertyType = propertyInfo.NullabilityPropertyType;
             Assert.Equal(NullabilityState.Nullable, propertyType.NullabilityState);
             Assert.Equal(typeof(GenericStruct<string>?), propertyType.Type);
 
@@ -126,7 +126,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityReadState);
             Assert.Equal(NullabilityState.Unknown, propertyInfo.NullabilityWriteState);
 
-            NullabilityType underlyingType = propertyInfo.NullabilityAnnotationPropertyType;
+            NullabilityType underlyingType = propertyInfo.NullabilityPropertyType;
             Assert.Equal(NullabilityState.NotNull, underlyingType.NullabilityState);
 
             // string
@@ -143,7 +143,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(NullabilityState.Nullable, propertyInfo.NullabilityReadState);
             Assert.Equal(NullabilityState.Unknown, propertyInfo.NullabilityWriteState);
 
-            propertyType = propertyInfo.NullabilityAnnotationPropertyType;
+            propertyType = propertyInfo.NullabilityPropertyType;
             Assert.Equal(NullabilityState.Nullable, propertyType.NullabilityState);
             Assert.Equal(typeof(GenericStruct<string?>?), propertyType.Type);
 
@@ -155,7 +155,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityReadState);
             Assert.Equal(NullabilityState.Unknown, propertyInfo.NullabilityWriteState);
 
-            underlyingType = propertyInfo.NullabilityAnnotationPropertyType;
+            underlyingType = propertyInfo.NullabilityPropertyType;
             Assert.Equal(NullabilityState.NotNull, underlyingType.NullabilityState);
 
             // string?
@@ -208,11 +208,11 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertProperty(propertyInfo, NullabilityState.NotNull);
 
             // GenericClass<string> -> GenericClass2<string>
-            propertyInfo = propertyInfo.NullabilityAnnotationPropertyType.GetProperty(nameof(GenericClass<string>.Property));
+            propertyInfo = propertyInfo.NullabilityPropertyType.GetProperty(nameof(GenericClass<string>.Property));
             AssertProperty(propertyInfo, NullabilityState.NotNull);
 
             // GenericClass<string> -> GenericClass2<string> -> string
-            propertyInfo = propertyInfo.NullabilityAnnotationPropertyType.GetProperty(nameof(GenericClass2<string>.Property));
+            propertyInfo = propertyInfo.NullabilityPropertyType.GetProperty(nameof(GenericClass2<string>.Property));
             AssertProperty(propertyInfo, NullabilityState.NotNull);
 
             // GenericClass<string>?
@@ -220,11 +220,11 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertProperty(propertyInfo, NullabilityState.Nullable);
 
             // GenericClass<string>? -> GenericClass2<string>
-            propertyInfo = propertyInfo.NullabilityAnnotationPropertyType.GetProperty(nameof(GenericClass<string>.Property));
+            propertyInfo = propertyInfo.NullabilityPropertyType.GetProperty(nameof(GenericClass<string>.Property));
             AssertProperty(propertyInfo, NullabilityState.NotNull);
 
             // GenericClass<string>? -> GenericClass2<string> -> string
-            propertyInfo = propertyInfo.NullabilityAnnotationPropertyType.GetProperty(nameof(GenericClass2<string>.Property));
+            propertyInfo = propertyInfo.NullabilityPropertyType.GetProperty(nameof(GenericClass2<string>.Property));
             AssertProperty(propertyInfo, NullabilityState.NotNull);
 
             // GenericClass<string?>
@@ -232,11 +232,11 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertProperty(propertyInfo, NullabilityState.NotNull);
 
             // GenericClass<string?> -> GenericClass2<string?>
-            propertyInfo = propertyInfo.NullabilityAnnotationPropertyType.GetProperty(nameof(GenericClass<string>.Property));
+            propertyInfo = propertyInfo.NullabilityPropertyType.GetProperty(nameof(GenericClass<string>.Property));
             AssertProperty(propertyInfo, NullabilityState.NotNull);
 
             // GenericClass<string?> -> GenericClass2<string?> -> string?
-            propertyInfo = propertyInfo.NullabilityAnnotationPropertyType.GetProperty(nameof(GenericClass2<string>.Property));
+            propertyInfo = propertyInfo.NullabilityPropertyType.GetProperty(nameof(GenericClass2<string>.Property));
             AssertProperty(propertyInfo, NullabilityState.Nullable);
 
             // GenericClass<string?>?
@@ -244,11 +244,11 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertProperty(propertyInfo, NullabilityState.Nullable);
 
             // GenericClass<string?>? -> GenericClass2<string?>
-            propertyInfo = propertyInfo.NullabilityAnnotationPropertyType.GetProperty(nameof(GenericClass<string>.Property));
+            propertyInfo = propertyInfo.NullabilityPropertyType.GetProperty(nameof(GenericClass<string>.Property));
             AssertProperty(propertyInfo, NullabilityState.NotNull);
 
             // GenericClass<string?>? -> GenericClass2<string?> -> string?
-            propertyInfo = propertyInfo.NullabilityAnnotationPropertyType.GetProperty(nameof(GenericClass2<string>.Property));
+            propertyInfo = propertyInfo.NullabilityPropertyType.GetProperty(nameof(GenericClass2<string>.Property));
             AssertProperty(propertyInfo, NullabilityState.Nullable);
         }
 
@@ -263,7 +263,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertProperty(propertyInfo, NullabilityState.NotNull);
 
             // GenericClass<string> -> GenericClass2<string> -> string
-            propertyInfo = propertyInfo.NullabilityAnnotationPropertyType.GetProperty(nameof(GenericClass2<string>.Property));
+            propertyInfo = propertyInfo.NullabilityPropertyType.GetProperty(nameof(GenericClass2<string>.Property));
             AssertProperty(propertyInfo, NullabilityState.NotNull);
 
             // GenericClass<string?>
@@ -274,7 +274,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertProperty(propertyInfo, NullabilityState.NotNull);
 
             // GenericClass<string?> -> GenericClass2<string?> -> string?
-            propertyInfo = propertyInfo.NullabilityAnnotationPropertyType.GetProperty(nameof(GenericClass2<string?>.Property));
+            propertyInfo = propertyInfo.NullabilityPropertyType.GetProperty(nameof(GenericClass2<string?>.Property));
             AssertProperty(propertyInfo, NullabilityState.Nullable);
         }
 
@@ -289,7 +289,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertProperty(propertyInfo, NullabilityState.Nullable);
 
             // GenericClass2<GenericClass2<string>?> -> GenericClass2<string>? -> string
-            propertyInfo = propertyInfo.NullabilityAnnotationPropertyType.GetProperty(nameof(GenericClass2<string>.Property));
+            propertyInfo = propertyInfo.NullabilityPropertyType.GetProperty(nameof(GenericClass2<string>.Property));
             AssertProperty(propertyInfo, NullabilityState.NotNull);
 
             // GenericClass2<GenericClass2<string?>>
@@ -300,7 +300,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertProperty(propertyInfo, NullabilityState.NotNull);
 
             // GenericClass2<GenericClass2<string?>> -> GenericClass2<string?> -> string?
-            propertyInfo = propertyInfo.NullabilityAnnotationPropertyType.GetProperty(nameof(GenericClass2<string>.Property));
+            propertyInfo = propertyInfo.NullabilityPropertyType.GetProperty(nameof(GenericClass2<string>.Property));
             AssertProperty(propertyInfo, NullabilityState.Nullable);
         }
 

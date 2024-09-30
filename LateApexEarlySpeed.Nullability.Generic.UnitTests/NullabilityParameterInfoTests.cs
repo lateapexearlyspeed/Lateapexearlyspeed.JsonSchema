@@ -23,7 +23,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(typeof(TestStruct), parameterInfo.ParameterType);
             Assert.Equal(NullabilityState.NotNull, parameterInfo.NullabilityState);
 
-            NullabilityType parameterType = parameterInfo.NullabilityAnnotationParameterType;
+            NullabilityType parameterType = parameterInfo.NullabilityParameterType;
             Assert.Equal(NullabilityState.NotNull, parameterType.NullabilityState);
             Assert.Equal(typeof(TestStruct), parameterType.Type);
 
@@ -36,7 +36,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(typeof(int), parameterInfo.ParameterType);
             Assert.Equal(NullabilityState.NotNull, parameterInfo.NullabilityState);
 
-            parameterType = parameterInfo.NullabilityAnnotationParameterType;
+            parameterType = parameterInfo.NullabilityParameterType;
             Assert.Equal(NullabilityState.NotNull, parameterType.NullabilityState);
             Assert.Equal(typeof(int), parameterType.Type);
         }
@@ -60,7 +60,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(typeof(GenericStruct<string>?), parameterInfo.ParameterType);
             Assert.Equal(NullabilityState.Nullable, parameterInfo.NullabilityState);
 
-            NullabilityType parameterType = parameterInfo.NullabilityAnnotationParameterType;
+            NullabilityType parameterType = parameterInfo.NullabilityParameterType;
             Assert.Equal(NullabilityState.Nullable, parameterType.NullabilityState);
             Assert.Equal(typeof(GenericStruct<string>?), parameterType.Type);
 
@@ -71,7 +71,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(typeof(GenericStruct<string>), propertyInfo.PropertyType);
             Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityReadState);
 
-            NullabilityType underlyingType = propertyInfo.NullabilityAnnotationPropertyType;
+            NullabilityType underlyingType = propertyInfo.NullabilityPropertyType;
             Assert.Equal(NullabilityState.NotNull, underlyingType.NullabilityState);
 
             // string
@@ -90,7 +90,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(typeof(GenericStruct<string?>?), parameterInfo.ParameterType);
             Assert.Equal(NullabilityState.Nullable, parameterInfo.NullabilityState);
 
-            parameterType = parameterInfo.NullabilityAnnotationParameterType;
+            parameterType = parameterInfo.NullabilityParameterType;
             Assert.Equal(NullabilityState.Nullable, parameterType.NullabilityState);
             Assert.Equal(typeof(GenericStruct<string?>?), parameterType.Type);
 
@@ -101,7 +101,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(typeof(GenericStruct<string?>), propertyInfo.PropertyType);
             Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityReadState);
 
-            underlyingType = propertyInfo.NullabilityAnnotationPropertyType;
+            underlyingType = propertyInfo.NullabilityPropertyType;
             Assert.Equal(NullabilityState.NotNull, underlyingType.NullabilityState);
 
             // string?
@@ -143,11 +143,11 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             NullabilityParameterInfo parameterInfo = AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.NotNull);
 
             // GenericClass<string> -> GenericClass2<string>
-            methodInfo = parameterInfo.NullabilityAnnotationParameterType.GetMethod(nameof(GenericClass<string>.Function));
+            methodInfo = parameterInfo.NullabilityParameterType.GetMethod(nameof(GenericClass<string>.Function));
             parameterInfo = AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.NotNull);
 
             // GenericClass<string> -> GenericClass2<string> -> string
-            methodInfo = parameterInfo.NullabilityAnnotationParameterType.GetMethod(nameof(GenericClass2<string>.Function));
+            methodInfo = parameterInfo.NullabilityParameterType.GetMethod(nameof(GenericClass2<string>.Function));
             AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.NotNull);
 
             // GenericClass<string>?
@@ -155,11 +155,11 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             parameterInfo = AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.Nullable);
 
             // GenericClass<string>? -> GenericClass2<string>
-            methodInfo = parameterInfo.NullabilityAnnotationParameterType.GetMethod(nameof(GenericClass<string>.Function));
+            methodInfo = parameterInfo.NullabilityParameterType.GetMethod(nameof(GenericClass<string>.Function));
             parameterInfo = AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.NotNull);
 
             // GenericClass<string>? -> GenericClass2<string> -> string
-            methodInfo = parameterInfo.NullabilityAnnotationParameterType.GetMethod(nameof(GenericClass2<string>.Function));
+            methodInfo = parameterInfo.NullabilityParameterType.GetMethod(nameof(GenericClass2<string>.Function));
             parameterInfo = AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.NotNull);
 
             // GenericClass<string?>
@@ -167,11 +167,11 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             parameterInfo = AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.NotNull);
 
             // GenericClass<string?> -> GenericClass2<string?>
-            methodInfo = parameterInfo.NullabilityAnnotationParameterType.GetMethod(nameof(GenericClass<string>.Function));
+            methodInfo = parameterInfo.NullabilityParameterType.GetMethod(nameof(GenericClass<string>.Function));
             parameterInfo = AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.NotNull);
 
             // GenericClass<string?> -> GenericClass2<string?> -> string?
-            methodInfo = parameterInfo.NullabilityAnnotationParameterType.GetMethod(nameof(GenericClass2<string>.Function));
+            methodInfo = parameterInfo.NullabilityParameterType.GetMethod(nameof(GenericClass2<string>.Function));
             AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.Nullable);
 
             // GenericClass<string?>?
@@ -179,11 +179,11 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             parameterInfo = AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.Nullable);
 
             // GenericClass<string?>? -> GenericClass2<string?>
-            methodInfo = parameterInfo.NullabilityAnnotationParameterType.GetMethod(nameof(GenericClass<string>.Function));
+            methodInfo = parameterInfo.NullabilityParameterType.GetMethod(nameof(GenericClass<string>.Function));
             parameterInfo = AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.NotNull);
 
             // GenericClass<string?>? -> GenericClass2<string?> -> string?
-            methodInfo = parameterInfo.NullabilityAnnotationParameterType.GetMethod(nameof(GenericClass2<string>.Function));
+            methodInfo = parameterInfo.NullabilityParameterType.GetMethod(nameof(GenericClass2<string>.Function));
             AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.Nullable);
         }
 
@@ -199,7 +199,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             NullabilityParameterInfo parameterInfo = AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.NotNull);
 
             // GenericClass<string> -> GenericClass2<string> -> string
-            methodInfo = parameterInfo.NullabilityAnnotationParameterType.GetMethod(nameof(GenericClass2<string>.Function));
+            methodInfo = parameterInfo.NullabilityParameterType.GetMethod(nameof(GenericClass2<string>.Function));
             AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.NotNull);
 
             // GenericClass<string?>
@@ -210,7 +210,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             parameterInfo = AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.NotNull);
 
             // GenericClass<string?> -> GenericClass2<string?> -> string?
-            methodInfo = parameterInfo.NullabilityAnnotationParameterType.GetMethod(nameof(GenericClass2<string?>.Function));
+            methodInfo = parameterInfo.NullabilityParameterType.GetMethod(nameof(GenericClass2<string?>.Function));
             AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.Nullable);
         }
 
@@ -226,7 +226,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             NullabilityParameterInfo parameterInfo = AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.Nullable);
 
             // GenericClass2<GenericClass2<string>?> -> GenericClass2<string>? -> string
-            methodInfo = parameterInfo.NullabilityAnnotationParameterType.GetMethod(nameof(GenericClass2<string>.Function));
+            methodInfo = parameterInfo.NullabilityParameterType.GetMethod(nameof(GenericClass2<string>.Function));
             AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.NotNull);
 
             // GenericClass2<GenericClass2<string?>>
@@ -237,7 +237,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             parameterInfo = AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.NotNull);
 
             // GenericClass2<GenericClass2<string?>> -> GenericClass2<string?> -> string?
-            methodInfo = parameterInfo.NullabilityAnnotationParameterType.GetMethod(nameof(GenericClass2<string>.Function));
+            methodInfo = parameterInfo.NullabilityParameterType.GetMethod(nameof(GenericClass2<string>.Function));
             AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.Nullable);
         }
 

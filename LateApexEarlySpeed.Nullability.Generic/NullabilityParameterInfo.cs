@@ -43,7 +43,7 @@ public partial class NullabilityParameterInfo
     /// <summary>
     /// Gets the nullability type of current parameter.
     /// </summary>
-    public NullabilityType NullabilityAnnotationParameterType
+    public NullabilityType NullabilityParameterType
     {
         get
         {

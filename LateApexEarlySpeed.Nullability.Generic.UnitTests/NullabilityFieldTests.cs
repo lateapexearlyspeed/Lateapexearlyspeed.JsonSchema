@@ -19,7 +19,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(typeof(TestStruct), fieldInfo.FieldType);
             Assert.Equal(NullabilityState.NotNull, fieldInfo.NullabilityState);
 
-            NullabilityType fieldType = fieldInfo.NullabilityAnnotationFieldType;
+            NullabilityType fieldType = fieldInfo.NullabilityFieldType;
             Assert.Equal(NullabilityState.NotNull, fieldType.NullabilityState);
             Assert.Equal(typeof(TestStruct), fieldType.Type);
 
@@ -29,7 +29,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(typeof(int), fieldInfo.FieldType);
             Assert.Equal(NullabilityState.NotNull, fieldInfo.NullabilityState);
 
-            fieldType = fieldInfo.NullabilityAnnotationFieldType;
+            fieldType = fieldInfo.NullabilityFieldType;
             Assert.Equal(NullabilityState.NotNull, fieldType.NullabilityState);
             Assert.Equal(typeof(int), fieldType.Type);
         }
@@ -49,7 +49,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(typeof(GenericStruct<string>?), fieldInfo.FieldType);
             Assert.Equal(NullabilityState.Nullable, fieldInfo.NullabilityState);
 
-            NullabilityType fieldType = fieldInfo.NullabilityAnnotationFieldType;
+            NullabilityType fieldType = fieldInfo.NullabilityFieldType;
             Assert.Equal(NullabilityState.Nullable, fieldType.NullabilityState);
             Assert.Equal(typeof(GenericStruct<string>?), fieldType.Type);
 
@@ -60,7 +60,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(typeof(GenericStruct<string>), propertyInfo.PropertyType);
             Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityReadState);
 
-            NullabilityType underlyingType = propertyInfo.NullabilityAnnotationPropertyType;
+            NullabilityType underlyingType = propertyInfo.NullabilityPropertyType;
             Assert.Equal(NullabilityState.NotNull, underlyingType.NullabilityState);
 
             // string
@@ -75,7 +75,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(typeof(GenericStruct<string?>?), fieldInfo.FieldType);
             Assert.Equal(NullabilityState.Nullable, fieldInfo.NullabilityState);
 
-            fieldType = fieldInfo.NullabilityAnnotationFieldType;
+            fieldType = fieldInfo.NullabilityFieldType;
             Assert.Equal(NullabilityState.Nullable, fieldType.NullabilityState);
             Assert.Equal(typeof(GenericStruct<string?>?), fieldType.Type);
 
@@ -86,7 +86,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.Equal(typeof(GenericStruct<string?>), propertyInfo.PropertyType);
             Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityReadState);
 
-            underlyingType = propertyInfo.NullabilityAnnotationPropertyType;
+            underlyingType = propertyInfo.NullabilityPropertyType;
             Assert.Equal(NullabilityState.NotNull, underlyingType.NullabilityState);
 
             // string?
@@ -126,11 +126,11 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertField(fieldInfo, NullabilityState.NotNull);
 
             // GenericClass<string> -> GenericClass2<string>
-            fieldInfo = fieldInfo.NullabilityAnnotationFieldType.GetField(nameof(GenericClass<string>.Field));
+            fieldInfo = fieldInfo.NullabilityFieldType.GetField(nameof(GenericClass<string>.Field));
             AssertField(fieldInfo, NullabilityState.NotNull);
 
             // GenericClass<string> -> GenericClass2<string> -> string
-            fieldInfo = fieldInfo.NullabilityAnnotationFieldType.GetField(nameof(GenericClass2<string>.Field));
+            fieldInfo = fieldInfo.NullabilityFieldType.GetField(nameof(GenericClass2<string>.Field));
             AssertField(fieldInfo, NullabilityState.NotNull);
 
             // GenericClass<string>?
@@ -138,11 +138,11 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertField(fieldInfo, NullabilityState.Nullable);
 
             // GenericClass<string>? -> GenericClass2<string>
-            fieldInfo = fieldInfo.NullabilityAnnotationFieldType.GetField(nameof(GenericClass<string>.Field));
+            fieldInfo = fieldInfo.NullabilityFieldType.GetField(nameof(GenericClass<string>.Field));
             AssertField(fieldInfo, NullabilityState.NotNull);
 
             // GenericClass<string>? -> GenericClass2<string> -> string
-            fieldInfo = fieldInfo.NullabilityAnnotationFieldType.GetField(nameof(GenericClass2<string>.Field));
+            fieldInfo = fieldInfo.NullabilityFieldType.GetField(nameof(GenericClass2<string>.Field));
             AssertField(fieldInfo, NullabilityState.NotNull);
 
             // GenericClass<string?>
@@ -150,11 +150,11 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertField(fieldInfo, NullabilityState.NotNull);
 
             // GenericClass<string?> -> GenericClass2<string?>
-            fieldInfo = fieldInfo.NullabilityAnnotationFieldType.GetField(nameof(GenericClass<string>.Field));
+            fieldInfo = fieldInfo.NullabilityFieldType.GetField(nameof(GenericClass<string>.Field));
             AssertField(fieldInfo, NullabilityState.NotNull);
 
             // GenericClass<string?> -> GenericClass2<string?> -> string?
-            fieldInfo = fieldInfo.NullabilityAnnotationFieldType.GetField(nameof(GenericClass2<string>.Field));
+            fieldInfo = fieldInfo.NullabilityFieldType.GetField(nameof(GenericClass2<string>.Field));
             AssertField(fieldInfo, NullabilityState.Nullable);
 
             // GenericClass<string?>?
@@ -162,11 +162,11 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertField(fieldInfo, NullabilityState.Nullable);
 
             // GenericClass<string?>? -> GenericClass2<string?>
-            fieldInfo = fieldInfo.NullabilityAnnotationFieldType.GetField(nameof(GenericClass<string>.Field));
+            fieldInfo = fieldInfo.NullabilityFieldType.GetField(nameof(GenericClass<string>.Field));
             AssertField(fieldInfo, NullabilityState.NotNull);
 
             // GenericClass<string?>? -> GenericClass2<string?> -> string?
-            fieldInfo = fieldInfo.NullabilityAnnotationFieldType.GetField(nameof(GenericClass2<string>.Field));
+            fieldInfo = fieldInfo.NullabilityFieldType.GetField(nameof(GenericClass2<string>.Field));
             AssertField(fieldInfo, NullabilityState.Nullable);
         }
 
@@ -181,7 +181,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertField(fieldInfo, NullabilityState.NotNull);
 
             // GenericClass<string> -> GenericClass2<string> -> string
-            fieldInfo = fieldInfo.NullabilityAnnotationFieldType.GetField(nameof(GenericClass2<string>.Field));
+            fieldInfo = fieldInfo.NullabilityFieldType.GetField(nameof(GenericClass2<string>.Field));
             AssertField(fieldInfo, NullabilityState.NotNull);
 
             // GenericClass<string?>
@@ -192,7 +192,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertField(fieldInfo, NullabilityState.NotNull);
 
             // GenericClass<string?> -> GenericClass2<string?> -> string?
-            fieldInfo = fieldInfo.NullabilityAnnotationFieldType.GetField(nameof(GenericClass2<string?>.Field));
+            fieldInfo = fieldInfo.NullabilityFieldType.GetField(nameof(GenericClass2<string?>.Field));
             AssertField(fieldInfo, NullabilityState.Nullable);
         }
 
@@ -207,7 +207,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertField(fieldInfo, NullabilityState.Nullable);
 
             // GenericClass2<GenericClass2<string>?> -> GenericClass2<string>? -> string
-            fieldInfo = fieldInfo.NullabilityAnnotationFieldType.GetField(nameof(GenericClass2<string>.Field));
+            fieldInfo = fieldInfo.NullabilityFieldType.GetField(nameof(GenericClass2<string>.Field));
             AssertField(fieldInfo, NullabilityState.NotNull);
 
             // GenericClass2<GenericClass2<string?>>
@@ -218,7 +218,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertField(fieldInfo, NullabilityState.NotNull);
 
             // GenericClass2<GenericClass2<string?>> -> GenericClass2<string?> -> string?
-            fieldInfo = fieldInfo.NullabilityAnnotationFieldType.GetField(nameof(GenericClass2<string>.Field));
+            fieldInfo = fieldInfo.NullabilityFieldType.GetField(nameof(GenericClass2<string>.Field));
             AssertField(fieldInfo, NullabilityState.Nullable);
         }
 

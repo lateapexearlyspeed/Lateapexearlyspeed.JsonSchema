@@ -26,7 +26,7 @@ public partial class NullabilityPropertyInfo
     /// <summary>
     /// Gets the nullability type of current property.
     /// </summary>
-    public NullabilityType NullabilityAnnotationPropertyType
+    public NullabilityType NullabilityPropertyType
     {
         get
         {

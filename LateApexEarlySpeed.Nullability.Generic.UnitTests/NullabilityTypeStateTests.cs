@@ -12,10 +12,10 @@ public class NullabilityTypeStateTests
         NullabilityPropertyInfo? propertyInfo = rootType.GetProperty(nameof(TestClass.Property));
         Assert.NotNull(propertyInfo);
 
-        propertyInfo = propertyInfo.NullabilityAnnotationPropertyType.GetProperty(nameof(GenericClass<int, int, int, int>.Property));
+        propertyInfo = propertyInfo.NullabilityPropertyType.GetProperty(nameof(GenericClass<int, int, int, int>.Property));
         Assert.NotNull(propertyInfo);
 
-        NullabilityType type = propertyInfo.NullabilityAnnotationPropertyType;
+        NullabilityType type = propertyInfo.NullabilityPropertyType;
 
         // GenericClass<List<int>, List<int?>?, List<string>, List<string?>?>?
         Assert.Equal(NullabilityState.Nullable, type.NullabilityState);
@@ -56,10 +56,10 @@ public class NullabilityTypeStateTests
 
         Assert.NotNull(propertyInfo);
 
-        rootType = propertyInfo.NullabilityAnnotationPropertyType;
+        rootType = propertyInfo.NullabilityPropertyType;
 
         // List<int>[]
-        NullabilityType? type = rootType.GetProperty(nameof(GenericClass<int, int, int, int>.ArrayProperty0))!.NullabilityAnnotationPropertyType;
+        NullabilityType? type = rootType.GetProperty(nameof(GenericClass<int, int, int, int>.ArrayProperty0))!.NullabilityPropertyType;
 
         Assert.Equal(NullabilityState.NotNull, type.NullabilityState);
         // List<int>
@@ -70,7 +70,7 @@ public class NullabilityTypeStateTests
         Assert.Equal(NullabilityState.NotNull, Assert.Single(type.GenericTypeArguments).NullabilityState);
 
         // List<int?>?[]
-        type = rootType.GetProperty(nameof(GenericClass<int, int, int, int>.ArrayProperty1))!.NullabilityAnnotationPropertyType;
+        type = rootType.GetProperty(nameof(GenericClass<int, int, int, int>.ArrayProperty1))!.NullabilityPropertyType;
         Assert.Equal(NullabilityState.NotNull, type.NullabilityState);
         // List<int?>?
         type = type.GetArrayElementType();
@@ -84,7 +84,7 @@ public class NullabilityTypeStateTests
         Assert.Equal(NullabilityState.NotNull, type.NullabilityState);
 
         // List<string>[]
-        type = rootType.GetProperty(nameof(GenericClass<int, int, int, int>.ArrayProperty2))!.NullabilityAnnotationPropertyType;
+        type = rootType.GetProperty(nameof(GenericClass<int, int, int, int>.ArrayProperty2))!.NullabilityPropertyType;
         Assert.Equal(NullabilityState.NotNull, type.NullabilityState);
         // List<string>
         type = type.GetArrayElementType();
@@ -94,7 +94,7 @@ public class NullabilityTypeStateTests
         Assert.Equal(NullabilityState.NotNull, Assert.Single(type.GenericTypeArguments).NullabilityState);
 
         // List<string?>?[]
-        type = rootType.GetProperty(nameof(GenericClass<int, int, int, int>.ArrayProperty3))!.NullabilityAnnotationPropertyType;
+        type = rootType.GetProperty(nameof(GenericClass<int, int, int, int>.ArrayProperty3))!.NullabilityPropertyType;
         Assert.Equal(NullabilityState.NotNull, type.NullabilityState);
         // List<string?>?
         type = type.GetArrayElementType();
@@ -107,9 +107,9 @@ public class NullabilityTypeStateTests
         propertyInfo = rootType.GetProperty(nameof(GenericClass<int, int, int, int>.ArrayProperty));
         Assert.NotNull(propertyInfo);
 
-        Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityAnnotationPropertyType.NullabilityState);
+        Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityPropertyType.NullabilityState);
         // GenericClass<T0, T1, T2, T3>?
-        type = propertyInfo.NullabilityAnnotationPropertyType.GetArrayElementType();
+        type = propertyInfo.NullabilityPropertyType.GetArrayElementType();
         Assert.NotNull(type);
         Assert.Equal(NullabilityState.Nullable, type.NullabilityState);
 
