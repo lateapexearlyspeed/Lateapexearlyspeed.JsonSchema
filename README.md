@@ -20,7 +20,9 @@ This repository is about json validation, the wish is to help develop json relat
 
 The core library is 'Lateapexearlyspeed.Json.Schema' which is a simple and high performance json schema implementation for .Net, and also contains other convenient helper to develop validation code rather than write standard json schema like: fluent json validation and validator generation from your type.
 
-Based on the core library, there are Entityframework core extensions which has solution of json column validation to protect your database in application side and a Xunit assertion extensions which has powerful json assertion capability.
+Based on the core library, there is a Xunit assertion extensions which has powerful json assertion capability.
+
+During developing core library, there are some basic requirement which turns to other reusable library, like: dealing with Nullability info of type (even if it is generic type).
 
 nuget packages:
 
@@ -180,91 +182,120 @@ JsonAssertion.Equivalent("""
 
 check available validation methods in [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Fluent-schema-builder#available-fluent-validation-methods).
 
-## LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema & LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema
+## LateApexEarlySpeed.Nullability.Generic
 
-Json column in database give flexible possiblilty to store information, but it may introduce unexpected json data into db incorrectly. 
-
-This libreary provides json level validation for EF core model's json column in client side before sending DB request, the usage is similiar with EF core's existing model property configuration. 
-
-Use package 'LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema' for 'Microsoft.EntityFrameworkCore' v3, and package 'LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema' for 'Microsoft.EntityFrameworkCore' v6+.
-
-Model:
-```csharp
-    public class Blog
-    {
-        public int BlogId { get; set; }
-
-        [Column(TypeName = "jsonb")]
-        public string JsonContent { get; set; }
-    }
-```
-
-Configure json column with 2 ways:
-
-### 1. Fluent configuration
+Starting from .net 6, there is built-in Nullability related classes to help read nullability annotation info on members of type (`NullabilityInfoContext` and so on). However, it is not possible to get annotated nullability state of members and parameters if their types are from generic type arguments:
 
 ```csharp
-protected override void OnModelCreating(ModelBuilder modelBuilder)
+class Class1
 {
-    modelBuilder.Entity<Blog>()
-        .Property(b => b.JsonContent).HasJsonValidation(b =>
-        {
-            b.ObjectHasProperty("A", b => b.IsJsonString().HasMinLength(5))
-             .HasProperty("B", b => b.IsJsonNumber().IsGreaterThan(1).IsLessThan(10))
-             .HasProperty("C", b => b.IsJsonArray().HasMinLength(5).HasItems(b =>
-            {
-                b.NotJsonNull();
-            }))
-            .HasProperty("D", b => b.Or(
-                b => b.IsJsonFalse(),
-                b => b.IsJsonNumber().Equal(0),
-                b => b.IsJsonObject().HasCustomValidation((JsonElement element) => element.GetProperty("Prop").ValueKind == JsonValueKind.True, 
-                    jsonElement => $"Cannot pass my custom validation, data is {jsonElement}")
-                )
-            );
-        });
+    public GenericClass<string> Property { get; }
 }
-```
 
-When saving wrong entity:
-
-```csharp
+class GenericClass<T>
 {
-  "A": "abcde",
-  "B": 2,
-  "C": [1, 2, 3, 4, null],
-  "D": 0
+    public T Property { get; }
 }
+
+PropertyInfo property = typeof(Class1).GetProperty("Property")!.PropertyType.GetProperty("Property")!;
+NullabilityInfo state = new NullabilityInfoContext().Create(property);
+Assert.Equal(NullabilityState.Nullable, state.ReadState); // expected nullability state of ‘string’ property is NotNull
 ```
 
-EF core will throw:
+this library can get NotNull state for this 'string' property whose type is from generic type argument:
 
 ```csharp
-Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while updating the entries. See the inner exception for details.
- ---> LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema.JsonValidationException: Failed to validate json property: 'JsonContent'. Failed json location (json pointer format): '/C/4', reason: Expect type(s): 'Object|Array|Boolean|Number|String' but actual is 'Null'.
-   at LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema.JsonStringValueConverter.ConvertToJson(String model, JsonValidator jsonValidator, String propertyName)
-   at ...
-   at Microsoft.EntityFrameworkCore.DbContext.SaveChanges(Boolean acceptAllChangesOnSuccess)
+NullabilityPropertyInfo propertyInfo = NullabilityType.GetType(typeof(Class1)).GetProperty("Property")!.NullabilityPropertyType.GetProperty("Property")!;
+Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityReadState);
 ```
 
-You can get column name, failed [location (by json pointer format)](https://datatracker.ietf.org/doc/html/rfc6901) in json body and failed reason.
+There is no information to help infer nullability info of generic type arguments of 'root' type, so if 'root' type is generic type, this library accepts explicit nullability info of generic type arguments for 'root' type and then process all properties, fields, parameters as normal:
 
-You don't have to specify all properties when configure, just configure necessary stuff your data requirement focuses on. The json part in data which is not configured will not be checked.
-
-Available validations for json column: check [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Fluent-schema-builder#available-fluent-validation-methods).
-
-### 2. Just provide standard json schema (2020.12) when call HasJsonValidation():
 ```csharp
-protected override void OnModelCreating(ModelBuilder modelBuilder)
+NullabilityPropertyInfo propertyInfo = NullabilityType.GetType(typeof(GenericClass<string>), NullabilityState.NotNull).GetProperty("Property")!;
+Assert.Equal(NullabilityState.NotNull, propertyInfo.NullabilityReadState);
+```
+
+even if with nested properties:
+
+```csharp
+class GenericClass<T>
 {
-    modelBuilder.Entity<Blog>().Property(b => b.JsonContent).HasJsonValidation("""
+    public GenericClass2<int?, T> Property { get; }
+}
+
+class GenericClass2<T1, T2>
+{
+    public T1 Property1 { get; }
+    public T2 Property2 { get; }
+    public string? Property3 { get; }
+}
+
+NullabilityPropertyInfo property = NullabilityType.GetType(typeof(GenericClass<string>), NullabilityState.NotNull).GetProperty("Property")!;
+Assert.Equal(NullabilityState.NotNull, property.NullabilityReadState); // GenericClass2<int?, T>
+
+NullabilityType type = property.NullabilityPropertyType;
+Assert.Equal(NullabilityState.Nullable, type.GetProperty("Property1")!.NullabilityReadState); // int?
+Assert.Equal(NullabilityState.NotNull, type.GetProperty("Property2")!.NullabilityReadState); // string
+Assert.Equal(NullabilityState.Nullable, type.GetProperty("Property3")!.NullabilityReadState); // string?
+```
+
+Library also supports info of fields and parameters, take parameter as example:
+
+```csharp
+        class Class1
         {
-          "properties": {
-            "cba": {
-              "type": "string"
-            }
-          }
+            public GenericClass<string, string?, int, int?> Property { get; }
         }
-        """);    
-}
+
+        class GenericClass<T1, T2, T3, T4>
+        {
+            public GenericClass2<T1, T2>? Function(T2 p0, T3 p1, T4 p2, string p3, string? p4)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        class GenericClass2<T1, T2>
+        {
+            public T1 Property1 { get; }
+            public T2 Property2 { get; }
+            public string? Property3 { get; }
+        }
+
+        NullabilityMethodInfo method = NullabilityType.GetType(typeof(Class1)).GetProperty("Property")!.NullabilityPropertyType.GetMethod("Function")!;
+
+        // GenericClass2<T1, T2>?
+        NullabilityParameterInfo returnParameter = method.NullabilityReturnParameter;
+        Assert.Equal(NullabilityState.Nullable, returnParameter.NullabilityState);
+        NullabilityType returnType = returnParameter.NullabilityParameterType;
+        Assert.Equal(NullabilityState.NotNull, returnType.GenericTypeArguments[0].NullabilityState); // string
+        Assert.Equal(NullabilityState.Nullable, returnType.GenericTypeArguments[1].NullabilityState); // string?
+
+        Assert.Equal(NullabilityState.NotNull, returnType.GetProperty("Property1")!.NullabilityReadState); // string
+        Assert.Equal(NullabilityState.Nullable, returnType.GetProperty("Property2")!.NullabilityReadState); // string?
+
+        // string? p0, int p1, int? p2, string p3, string? p4
+        NullabilityParameterInfo[] parameters = method.GetNullabilityParameters();
+        Assert.Equal(NullabilityState.Nullable, parameters[0].NullabilityState);
+        Assert.Equal(NullabilityState.NotNull, parameters[1].NullabilityState);
+        Assert.Equal(NullabilityState.Nullable, parameters[2].NullabilityState);
+        Assert.Equal(NullabilityState.NotNull, parameters[3].NullabilityState);
+        Assert.Equal(NullabilityState.Nullable, parameters[4].NullabilityState);
 ```
+
+Calling entrypoint is static method `NullabilityType.GetType()` which has 3 overloads:
+
+```csharp
+NullabilityType GetType(Type type) // when type itself is not generic type
+NullabilityType GetType(Type type, params NullabilityState[] genericTypeArgumentsNullabilities) // when type is generic type is generic type and its generic type arguments are not generic types
+NullabilityType GetType(Type type, params NullabilityElement[] genericTypeArgumentsNullabilities) // when type is generic type and its generic type arguments are also generic type
+```
+
+Navigating apis of `NullabilityType` are defined align with `System.Type`, other memberInfo types (`NullabilityPropertyInfo, NullabilityFieldInfo, NullabilityMethodInfo` and `NullabilityParameterInfo`) inherited from their standard member types. Every Nullability related classes have corresponding properties to escape nullability type world back to runtime ones, like:
+
+```csharp
+Type NullabilityType.Type { get; }
+```
+
+More API doc see wiki.
