@@ -12,7 +12,7 @@
 ![GitHub top language](https://img.shields.io/github/languages/top/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema)
 ![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Json.Schema?label=LateApexEarlySpeed.Json.Schema)
 ![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Xunit.Assertion.Json?label=LateApexEarlySpeed.Xunit.Assertion.Json)
-![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema?label=LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema)
+![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Nullability.Generic?label=LateApexEarlySpeed.Nullability.Generic)
 
 # What is all in Lateapexearlyspeed.JsonSchema
 
@@ -37,12 +37,8 @@ nuget packages:
 <td>Xunit assertion extension for json - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema?tab=readme-ov-file#lateapexearlyspeedxunitassertionjson">doc</a></td>
 </tr>
 <tr>
-<td>LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema/"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.EntityFrameworkCore.V6.Json.Schema"></img></a></td>
-<td>Json column validation for Entityframework core v6+ - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema?tab=readme-ov-file#lateapexearlyspeedentityframeworkcorev6jsonschema--lateapexearlyspeedentityframeworkcorev3jsonschema">doc</a></td>
-</tr>
-<tr>
-<td>LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema/"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.EntityFrameworkCore.V3.Json.Schema"></img></a></td>
-<td>Json column validation for Entityframework core v3 - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema?tab=readme-ov-file#lateapexearlyspeedentityframeworkcorev6jsonschema--lateapexearlyspeedentityframeworkcorev3jsonschema">doc</a></td>
+<td>LateApexEarlySpeed.Nullability.Generic<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.Nullability.Generic/"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.Nullability.Generic"></img></a></td>
+<td>Nullability info reader including for generic type - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema?tab=readme-ov-file#lateapexearlyspeednullabilitygeneric">doc</a></td>
 </tr>
 </tbody>
 </table>
@@ -292,10 +288,4 @@ NullabilityType GetType(Type type, params NullabilityState[] genericTypeArgument
 NullabilityType GetType(Type type, params NullabilityElement[] genericTypeArgumentsNullabilities) // when type is generic type and its generic type arguments are also generic type
 ```
 
-Navigating apis of `NullabilityType` are defined align with `System.Type`, other memberInfo types (`NullabilityPropertyInfo, NullabilityFieldInfo, NullabilityMethodInfo` and `NullabilityParameterInfo`) inherited from their standard member types. Every Nullability related classes have corresponding properties to escape nullability type world back to runtime ones, like:
-
-```csharp
-Type NullabilityType.Type { get; }
-```
-
-More API doc see wiki.
+More API doc see [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/LateApexEarlySpeed.Nullability.Generic).
