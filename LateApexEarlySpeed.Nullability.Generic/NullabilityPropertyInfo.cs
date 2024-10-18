@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Reflection;
+using LateApexEarlySpeed.Nullability.Generic.RawNullabilityAnnotation;
 
 namespace LateApexEarlySpeed.Nullability.Generic;
 
@@ -12,14 +13,14 @@ public partial class NullabilityPropertyInfo
 
     private readonly PropertyInfo _propertyInfo;
 
-    private readonly Type? _propertyTypeInGenericDefType;
+    private readonly PropertyInfo? _propertyInfoInGenericDefType;
 
     private readonly NullabilityType _declaringType;
 
-    protected internal NullabilityPropertyInfo(PropertyInfo propertyInfo, Type? propertyTypeInGenericDefType, NullabilityType declaringType)
+    protected internal NullabilityPropertyInfo(PropertyInfo propertyInfo, PropertyInfo? propertyInfoInGenericDefType, NullabilityType declaringType)
     {
         _propertyInfo = propertyInfo;
-        _propertyTypeInGenericDefType = propertyTypeInGenericDefType;
+        _propertyInfoInGenericDefType = propertyInfoInGenericDefType;
         _declaringType = declaringType;
     }
 
@@ -32,7 +33,10 @@ public partial class NullabilityPropertyInfo
         {
             Type propertyType = _propertyInfo.PropertyType;
             NullabilityInfo origNullabilityInfo = _context.Create(_propertyInfo);
-            NullabilityElement nullabilityElement = NullabilityElement.Create(_propertyTypeInGenericDefType ?? propertyType, _declaringType, origNullabilityInfo);
+            
+            // todo: currently only considered no inherit struct
+            NullabilityElement rawNullabilityInfo = RawNullabilityAnnotationConverter.ReadPropertyGetter(_propertyInfoInGenericDefType ?? _propertyInfo);
+            NullabilityElement nullabilityElement = NullabilityElement.Create(_propertyInfoInGenericDefType?.PropertyType ?? propertyType, _declaringType, origNullabilityInfo);
 
             return new NullabilityType(propertyType, nullabilityElement);
         }
@@ -49,9 +53,9 @@ public partial class NullabilityPropertyInfo
             NullabilityState origState = _context.Create(_propertyInfo).ReadState;
 
             return
-                origState == NullabilityState.Unknown || _propertyTypeInGenericDefType is null || !_propertyTypeInGenericDefType.IsGenericTypeParameter
+                origState == NullabilityState.Unknown || _propertyInfoInGenericDefType is null || !_propertyInfoInGenericDefType.PropertyType.IsGenericTypeParameter
                     ? origState
-                    : _declaringType.GetGenericArgumentNullabilityInfo(_propertyTypeInGenericDefType.GenericParameterPosition).State;
+                    : _declaringType.GetGenericArgumentNullabilityInfo(_propertyInfoInGenericDefType.PropertyType.GenericParameterPosition).State;
         }
     }
 
@@ -66,9 +70,9 @@ public partial class NullabilityPropertyInfo
             NullabilityState origState = _context.Create(_propertyInfo).WriteState;
 
             return
-                origState == NullabilityState.Unknown || _propertyTypeInGenericDefType is null || !_propertyTypeInGenericDefType.IsGenericTypeParameter
+                origState == NullabilityState.Unknown || _propertyInfoInGenericDefType is null || !_propertyInfoInGenericDefType.PropertyType.IsGenericTypeParameter
                     ? origState
-                    : _declaringType.GetGenericArgumentNullabilityInfo(_propertyTypeInGenericDefType.GenericParameterPosition).State;
+                    : _declaringType.GetGenericArgumentNullabilityInfo(_propertyInfoInGenericDefType.PropertyType.GenericParameterPosition).State;
         }
     }
 }

@@ -148,9 +148,9 @@ public class NullabilityType
             return null;
         }
 
-        Type? genericDefPropertyType = _genericDefType?.GetProperty(name, bindingAttr)!.PropertyType;
+        PropertyInfo? genericDefPropertyInfo = _genericDefType?.GetProperty(name, bindingAttr);
 
-        return new NullabilityPropertyInfo(propertyInfo, genericDefPropertyType, this);
+        return new NullabilityPropertyInfo(propertyInfo, genericDefPropertyInfo, this);
     }
 
     public NullabilityPropertyInfo? GetProperty(string name, Type? returnType)
@@ -161,9 +161,9 @@ public class NullabilityType
             return null;
         }
 
-        Type? genericDefPropertyType = _genericDefType?.GetProperty(name, returnType)!.PropertyType;
+        PropertyInfo? genericDefPropertyInfo = _genericDefType?.GetProperty(name, returnType);
 
-        return new NullabilityPropertyInfo(propertyInfo, genericDefPropertyType, this);
+        return new NullabilityPropertyInfo(propertyInfo, genericDefPropertyInfo, this);
     }
 
     public NullabilityPropertyInfo? GetProperty(string name, Type? returnType, Type[] types)
@@ -189,9 +189,9 @@ public class NullabilityType
             return null;
         }
 
-        Type? genericDefPropertyType = _genericDefType?.GetProperty(name, bindingAttr, binder, returnType, types, modifiers)!.PropertyType;
+        PropertyInfo? genericDefPropertyInfo = _genericDefType?.GetProperty(name, bindingAttr, binder, returnType, types, modifiers);
 
-        return new NullabilityPropertyInfo(propertyInfo, genericDefPropertyType, this);
+        return new NullabilityPropertyInfo(propertyInfo, genericDefPropertyInfo, this);
     }
 
     public NullabilityPropertyInfo[] GetProperties()
@@ -210,7 +210,7 @@ public class NullabilityType
 
         PropertyInfo[]? genericDefTypeProperties = _genericDefType?.GetProperties(bindingAttr);
 
-        return propertyInfos.Select(p => new NullabilityPropertyInfo(p, genericDefTypeProperties?.First(genericProp => genericProp.HasSameMetadataDefinitionAs(p)).PropertyType, this)).ToArray();
+        return propertyInfos.Select(p => new NullabilityPropertyInfo(p, genericDefTypeProperties?.First(genericProp => genericProp.HasSameMetadataDefinitionAs(p)), this)).ToArray();
     }
 
     public NullabilityFieldInfo? GetField(string name)

@@ -52,9 +52,8 @@ public class NullabilityElement
             Type? underlyingTypeOfNullableValue = Nullable.GetUnderlyingType(typeInGenericDefType);
             if (underlyingTypeOfNullableValue is null)
             {
-                Type[] genericTypeArguments = typeInGenericDefType.IsGenericTypeDefinition // here will be true when enclosing generic type contains same generic type (current 'typeInGenericDefType' instance) with same ordered generic type arguments
-                ? typeInGenericDefType.GetTypeInfo().GenericTypeParameters 
-                : typeInGenericDefType.GenericTypeArguments;
+                // here 'typeInGenericDefType.IsGenericTypeDefinition' will be true when enclosing generic type contains same generic type (current 'typeInGenericDefType' instance) with same ordered generic type arguments
+                Type[] genericTypeArguments = typeInGenericDefType.GenericTypeArgumentsOrParameters();
 
                 NullabilityElement[] genericTypeArgumentsInfo = CreateGenericTypeArgumentElements(genericTypeArguments);
 
