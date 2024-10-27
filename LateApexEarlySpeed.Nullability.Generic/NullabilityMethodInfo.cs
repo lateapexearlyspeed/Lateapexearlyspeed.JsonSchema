@@ -9,20 +9,28 @@ namespace LateApexEarlySpeed.Nullability.Generic;
 public partial class NullabilityMethodInfo
 {
     private readonly MethodInfo _methodInfo;
-    private readonly MethodInfo? _genericDefMethod;
-    private readonly NullabilityType _declaringType;
+    private readonly NullabilityType _reflectedType;
 
-    protected internal NullabilityMethodInfo(MethodInfo method, MethodInfo? genericDefMethod, NullabilityType declaringType)
+    protected internal NullabilityMethodInfo(MethodInfo method, NullabilityType reflectedType)
     {
         _methodInfo = method;
-        _genericDefMethod = genericDefMethod;
-        _declaringType = declaringType;
+        _reflectedType = reflectedType;
     }
 
     /// <summary>
     /// Gets a <see cref="NullabilityParameterInfo"/> object that contains info about the return type of the method, including nullability.
     /// </summary>
-    public NullabilityParameterInfo NullabilityReturnParameter => new(_methodInfo.ReturnParameter, _genericDefMethod?.ReturnParameter, _declaringType);
+    public NullabilityParameterInfo NullabilityReturnParameter
+    {
+        get
+        {
+            NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(_methodInfo.DeclaringType!);
+
+            MethodInfo methodInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(_methodInfo);
+
+            return new(_methodInfo.ReturnParameter, methodInfoInDeclaringGenericDefType.ReturnParameter, baseClassType);
+        }
+    }
 
     /// <summary>
     /// gets the parameters of the specified method or constructor.
@@ -30,10 +38,14 @@ public partial class NullabilityMethodInfo
     /// <returns>An array of type <see cref="NullabilityParameterInfo"/> containing information (including nullability) that matches the signature of the method (or constructor).</returns>
     public NullabilityParameterInfo[] GetNullabilityParameters()
     {
-        ParameterInfo[] parameters = _methodInfo.GetParameters();
-        ParameterInfo[]? parametersInGenericDefType = _genericDefMethod?.GetParameters();
+        NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(_methodInfo.DeclaringType!);
 
-        return parameters.Select((p, idx) => new NullabilityParameterInfo(p, parametersInGenericDefType?[idx], _declaringType)).ToArray();
+        MethodInfo methodInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(_methodInfo);
+
+        ParameterInfo[] parameters = _methodInfo.GetParameters();
+        ParameterInfo[] parametersInGenericDefType = methodInfoInDeclaringGenericDefType.GetParameters();
+
+        return parameters.Select((p, idx) => new NullabilityParameterInfo(p, parametersInGenericDefType[idx], baseClassType)).ToArray();
     }
 }
 
@@ -53,7 +65,7 @@ public partial class NullabilityMethodInfo : MethodInfo
     {
         return obj is NullabilityMethodInfo nullabilityMethodInfo 
                && _methodInfo.Equals(nullabilityMethodInfo._methodInfo)
-               && _declaringType.Equals(nullabilityMethodInfo._declaringType);
+               && _reflectedType.Equals(nullabilityMethodInfo._reflectedType);
     }
 
     public override Type[] GetGenericArguments()

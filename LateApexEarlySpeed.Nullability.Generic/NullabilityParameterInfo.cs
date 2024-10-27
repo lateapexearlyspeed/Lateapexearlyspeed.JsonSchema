@@ -1,4 +1,5 @@
 using System.Reflection;
+using LateApexEarlySpeed.Nullability.Generic.RawNullabilityAnnotation;
 
 namespace LateApexEarlySpeed.Nullability.Generic;
 
@@ -7,38 +8,21 @@ namespace LateApexEarlySpeed.Nullability.Generic;
 /// </summary>
 public partial class NullabilityParameterInfo
 {
-    private readonly NullabilityInfoContext _context = new();
-        
     private readonly ParameterInfo _parameterInfo;
-    private readonly ParameterInfo? _parameterInGenericDefType;
+    private readonly ParameterInfo _parameterInDeclaringGenericDefType;
     private readonly NullabilityType _declaringType;
 
-    public NullabilityParameterInfo(ParameterInfo parameter, ParameterInfo? parameterInGenericDefType, NullabilityType declaringType)
+    public NullabilityParameterInfo(ParameterInfo parameter, ParameterInfo parameterInDeclaringGenericDefType, NullabilityType declaringType)
     {
         _parameterInfo = parameter;
-        _parameterInGenericDefType = parameterInGenericDefType;
+        _parameterInDeclaringGenericDefType = parameterInDeclaringGenericDefType;
         _declaringType = declaringType;
     }
 
     /// <summary>
     /// Gets the nullability state of current parameter.
     /// </summary>
-    public NullabilityState NullabilityState
-    {
-        get
-        {
-            if (_parameterInGenericDefType is not null)
-            {
-                Type typeInGenericDefType = _parameterInGenericDefType.ParameterType;
-                if (typeInGenericDefType.IsGenericTypeParameter)
-                {
-                    return _declaringType.GetGenericArgumentNullabilityInfo(typeInGenericDefType.GenericParameterPosition).State;
-                }
-            }
-
-            return _context.Create(_parameterInfo).ReadState;
-        }
-    }
+    public NullabilityState NullabilityState => GetParameterNullabilityInfo().State;
 
     /// <summary>
     /// Gets the nullability type of current parameter.
@@ -47,12 +31,16 @@ public partial class NullabilityParameterInfo
     {
         get
         {
-            Type parameterType = _parameterInfo.ParameterType;
-            NullabilityInfo origNullabilityInfo = _context.Create(_parameterInfo);
-            NullabilityElement nullabilityElement = NullabilityElement.Create(_parameterInGenericDefType?.ParameterType ?? parameterType, _declaringType, origNullabilityInfo);
+            NullabilityElement nullabilityElement = GetParameterNullabilityInfo();
 
-            return new NullabilityType(parameterType, nullabilityElement);
+            return new NullabilityType(_parameterInfo.ParameterType, nullabilityElement);
         }
+    }
+
+    private NullabilityElement GetParameterNullabilityInfo()
+    {
+        NullabilityElement rawParameterInfo = RawNullabilityAnnotationConverter.ReadParameter(_parameterInDeclaringGenericDefType);
+        return NullabilityElement.CreateAssembledInfo(_parameterInDeclaringGenericDefType.ParameterType, _declaringType, rawParameterInfo);
     }
 }
 

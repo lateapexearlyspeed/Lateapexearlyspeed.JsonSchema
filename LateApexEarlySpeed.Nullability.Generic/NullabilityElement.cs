@@ -9,8 +9,6 @@ namespace LateApexEarlySpeed.Nullability.Generic;
 /// </summary>
 public class NullabilityElement
 {
-    private static readonly INullabilityStatePolicy DefaultNullabilityStatePolicy = new NullabilityStatePolicy();
-
     private readonly NullabilityElement[]? _genericTypeArguments;
     private readonly NullabilityElement? _arrayElement;
 
@@ -18,66 +16,54 @@ public class NullabilityElement
 
     /// <param name="typeInGenericDefType"></param>
     /// <param name="declaringType"></param>
-    /// <param name="nullabilityInfo">represent the nullability info of current type if <paramref name="calledFromNullableValueType"/> is false;
-    /// Otherwise represent nullability info of <see cref="Nullable{T}"/> itself. </param>
-    /// <param name="calledFromNullableValueType">Specify whether current <paramref name="typeInGenericDefType"/> is underlying type of <see cref="Nullable{T}"/> </param>
-    /// <param name="nullabilityStatePolicy"></param>
+    /// <param name="rawNullabilityInfo">represent the raw nullability info of current type.</param>
     /// <returns></returns>
-    internal static NullabilityElement Create(Type typeInGenericDefType, NullabilityType declaringType, NullabilityInfo nullabilityInfo, bool calledFromNullableValueType = false, INullabilityStatePolicy? nullabilityStatePolicy = null)
+    internal static NullabilityElement CreateAssembledInfo(Type typeInGenericDefType, NullabilityType declaringType, NullabilityElement rawNullabilityInfo)
     {
-        nullabilityStatePolicy ??= DefaultNullabilityStatePolicy;
-
         if (typeInGenericDefType.IsGenericTypeParameter)
         {
-            return declaringType.GetGenericArgumentNullabilityInfo(typeInGenericDefType.GenericParameterPosition);
+            NullabilityType genericTypeArg = declaringType.GenericTypeArguments[typeInGenericDefType.GenericParameterPosition];
+
+            return rawNullabilityInfo.State == NullabilityState.Nullable && !genericTypeArg.Type.IsValueType
+                ? new NullabilityElement(NullabilityState.Nullable, genericTypeArg.NullabilityInfo._genericTypeArguments, genericTypeArg.NullabilityInfo._arrayElement) 
+                : genericTypeArg.NullabilityInfo;
         }
 
-        NullabilityState currentElementState = calledFromNullableValueType 
-            ? NullabilityState.NotNull
-            : nullabilityStatePolicy.FindState(nullabilityInfo);
+        NullabilityState currentElementState = rawNullabilityInfo.State;
 
         if (HasArrayElementType(typeInGenericDefType))
         {
             Type? arrayElementType = typeInGenericDefType.GetElementType();
 
             Debug.Assert(arrayElementType is not null);
-            Debug.Assert(nullabilityInfo.ElementType is not null);
-            NullabilityElement arrayElementInfo = Create(arrayElementType, declaringType, nullabilityInfo.ElementType, false, nullabilityStatePolicy);
+            Debug.Assert(rawNullabilityInfo.HasArrayElement);
+            NullabilityElement arrayElementInfo = CreateAssembledInfo(arrayElementType, declaringType, rawNullabilityInfo.ArrayElement);
 
             return new NullabilityElement(currentElementState, null, arrayElementInfo);
         }
 
         if (typeInGenericDefType.IsGenericType)
         {
-            Type? underlyingTypeOfNullableValue = Nullable.GetUnderlyingType(typeInGenericDefType);
-            if (underlyingTypeOfNullableValue is null)
-            {
-                // here 'typeInGenericDefType.IsGenericTypeDefinition' will be true when enclosing generic type contains same generic type (current 'typeInGenericDefType' instance) with same ordered generic type arguments
-                Type[] genericTypeArguments = typeInGenericDefType.GenericTypeArgumentsOrParameters();
+            // here 'typeInGenericDefType.IsGenericTypeDefinition' will be true when enclosing generic type contains same generic type (current 'typeInGenericDefType' instance) with same ordered generic type arguments
+            Type[] genericTypeArguments = typeInGenericDefType.GenericTypeArgumentsOrParameters();
 
-                NullabilityElement[] genericTypeArgumentsInfo = CreateGenericTypeArgumentElements(genericTypeArguments);
+            NullabilityElement[] genericTypeArgumentsInfo = CreateGenericTypeArgumentElements(genericTypeArguments);
 
-                return new NullabilityElement(currentElementState, genericTypeArgumentsInfo);
-            }
-            else // current type is nullable value type
-            {
-                NullabilityElement underlyingTypeElement = Create(underlyingTypeOfNullableValue, declaringType, nullabilityInfo, true, nullabilityStatePolicy);
-                return new NullabilityElement(currentElementState, new[] { underlyingTypeElement });
-            }
+            return new NullabilityElement(currentElementState, genericTypeArgumentsInfo);
         }
 
         return new NullabilityElement(currentElementState);
 
         NullabilityElement[] CreateGenericTypeArgumentElements(Type[] genericTypeArguments)
         {
-            Debug.Assert(genericTypeArguments.Length == nullabilityInfo.GenericTypeArguments.Length);
+            Debug.Assert(genericTypeArguments.Length == rawNullabilityInfo.GenericTypeArguments.Length);
 
             var genericTypeArgumentsInfo = new NullabilityElement[genericTypeArguments.Length];
 
             for (int i = 0; i < genericTypeArguments.Length; i++)
             {
                 Type genericTypeArgument = genericTypeArguments[i];
-                genericTypeArgumentsInfo[i] = Create(genericTypeArgument, declaringType, nullabilityInfo.GenericTypeArguments[i], false, nullabilityStatePolicy);
+                genericTypeArgumentsInfo[i] = CreateAssembledInfo(genericTypeArgument, declaringType, rawNullabilityInfo.GenericTypeArguments[i]);
             }
 
             return genericTypeArgumentsInfo;

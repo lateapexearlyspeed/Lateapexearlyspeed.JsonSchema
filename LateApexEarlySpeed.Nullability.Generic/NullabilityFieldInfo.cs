@@ -1,3 +1,4 @@
+using LateApexEarlySpeed.Nullability.Generic.RawNullabilityAnnotation;
 using System.Globalization;
 using System.Reflection;
 
@@ -8,26 +9,19 @@ namespace LateApexEarlySpeed.Nullability.Generic;
 /// </summary>
 public partial class NullabilityFieldInfo
 {
-    private readonly NullabilityInfoContext _context = new();
-
     private readonly FieldInfo _fieldInfo;
-    private readonly Type? _typeInGenericDefType;
-    private readonly NullabilityType _declaringType;
+    private readonly NullabilityType _reflectedType;
 
-    protected internal NullabilityFieldInfo(FieldInfo fieldInfo, Type? typeInGenericDefType, NullabilityType declaringType)
+    protected internal NullabilityFieldInfo(FieldInfo fieldInfo, NullabilityType reflectedType)
     {
         _fieldInfo = fieldInfo;
-        _typeInGenericDefType = typeInGenericDefType;
-        _declaringType = declaringType;
+        _reflectedType = reflectedType;
     }
 
     /// <summary>
     /// Gets the nullability state of current field.
     /// </summary>
-    public NullabilityState NullabilityState =>
-        _typeInGenericDefType is not null && _typeInGenericDefType.IsGenericTypeParameter
-            ? _declaringType.GetGenericArgumentNullabilityInfo(_typeInGenericDefType.GenericParameterPosition).State
-            : _context.Create(_fieldInfo).ReadState;
+    public NullabilityState NullabilityState => GetFieldNullabilityInfo().State;
 
     /// <summary>
     /// Gets the nullability type of current field.
@@ -36,12 +30,21 @@ public partial class NullabilityFieldInfo
     {
         get
         {
-            Type fieldType = _fieldInfo.FieldType;
-            NullabilityInfo origNullabilityInfo = _context.Create(_fieldInfo);
-            NullabilityElement nullabilityElement = NullabilityElement.Create(_typeInGenericDefType ?? fieldType, _declaringType, origNullabilityInfo);
+            NullabilityElement nullabilityElement = GetFieldNullabilityInfo();
 
-            return new NullabilityType(fieldType, nullabilityElement);
+            return new NullabilityType(_fieldInfo.FieldType, nullabilityElement);
         }
+    }
+
+    private NullabilityElement GetFieldNullabilityInfo()
+    {
+        NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(_fieldInfo.DeclaringType!);
+
+        FieldInfo fieldInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(_fieldInfo);
+
+        NullabilityElement fieldRawNullabilityInfo = RawNullabilityAnnotationConverter.ReadField(fieldInfoInDeclaringGenericDefType);
+
+        return NullabilityElement.CreateAssembledInfo(fieldInfoInDeclaringGenericDefType.FieldType, baseClassType, fieldRawNullabilityInfo);
     }
 }
 
@@ -51,7 +54,7 @@ public partial class NullabilityFieldInfo : FieldInfo
     {
         return obj is NullabilityFieldInfo nullabilityFieldInfo 
                && _fieldInfo.Equals(nullabilityFieldInfo._fieldInfo) 
-               && _declaringType.Equals(nullabilityFieldInfo._declaringType);
+               && _reflectedType.Equals(nullabilityFieldInfo._reflectedType);
     }
 
     public override int GetHashCode()

@@ -1,3 +1,4 @@
+using LateApexEarlySpeed.Nullability.Generic.RawNullabilityAnnotation;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -10,8 +11,7 @@ public class NullabilityType
 {
     private const BindingFlags DefaultLookup = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public;
 
-    private readonly NullabilityElement _nullabilityInfo;
-    private readonly Type? _genericDefType;
+    internal readonly NullabilityElement NullabilityInfo;
 
     /// <summary>
     /// Get the actual runtime type
@@ -21,16 +21,12 @@ public class NullabilityType
     /// <summary>
     /// Get the annotated nullability state of current type
     /// </summary>
-    public NullabilityState NullabilityState => _nullabilityInfo.State;
+    public NullabilityState NullabilityState => NullabilityInfo.State;
 
     internal NullabilityType(Type type, NullabilityElement nullabilityInfo)
     {
-        _nullabilityInfo = nullabilityInfo;
+        NullabilityInfo = nullabilityInfo;
         Type = type;
-        if (type.IsGenericType)
-        {
-            _genericDefType = type.GetGenericTypeDefinition();
-        }
     }
 
     /// <summary>
@@ -114,7 +110,7 @@ public class NullabilityType
     /// Gets an array of the generic type arguments for this type.
     /// </summary>
     public NullabilityType[] GenericTypeArguments
-        => Type.GenericTypeArguments.Select((type, idx) => new NullabilityType(type, _nullabilityInfo.GenericTypeArguments[idx])).ToArray();
+        => Type.GenericTypeArguments.Select((type, idx) => new NullabilityType(type, NullabilityInfo.GenericTypeArguments[idx])).ToArray();
 
     /// <summary>
     /// returns the <see cref="NullabilityType"/> of the elements in current array, or null if the current Type is not an array
@@ -122,12 +118,12 @@ public class NullabilityType
     /// <returns></returns>
     public NullabilityType? GetArrayElementType()
     {
-        if (!_nullabilityInfo.HasArrayElement)
+        if (!NullabilityInfo.HasArrayElement)
         {
             return null;
         }
 
-        NullabilityElement arrayElement = _nullabilityInfo.ArrayElement;
+        NullabilityElement arrayElement = NullabilityInfo.ArrayElement;
 
         Type? arrayElementType = Type.GetElementType();
         Debug.Assert(arrayElementType is not null);
@@ -148,9 +144,7 @@ public class NullabilityType
             return null;
         }
 
-        PropertyInfo? genericDefPropertyInfo = _genericDefType?.GetProperty(name, bindingAttr);
-
-        return new NullabilityPropertyInfo(propertyInfo, genericDefPropertyInfo, this);
+        return new NullabilityPropertyInfo(propertyInfo, this);
     }
 
     public NullabilityPropertyInfo? GetProperty(string name, Type? returnType)
@@ -161,9 +155,7 @@ public class NullabilityType
             return null;
         }
 
-        PropertyInfo? genericDefPropertyInfo = _genericDefType?.GetProperty(name, returnType);
-
-        return new NullabilityPropertyInfo(propertyInfo, genericDefPropertyInfo, this);
+        return new NullabilityPropertyInfo(propertyInfo, this);
     }
 
     public NullabilityPropertyInfo? GetProperty(string name, Type? returnType, Type[] types)
@@ -189,9 +181,7 @@ public class NullabilityType
             return null;
         }
 
-        PropertyInfo? genericDefPropertyInfo = _genericDefType?.GetProperty(name, bindingAttr, binder, returnType, types, modifiers);
-
-        return new NullabilityPropertyInfo(propertyInfo, genericDefPropertyInfo, this);
+        return new NullabilityPropertyInfo(propertyInfo, this);
     }
 
     public NullabilityPropertyInfo[] GetProperties()
@@ -208,9 +198,7 @@ public class NullabilityType
             return Array.Empty<NullabilityPropertyInfo>();
         }
 
-        PropertyInfo[]? genericDefTypeProperties = _genericDefType?.GetProperties(bindingAttr);
-
-        return propertyInfos.Select(p => new NullabilityPropertyInfo(p, genericDefTypeProperties?.First(genericProp => genericProp.HasSameMetadataDefinitionAs(p)), this)).ToArray();
+        return propertyInfos.Select(p => new NullabilityPropertyInfo(p, this)).ToArray();
     }
 
     public NullabilityFieldInfo? GetField(string name)
@@ -226,9 +214,7 @@ public class NullabilityType
             return null;
         }
 
-        Type? genericDefFieldType = _genericDefType?.GetField(name, bindingAttr)!.FieldType;
-
-        return new NullabilityFieldInfo(fieldInfo, genericDefFieldType, this);
+        return new NullabilityFieldInfo(fieldInfo, this);
     }
 
     public NullabilityFieldInfo[] GetFields()
@@ -244,9 +230,7 @@ public class NullabilityType
             return Array.Empty<NullabilityFieldInfo>();
         }
 
-        FieldInfo[]? fieldsInGenericDefType = _genericDefType?.GetFields(bindingAttr);
-
-        return fieldInfos.Select(f => new NullabilityFieldInfo(f, fieldsInGenericDefType?.First(genericField => genericField.HasSameMetadataDefinitionAs(f)).FieldType, this)).ToArray();
+        return fieldInfos.Select(f => new NullabilityFieldInfo(f, this)).ToArray();
     }
 
     public NullabilityMethodInfo? GetMethod(string name)
@@ -262,9 +246,7 @@ public class NullabilityType
             return null;
         }
 
-        MethodInfo? genericDefMethod = _genericDefType?.GetMethod(name, bindingAttr);
-
-        return new NullabilityMethodInfo(method, genericDefMethod, this);
+        return new NullabilityMethodInfo(method, this);
     }
 
     public NullabilityMethodInfo? GetMethod(string name, BindingFlags bindingAttr, Binder? binder, Type[] types, ParameterModifier[]? modifiers)
@@ -295,9 +277,7 @@ public class NullabilityType
             return null;
         }
 
-        MethodInfo? genericDefMethod = _genericDefType?.GetMethod(name, bindingAttr, binder, callConvention, types, modifiers);
-
-        return new NullabilityMethodInfo(method, genericDefMethod, this);
+        return new NullabilityMethodInfo(method, this);
     }
 
     public NullabilityMethodInfo? GetMethod(string name, int genericParameterCount, Type[] types)
@@ -323,9 +303,7 @@ public class NullabilityType
             return null;
         }
 
-        MethodInfo? genericDefMethod = _genericDefType?.GetMethod(name, genericParameterCount, bindingAttr, binder, callConvention, types, modifiers);
-
-        return new NullabilityMethodInfo(method, genericDefMethod, this);
+        return new NullabilityMethodInfo(method, this);
     }
 
     public NullabilityMethodInfo[] GetMethods()
@@ -341,14 +319,25 @@ public class NullabilityType
             return Array.Empty<NullabilityMethodInfo>();
         }
 
-        MethodInfo[]? methodsInGenericDefType = _genericDefType?.GetMethods(bindingAttr);
-
-        return methodInfos.Select(m => new NullabilityMethodInfo(m, methodsInGenericDefType?.First(genericMethod => genericMethod.HasSameMetadataDefinitionAs(m)), this)).ToArray();
+        return methodInfos.Select(m => new NullabilityMethodInfo(m, this)).ToArray();
     }
 
-    internal NullabilityElement GetGenericArgumentNullabilityInfo(int argumentIdx)
+    internal NullabilityType CreateDeclaringBaseClassType(Type declaringType)
     {
-        return _nullabilityInfo.GenericTypeArguments[argumentIdx];
+        NullabilityType baseClassType = this;
+
+        while (baseClassType.Type != declaringType)
+        {
+            Type subClass = baseClassType.Type;
+            Type subClassGenericDef = subClass.GetGenericTypeDefinitionIfIsGenericType();
+            NullabilityElement baseClassRawNullabilityInfo = RawNullabilityAnnotationConverter.ReadBaseClass(subClassGenericDef);
+            Debug.Assert(subClassGenericDef.BaseType is not null);
+            NullabilityElement baseClassNullabilityInfo = NullabilityElement.CreateAssembledInfo(subClassGenericDef.BaseType, baseClassType, baseClassRawNullabilityInfo);
+            Debug.Assert(subClass.BaseType is not null);
+            baseClassType = new NullabilityType(subClass.BaseType, baseClassNullabilityInfo);
+        }
+
+        return baseClassType;
     }
 
     public override bool Equals(object? obj)
@@ -360,7 +349,7 @@ public class NullabilityType
 
         return obj is NullabilityType otherNullabilityType 
         && Type == otherNullabilityType.Type 
-        && _nullabilityInfo.Equals(otherNullabilityType._nullabilityInfo);
+        && NullabilityInfo.Equals(otherNullabilityType.NullabilityInfo);
     }
 
     public override int GetHashCode()

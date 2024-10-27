@@ -153,15 +153,15 @@ public class NullabilityTypeStateTests
     {
         public GenericClass<List<int>, List<int?>?, List<string>, List<string?>?> Property { get; }
     }
-}
 
-internal class GenericClass<T0, T1, T2, T3>
-{
-    public GenericClass<T0, T1, T2, T3>? Property { get; }
+    internal class GenericClass<T0, T1, T2, T3>
+    {
+        public GenericClass<T0, T1, T2, T3>? Property { get; }
 
-    public T0[] ArrayProperty0 { get; }
-    public T1[] ArrayProperty1 { get; }
-    public T2[] ArrayProperty2 { get; }
-    public T3[] ArrayProperty3 { get; }
-    public GenericClass<T0, T1, T2, T3>?[] ArrayProperty { get; }
+        public T0[] ArrayProperty0 { get; }
+        public T1[] ArrayProperty1 { get; }
+        public T2[] ArrayProperty2 { get; }
+        public T3[] ArrayProperty3 { get; }
+        public GenericClass<T0, T1, T2, T3>?[] ArrayProperty { get; }
+    }
 }

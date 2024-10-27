@@ -9,21 +9,17 @@ namespace LateApexEarlySpeed.Nullability.Generic;
 /// </summary>
 public partial class NullabilityPropertyInfo
 {
-    private readonly NullabilityInfoContext _context = new();
-
     private readonly PropertyInfo _propertyInfo;
 
-    private readonly PropertyInfo? _propertyInfoInGenericDefType;
+    private readonly NullabilityType _reflectedType;
 
-    private readonly NullabilityType _declaringType;
-
-    protected internal NullabilityPropertyInfo(PropertyInfo propertyInfo, PropertyInfo? propertyInfoInGenericDefType, NullabilityType declaringType)
+    protected internal NullabilityPropertyInfo(PropertyInfo propertyInfo, NullabilityType reflectedType)
     {
         _propertyInfo = propertyInfo;
-        _propertyInfoInGenericDefType = propertyInfoInGenericDefType;
-        _declaringType = declaringType;
+        _reflectedType = reflectedType;
     }
 
+    // todo: currently only considered no inherit struct
     /// <summary>
     /// Gets the nullability type of current property.
     /// </summary>
@@ -31,15 +27,23 @@ public partial class NullabilityPropertyInfo
     {
         get
         {
-            Type propertyType = _propertyInfo.PropertyType;
-            NullabilityInfo origNullabilityInfo = _context.Create(_propertyInfo);
-            
-            // todo: currently only considered no inherit struct
-            NullabilityElement rawNullabilityInfo = RawNullabilityAnnotationConverter.ReadPropertyGetter(_propertyInfoInGenericDefType ?? _propertyInfo);
-            NullabilityElement nullabilityElement = NullabilityElement.Create(_propertyInfoInGenericDefType?.PropertyType ?? propertyType, _declaringType, origNullabilityInfo);
+            NullabilityElement nullabilityElement = GetPropertyNullabilityInfo();
 
-            return new NullabilityType(propertyType, nullabilityElement);
+            return new NullabilityType(_propertyInfo.PropertyType, nullabilityElement);
         }
+    }
+
+    private NullabilityElement GetPropertyNullabilityInfo()
+    {
+        NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(_propertyInfo.DeclaringType!);
+
+        PropertyInfo propertyInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(_propertyInfo);
+
+        NullabilityElement propertyRawNullabilityInfo = propertyInfoInDeclaringGenericDefType.GetGetMethod() is null 
+            ? RawNullabilityAnnotationConverter.ReadPropertySetter(propertyInfoInDeclaringGenericDefType) 
+            : RawNullabilityAnnotationConverter.ReadPropertyGetter(propertyInfoInDeclaringGenericDefType);
+
+        return NullabilityElement.CreateAssembledInfo(propertyInfoInDeclaringGenericDefType.PropertyType, baseClassType, propertyRawNullabilityInfo);
     }
 
     // todo: need to consider nullable related attribute later
@@ -50,12 +54,13 @@ public partial class NullabilityPropertyInfo
     {
         get
         {
-            NullabilityState origState = _context.Create(_propertyInfo).ReadState;
+            if (_propertyInfo.GetGetMethod() is null)
+            {
+                return NullabilityState.Unknown;
+            }
 
-            return
-                origState == NullabilityState.Unknown || _propertyInfoInGenericDefType is null || !_propertyInfoInGenericDefType.PropertyType.IsGenericTypeParameter
-                    ? origState
-                    : _declaringType.GetGenericArgumentNullabilityInfo(_propertyInfoInGenericDefType.PropertyType.GenericParameterPosition).State;
+            NullabilityElement info = GetPropertyNullabilityInfo();
+            return info.State;
         }
     }
 
@@ -67,12 +72,13 @@ public partial class NullabilityPropertyInfo
     {
         get
         {
-            NullabilityState origState = _context.Create(_propertyInfo).WriteState;
+            if (_propertyInfo.GetSetMethod() is null)
+            {
+                return NullabilityState.Unknown;
+            }
 
-            return
-                origState == NullabilityState.Unknown || _propertyInfoInGenericDefType is null || !_propertyInfoInGenericDefType.PropertyType.IsGenericTypeParameter
-                    ? origState
-                    : _declaringType.GetGenericArgumentNullabilityInfo(_propertyInfoInGenericDefType.PropertyType.GenericParameterPosition).State;
+            NullabilityElement info = GetPropertyNullabilityInfo();
+            return info.State;
         }
     }
 }
@@ -142,7 +148,7 @@ public partial class NullabilityPropertyInfo : PropertyInfo
     {
         return obj is NullabilityPropertyInfo nullabilityPropertyInfo
         && _propertyInfo.Equals(nullabilityPropertyInfo._propertyInfo)
-        && _declaringType.Equals(nullabilityPropertyInfo._declaringType);
+        && _reflectedType.Equals(nullabilityPropertyInfo._reflectedType);
     }
 
     public override object? GetConstantValue()
