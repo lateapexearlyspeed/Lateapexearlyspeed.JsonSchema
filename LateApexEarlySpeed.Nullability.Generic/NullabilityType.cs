@@ -324,6 +324,8 @@ public class NullabilityType
 
     internal NullabilityType CreateDeclaringBaseClassType(Type declaringType)
     {
+        Debug.Assert((Type.IsInterface && Type == declaringType) || (!Type.IsInterface && !declaringType.IsInterface));
+
         NullabilityType baseClassType = this;
 
         while (baseClassType.Type != declaringType)

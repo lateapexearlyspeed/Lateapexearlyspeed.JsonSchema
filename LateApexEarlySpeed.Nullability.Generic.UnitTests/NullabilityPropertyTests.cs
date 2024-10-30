@@ -198,10 +198,12 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             public T Value { get; }
         }
 
-        [Fact]
-        public void ReferencePropertyTypeTests()
+        [Theory]
+        [InlineData(typeof(TestClass))]
+        [InlineData(typeof(ITestInterface))]
+        public void ReferencePropertyTypeTests(Type testRootType)
         {
-            NullabilityType rootType = NullabilityType.GetType(typeof(TestClass));
+            NullabilityType rootType = NullabilityType.GetType(testRootType);
 
             // GenericClass<string>
             NullabilityPropertyInfo? propertyInfo = rootType.GetProperty(nameof(TestClass.Property1));
@@ -317,6 +319,14 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             public GenericClass<string>? Property2 { get; }
             public GenericClass<string?> Property3 { get; }
             public GenericClass<string?>? Property4 { get; }
+        }
+
+        interface ITestInterface
+        {
+            GenericClass<string> Property1 { get; }
+            GenericClass<string>? Property2 { get; }
+            GenericClass<string?> Property3 { get; }
+            GenericClass<string?>? Property4 { get; }
         }
 
         class GenericClass<T>
