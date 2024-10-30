@@ -7,16 +7,16 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Title>Nullability annotation info reader for .net types based on reflection and standard NullabilityInfoContext. Key improvement compared with NullabilityInfoContext is for more nullability info support of Generic type. </Title>
+    <Title>Nullability annotation info reader for .net types. Key improvement compared with standard NullabilityInfoContext is for more nullability info support of Generic type. </Title>
     <Authors>Lateapexearlyspeed</Authors>
-    <Description>Nullability annotation info reader for .net types based on reflection and standard NullabilityInfoContext. Key improvement compared with NullabilityInfoContext is for more nullability info support of Generic type. </Description>
+    <Description>Nullability annotation info reader for .net types. Key improvement compared with standard NullabilityInfoContext is for more nullability info support of Generic type. </Description>
     <PackageReadmeFile>nuget.readme.md</PackageReadmeFile>
     <PackageIcon>nuget.icon.jpg</PackageIcon>
     <PackageTags>Nullability;Nullable reference type;Nullability annotation;Generic type</PackageTags>
     <PackageOutputPath>bin\Release\NugetPackage</PackageOutputPath>
-    <Version>1.0.1</Version>
-    <AssemblyVersion>1.0.1</AssemblyVersion>
-    <FileVersion>1.0.1</FileVersion>
+    <Version>1.0.2</Version>
+    <AssemblyVersion>1.0.2</AssemblyVersion>
+    <FileVersion>1.0.2</FileVersion>
     <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema?tab=readme-ov-file#lateapexearlyspeednullabilitygeneric</PackageProjectUrl>
   </PropertyGroup>

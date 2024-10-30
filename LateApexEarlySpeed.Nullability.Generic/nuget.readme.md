@@ -1,6 +1,6 @@
 ﻿# LateApexEarlySpeed.Nullability.Generic
 
-Nullability annotation info reader for .net types based on reflection and standard NullabilityInfoContext. Key improvement compared with NullabilityInfoContext is for more nullability info support of Generic type.
+Nullability annotation info reader for .net types. Key improvement compared with standard NullabilityInfoContext is for more nullability info support of Generic type.
 
 Starting from .net 6, there is built-in Nullability related classes to help read nullability annotation info on members of type (`NullabilityInfoContext` and so on). However, it is not possible to get annotated nullability state of members and parameters if their types are from generic type arguments:
 
