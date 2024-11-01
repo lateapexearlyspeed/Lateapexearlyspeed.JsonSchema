@@ -18,7 +18,23 @@ internal static class TypeExtensions
     {
         Type genericDefType = type.GetGenericTypeDefinitionIfIsGenericType();
 
-        MemberInfo result = genericDefType.GetMemberWithSameMetadataDefinitionAs(memberInfo);
+        // In .net6, there is new sdk method: genericDefType.GetMemberWithSameMetadataDefinitionAs(memberInfo)
+        MemberInfo result;
+        switch (memberInfo.MemberType)
+        {
+            case MemberTypes.Property:
+                result = genericDefType.GetRuntimeProperties().First(prop => prop.HasSameMetadataDefinitionAs(memberInfo));
+                break;
+            case MemberTypes.Field:
+                result = genericDefType.GetRuntimeFields().First(prop => prop.HasSameMetadataDefinitionAs(memberInfo));
+                break;
+            case MemberTypes.Method:
+                result = genericDefType.GetRuntimeMethods().First(prop => prop.HasSameMetadataDefinitionAs(memberInfo));
+                break;
+            default:
+                throw new NotSupportedException($"Method {nameof(GetMemberInfoInGenericDefType)} not support member type: {memberInfo.MemberType}");
+        }
+
         return (TMemberInfo)result;
     }
 }

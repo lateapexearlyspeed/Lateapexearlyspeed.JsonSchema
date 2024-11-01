@@ -19,7 +19,6 @@ public partial class NullabilityPropertyInfo
         _reflectedType = reflectedType;
     }
 
-    // todo: currently only considered no inherit struct
     /// <summary>
     /// Gets the nullability type of current property.
     /// </summary>
@@ -131,7 +130,7 @@ public partial class NullabilityPropertyInfo : PropertyInfo
         return _propertyInfo.GetValue(obj, invokeAttr, binder, index, culture);
     }
 
-    public override void SetValue(object? obj, object? value, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo? culture)
+    public override void SetValue(object? obj, object? value, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo culture)
     {
         _propertyInfo.SetValue(obj, value, invokeAttr, binder, index, culture);
     }
@@ -200,7 +199,6 @@ public partial class NullabilityPropertyInfo : PropertyInfo
     }
 
     public override IEnumerable<CustomAttributeData> CustomAttributes => _propertyInfo.CustomAttributes;
-    public override bool IsCollectible => _propertyInfo.IsCollectible;
     public override int MetadataToken => _propertyInfo.MetadataToken;
     public override Module Module => _propertyInfo.Module;
     public override string? ToString()

@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace LateApexEarlySpeed.Nullability.Generic.UnitTests;
+﻿namespace LateApexEarlySpeed.Nullability.Generic.UnitTests;
 
 public class BaseClassTests
 {

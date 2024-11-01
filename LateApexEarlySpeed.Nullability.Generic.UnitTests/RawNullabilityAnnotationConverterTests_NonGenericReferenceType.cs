@@ -1,7 +1,4 @@
-﻿using System.Reflection;
-using LateApexEarlySpeed.Nullability.Generic.RawNullabilityAnnotation;
-
-namespace LateApexEarlySpeed.Nullability.Generic.UnitTests;
+﻿namespace LateApexEarlySpeed.Nullability.Generic.UnitTests;
 
 public class RawNullabilityAnnotationConverterTests_NonGenericReferenceType
 {

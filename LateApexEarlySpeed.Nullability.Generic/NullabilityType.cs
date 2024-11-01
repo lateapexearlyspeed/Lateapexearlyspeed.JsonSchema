@@ -147,7 +147,7 @@ public class NullabilityType
         return new NullabilityPropertyInfo(propertyInfo, this);
     }
 
-    public NullabilityPropertyInfo? GetProperty(string name, Type? returnType)
+    public NullabilityPropertyInfo? GetProperty(string name, Type returnType)
     {
         PropertyInfo? propertyInfo = Type.GetProperty(name, returnType);
         if (propertyInfo is null)

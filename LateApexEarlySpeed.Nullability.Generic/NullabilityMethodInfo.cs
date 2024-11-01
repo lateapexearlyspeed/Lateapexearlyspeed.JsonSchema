@@ -123,7 +123,6 @@ public partial class NullabilityMethodInfo : MethodInfo
     }
 
     public override IEnumerable<CustomAttributeData> CustomAttributes => _methodInfo.CustomAttributes;
-    public override bool IsCollectible => _methodInfo.IsCollectible;
     public override int MetadataToken => _methodInfo.MetadataToken;
     public override Module Module => _methodInfo.Module;
 
@@ -158,7 +157,7 @@ public partial class NullabilityMethodInfo : MethodInfo
         return _methodInfo.GetMethodImplementationFlags();
     }
 
-    public override object? Invoke(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? parameters, CultureInfo? culture)
+    public override object? Invoke(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? parameters, CultureInfo culture)
     {
         return _methodInfo.Invoke(obj, invokeAttr, binder, parameters, culture);
     }

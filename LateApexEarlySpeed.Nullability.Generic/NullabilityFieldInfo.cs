@@ -67,7 +67,7 @@ public partial class NullabilityFieldInfo : FieldInfo
         return _fieldInfo.GetOptionalCustomModifiers();
     }
 
-    public override object? GetRawConstantValue()
+    public override object GetRawConstantValue()
     {
         return _fieldInfo.GetRawConstantValue();
     }
@@ -102,7 +102,6 @@ public partial class NullabilityFieldInfo : FieldInfo
     }
 
     public override IEnumerable<CustomAttributeData> CustomAttributes => _fieldInfo.CustomAttributes;
-    public override bool IsCollectible => _fieldInfo.IsCollectible;
     public override int MetadataToken => _fieldInfo.MetadataToken;
     public override Module Module => _fieldInfo.Module;
     public override string? ToString()
@@ -136,7 +135,7 @@ public partial class NullabilityFieldInfo : FieldInfo
         return _fieldInfo.GetValue(obj);
     }
 
-    public override void SetValue(object? obj, object? value, BindingFlags invokeAttr, Binder? binder, CultureInfo? culture)
+    public override void SetValue(object obj, object value, BindingFlags invokeAttr, Binder? binder, CultureInfo culture)
     {
         _fieldInfo.SetValue(obj, value, invokeAttr, binder, culture);
     }
