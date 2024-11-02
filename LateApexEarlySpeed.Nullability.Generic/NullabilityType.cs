@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using LateApexEarlySpeed.Nullability.Generic.RawNullabilityAnnotation;
 using System.Diagnostics;
 using System.Reflection;
@@ -10,6 +11,10 @@ namespace LateApexEarlySpeed.Nullability.Generic;
 public class NullabilityType
 {
     private const BindingFlags DefaultLookup = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public;
+
+    private readonly ConcurrentDictionary<PropertyInfo, NullabilityPropertyInfo> _propertiesCache = new();
+    private readonly ConcurrentDictionary<FieldInfo, NullabilityFieldInfo> _fieldsCache = new();
+    private readonly ConcurrentDictionary<MethodInfo, NullabilityMethodInfo> _methodsCache = new();
 
     internal readonly NullabilityElement NullabilityInfo;
 
@@ -144,7 +149,7 @@ public class NullabilityType
             return null;
         }
 
-        return new NullabilityPropertyInfo(propertyInfo, this);
+        return GetOrAddToCache(propertyInfo);
     }
 
     public NullabilityPropertyInfo? GetProperty(string name, Type returnType)
@@ -155,7 +160,7 @@ public class NullabilityType
             return null;
         }
 
-        return new NullabilityPropertyInfo(propertyInfo, this);
+        return GetOrAddToCache(propertyInfo);
     }
 
     public NullabilityPropertyInfo? GetProperty(string name, Type? returnType, Type[] types)
@@ -181,7 +186,7 @@ public class NullabilityType
             return null;
         }
 
-        return new NullabilityPropertyInfo(propertyInfo, this);
+        return GetOrAddToCache(propertyInfo);
     }
 
     public NullabilityPropertyInfo[] GetProperties()
@@ -198,7 +203,12 @@ public class NullabilityType
             return Array.Empty<NullabilityPropertyInfo>();
         }
 
-        return propertyInfos.Select(p => new NullabilityPropertyInfo(p, this)).ToArray();
+        return propertyInfos.Select(GetOrAddToCache).ToArray();
+    }
+
+    private NullabilityPropertyInfo GetOrAddToCache(PropertyInfo propertyInfo)
+    {
+        return _propertiesCache.GetOrAdd(propertyInfo, static (prop, reflectedType) => new NullabilityPropertyInfo(prop, reflectedType), this);
     }
 
     public NullabilityFieldInfo? GetField(string name)
@@ -214,7 +224,7 @@ public class NullabilityType
             return null;
         }
 
-        return new NullabilityFieldInfo(fieldInfo, this);
+        return GetOrAddToCache(fieldInfo);
     }
 
     public NullabilityFieldInfo[] GetFields()
@@ -230,7 +240,12 @@ public class NullabilityType
             return Array.Empty<NullabilityFieldInfo>();
         }
 
-        return fieldInfos.Select(f => new NullabilityFieldInfo(f, this)).ToArray();
+        return fieldInfos.Select(GetOrAddToCache).ToArray();
+    }
+
+    private NullabilityFieldInfo GetOrAddToCache(FieldInfo fieldInfo)
+    {
+        return _fieldsCache.GetOrAdd(fieldInfo, static (field, reflectedType) => new NullabilityFieldInfo(field, reflectedType), this);
     }
 
     public NullabilityMethodInfo? GetMethod(string name)
@@ -246,8 +261,9 @@ public class NullabilityType
             return null;
         }
 
-        return new NullabilityMethodInfo(method, this);
+        return GetOrAddToCache(method);
     }
+
 
     public NullabilityMethodInfo? GetMethod(string name, BindingFlags bindingAttr, Binder? binder, Type[] types, ParameterModifier[]? modifiers)
     {
@@ -277,7 +293,7 @@ public class NullabilityType
             return null;
         }
 
-        return new NullabilityMethodInfo(method, this);
+        return GetOrAddToCache(method);
     }
 
     public NullabilityMethodInfo? GetMethod(string name, int genericParameterCount, Type[] types)
@@ -303,7 +319,7 @@ public class NullabilityType
             return null;
         }
 
-        return new NullabilityMethodInfo(method, this);
+        return GetOrAddToCache(method);
     }
 
     public NullabilityMethodInfo[] GetMethods()
@@ -319,7 +335,12 @@ public class NullabilityType
             return Array.Empty<NullabilityMethodInfo>();
         }
 
-        return methodInfos.Select(m => new NullabilityMethodInfo(m, this)).ToArray();
+        return methodInfos.Select(GetOrAddToCache).ToArray();
+    }
+
+    private NullabilityMethodInfo GetOrAddToCache(MethodInfo methodInfo)
+    {
+        return _methodsCache.GetOrAdd(methodInfo, static (method, reflectedType) => new NullabilityMethodInfo(method, reflectedType), this);
     }
 
     internal NullabilityType CreateDeclaringBaseClassType(Type declaringType)

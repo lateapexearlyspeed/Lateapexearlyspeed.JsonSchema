@@ -10,8 +10,9 @@ namespace LateApexEarlySpeed.Nullability.Generic;
 public partial class NullabilityPropertyInfo
 {
     private readonly PropertyInfo _propertyInfo;
-
     private readonly NullabilityType _reflectedType;
+
+    private volatile NullabilityType? _nullabilityPropertyType;
 
     protected internal NullabilityPropertyInfo(PropertyInfo propertyInfo, NullabilityType reflectedType)
     {
@@ -26,9 +27,14 @@ public partial class NullabilityPropertyInfo
     {
         get
         {
-            NullabilityElement nullabilityElement = GetPropertyNullabilityInfo();
+            if (_nullabilityPropertyType is null)
+            {
+                NullabilityElement nullabilityElement = GetPropertyNullabilityInfo();
 
-            return new NullabilityType(_propertyInfo.PropertyType, nullabilityElement);
+                _nullabilityPropertyType = new NullabilityType(_propertyInfo.PropertyType, nullabilityElement);
+            }
+
+            return _nullabilityPropertyType;
         }
     }
 
@@ -58,8 +64,7 @@ public partial class NullabilityPropertyInfo
                 return NullabilityState.Unknown;
             }
 
-            NullabilityElement info = GetPropertyNullabilityInfo();
-            return info.State;
+            return NullabilityPropertyType.NullabilityState;
         }
     }
 
@@ -76,8 +81,7 @@ public partial class NullabilityPropertyInfo
                 return NullabilityState.Unknown;
             }
 
-            NullabilityElement info = GetPropertyNullabilityInfo();
-            return info.State;
+            return NullabilityPropertyType.NullabilityState;
         }
     }
 }

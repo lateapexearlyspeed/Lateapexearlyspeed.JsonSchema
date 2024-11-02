@@ -12,6 +12,8 @@ public partial class NullabilityFieldInfo
     private readonly FieldInfo _fieldInfo;
     private readonly NullabilityType _reflectedType;
 
+    private volatile NullabilityType? _nullabilityFieldType;
+
     protected internal NullabilityFieldInfo(FieldInfo fieldInfo, NullabilityType reflectedType)
     {
         _fieldInfo = fieldInfo;
@@ -21,7 +23,7 @@ public partial class NullabilityFieldInfo
     /// <summary>
     /// Gets the nullability state of current field.
     /// </summary>
-    public NullabilityState NullabilityState => GetFieldNullabilityInfo().State;
+    public NullabilityState NullabilityState => NullabilityFieldType.NullabilityState;
 
     /// <summary>
     /// Gets the nullability type of current field.
@@ -30,9 +32,14 @@ public partial class NullabilityFieldInfo
     {
         get
         {
-            NullabilityElement nullabilityElement = GetFieldNullabilityInfo();
+            if (_nullabilityFieldType is null)
+            {
+                NullabilityElement nullabilityElement = GetFieldNullabilityInfo();
 
-            return new NullabilityType(_fieldInfo.FieldType, nullabilityElement);
+                _nullabilityFieldType = new NullabilityType(_fieldInfo.FieldType, nullabilityElement);
+            }
+
+            return _nullabilityFieldType;
         }
     }
 

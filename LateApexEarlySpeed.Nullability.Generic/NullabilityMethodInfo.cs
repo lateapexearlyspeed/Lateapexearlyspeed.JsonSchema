@@ -11,6 +11,9 @@ public partial class NullabilityMethodInfo
     private readonly MethodInfo _methodInfo;
     private readonly NullabilityType _reflectedType;
 
+    private volatile NullabilityParameterInfo? _nullabilityReturnParameter;
+    private volatile NullabilityParameterInfo[]? _nullabilityParameters;
+
     protected internal NullabilityMethodInfo(MethodInfo method, NullabilityType reflectedType)
     {
         _methodInfo = method;
@@ -24,11 +27,16 @@ public partial class NullabilityMethodInfo
     {
         get
         {
-            NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(_methodInfo.DeclaringType!);
+            if (_nullabilityReturnParameter is null)
+            {
+                NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(_methodInfo.DeclaringType!);
 
-            MethodInfo methodInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(_methodInfo);
+                MethodInfo methodInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(_methodInfo);
 
-            return new(_methodInfo.ReturnParameter, methodInfoInDeclaringGenericDefType.ReturnParameter, baseClassType);
+                _nullabilityReturnParameter = new(_methodInfo.ReturnParameter, methodInfoInDeclaringGenericDefType.ReturnParameter, baseClassType);
+            }
+
+            return _nullabilityReturnParameter;
         }
     }
 
@@ -38,14 +46,19 @@ public partial class NullabilityMethodInfo
     /// <returns>An array of type <see cref="NullabilityParameterInfo"/> containing information (including nullability) that matches the signature of the method (or constructor).</returns>
     public NullabilityParameterInfo[] GetNullabilityParameters()
     {
-        NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(_methodInfo.DeclaringType!);
+        if (_nullabilityParameters is null)
+        {
+            NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(_methodInfo.DeclaringType!);
 
-        MethodInfo methodInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(_methodInfo);
+            MethodInfo methodInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(_methodInfo);
 
-        ParameterInfo[] parameters = _methodInfo.GetParameters();
-        ParameterInfo[] parametersInGenericDefType = methodInfoInDeclaringGenericDefType.GetParameters();
+            ParameterInfo[] parameters = _methodInfo.GetParameters();
+            ParameterInfo[] parametersInGenericDefType = methodInfoInDeclaringGenericDefType.GetParameters();
 
-        return parameters.Select((p, idx) => new NullabilityParameterInfo(p, parametersInGenericDefType[idx], baseClassType)).ToArray();
+            _nullabilityParameters = parameters.Select((p, idx) => new NullabilityParameterInfo(p, parametersInGenericDefType[idx], baseClassType)).ToArray();
+        }
+
+        return _nullabilityParameters;
     }
 }
 

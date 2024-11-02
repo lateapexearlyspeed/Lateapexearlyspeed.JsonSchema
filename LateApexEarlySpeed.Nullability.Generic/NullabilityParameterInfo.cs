@@ -12,6 +12,8 @@ public partial class NullabilityParameterInfo
     private readonly ParameterInfo _parameterInDeclaringGenericDefType;
     private readonly NullabilityType _declaringType;
 
+    private volatile NullabilityType? _nullabilityParameterType;
+
     public NullabilityParameterInfo(ParameterInfo parameter, ParameterInfo parameterInDeclaringGenericDefType, NullabilityType declaringType)
     {
         _parameterInfo = parameter;
@@ -22,7 +24,7 @@ public partial class NullabilityParameterInfo
     /// <summary>
     /// Gets the nullability state of current parameter.
     /// </summary>
-    public NullabilityState NullabilityState => GetParameterNullabilityInfo().State;
+    public NullabilityState NullabilityState => NullabilityParameterType.NullabilityState;
 
     /// <summary>
     /// Gets the nullability type of current parameter.
@@ -31,9 +33,14 @@ public partial class NullabilityParameterInfo
     {
         get
         {
-            NullabilityElement nullabilityElement = GetParameterNullabilityInfo();
+            if (_nullabilityParameterType is null)
+            {
+                NullabilityElement nullabilityElement = GetParameterNullabilityInfo();
 
-            return new NullabilityType(_parameterInfo.ParameterType, nullabilityElement);
+                _nullabilityParameterType = new NullabilityType(_parameterInfo.ParameterType, nullabilityElement);
+            }
+
+            return _nullabilityParameterType;
         }
     }
 

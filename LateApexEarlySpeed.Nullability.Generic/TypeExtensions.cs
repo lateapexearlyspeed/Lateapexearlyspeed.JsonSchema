@@ -11,7 +11,7 @@ internal static class TypeExtensions
 
     public static Type GetGenericTypeDefinitionIfIsGenericType(this Type type)
     {
-        return type.IsConstructedGenericType? type.GetGenericTypeDefinition() : type;
+        return type.IsConstructedGenericType ? type.GetGenericTypeDefinition() : type;
     }
 
     public static TMemberInfo GetMemberInfoInGenericDefType<TMemberInfo>(this Type type, TMemberInfo memberInfo) where TMemberInfo : MemberInfo
