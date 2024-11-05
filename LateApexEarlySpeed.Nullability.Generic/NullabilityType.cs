@@ -72,16 +72,60 @@ public class NullabilityType
     /// <returns></returns>
     /// <exception cref="ArgumentException">generic type argument info of <paramref name="type"/> not match with <paramref name="genericTypeArgumentsNullabilities"/>></exception>
     /// <remarks>Use this construct when <paramref name="type"/> is generic type and its generic type arguments are also generic type</remarks>
-    public static NullabilityType GetType(Type type, params NullabilityElement[] genericTypeArgumentsNullabilities)
+    public static NullabilityType GetType(Type type, NullabilityElement[] genericTypeArgumentsNullabilities)
     {
         if (type.IsGenericTypeDefinition)
         {
             throw new NotSupportedException($"{nameof(type)} is generic type definition which is not supported currently. Please raise requirement issue if need.");
         }
 
-        ThrowIfGenericTypeArgumentsNotMatch(type, genericTypeArgumentsNullabilities);
+        var nullabilityElement = new NullabilityElement(GetRootTypeNullabilityState(type), genericTypeArgumentsNullabilities);
+        ThrowIfNullabilityElementNotMatchWithTypeStructure(type, nullabilityElement);
 
-        return new NullabilityType(type, new NullabilityElement(GetRootTypeNullabilityState(type), genericTypeArgumentsNullabilities));
+        return new NullabilityType(type, nullabilityElement);
+    }
+
+    /// <summary>
+    /// Initialize new instance of <see cref="NullabilityType"/> from actual runtime type instance with specified nullability info of its array element
+    /// </summary>
+    /// <param name="type">actual runtime type instance </param>
+    /// <param name="arrayElementNullability">nullability info of array element</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException">array element info of <paramref name="type"/> not match with <paramref name="arrayElementNullability"/></exception>
+    /// <remarks>Use this construct when <paramref name="type"/> is array type</remarks>
+    public static NullabilityType GetType(Type type, NullabilityElement arrayElementNullability)
+    {
+        var nullabilityElement = new NullabilityElement(GetRootTypeNullabilityState(type), arrayElementNullability);
+        ThrowIfNullabilityElementNotMatchWithTypeStructure(type, nullabilityElement);
+
+        return new NullabilityType(type, nullabilityElement);
+    }
+
+    private static void ThrowIfNullabilityElementNotMatchWithTypeStructure(Type type, NullabilityElement nullabilityElement)
+    {
+        if (type.HasArrayElementType())
+        {
+            if (!nullabilityElement.HasArrayElement)
+            {
+                throw new ArgumentException("There is missing array element info.");
+            }
+
+            Type? elementType = type.GetElementType();
+            Debug.Assert(elementType is not null);
+            ThrowIfNullabilityElementNotMatchWithTypeStructure(elementType, nullabilityElement.ArrayElement);
+        }
+        else if (type.IsGenericType)
+        {
+            if (type.GenericTypeArguments.Length != nullabilityElement.GenericTypeArguments.Length)
+            {
+                throw new ArgumentException("There is generic type arguments count mismatch.");
+            }
+
+            for (int i = 0; i < type.GenericTypeArguments.Length; i++)
+            {
+                ThrowIfNullabilityElementNotMatchWithTypeStructure(type.GenericTypeArguments[i], nullabilityElement.GenericTypeArguments[i]);
+            }
+        }
     }
 
     private static NullabilityState GetRootTypeNullabilityState(Type type)
@@ -94,21 +138,6 @@ public class NullabilityType
         }
 
         return NullabilityState.Unknown;
-    }
-
-    private static void ThrowIfGenericTypeArgumentsNotMatch(Type type, NullabilityElement[] genericTypeArgNullabilities)
-    {
-        Type[] typeArguments = type.GenericTypeArguments;
-        if (typeArguments.Length != genericTypeArgNullabilities.Length)
-        {
-            throw new ArgumentException("Generic type arguments count mismatch");
-        }
-
-        for (int i = 0; i < typeArguments.Length; i++)
-        {
-            ThrowIfGenericTypeArgumentsNotMatch(type.GenericTypeArguments[i], genericTypeArgNullabilities[i].GenericTypeArguments);
-        }
-
     }
 
     /// <summary>

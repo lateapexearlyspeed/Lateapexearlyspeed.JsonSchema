@@ -37,4 +37,6 @@ internal static class TypeExtensions
 
         return (TMemberInfo)result;
     }
+
+    public static bool HasArrayElementType(this Type type) => type.IsArray && type.HasElementType;
 }

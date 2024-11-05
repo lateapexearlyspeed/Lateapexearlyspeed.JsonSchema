@@ -289,7 +289,7 @@ internal static class RawNullabilityAnnotationConverter
         if (type.IsArray)
         {
             return type.HasElementType 
-                ? new NullabilityElement(MapToState(bytesReader.ReadByte()), null, ParseNullableAttributeBytes(type.GetElementType()!, bytesReader)) 
+                ? new NullabilityElement(MapToState(bytesReader.ReadByte()), ParseNullableAttributeBytes(type.GetElementType()!, bytesReader)) 
                 : new NullabilityElement(MapToState(bytesReader.ReadByte()));
         }
 

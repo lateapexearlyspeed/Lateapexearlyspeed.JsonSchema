@@ -218,7 +218,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
         public void NestedGenericRootTypeTests(Func<NullabilityMethodInfo, NullabilityParameterInfo> parameterInfoProvider)
         {
             // GenericClass2<GenericClass2<string>?>
-            NullabilityType rootType = NullabilityType.GetType(typeof(GenericClass2<GenericClass2<string>?>), new NullabilityElement(NullabilityState.Nullable, new []{new NullabilityElement(NullabilityState.NotNull)}));
+            NullabilityType rootType = NullabilityType.GetType(typeof(GenericClass2<GenericClass2<string>?>), new[]{ new NullabilityElement(NullabilityState.Nullable, new[] { new NullabilityElement(NullabilityState.NotNull) }) });
 
             // GenericClass2<GenericClass2<string>?> -> GenericClass2<string>?
             NullabilityMethodInfo? methodInfo = rootType.GetMethod(nameof(GenericClass2<string>.Function));
@@ -229,7 +229,7 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             AssertMethodAndParameter(methodInfo, parameterInfoProvider, NullabilityState.NotNull);
 
             // GenericClass2<GenericClass2<string?>>
-            rootType = NullabilityType.GetType(typeof(GenericClass2<GenericClass2<string?>>), new NullabilityElement(NullabilityState.NotNull, new[] { new NullabilityElement(NullabilityState.Nullable) }));
+            rootType = NullabilityType.GetType(typeof(GenericClass2<GenericClass2<string?>>), new[]{ new NullabilityElement(NullabilityState.NotNull, new[] { new NullabilityElement(NullabilityState.Nullable) }) });
 
             // GenericClass2<GenericClass2<string?>> -> GenericClass2<string?>
             methodInfo = rootType.GetMethod(nameof(GenericClass2<string?>.Function));

@@ -30,7 +30,7 @@ public class NullabilityElement
 
         NullabilityState currentElementState = rawNullabilityInfo.State;
 
-        if (HasArrayElementType(typeInGenericDefType))
+        if (typeInGenericDefType.HasArrayElementType())
         {
             Type? arrayElementType = typeInGenericDefType.GetElementType();
 
@@ -38,7 +38,7 @@ public class NullabilityElement
             Debug.Assert(rawNullabilityInfo.HasArrayElement);
             NullabilityElement arrayElementInfo = CreateAssembledInfo(arrayElementType, declaringType, rawNullabilityInfo.ArrayElement);
 
-            return new NullabilityElement(currentElementState, null, arrayElementInfo);
+            return new NullabilityElement(currentElementState, arrayElementInfo);
         }
 
         if (typeInGenericDefType.IsGenericType)
@@ -69,14 +69,21 @@ public class NullabilityElement
         }
     }
 
-    private static bool HasArrayElementType(Type type) => type.IsArray && type.HasElementType;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="NullabilityElement"/> class that contains nullability info of current node and generic type arguments.
     /// </summary>
     /// <param name="state">Annotated <see cref="NullabilityState"/> of current type</param>
     /// <param name="genericTypeArgs">Nullability info of generic type arguments</param>
     public NullabilityElement(NullabilityState state, NullabilityElement[]? genericTypeArgs = null) : this(state, genericTypeArgs, null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NullabilityElement"/> class that contains nullability info of current array node and its array element.
+    /// </summary>
+    /// <param name="state">Annotated <see cref="NullabilityState"/> of current type</param>
+    /// <param name="arrayElement">Nullability info of array element</param>
+    public NullabilityElement(NullabilityState state, NullabilityElement arrayElement) : this(state, null, arrayElement)
     {
     }
 
