@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
 {
@@ -256,6 +257,31 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
                 yield return new object[] { (NullabilityMethodInfo m) => m.NullabilityReturnParameter };
                 yield return new object[] { (NullabilityMethodInfo m) => m.GetNullabilityParameters()[0] };
             }
+        }
+
+        [Fact]
+        public void GetSameMethod_ReturnSameMethodInstance()
+        {
+            NullabilityType rootType = NullabilityType.GetType(typeof(TestClass));
+            NullabilityMethodInfo methodInfo1 = rootType.GetMethod(nameof(TestClass.Function1))!;
+            NullabilityMethodInfo methodInfo2 = rootType.GetMethod(nameof(TestClass.Function1))!;
+            NullabilityMethodInfo methodInfo3 = rootType.GetMethod(nameof(TestClass.Function1), BindingFlags.Public | BindingFlags.Instance)!;
+            NullabilityMethodInfo methodInfo4 = rootType.GetMethod(nameof(TestClass.Function1), BindingFlags.Public | BindingFlags.Instance, new []{typeof(GenericClass<string>)})!;
+            NullabilityMethodInfo methodInfo5 = rootType.GetMethod(nameof(TestClass.Function1), BindingFlags.Public | BindingFlags.Instance, null, new []{typeof(GenericClass<string>)}, null)!;
+            NullabilityMethodInfo methodInfo6 = rootType.GetMethods().First(m => m.Name == nameof(TestClass.Function1));
+            NullabilityMethodInfo methodInfo7 = rootType.GetMethods(BindingFlags.Public | BindingFlags.Instance).First(m => m.Name == nameof(TestClass.Function1));
+
+            Assert.All(new[] { methodInfo1, methodInfo2, methodInfo3, methodInfo4, methodInfo5, methodInfo6, methodInfo7 }, method => Assert.Same(method, methodInfo1));
+        }
+
+        [Fact]
+        public void GetSameParameter_ReturnSameParameterInstance()
+        {
+            NullabilityType rootType = NullabilityType.GetType(typeof(TestClass));
+            NullabilityMethodInfo methodInfo = rootType.GetMethod(nameof(TestClass.Function1))!;
+
+            Assert.Same(methodInfo.NullabilityReturnParameter, methodInfo.NullabilityReturnParameter);
+            Assert.Same(methodInfo.GetNullabilityParameters().First(), methodInfo.GetNullabilityParameters().First());
         }
 
         class TestClass

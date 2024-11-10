@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
 {
@@ -310,6 +311,22 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
             Assert.NotNull(propertyInfo);
             Assert.Equal(expectedReadState, propertyInfo.NullabilityReadState);
             Assert.Equal(NullabilityState.Unknown, propertyInfo.NullabilityWriteState);
+        }
+
+        [Fact]
+        public void GetSameProperty_ReturnSamePropertyInstanceAndTypeInstance()
+        {
+            NullabilityType rootType = NullabilityType.GetType(typeof(TestClass));
+            NullabilityPropertyInfo propertyInfo1 = rootType.GetProperty(nameof(TestClass.Property1))!;
+            NullabilityPropertyInfo propertyInfo2 = rootType.GetProperty(nameof(TestClass.Property1))!;
+            NullabilityPropertyInfo propertyInfo3 = rootType.GetProperty(nameof(TestClass.Property1), BindingFlags.Public | BindingFlags.Instance)!;
+            NullabilityPropertyInfo propertyInfo4 = rootType.GetProperty(nameof(TestClass.Property1), typeof(GenericClass<string>))!;
+            NullabilityPropertyInfo propertyInfo5 = rootType.GetProperties().First(p => p.Name == nameof(TestClass.Property1));
+            NullabilityPropertyInfo propertyInfo6 = rootType.GetProperties(BindingFlags.Public | BindingFlags.Instance).First(p => p.Name == nameof(TestClass.Property1));
+
+            Assert.All(new[]{ propertyInfo1, propertyInfo2, propertyInfo3, propertyInfo4, propertyInfo5, propertyInfo6 }, prop => Assert.Same(prop, propertyInfo1));
+
+            Assert.Same(propertyInfo1.NullabilityPropertyType, propertyInfo1.NullabilityPropertyType);
         }
 
         class TestClass

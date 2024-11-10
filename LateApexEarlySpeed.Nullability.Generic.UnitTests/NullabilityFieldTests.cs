@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
 {
@@ -225,6 +226,21 @@ namespace LateApexEarlySpeed.Nullability.Generic.UnitTests
         {
             Assert.NotNull(fieldInfo);
             Assert.Equal(expectedState, fieldInfo.NullabilityState);
+        }
+
+        [Fact]
+        public void GetSameField_ReturnSameFieldInstanceAndTypeInstance()
+        {
+            NullabilityType rootType = NullabilityType.GetType(typeof(TestClass));
+            NullabilityFieldInfo fieldInfo1 = rootType.GetField(nameof(TestClass.Field1))!;
+            NullabilityFieldInfo fieldInfo2 = rootType.GetField(nameof(TestClass.Field1))!;
+            NullabilityFieldInfo fieldInfo3 = rootType.GetField(nameof(TestClass.Field1), BindingFlags.Public | BindingFlags.Instance)!;
+            NullabilityFieldInfo fieldInfo4 = rootType.GetFields().First(p => p.Name == nameof(TestClass.Field1));
+            NullabilityFieldInfo fieldInfo5 = rootType.GetFields(BindingFlags.Public | BindingFlags.Instance).First(p => p.Name == nameof(TestClass.Field1));
+
+            Assert.All(new[] { fieldInfo1, fieldInfo2, fieldInfo3, fieldInfo4, fieldInfo5 }, field => Assert.Same(field, fieldInfo1));
+
+            Assert.Same(fieldInfo1.NullabilityFieldType, fieldInfo1.NullabilityFieldType);
         }
 
         class TestClass
