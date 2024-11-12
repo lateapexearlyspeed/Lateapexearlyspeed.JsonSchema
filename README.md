@@ -180,6 +180,8 @@ check available validation methods in [wiki](https://github.com/lateapexearlyspe
 
 ## LateApexEarlySpeed.Nullability.Generic
 
+### Intro
+
 Starting from .net 6, there is built-in Nullability related classes to help read nullability annotation info on members of type (`NullabilityInfoContext` and so on). However, it is not possible to get annotated nullability state of members and parameters if their types are from generic type arguments:
 
 ```csharp
@@ -289,3 +291,29 @@ NullabilityType GetType(Type type, params NullabilityElement[] genericTypeArgume
 ```
 
 More API doc see [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/LateApexEarlySpeed.Nullability.Generic).
+
+### Thread Safety
+
+All types under namespace 'LateApexEarlySpeed.Nullability.Generic' are thread safe.
+
+### Performance consideration
+
+To reduce reflection process time, you can reuse `NullabilityType` instance for specific type. 
+
+In that case, multiple calls on memberInfo related methods on same `NullabilityType` instance will return same memberInfo instance for each memberInfo. E.g.:
+
+```csharp
+NullabilityType type = NullabilityType.GetType(typeof(TestClass));
+NullabilityPropertyInfo? propertyInfo = type.GetProperty("PropName");
+// Later
+NullabilityPropertyInfo? propertyInfo2 = type.GetProperty("PropName"); // propertyInfo2 is same instance as propertyInfo
+```
+
+Also retrieving nullability type on specific memberInfo will return same `NullabilityType` instance... so that all members tree for 'root' type are cached.
+
+E.g.:
+```csharp
+Assert.Same(propertyInfo.NullabilityPropertyType, propertyInfo2.NullabilityPropertyType); // NullabilityPropertyType property will always return same instance
+```
+
+There are thread safe caches in nullability related types. (This is another difference with standard .net core `NullabilityInfoContext` which is not thread safe)
