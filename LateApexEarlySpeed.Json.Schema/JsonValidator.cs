@@ -70,15 +70,33 @@ public class JsonValidator
         AddExternalDocument(jsonSchemaText);
     }
 
+    /// <summary>
+    /// Validate specified <paramref name="jsonInstance"/>
+    /// </summary>
+    /// <param name="jsonInstance">JSON instance to be validated</param>
+    /// <param name="options">Options to control the validation behavior</param>
+    /// <returns><see cref="ValidationResult"/> to represent validation result</returns>
     public ValidationResult Validate(string jsonInstance, JsonSchemaOptions? options = null)
     {
         // ReSharper disable once ConvertToUsingDeclaration
         using (JsonDocument instance = JsonDocument.Parse(jsonInstance))
         {
-            options = new JsonSchemaOptions(options, _globalSchemaResourceRegistry);
-
-            return _mainSchemaDoc.DoValidation(instance.RootInstanceElement(), options);
+            return Validate(instance, options);
         }
+    }
+
+    /// <summary>
+    /// Validate specified <paramref name="jsonInstance"/>
+    /// </summary>
+    /// <param name="jsonInstance">JSON instance to be validated</param>
+    /// <param name="options">Options to control the validation behavior</param>
+    /// <returns><see cref="ValidationResult"/> to represent validation result</returns>
+    /// <remarks>This method will not dispose <paramref name="jsonInstance"/> parameter </remarks>
+    public ValidationResult Validate(JsonDocument jsonInstance, JsonSchemaOptions? options = null)
+    {
+        options = new JsonSchemaOptions(options, _globalSchemaResourceRegistry);
+
+        return _mainSchemaDoc.DoValidation(jsonInstance.RootInstanceElement(), options);
     }
 
     /// <summary>
