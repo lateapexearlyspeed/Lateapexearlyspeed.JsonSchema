@@ -28,12 +28,14 @@
     <WarningLevel>6</WarningLevel>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <NoWarn>1701;1702;1591</NoWarn>
+    <WarningsNotAsErrors>NU1903</WarningsNotAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>6</WarningLevel>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <NoWarn>1701;1702;1591</NoWarn>
+    <WarningsNotAsErrors>NU1903</WarningsNotAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
