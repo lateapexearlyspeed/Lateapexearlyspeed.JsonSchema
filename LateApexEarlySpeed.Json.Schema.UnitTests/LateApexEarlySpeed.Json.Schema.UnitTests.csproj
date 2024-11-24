@@ -8,6 +8,8 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <LangVersion>11.0</LangVersion>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\strong-name.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
