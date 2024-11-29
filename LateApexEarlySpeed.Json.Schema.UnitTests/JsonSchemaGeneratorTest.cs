@@ -6,7 +6,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
-using LateApexEarlySpeed.Json.Schema.FluentGenerator;
 using LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 using LateApexEarlySpeed.Json.Schema.Generator;
 using LateApexEarlySpeed.Json.Schema.JSchema;
@@ -161,6 +160,7 @@ public class JsonSchemaGeneratorTest
         samples = samples.Concat(CreateSamplesForUniqueItemsAttribute());
         samples = samples.Concat(CreateSamplesForPropertyNameAttribute());
         samples = samples.Concat(CreateSamplesForNotNullAttribute());
+        samples = samples.Concat(CreateSamplesForNullabilityAnnotation());
         samples = samples.Concat(CreateSamplesForEnumWithJsonStringEnumConverter());
         samples = samples.Concat(CreateSamplesForEnumPropertyWithJsonStringEnumConverter());
         
@@ -1063,6 +1063,215 @@ public class JsonSchemaGeneratorTest
 
         [NotNull]
         public InnerCustomClass? ObjectProp { get; set; }
+    }
+
+    private static IEnumerable<TestSample> CreateSamplesForNullabilityAnnotation()
+    {
+        // successful cases
+        var options = new JsonSchemaGeneratorOptions{ NullabilityTypeInfo = { ReferenceTypeNullabilityPolicy = NullabilityPolicy.BasedOnNullabilityAnnotation }};
+
+        yield return TestSample.Create<CustomObjectForNullabilityAnnotationTest>("""
+            {
+              "IntegerProp1": null,
+              "IntegerProp2": 1,
+              "StringProp1": null,
+              "StringProp2": "abc",
+              "ObjectProp1": null,
+              "ObjectProp2": {
+                "IntegerProp1": null,
+                "IntegerProp2": 1,
+                "StringProp1": null,
+                "StringProp2": "abc",
+                "GenericProp1": null,
+                "GenericProp2": [
+                  {
+                    "IntegerProp1": null,
+                    "IntegerProp2": 1,
+                    "StringProp1": null,
+                    "StringProp2": "abc"
+                  }
+                ]
+              }
+            }
+            """, ValidationResult.ValidResult, options);
+        
+        yield return TestSample.Create<CustomObjectForNullabilityAnnotationTest>("""
+            {
+              "IntegerProp1": 1,
+              "IntegerProp2": 1,
+              "StringProp1": "abc",
+              "StringProp2": "abc",
+              "ObjectProp1": {},
+              "ObjectProp2": {
+                "IntegerProp1": 1,
+                "IntegerProp2": 1,
+                "StringProp1": "abc",
+                "StringProp2": "abc",
+                "GenericProp1": [],
+                "GenericProp2": [
+                  {
+                    "IntegerProp1": 1,
+                    "IntegerProp2": 1,
+                    "StringProp1": "abc",
+                    "StringProp2": "abc"
+                  }
+                ]
+              }
+            }
+            """, ValidationResult.ValidResult, options);
+        
+        yield return TestSample.Create<CustomObjectForNullabilityAnnotationTest>("""
+            {
+              "IntegerProp1": 1,
+              "IntegerProp2": 1,
+              "StringProp1": "abc",
+              "StringProp2": "abc",
+              "ObjectProp1": {
+                "IntegerProp1": 1,
+                "IntegerProp2": 1,
+                "StringProp1": "abc",
+                "StringProp2": "abc",
+                "GenericProp1": null,
+                "GenericProp2": null
+              },
+              "ObjectProp2": {}
+            }
+            """, ValidationResult.ValidResult, options);
+        
+        // failed cases
+        yield return TestSample.Create<CustomObjectForNullabilityAnnotationTest>("""
+            {
+              "IntegerProp2": null
+            }
+            """, new ValidationResult(
+            ResultCode.InvalidTokenKind,
+            "type",
+            GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Integer),
+            ImmutableJsonPointer.Create("/IntegerProp2")!,
+            ImmutableJsonPointer.Create("/properties/IntegerProp2/type")!,
+            GetSchemaResourceBaseUri<CustomObjectForNullabilityAnnotationTest>(),
+            GetSchemaResourceBaseUri<CustomObjectForNullabilityAnnotationTest>()), options);
+        
+        yield return TestSample.Create<CustomObjectForNullabilityAnnotationTest>("""
+            {
+              "StringProp2": null
+            }
+            """, new ValidationResult(
+            ResultCode.InvalidTokenKind,
+            "type",
+            GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array),
+            ImmutableJsonPointer.Create("/StringProp2")!,
+            ImmutableJsonPointer.Create("/properties/StringProp2/allOf/1/type")!,
+            GetSchemaResourceBaseUri<CustomObjectForNullabilityAnnotationTest>(),
+            GetSchemaResourceBaseUri<CustomObjectForNullabilityAnnotationTest>()), options);
+        
+        yield return TestSample.Create<CustomObjectForNullabilityAnnotationTest>("""
+            {
+              "ObjectProp1": {
+                "IntegerProp2": null
+              }
+            }
+            """, new ValidationResult(
+            ResultCode.InvalidTokenKind,
+            "type",
+            GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Integer),
+            ImmutableJsonPointer.Create("/ObjectProp1/IntegerProp2")!,
+            ImmutableJsonPointer.Create("/properties/ObjectProp1/properties/IntegerProp2/type")!,
+            GetSchemaResourceBaseUri<CustomObjectForNullabilityAnnotationTest>(),
+            GetSchemaResourceBaseUri<CustomObjectForNullabilityAnnotationTest>()), options);
+        
+        yield return TestSample.Create<CustomObjectForNullabilityAnnotationTest>("""
+            {
+              "ObjectProp1": {
+                "StringProp2": null
+              }
+            }
+            """, new ValidationResult(
+            ResultCode.InvalidTokenKind,
+            "type",
+            GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array),
+            ImmutableJsonPointer.Create("/ObjectProp1/StringProp2")!,
+            ImmutableJsonPointer.Create("/properties/ObjectProp1/properties/StringProp2/allOf/1/type")!,
+            GetSchemaResourceBaseUri<CustomObjectForNullabilityAnnotationTest>(),
+            GetSchemaResourceBaseUri<CustomObjectForNullabilityAnnotationTest>()), options);
+        
+        yield return TestSample.Create<CustomObjectForNullabilityAnnotationTest>("""
+            {
+              "ObjectProp1": {
+                "GenericProp1": [
+                  { "StringProp2": null }
+                ]
+              }
+            }
+            """, new ValidationResult(
+            ResultCode.InvalidTokenKind,
+            "type",
+            GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array),
+            ImmutableJsonPointer.Create("/ObjectProp1/GenericProp1/0/StringProp2")!,
+            ImmutableJsonPointer.Create("/properties/ObjectProp1/properties/GenericProp1/items/$ref/properties/StringProp2/allOf/1/type")!,
+            GetSchemaResourceBaseUri<CustomObjectForNullabilityAnnotationTest>(),
+            GetSubSchemaRefFullUriForDefs<CustomObjectForNullabilityAnnotationTest, CustomObjectForNullabilityAnnotationTest.GenericArgumentClass>()), options);
+        
+        yield return TestSample.Create<CustomObjectForNullabilityAnnotationTest>("""
+            {
+              "ObjectProp2": null
+            }
+            """, new ValidationResult(
+            ResultCode.InvalidTokenKind,
+            "type",
+            GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array),
+            ImmutableJsonPointer.Create("/ObjectProp2")!,
+            ImmutableJsonPointer.Create("/properties/ObjectProp2/allOf/1/type")!,
+            GetSchemaResourceBaseUri<CustomObjectForNullabilityAnnotationTest>(),
+            GetSchemaResourceBaseUri<CustomObjectForNullabilityAnnotationTest>()), options);
+
+        yield return TestSample.Create<CustomObjectForNullabilityAnnotationTest>("""
+            {
+              "ObjectProp2": {
+                "GenericProp2": null
+              }
+            }
+            """, new ValidationResult(
+            ResultCode.InvalidTokenKind,
+            "type",
+            GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array),
+            ImmutableJsonPointer.Create("/ObjectProp2/GenericProp2")!,
+            ImmutableJsonPointer.Create("/properties/ObjectProp2/allOf/0/properties/GenericProp2/allOf/1/type")!,
+            GetSchemaResourceBaseUri<CustomObjectForNullabilityAnnotationTest>(),
+            GetSchemaResourceBaseUri<CustomObjectForNullabilityAnnotationTest>()), options);
+    }
+
+    private class CustomObjectForNullabilityAnnotationTest
+    {
+        public int? IntegerProp1 { get; set; }
+        public int IntegerProp2 { get; set; }
+
+        public string? StringProp1 { get; set; }
+        public string StringProp2 { get; set; } = null!;
+
+        public InnerClass<List<GenericArgumentClass>?>? ObjectProp1 { get; set; }
+        public InnerClass<List<GenericArgumentClass>> ObjectProp2 { get; set; } = null!;
+
+        public class InnerClass<T>
+        {
+            public int? IntegerProp1 { get; set; }
+            public int IntegerProp2 { get; set; }
+
+            public string? StringProp1 { get; set; }
+            public string StringProp2 { get; set; } = null!;
+
+            public T? GenericProp1 { get; set; }
+            public T GenericProp2 { get; set; } = default!;
+        }
+
+        public class GenericArgumentClass
+        {
+            public int? IntegerProp1 { get; set; }
+            public int IntegerProp2 { get; set; }
+
+            public string? StringProp1 { get; set; }
+            public string StringProp2 { get; set; } = null!;
+        }
     }
 
     private static IEnumerable<TestSample> CreateSamplesForPropertyNameAttribute()

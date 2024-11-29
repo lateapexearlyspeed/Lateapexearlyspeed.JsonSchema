@@ -35,7 +35,12 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
             keywords = keywords.Append(requiredKeyword);
         }
 
-        return new JsonSchemaResource(new Uri(typeToConvert.Type.FullName!, UriKind.Relative), keywords.ToList(), new List<ISchemaContainerValidationNode>(0), null, null, null, null, null);
+        if (options.NullabilityTypeInfo.ReferenceTypeNullabilityPolicy.UseNullabilityAnnotation && typeToConvert.Type.IsGenericType) // Because same runtime generic types may have different nullabilities of their generic arguments, so if enable nullability annotation, we cannot make sure they can reuse same JsonSchemaResource (thus $ref)
+        {
+            return new BodyJsonSchema(keywords);
+        }
+
+        return new JsonSchemaResource(new Uri(typeToConvert.Type.FullName!, UriKind.Relative), keywords, new List<ISchemaContainerValidationNode>(0), null, null, null, null, null);
     }
 
     private static PropertiesKeyword CreatePropertiesKeyword(IEnumerable<IMemberInfo> memberInfos, JsonSchemaGeneratorOptions options)
@@ -58,7 +63,7 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
 
             List<KeywordBase>? keywordsForAdditionalAttributes = null;
 
-            if (options.NullabilityTypeInfo.ReferenceTypeNullabilityPolicy.GetNullabilityState(memberInfo) == NullabilityState.NotNull)
+            if (!memberType.Type.IsValueType && options.NullabilityTypeInfo.ReferenceTypeNullabilityPolicy.GetNullabilityState(memberInfo) == NullabilityState.NotNull)
             {
                 var typeKeyword = new TypeKeyword(InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array);
                 keywordsForAdditionalAttributes = new List<KeywordBase>(2) { typeKeyword };

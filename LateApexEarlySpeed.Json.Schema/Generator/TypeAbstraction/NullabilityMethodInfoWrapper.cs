@@ -12,7 +12,7 @@ internal class NullabilityMethodInfoWrapper : IMethodInfo
         _method = method;
     }
 
-    public MemberInfo MemberInfo => _method;
-    public MethodInfo MethodInfo => _method;
+    public MemberInfo MemberInfo => _method.MethodInfo;
+    public MethodInfo MethodInfo => _method.MethodInfo;
     public IParameterInfo ReturnParameter => new NullabilityParameterInfoWrapper(_method.NullabilityReturnParameter);
 }

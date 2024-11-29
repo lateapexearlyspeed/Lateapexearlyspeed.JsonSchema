@@ -41,9 +41,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LateApexEarlySpeed.Nullability.Generic" Version="1.0.3" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.0" />
     <PackageReference Include="System.Text.Json" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LateApexEarlySpeed.Nullability.Generic\LateApexEarlySpeed.Nullability.Generic.csproj" />
   </ItemGroup>
 
   <ItemGroup>
