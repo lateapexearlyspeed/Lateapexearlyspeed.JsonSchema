@@ -9,14 +9,18 @@ namespace LateApexEarlySpeed.Nullability.Generic;
 /// </summary>
 public partial class NullabilityFieldInfo
 {
-    private readonly FieldInfo _fieldInfo;
     private readonly NullabilityType _reflectedType;
 
     private volatile NullabilityType? _nullabilityFieldType;
 
+    /// <summary>
+    /// Get the actual runtime FieldInfo
+    /// </summary>
+    public FieldInfo FieldInfo { get; }
+
     protected internal NullabilityFieldInfo(FieldInfo fieldInfo, NullabilityType reflectedType)
     {
-        _fieldInfo = fieldInfo;
+        FieldInfo = fieldInfo;
         _reflectedType = reflectedType;
     }
 
@@ -36,7 +40,7 @@ public partial class NullabilityFieldInfo
             {
                 NullabilityElement nullabilityElement = GetFieldNullabilityInfo();
 
-                _nullabilityFieldType = new NullabilityType(_fieldInfo.FieldType, nullabilityElement);
+                _nullabilityFieldType = new NullabilityType(FieldInfo.FieldType, nullabilityElement);
             }
 
             return _nullabilityFieldType;
@@ -45,9 +49,9 @@ public partial class NullabilityFieldInfo
 
     private NullabilityElement GetFieldNullabilityInfo()
     {
-        NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(_fieldInfo.DeclaringType!);
+        NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(FieldInfo.DeclaringType!);
 
-        FieldInfo fieldInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(_fieldInfo);
+        FieldInfo fieldInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(FieldInfo);
 
         NullabilityElement fieldRawNullabilityInfo = RawNullabilityAnnotationConverter.ReadField(fieldInfoInDeclaringGenericDefType);
 
@@ -60,96 +64,96 @@ public partial class NullabilityFieldInfo : FieldInfo
     public override bool Equals(object? obj)
     {
         return obj is NullabilityFieldInfo nullabilityFieldInfo 
-               && _fieldInfo.Equals(nullabilityFieldInfo._fieldInfo) 
+               && FieldInfo.Equals(nullabilityFieldInfo.FieldInfo) 
                && _reflectedType.Equals(nullabilityFieldInfo._reflectedType);
     }
 
     public override int GetHashCode()
     {
-        return _fieldInfo.GetHashCode();
+        return FieldInfo.GetHashCode();
     }
 
     public override Type[] GetOptionalCustomModifiers()
     {
-        return _fieldInfo.GetOptionalCustomModifiers();
+        return FieldInfo.GetOptionalCustomModifiers();
     }
 
     public override object GetRawConstantValue()
     {
-        return _fieldInfo.GetRawConstantValue();
+        return FieldInfo.GetRawConstantValue();
     }
 
     public override Type[] GetRequiredCustomModifiers()
     {
-        return _fieldInfo.GetRequiredCustomModifiers();
+        return FieldInfo.GetRequiredCustomModifiers();
     }
 
     public override object? GetValueDirect(TypedReference obj)
     {
-        return _fieldInfo.GetValueDirect(obj);
+        return FieldInfo.GetValueDirect(obj);
     }
 
     public override void SetValueDirect(TypedReference obj, object value)
     {
-        _fieldInfo.SetValueDirect(obj, value);
+        FieldInfo.SetValueDirect(obj, value);
     }
 
-    public override bool IsSecurityCritical => _fieldInfo.IsSecurityCritical;
-    public override bool IsSecuritySafeCritical => _fieldInfo.IsSecuritySafeCritical;
-    public override bool IsSecurityTransparent => _fieldInfo.IsSecurityTransparent;
-    public override MemberTypes MemberType => _fieldInfo.MemberType;
+    public override bool IsSecurityCritical => FieldInfo.IsSecurityCritical;
+    public override bool IsSecuritySafeCritical => FieldInfo.IsSecuritySafeCritical;
+    public override bool IsSecurityTransparent => FieldInfo.IsSecurityTransparent;
+    public override MemberTypes MemberType => FieldInfo.MemberType;
     public override IList<CustomAttributeData> GetCustomAttributesData()
     {
-        return _fieldInfo.GetCustomAttributesData();
+        return FieldInfo.GetCustomAttributesData();
     }
 
     public override bool HasSameMetadataDefinitionAs(MemberInfo other)
     {
-        return _fieldInfo.HasSameMetadataDefinitionAs(other);
+        return FieldInfo.HasSameMetadataDefinitionAs(other);
     }
 
-    public override IEnumerable<CustomAttributeData> CustomAttributes => _fieldInfo.CustomAttributes;
-    public override int MetadataToken => _fieldInfo.MetadataToken;
-    public override Module Module => _fieldInfo.Module;
+    public override IEnumerable<CustomAttributeData> CustomAttributes => FieldInfo.CustomAttributes;
+    public override int MetadataToken => FieldInfo.MetadataToken;
+    public override Module Module => FieldInfo.Module;
     public override string? ToString()
     {
-        return _fieldInfo.ToString();
+        return FieldInfo.ToString();
     }
 
     public override object[] GetCustomAttributes(bool inherit)
     {
-        return _fieldInfo.GetCustomAttributes(inherit);
+        return FieldInfo.GetCustomAttributes(inherit);
     }
 
     public override object[] GetCustomAttributes(Type attributeType, bool inherit)
     {
-        return _fieldInfo.GetCustomAttributes(attributeType, inherit);
+        return FieldInfo.GetCustomAttributes(attributeType, inherit);
     }
 
     public override bool IsDefined(Type attributeType, bool inherit)
     {
-        return _fieldInfo.IsDefined(attributeType, inherit);
+        return FieldInfo.IsDefined(attributeType, inherit);
     }
 
-    public override Type? DeclaringType => _fieldInfo.DeclaringType;
+    public override Type? DeclaringType => FieldInfo.DeclaringType;
 
-    public override string Name => _fieldInfo.Name;
+    public override string Name => FieldInfo.Name;
 
-    public override Type? ReflectedType => _fieldInfo.ReflectedType;
+    public override Type? ReflectedType => FieldInfo.ReflectedType;
 
     public override object? GetValue(object? obj)
     {
-        return _fieldInfo.GetValue(obj);
+        return FieldInfo.GetValue(obj);
     }
 
     public override void SetValue(object obj, object value, BindingFlags invokeAttr, Binder? binder, CultureInfo culture)
     {
-        _fieldInfo.SetValue(obj, value, invokeAttr, binder, culture);
+        FieldInfo.SetValue(obj, value, invokeAttr, binder, culture);
     }
 
-    public override FieldAttributes Attributes => _fieldInfo.Attributes;
+    public override FieldAttributes Attributes => FieldInfo.Attributes;
 
-    public override RuntimeFieldHandle FieldHandle => _fieldInfo.FieldHandle;
+    public override RuntimeFieldHandle FieldHandle => FieldInfo.FieldHandle;
 
-    public override Type FieldType => _fieldInfo.FieldType;
+    public override Type FieldType => FieldInfo.FieldType;
 }

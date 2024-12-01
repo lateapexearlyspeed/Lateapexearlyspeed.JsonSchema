@@ -9,14 +9,18 @@ namespace LateApexEarlySpeed.Nullability.Generic;
 /// </summary>
 public partial class NullabilityPropertyInfo
 {
-    private readonly PropertyInfo _propertyInfo;
     private readonly NullabilityType _reflectedType;
 
     private volatile NullabilityType? _nullabilityPropertyType;
 
+    /// <summary>
+    /// Get the actual runtime PropertyInfo
+    /// </summary>
+    public PropertyInfo PropertyInfo { get; }
+
     protected internal NullabilityPropertyInfo(PropertyInfo propertyInfo, NullabilityType reflectedType)
     {
-        _propertyInfo = propertyInfo;
+        PropertyInfo = propertyInfo;
         _reflectedType = reflectedType;
     }
 
@@ -31,7 +35,7 @@ public partial class NullabilityPropertyInfo
             {
                 NullabilityElement nullabilityElement = GetPropertyNullabilityInfo();
 
-                _nullabilityPropertyType = new NullabilityType(_propertyInfo.PropertyType, nullabilityElement);
+                _nullabilityPropertyType = new NullabilityType(PropertyInfo.PropertyType, nullabilityElement);
             }
 
             return _nullabilityPropertyType;
@@ -40,9 +44,9 @@ public partial class NullabilityPropertyInfo
 
     private NullabilityElement GetPropertyNullabilityInfo()
     {
-        NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(_propertyInfo.DeclaringType!);
+        NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(PropertyInfo.DeclaringType!);
 
-        PropertyInfo propertyInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(_propertyInfo);
+        PropertyInfo propertyInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(PropertyInfo);
 
         NullabilityElement propertyRawNullabilityInfo = propertyInfoInDeclaringGenericDefType.GetGetMethod() is null 
             ? RawNullabilityAnnotationConverter.ReadPropertySetter(propertyInfoInDeclaringGenericDefType) 
@@ -59,7 +63,7 @@ public partial class NullabilityPropertyInfo
     {
         get
         {
-            if (_propertyInfo.GetGetMethod() is null)
+            if (PropertyInfo.GetGetMethod() is null)
             {
                 return NullabilityState.Unknown;
             }
@@ -76,7 +80,7 @@ public partial class NullabilityPropertyInfo
     {
         get
         {
-            if (_propertyInfo.GetSetMethod() is null)
+            if (PropertyInfo.GetSetMethod() is null)
             {
                 return NullabilityState.Unknown;
             }
@@ -90,123 +94,123 @@ public partial class NullabilityPropertyInfo : PropertyInfo
 {
     public override object[] GetCustomAttributes(bool inherit)
     {
-        return _propertyInfo.GetCustomAttributes(inherit);
+        return PropertyInfo.GetCustomAttributes(inherit);
     }
 
     public override object[] GetCustomAttributes(Type attributeType, bool inherit)
     {
-        return _propertyInfo.GetCustomAttributes(attributeType, inherit);
+        return PropertyInfo.GetCustomAttributes(attributeType, inherit);
     }
 
     public override bool IsDefined(Type attributeType, bool inherit)
     {
-        return _propertyInfo.IsDefined(attributeType, inherit);
+        return PropertyInfo.IsDefined(attributeType, inherit);
     }
 
-    public override Type? DeclaringType => _propertyInfo.DeclaringType;
+    public override Type? DeclaringType => PropertyInfo.DeclaringType;
 
-    public override string Name => _propertyInfo.Name;
+    public override string Name => PropertyInfo.Name;
 
-    public override Type? ReflectedType => _propertyInfo.ReflectedType;
+    public override Type? ReflectedType => PropertyInfo.ReflectedType;
 
     public override MethodInfo[] GetAccessors(bool nonPublic)
     {
-        return _propertyInfo.GetAccessors(nonPublic);
+        return PropertyInfo.GetAccessors(nonPublic);
     }
 
     public override MethodInfo? GetGetMethod(bool nonPublic)
     {
-        return _propertyInfo.GetGetMethod(nonPublic);
+        return PropertyInfo.GetGetMethod(nonPublic);
     }
 
     public override ParameterInfo[] GetIndexParameters()
     {
-        return _propertyInfo.GetIndexParameters();
+        return PropertyInfo.GetIndexParameters();
     }
 
     public override MethodInfo? GetSetMethod(bool nonPublic)
     {
-        return _propertyInfo.GetSetMethod(nonPublic);
+        return PropertyInfo.GetSetMethod(nonPublic);
     }
 
     public override object? GetValue(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo? culture)
     {
-        return _propertyInfo.GetValue(obj, invokeAttr, binder, index, culture);
+        return PropertyInfo.GetValue(obj, invokeAttr, binder, index, culture);
     }
 
     public override void SetValue(object? obj, object? value, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo culture)
     {
-        _propertyInfo.SetValue(obj, value, invokeAttr, binder, index, culture);
+        PropertyInfo.SetValue(obj, value, invokeAttr, binder, index, culture);
     }
 
-    public override PropertyAttributes Attributes => _propertyInfo.Attributes;
+    public override PropertyAttributes Attributes => PropertyInfo.Attributes;
 
-    public override bool CanRead => _propertyInfo.CanRead;
+    public override bool CanRead => PropertyInfo.CanRead;
 
-    public override bool CanWrite => _propertyInfo.CanWrite;
+    public override bool CanWrite => PropertyInfo.CanWrite;
 
-    public override Type PropertyType => _propertyInfo.PropertyType;
+    public override Type PropertyType => PropertyInfo.PropertyType;
 
     public override bool Equals(object? obj)
     {
         return obj is NullabilityPropertyInfo nullabilityPropertyInfo
-        && _propertyInfo.Equals(nullabilityPropertyInfo._propertyInfo)
+        && PropertyInfo.Equals(nullabilityPropertyInfo.PropertyInfo)
         && _reflectedType.Equals(nullabilityPropertyInfo._reflectedType);
     }
 
     public override object? GetConstantValue()
     {
-        return _propertyInfo.GetConstantValue();
+        return PropertyInfo.GetConstantValue();
     }
 
     public override int GetHashCode()
     {
-        return _propertyInfo.GetHashCode();
+        return PropertyInfo.GetHashCode();
     }
 
     public override Type[] GetOptionalCustomModifiers()
     {
-        return _propertyInfo.GetOptionalCustomModifiers();
+        return PropertyInfo.GetOptionalCustomModifiers();
     }
 
     public override object? GetRawConstantValue()
     {
-        return _propertyInfo.GetRawConstantValue();
+        return PropertyInfo.GetRawConstantValue();
     }
 
     public override Type[] GetRequiredCustomModifiers()
     {
-        return _propertyInfo.GetRequiredCustomModifiers();
+        return PropertyInfo.GetRequiredCustomModifiers();
     }
 
     public override object? GetValue(object? obj, object?[]? index)
     {
-        return _propertyInfo.GetValue(obj, index);
+        return PropertyInfo.GetValue(obj, index);
     }
 
     public override void SetValue(object? obj, object? value, object?[]? index)
     {
-        _propertyInfo.SetValue(obj, value, index);
+        PropertyInfo.SetValue(obj, value, index);
     }
 
-    public override MethodInfo? GetMethod => _propertyInfo.GetMethod;
-    public override MemberTypes MemberType => _propertyInfo.MemberType;
-    public override MethodInfo? SetMethod => _propertyInfo.SetMethod;
+    public override MethodInfo? GetMethod => PropertyInfo.GetMethod;
+    public override MemberTypes MemberType => PropertyInfo.MemberType;
+    public override MethodInfo? SetMethod => PropertyInfo.SetMethod;
     public override IList<CustomAttributeData> GetCustomAttributesData()
     {
-        return _propertyInfo.GetCustomAttributesData();
+        return PropertyInfo.GetCustomAttributesData();
     }
 
     public override bool HasSameMetadataDefinitionAs(MemberInfo other)
     {
-        return _propertyInfo.HasSameMetadataDefinitionAs(other);
+        return PropertyInfo.HasSameMetadataDefinitionAs(other);
     }
 
-    public override IEnumerable<CustomAttributeData> CustomAttributes => _propertyInfo.CustomAttributes;
-    public override int MetadataToken => _propertyInfo.MetadataToken;
-    public override Module Module => _propertyInfo.Module;
+    public override IEnumerable<CustomAttributeData> CustomAttributes => PropertyInfo.CustomAttributes;
+    public override int MetadataToken => PropertyInfo.MetadataToken;
+    public override Module Module => PropertyInfo.Module;
     public override string? ToString()
     {
-        return _propertyInfo.ToString();
+        return PropertyInfo.ToString();
     }
 }

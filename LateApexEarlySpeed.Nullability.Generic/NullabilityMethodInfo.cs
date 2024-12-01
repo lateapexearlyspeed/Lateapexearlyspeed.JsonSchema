@@ -8,15 +8,19 @@ namespace LateApexEarlySpeed.Nullability.Generic;
 /// </summary>
 public partial class NullabilityMethodInfo
 {
-    private readonly MethodInfo _methodInfo;
-    private readonly NullabilityType _reflectedType;
-
     private volatile NullabilityParameterInfo? _nullabilityReturnParameter;
     private volatile NullabilityParameterInfo[]? _nullabilityParameters;
 
+    private readonly NullabilityType _reflectedType;
+
+    /// <summary>
+    /// Get the actual runtime MethodInfo
+    /// </summary>
+    public MethodInfo MethodInfo { get; }
+
     protected internal NullabilityMethodInfo(MethodInfo method, NullabilityType reflectedType)
     {
-        _methodInfo = method;
+        MethodInfo = method;
         _reflectedType = reflectedType;
     }
 
@@ -29,11 +33,11 @@ public partial class NullabilityMethodInfo
         {
             if (_nullabilityReturnParameter is null)
             {
-                NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(_methodInfo.DeclaringType!);
+                NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(MethodInfo.DeclaringType!);
 
-                MethodInfo methodInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(_methodInfo);
+                MethodInfo methodInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(MethodInfo);
 
-                _nullabilityReturnParameter = new(_methodInfo.ReturnParameter, methodInfoInDeclaringGenericDefType.ReturnParameter, baseClassType);
+                _nullabilityReturnParameter = new(MethodInfo.ReturnParameter, methodInfoInDeclaringGenericDefType.ReturnParameter, baseClassType);
             }
 
             return _nullabilityReturnParameter;
@@ -48,11 +52,11 @@ public partial class NullabilityMethodInfo
     {
         if (_nullabilityParameters is null)
         {
-            NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(_methodInfo.DeclaringType!);
+            NullabilityType baseClassType = _reflectedType.CreateDeclaringBaseClassType(MethodInfo.DeclaringType!);
 
-            MethodInfo methodInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(_methodInfo);
+            MethodInfo methodInfoInDeclaringGenericDefType = baseClassType.Type.GetMemberInfoInGenericDefType(MethodInfo);
 
-            ParameterInfo[] parameters = _methodInfo.GetParameters();
+            ParameterInfo[] parameters = MethodInfo.GetParameters();
             ParameterInfo[] parametersInGenericDefType = methodInfoInDeclaringGenericDefType.GetParameters();
 
             _nullabilityParameters = parameters.Select((p, idx) => new NullabilityParameterInfo(p, parametersInGenericDefType[idx], baseClassType)).ToArray();
@@ -66,123 +70,123 @@ public partial class NullabilityMethodInfo : MethodInfo
 {
     public override Delegate CreateDelegate(Type delegateType)
     {
-        return _methodInfo.CreateDelegate(delegateType);
+        return MethodInfo.CreateDelegate(delegateType);
     }
 
     public override Delegate CreateDelegate(Type delegateType, object? target)
     {
-        return _methodInfo.CreateDelegate(delegateType, target);
+        return MethodInfo.CreateDelegate(delegateType, target);
     }
 
     public override bool Equals(object? obj)
     {
         return obj is NullabilityMethodInfo nullabilityMethodInfo 
-               && _methodInfo.Equals(nullabilityMethodInfo._methodInfo)
+               && MethodInfo.Equals(nullabilityMethodInfo.MethodInfo)
                && _reflectedType.Equals(nullabilityMethodInfo._reflectedType);
     }
 
     public override Type[] GetGenericArguments()
     {
-        return _methodInfo.GetGenericArguments();
+        return MethodInfo.GetGenericArguments();
     }
 
     public override MethodInfo GetGenericMethodDefinition()
     {
-        return _methodInfo.GetGenericMethodDefinition();
+        return MethodInfo.GetGenericMethodDefinition();
     }
 
     public override int GetHashCode()
     {
-        return _methodInfo.GetHashCode();
+        return MethodInfo.GetHashCode();
     }
 
     public override MethodInfo MakeGenericMethod(params Type[] typeArguments)
     {
-        return _methodInfo.MakeGenericMethod(typeArguments);
+        return MethodInfo.MakeGenericMethod(typeArguments);
     }
 
-    public override MemberTypes MemberType => _methodInfo.MemberType;
-    public override ParameterInfo ReturnParameter => _methodInfo.ReturnParameter;
-    public override Type ReturnType => _methodInfo.ReturnType;
+    public override MemberTypes MemberType => MethodInfo.MemberType;
+    public override ParameterInfo ReturnParameter => MethodInfo.ReturnParameter;
+    public override Type ReturnType => MethodInfo.ReturnType;
 
     public override MethodBody? GetMethodBody()
     {
-        return _methodInfo.GetMethodBody();
+        return MethodInfo.GetMethodBody();
     }
 
     public override ParameterInfo[] GetParameters()
     {
-        return _methodInfo.GetParameters();
+        return MethodInfo.GetParameters();
     }
 
-    public override CallingConventions CallingConvention => _methodInfo.CallingConvention;
-    public override bool ContainsGenericParameters => _methodInfo.ContainsGenericParameters;
-    public override bool IsConstructedGenericMethod => _methodInfo.IsConstructedGenericMethod;
-    public override bool IsGenericMethod => _methodInfo.IsGenericMethod;
-    public override bool IsGenericMethodDefinition => _methodInfo.IsGenericMethodDefinition;
-    public override bool IsSecurityCritical => _methodInfo.IsSecurityCritical;
-    public override bool IsSecuritySafeCritical => _methodInfo.IsSecuritySafeCritical;
-    public override bool IsSecurityTransparent => _methodInfo.IsSecurityTransparent;
-    public override MethodImplAttributes MethodImplementationFlags => _methodInfo.MethodImplementationFlags;
+    public override CallingConventions CallingConvention => MethodInfo.CallingConvention;
+    public override bool ContainsGenericParameters => MethodInfo.ContainsGenericParameters;
+    public override bool IsConstructedGenericMethod => MethodInfo.IsConstructedGenericMethod;
+    public override bool IsGenericMethod => MethodInfo.IsGenericMethod;
+    public override bool IsGenericMethodDefinition => MethodInfo.IsGenericMethodDefinition;
+    public override bool IsSecurityCritical => MethodInfo.IsSecurityCritical;
+    public override bool IsSecuritySafeCritical => MethodInfo.IsSecuritySafeCritical;
+    public override bool IsSecurityTransparent => MethodInfo.IsSecurityTransparent;
+    public override MethodImplAttributes MethodImplementationFlags => MethodInfo.MethodImplementationFlags;
 
     public override IList<CustomAttributeData> GetCustomAttributesData()
     {
-        return _methodInfo.GetCustomAttributesData();
+        return MethodInfo.GetCustomAttributesData();
     }
 
     public override bool HasSameMetadataDefinitionAs(MemberInfo other)
     {
-        return _methodInfo.HasSameMetadataDefinitionAs(other);
+        return MethodInfo.HasSameMetadataDefinitionAs(other);
     }
 
-    public override IEnumerable<CustomAttributeData> CustomAttributes => _methodInfo.CustomAttributes;
-    public override int MetadataToken => _methodInfo.MetadataToken;
-    public override Module Module => _methodInfo.Module;
+    public override IEnumerable<CustomAttributeData> CustomAttributes => MethodInfo.CustomAttributes;
+    public override int MetadataToken => MethodInfo.MetadataToken;
+    public override Module Module => MethodInfo.Module;
 
     public override string? ToString()
     {
-        return _methodInfo.ToString();
+        return MethodInfo.ToString();
     }
 
     public override object[] GetCustomAttributes(bool inherit)
     {
-        return _methodInfo.GetCustomAttributes(inherit);
+        return MethodInfo.GetCustomAttributes(inherit);
     }
 
     public override object[] GetCustomAttributes(Type attributeType, bool inherit)
     {
-        return _methodInfo.GetCustomAttributes(attributeType, inherit);
+        return MethodInfo.GetCustomAttributes(attributeType, inherit);
     }
 
     public override bool IsDefined(Type attributeType, bool inherit)
     {
-        return _methodInfo.IsDefined(attributeType, inherit);
+        return MethodInfo.IsDefined(attributeType, inherit);
     }
 
-    public override Type? DeclaringType => _methodInfo.DeclaringType;
+    public override Type? DeclaringType => MethodInfo.DeclaringType;
 
-    public override string Name => _methodInfo.Name;
+    public override string Name => MethodInfo.Name;
 
-    public override Type? ReflectedType => _methodInfo.ReflectedType;
+    public override Type? ReflectedType => MethodInfo.ReflectedType;
 
     public override MethodImplAttributes GetMethodImplementationFlags()
     {
-        return _methodInfo.GetMethodImplementationFlags();
+        return MethodInfo.GetMethodImplementationFlags();
     }
 
     public override object? Invoke(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? parameters, CultureInfo culture)
     {
-        return _methodInfo.Invoke(obj, invokeAttr, binder, parameters, culture);
+        return MethodInfo.Invoke(obj, invokeAttr, binder, parameters, culture);
     }
 
-    public override MethodAttributes Attributes => _methodInfo.Attributes;
+    public override MethodAttributes Attributes => MethodInfo.Attributes;
 
-    public override RuntimeMethodHandle MethodHandle => _methodInfo.MethodHandle;
+    public override RuntimeMethodHandle MethodHandle => MethodInfo.MethodHandle;
 
     public override MethodInfo GetBaseDefinition()
     {
-        return _methodInfo.GetBaseDefinition();
+        return MethodInfo.GetBaseDefinition();
     }
 
-    public override ICustomAttributeProvider ReturnTypeCustomAttributes => _methodInfo.ReturnTypeCustomAttributes;
+    public override ICustomAttributeProvider ReturnTypeCustomAttributes => MethodInfo.ReturnTypeCustomAttributes;
 }

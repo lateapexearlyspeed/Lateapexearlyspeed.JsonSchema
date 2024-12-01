@@ -1,6 +1,7 @@
-﻿using LateApexEarlySpeed.Json.Schema.JSchema;
+﻿using System.Diagnostics;
+using LateApexEarlySpeed.Json.Schema.Generator.TypeAbstraction;
+using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
-using System.Diagnostics;
 
 namespace LateApexEarlySpeed.Json.Schema.Generator.SchemaGenerators;
 
@@ -8,14 +9,14 @@ internal class NullableValueTypeSchemaGenerationCandidate : ISchemaGenerationCan
 {
     public bool CanGenerate(Type typeToConvert)
     {
-        return typeToConvert.IsConstructedGenericType && typeToConvert.GetGenericTypeDefinition() == typeof(Nullable<>);
+        return Nullable.GetUnderlyingType(typeToConvert) is not null;
     }
 
-    public BodyJsonSchema Generate(Type typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
-        Debug.Assert(typeToConvert.IsConstructedGenericType && typeToConvert.GetGenericTypeDefinition() == typeof(Nullable<>));
+        Debug.Assert(typeToConvert.GenericTypeArguments.Length == 1);
 
-        Type underlyingType = Nullable.GetUnderlyingType(typeToConvert)!;
+        IType underlyingType = typeToConvert.GenericTypeArguments[0];
 
         BodyJsonSchema underlyingSchema = JsonSchemaGenerator.GenerateSchema(underlyingType, keywordsFromProperty, options);
 
@@ -23,8 +24,8 @@ internal class NullableValueTypeSchemaGenerationCandidate : ISchemaGenerationCan
 
         if (underlyingSchema is JsonSchemaResource schemaResource)
         {
-            options.SchemaDefinitions.AddSchemaDefinition(underlyingType, schemaResource);
-            underlyingSchema = SchemaGenerationHelper.GenerateSchemaReference(underlyingType, keywordsFromProperty, options.MainDocumentBaseUri!);
+            options.SchemaDefinitions.AddSchemaDefinition(underlyingType.Type, schemaResource);
+            underlyingSchema = SchemaGenerationHelper.GenerateSchemaReference(underlyingType.Type, keywordsFromProperty, options.MainDocumentBaseUri!);
         }
 
         var anyOfKeyword = new AnyOfKeyword(new [] { nullTypeSchema, underlyingSchema });

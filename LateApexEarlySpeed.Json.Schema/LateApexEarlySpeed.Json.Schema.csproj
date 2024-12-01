@@ -46,6 +46,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\LateApexEarlySpeed.Nullability.Generic\LateApexEarlySpeed.Nullability.Generic.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="nuget.icon.jpg">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>

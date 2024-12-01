@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.Generator.TypeAbstraction;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
@@ -14,18 +15,18 @@ internal class EnumSchemaGenerationCandidate : ISchemaGenerationCandidate
         return typeToConvert.IsEnum;
     }
 
-    public BodyJsonSchema Generate(Type typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
-        IEnumerable<JsonInstanceElement> allowedStringEnums = typeToConvert.GetEnumNames().Select(name => JsonInstanceSerializer.SerializeToElement(name));
+        IEnumerable<JsonInstanceElement> allowedStringEnums = typeToConvert.Type.GetEnumNames().Select(name => JsonInstanceSerializer.SerializeToElement(name));
 
         IEnumerable<JsonInstanceElement> enumCollection;
-        if (HasJsonStringEnumConverter(typeToConvert))
+        if (HasJsonStringEnumConverter(typeToConvert.Type))
         {
             enumCollection = allowedStringEnums;
         }
         else
         {
-            IEnumerable<JsonInstanceElement> allowedNumberEnums = typeToConvert.GetEnumValues().Select(JsonInstanceSerializer.SerializeToElement);
+            IEnumerable<JsonInstanceElement> allowedNumberEnums = typeToConvert.Type.GetEnumValues().Select(JsonInstanceSerializer.SerializeToElement);
             enumCollection = allowedStringEnums.Concat(allowedNumberEnums);
         }
         
@@ -33,7 +34,7 @@ internal class EnumSchemaGenerationCandidate : ISchemaGenerationCandidate
 
         var keywords = new List<KeywordBase> { enumKeyword };
         keywords.AddRange(keywordsFromProperty);
-        keywords.AddRange(SchemaGenerationHelper.GenerateKeywordsFromType(typeToConvert));
+        keywords.AddRange(SchemaGenerationHelper.GenerateKeywordsFromType(typeToConvert.Type));
 
         return new BodyJsonSchema(keywords);
     }

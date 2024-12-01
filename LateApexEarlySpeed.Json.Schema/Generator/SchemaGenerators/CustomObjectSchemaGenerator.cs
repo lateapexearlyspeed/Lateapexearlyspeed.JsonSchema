@@ -2,31 +2,32 @@
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using LateApexEarlySpeed.Json.Schema.Generator.TypeAbstraction;
 using LateApexEarlySpeed.Json.Schema.JInstance;
+using LateApexEarlySpeed.Nullability.Generic;
 
 namespace LateApexEarlySpeed.Json.Schema.Generator.SchemaGenerators;
 
 internal class CustomObjectSchemaGenerator : ISchemaGenerator
 {
-    public BodyJsonSchema Generate(Type typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
-        TypeKeyword typeKeyword = typeToConvert.IsValueType
+        TypeKeyword typeKeyword = typeToConvert.Type.IsValueType
             ? new TypeKeyword(InstanceType.Object)
             : new TypeKeyword(InstanceType.Object, InstanceType.Null);
 
-        IEnumerable<KeywordBase> keywordsOnType = SchemaGenerationHelper.GenerateKeywordsFromType(typeToConvert);
+        IEnumerable<KeywordBase> keywordsOnType = SchemaGenerationHelper.GenerateKeywordsFromType(typeToConvert.Type);
 
-        PropertyInfo[] propertyInfos = typeToConvert.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-        FieldInfo[] fieldInfos = typeToConvert.GetFields(BindingFlags.Public | BindingFlags.Instance);
+        IPropertyInfo[] propertyInfos = typeToConvert.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        IFieldInfo[] fieldInfos = typeToConvert.GetFields(BindingFlags.Public | BindingFlags.Instance);
 
-        IEnumerable<MemberInfo> memberInfos = propertyInfos.Concat<MemberInfo>(fieldInfos);
+        IEnumerable<IMemberInfo> memberInfos = propertyInfos.Concat<IMemberInfo>(fieldInfos);
 
         PropertiesKeyword propertiesKeyword = CreatePropertiesKeyword(memberInfos, options);
 
-        RequiredKeyword? requiredKeyword = CreateRequiredKeyword(memberInfos, options);
+        RequiredKeyword? requiredKeyword = CreateRequiredKeyword(memberInfos.Select(m => m.MemberInfo), options);
 
         IEnumerable<KeywordBase> keywords = keywordsOnType.Append(typeKeyword).Append(propertiesKeyword);
         if (requiredKeyword is not null)
@@ -34,39 +35,44 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
             keywords = keywords.Append(requiredKeyword);
         }
 
-        return new JsonSchemaResource(new Uri(typeToConvert.FullName!, UriKind.Relative), keywords.ToList(), new List<ISchemaContainerValidationNode>(0), null, null, null, null, null);
+        if (options.NullabilityTypeInfo.ReferenceTypeNullabilityPolicy.UseNullabilityAnnotation && typeToConvert.Type.IsGenericType) // Because same runtime generic types may have different nullabilities of their generic arguments, so if enable nullability annotation, we cannot make sure they can reuse same JsonSchemaResource (thus $ref)
+        {
+            return new BodyJsonSchema(keywords);
+        }
+
+        return new JsonSchemaResource(new Uri(typeToConvert.Type.FullName!, UriKind.Relative), keywords, new List<ISchemaContainerValidationNode>(0), null, null, null, null, null);
     }
 
-    private static PropertiesKeyword CreatePropertiesKeyword(IEnumerable<MemberInfo> memberInfos, JsonSchemaGeneratorOptions options)
+    private static PropertiesKeyword CreatePropertiesKeyword(IEnumerable<IMemberInfo> memberInfos, JsonSchemaGeneratorOptions options)
     {
         var propertiesSchemas = new Dictionary<string, JsonSchema>();
 
-        foreach (MemberInfo memberInfo in memberInfos.Where(prop => prop.GetCustomAttribute<JsonIgnoreAttribute>() is null))
+        foreach (IMemberInfo memberInfo in memberInfos.Where(prop => prop.MemberInfo.GetCustomAttribute<JsonIgnoreAttribute>() is null))
         {
-            Type memberType = GetMemberType(memberInfo);
+            IType memberType = memberInfo.GetMemberType();
 
             KeywordBase[] keywordsOfMember = GenerateKeywordsFromMemberInfo(memberInfo);
             JsonSchema propertySchema = JsonSchemaGenerator.GenerateSchema(memberType, keywordsOfMember, options);
 
             if (propertySchema is JsonSchemaResource propertySchemaResource)
             {
-                options.SchemaDefinitions.AddSchemaDefinition(memberType, propertySchemaResource);
+                options.SchemaDefinitions.AddSchemaDefinition(memberType.Type, propertySchemaResource);
 
-                propertySchema = SchemaGenerationHelper.GenerateSchemaReference(memberType, keywordsOfMember, options.MainDocumentBaseUri!);
+                propertySchema = SchemaGenerationHelper.GenerateSchemaReference(memberType.Type, keywordsOfMember, options.MainDocumentBaseUri!);
             }
 
             List<KeywordBase>? keywordsForAdditionalAttributes = null;
 
-            if (memberInfo.GetCustomAttribute<NotNullAttribute>() is not null)
+            if (!memberType.Type.IsValueType && options.NullabilityTypeInfo.ReferenceTypeNullabilityPolicy.GetNullabilityState(memberInfo) == NullabilityState.NotNull)
             {
                 var typeKeyword = new TypeKeyword(InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array);
                 keywordsForAdditionalAttributes = new List<KeywordBase>(2) { typeKeyword };
             }
 
-            if (memberType.IsEnum && EnumSchemaGenerationCandidate.HasJsonStringEnumConverter(memberInfo))
+            if (memberType.Type.IsEnum && EnumSchemaGenerationCandidate.HasJsonStringEnumConverter(memberInfo.MemberInfo))
             {
                 keywordsForAdditionalAttributes ??= new List<KeywordBase>(1);
-                keywordsForAdditionalAttributes.Add(new EnumKeyword(memberType.GetEnumNames().Select(JsonInstanceSerializer.SerializeToElement)));
+                keywordsForAdditionalAttributes.Add(new EnumKeyword(memberType.Type.GetEnumNames().Select(JsonInstanceSerializer.SerializeToElement)));
             }
 
             if (keywordsForAdditionalAttributes is not null)
@@ -76,7 +82,7 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
                 propertySchema = new BodyJsonSchema(new KeywordBase[] { allOfKeyword });
             }
 
-            propertiesSchemas[GetPropertyName(memberInfo, options)] = propertySchema;
+            propertiesSchemas[GetPropertyName(memberInfo.MemberInfo, options)] = propertySchema;
         }
 
         return new PropertiesKeyword(propertiesSchemas, false);
@@ -104,23 +110,9 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
     /// <summary>
     /// Extract attributes from either <see cref="PropertyInfo"/> or <see cref="FieldInfo"/>
     /// </summary>
-    private static KeywordBase[] GenerateKeywordsFromMemberInfo(MemberInfo memberInfo)
+    private static KeywordBase[] GenerateKeywordsFromMemberInfo(IMemberInfo memberInfo)
     {
-        IEnumerable<IKeywordGenerator> keywordGeneratorOnType = memberInfo.GetCustomAttributes().OfType<IKeywordGenerator>();
-        return keywordGeneratorOnType.Select(keywordGenerator => keywordGenerator.CreateKeyword(GetMemberType(memberInfo))).ToArray();
-    }
-
-    private static Type GetMemberType(MemberInfo memberInfo)
-    {
-        Debug.Assert((memberInfo.MemberType & (MemberTypes.Property | MemberTypes.Field)) != 0);
-
-        if ((memberInfo.MemberType & MemberTypes.Property) != 0)
-        {
-            Debug.Assert(memberInfo is PropertyInfo);
-            return ((PropertyInfo)memberInfo).PropertyType;
-        }
-
-        Debug.Assert(memberInfo is FieldInfo);
-        return ((FieldInfo)memberInfo).FieldType;
+        IEnumerable<IKeywordGenerator> keywordGeneratorOnType = memberInfo.MemberInfo.GetCustomAttributes().OfType<IKeywordGenerator>();
+        return keywordGeneratorOnType.Select(keywordGenerator => keywordGenerator.CreateKeyword(memberInfo.GetMemberType().Type)).ToArray();
     }
 }
