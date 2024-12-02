@@ -51,6 +51,7 @@ public class JsonSchemaGeneratorTest
         Assert.Equal(expectedValidationResult.RelativeKeywordLocation, validationResult.RelativeKeywordLocation);
         Assert.Equal(expectedValidationResult.SchemaResourceBaseUri, validationResult.SchemaResourceBaseUri);
         Assert.Equal(expectedValidationResult.SubSchemaRefFullUri, validationResult.SubSchemaRefFullUri);
+        Assert.Equal(expectedValidationResult.SubSchemaRefFullUri?.Fragment, validationResult.SubSchemaRefFullUri?.Fragment);
     }
 
     public static IEnumerable<object?[]> TestData
@@ -880,7 +881,7 @@ public class JsonSchemaGeneratorTest
 
     private static Uri GetSubSchemaRefFullUriForDefs(Type document, Type subSchema)
     {
-        return new Uri(GetSchemaResourceBaseUri(document), "#/defs/" + subSchema.FullName);
+        return new Uri(GetSchemaResourceBaseUri(document), "#/$defs/" + subSchema.FullName);
     }
 
     private static IEnumerable<TestSample> CreateSamplesForJsonSchemaNamingPolicy()
