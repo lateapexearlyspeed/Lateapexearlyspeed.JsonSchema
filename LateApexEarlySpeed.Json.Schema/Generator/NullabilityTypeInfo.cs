@@ -4,7 +4,14 @@ namespace LateApexEarlySpeed.Json.Schema.Generator;
 
 public class NullabilityTypeInfo
 {
+    /// <summary>
+    /// Nullability info of array element of root type, if root type itself is array type.
+    /// </summary>
     public NullabilityElement? ArrayElementNullability { get; set; }
+
+    /// <summary>
+    /// Nullability info of generic type arguments of root type, if root type itself is generic type.
+    /// </summary>
     public NullabilityElement[]? GenericTypeArgumentsNullabilities { get; set; }
 
     /// <summary>
