@@ -6,7 +6,16 @@ public abstract class JsonQueryConverter<TQuery> : IJsonQueryConverter where TQu
 
     IJsonQueryable IJsonQueryConverter.Read(ref JsonQueryReader reader)
     {
-        return Read(ref reader);
+        int before = reader.PositionStackCount;
+        
+        TQuery query = Read(ref reader);
+
+        if (reader.PositionStackCount != before || reader.TokenType != JsonQueryTokenType.EndParenthesis)
+        {
+            throw new JsonQueryParseException($"Error during json query parsing for {typeof(TQuery)}", reader.Position);
+        }
+
+        return query;
     }
 }
 

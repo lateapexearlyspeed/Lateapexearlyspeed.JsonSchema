@@ -1,11 +1,10 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 using System.Text.RegularExpressions;
 
 namespace JsonQuery.Net
@@ -32,7 +31,7 @@ namespace JsonQuery.Net
             JsonQueryables = Assembly.GetExecutingAssembly().GetTypes().Where(type => !type.IsAbstract && typeof(IJsonQueryable).IsAssignableFrom(type) && type != typeof(ConstQueryable)).ToDictionary(type => (string)type.GetField("Keyword", BindingFlags.Static | BindingFlags.NonPublic)!.GetRawConstantValue());
         }
 
-        public static Type FindQueryableType(string keyword) => JsonQueryables[keyword];
+        public static bool TryGetQueryableType(string keyword, [NotNullWhen(true)]out Type? queryType) => JsonQueryables.TryGetValue(keyword, out queryType);
     }
 
     static class OperatorRegistry
@@ -72,16 +71,16 @@ namespace JsonQuery.Net
     {
         internal const string Keyword = "array";
 
-        private readonly IJsonQueryable[] _queries;
+        public IJsonQueryable[] Queries { get; }
 
         public ArrayQuery(IJsonQueryable[] queries)
         {
-            _queries = queries;
+            Queries = queries;
         }
 
         public JsonNode? Query(JsonNode? data)
         {
-            return new JsonArray(_queries.Select(query => query.Query(data)?.DeepClone()).ToArray());
+            return new JsonArray(Queries.Select(query => query.Query(data)?.DeepClone()).ToArray());
         }
     }
 
@@ -294,11 +293,6 @@ namespace JsonQuery.Net
                     isDesc = true;
                     reader.Read();
                 }
-
-                if (reader.TokenType != JsonQueryTokenType.EndParenthesis)
-                {
-                    reader.Read();
-                }
             }
 
             return new SortQuery(sortQuery, isDesc);
@@ -416,18 +410,18 @@ namespace JsonQuery.Net
     {
         internal const string Keyword = "pipe";
 
-        private readonly IJsonQueryable[] _queries;
+        public IJsonQueryable[] Queries { get; }
 
         public PipeQuery(IJsonQueryable[] queries)
         {
-            _queries = queries;
+            Queries = queries;
         }
 
         public JsonNode? Query(JsonNode? data)
         {
             JsonNode? curNode = data;
 
-            foreach (IJsonQueryable query in _queries)
+            foreach (IJsonQueryable query in Queries)
             {
                 curNode = query.Query(curNode);
             }
@@ -509,7 +503,12 @@ namespace JsonQuery.Net
             var getQueries = new List<GetQuery>();
             while (reader.TokenType != JsonQueryTokenType.EndParenthesis)
             {
-                GetQuery getQuery = (GetQuery)JsonQueryParser.ParseSingleQuery(ref reader);
+                IJsonQueryable query = JsonQueryParser.ParseSingleQuery(ref reader);
+                if (query is not GetQuery getQuery)
+                {
+                    throw new JsonQueryParseException($"Invalid query type: {query.GetType()} for {typeof(PickQuery)}", reader.Position);
+                }
+
                 getQueries.Add(getQuery);
 
                 reader.Read();
@@ -578,6 +577,11 @@ namespace JsonQuery.Net
         {
             reader.Read();
             reader.Read();
+
+            if (reader.TokenType != JsonQueryTokenType.StartBrace)
+            {
+                throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for {typeof(MapObjectQuery)}", reader.Position);
+            }
 
             ObjectQuery objectQuery = JsonQueryParser.ParseObjectQuery(ref reader);
 
@@ -1008,6 +1012,11 @@ namespace JsonQuery.Net
 
             reader.Read();
 
+            if (reader.TokenType != JsonQueryTokenType.Number)
+            {
+                throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for {typeof(SubstringQuery)}", reader.Position);
+            }
+
             int start = (int)reader.GetDecimal();
 
             reader.Read();
@@ -1145,6 +1154,11 @@ namespace JsonQuery.Net
         {
             reader.Read();
             reader.Read();
+
+            if (reader.TokenType != JsonQueryTokenType.Number)
+            {
+                throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for {typeof(LimitQuery)}", reader.Position);
+            }
 
             int limitSize = (int)reader.GetDecimal();
 
@@ -1409,7 +1423,12 @@ namespace JsonQuery.Net
 
             reader.Read();
 
-            string regex = reader.GetString()!;
+            if (reader.TokenType != JsonQueryTokenType.String)
+            {
+                throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for {typeof(RegexQuery)}", reader.Position);
+            }
+
+            string regex = reader.GetString();
 
             reader.Read();
 
@@ -1985,7 +2004,6 @@ namespace JsonQuery.Net
         public override GetQuery Read(ref JsonQueryReader reader)
         {
             reader.Read();
-
             reader.Read();
 
             var propertyPath = new List<object>();
@@ -1996,10 +2014,15 @@ namespace JsonQuery.Net
                 {
                     segment = reader.GetString();
                 }
-                else
+                else if (reader.TokenType == JsonQueryTokenType.Number)
                 {
                     segment = (int)reader.GetDecimal();
                 }
+                else
+                {
+                    throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for {typeof(GetQuery)}", reader.Position);
+                }
+
                 propertyPath.Add(segment);
 
                 reader.Read();
@@ -2081,9 +2104,12 @@ namespace JsonQuery.Net
 
                 string queryKeyword = detectorReader.GetString()!;
 
-                Type queryableType = JsonQueryableRegistry.FindQueryableType(queryKeyword);
+                if (JsonQueryableRegistry.TryGetQueryableType(queryKeyword, out Type? queryableType))
+                {
+                    return (IJsonQueryable)JsonSerializer.Deserialize(ref reader, queryableType)!;
+                }
 
-                return (IJsonQueryable)JsonSerializer.Deserialize(ref reader, queryableType)!;
+                throw new JsonException($"Invalid json query keyword: {queryKeyword}");
             }
 
             return new ConstQueryable(JsonNode.Parse(ref reader));

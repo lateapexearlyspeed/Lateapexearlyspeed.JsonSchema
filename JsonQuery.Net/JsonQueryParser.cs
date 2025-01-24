@@ -27,7 +27,8 @@ public static class JsonQueryParser
                 break;
             }
 
-            // here should be reader.TokenType == JsonQueryTokenType.Pipe
+            Debug.Assert(reader.TokenType == JsonQueryTokenType.Pipe);
+
             reader.Read();
         }
 
@@ -48,7 +49,8 @@ public static class JsonQueryParser
             return query;
         }
 
-        // here should be JsonQueryTokenType.Operator
+        Debug.Assert(reader.TokenType == JsonQueryTokenType.Operator);
+
         string operatorName = reader.GetOperator();
 
         reader.Read();
@@ -124,7 +126,7 @@ public static class JsonQueryParser
                 return new ConstQueryable(null);
             
             default:
-                throw new InvalidOperationException("invalid token type for single query");
+                throw new InvalidOperationException($"invalid token type for single query: {reader.TokenType}");
         }
     }
 
@@ -173,7 +175,9 @@ public static class JsonQueryParser
     {
         string functionName = reader.GetFunctionName();
 
-        Type queryableType = JsonQueryableRegistry.FindQueryableType(functionName);
+        bool canFindFunction = JsonQueryableRegistry.TryGetQueryableType(functionName, out Type? queryableType);
+        Debug.Assert(canFindFunction);
+        Debug.Assert(queryableType is not null);
 
         return FunctionQuerySerializer.Deserialize(ref reader, queryableType);
     }
@@ -186,7 +190,7 @@ public static class JsonQueryParser
 
         reader.Read();
 
-        // Now should be end of parenthesis
+        Debug.Assert(reader.TokenType == JsonQueryTokenType.EndParenthesis);
 
         return query;
     }
