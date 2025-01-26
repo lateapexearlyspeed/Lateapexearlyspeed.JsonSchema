@@ -6,11 +6,11 @@ public abstract class JsonQueryConverter<TQuery> : IJsonQueryConverter where TQu
 
     IJsonQueryable IJsonQueryConverter.Read(ref JsonQueryReader reader)
     {
-        int before = reader.PositionStackCount;
+        int before = reader.PositionStackCount; // the count has already included recently pushed InFunction now
         
         TQuery query = Read(ref reader);
 
-        if (reader.PositionStackCount != before || reader.TokenType != JsonQueryTokenType.EndParenthesis)
+        if (reader.PositionStackCount != before - 1 || reader.TokenType != JsonQueryTokenType.EndParenthesis)
         {
             throw new JsonQueryParseException($"Error during json query parsing for {typeof(TQuery)}", reader.Position);
         }

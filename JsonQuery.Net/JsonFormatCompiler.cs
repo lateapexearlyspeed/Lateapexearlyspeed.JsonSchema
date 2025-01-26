@@ -22,16 +22,38 @@ namespace JsonQuery.Net
         }
     }
 
+    public static class JsonQueryableExtensions
+    {
+        public static string GetKeyword(this IJsonQueryable queryable)
+        {
+            return JsonQueryableRegistry.GetKeyword(queryable.GetType());
+        }
+
+        public static string SerializeToJsonFormat(this IJsonQueryable queryable)
+        {
+            return queryable is ConstQueryable constQuery 
+                ? (constQuery.Value?.ToJsonString() ?? "null") 
+                : JsonSerializer.Serialize(queryable);
+        }
+    }
+
     static class JsonQueryableRegistry
     {
         private static readonly Dictionary<string, Type> JsonQueryables;
+        private static readonly Dictionary<Type, string> QueryTypeKeywordsMap;
 
         static JsonQueryableRegistry()
         {
             JsonQueryables = Assembly.GetExecutingAssembly().GetTypes().Where(type => !type.IsAbstract && typeof(IJsonQueryable).IsAssignableFrom(type) && type != typeof(ConstQueryable)).ToDictionary(type => (string)type.GetField("Keyword", BindingFlags.Static | BindingFlags.NonPublic)!.GetRawConstantValue());
+            QueryTypeKeywordsMap = JsonQueryables.ToDictionary(kv => kv.Value, kv => kv.Key);
         }
 
         public static bool TryGetQueryableType(string keyword, [NotNullWhen(true)]out Type? queryType) => JsonQueryables.TryGetValue(keyword, out queryType);
+
+        public static string GetKeyword(Type queryType)
+        {
+            return QueryTypeKeywordsMap[queryType];
+        }
     }
 
     static class OperatorRegistry
@@ -67,26 +89,28 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(QueryCollectionConverter<ArrayQuery>))]
-    public class ArrayQuery : IJsonQueryable
+    public class ArrayQuery : IJsonQueryable, IMultipleSubQuery
     {
         internal const string Keyword = "array";
 
-        public IJsonQueryable[] Queries { get; }
+        private readonly IJsonQueryable[] _queries;
 
         public ArrayQuery(IJsonQueryable[] queries)
         {
-            Queries = queries;
+            _queries = queries;
         }
 
         public JsonNode? Query(JsonNode? data)
         {
-            return new JsonArray(Queries.Select(query => query.Query(data)?.DeepClone()).ToArray());
+            return new JsonArray(_queries.Select(query => query.Query(data)?.DeepClone()).ToArray());
         }
+
+        public IEnumerable<IJsonQueryable> SubQueries => _queries;
     }
 
-    public class QueryCollectionConverter<T> : JsonConverter<T>
+    public class QueryCollectionConverter<TQuery> : JsonConverter<TQuery> where TQuery : IJsonQueryable, IMultipleSubQuery
     {
-        public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override TQuery? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             reader.Read(); // pass start array token
             reader.Read(); // pass keyword
@@ -99,12 +123,20 @@ namespace JsonQuery.Net
                 reader.Read();
             }
 
-            return (T)Activator.CreateInstance(typeof(T), new object[] { queries.ToArray() });
+            return (TQuery)Activator.CreateInstance(typeof(TQuery), new object[] { queries.ToArray() });
         }
 
-        public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, TQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+
+            writer.WriteStringValue(value.GetKeyword());
+            foreach (IJsonQueryable subQuery in value.SubQueries)
+            {
+                JsonSerializer.Serialize(writer, subQuery);
+            }
+
+            writer.WriteEndArray();
         }
     }
 
@@ -142,13 +174,17 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, ObjectQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+
+            JsonSerializer.Serialize(writer, value.PropertiesQueries);
+
+            writer.WriteEndArray();
         }
     }
 
     [JsonConverter(typeof(SingleQueryParameterConverter<FilterQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<FilterQuery>))]
-    public class FilterQuery : IJsonQueryable
+    public class FilterQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "filter";
 
@@ -175,6 +211,8 @@ namespace JsonQuery.Net
 
             return result;
         }
+
+        public IJsonQueryable SubQuery => _filter;
     }
 
     internal class SingleQueryParameterParserConverter<TQuery> : JsonQueryConverter<TQuery> where TQuery : IJsonQueryable
@@ -192,7 +230,7 @@ namespace JsonQuery.Net
         }
     }
 
-    public class SingleQueryParameterConverter<TQuery> : JsonConverter<TQuery> where TQuery : IJsonQueryable
+    public class SingleQueryParameterConverter<TQuery> : JsonConverter<TQuery> where TQuery : IJsonQueryable, ISingleSubQuery
     {
         public override TQuery? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -210,7 +248,10 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, TQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+            writer.WriteStringValue(value.GetKeyword());
+            JsonSerializer.Serialize(writer, value.SubQuery);
+            writer.WriteEndArray();
         }
     }
 
@@ -220,13 +261,13 @@ namespace JsonQuery.Net
     {
         internal const string Keyword = "sort";
 
-        private readonly IJsonQueryable _sortQuery;
-        private readonly bool _isDesc;
+        public IJsonQueryable SubQuery { get; }
+        public bool IsDesc { get; }
 
         public SortQuery(IJsonQueryable sortQuery, bool isDesc = false)
         {
-            _sortQuery = sortQuery;
-            _isDesc = isDesc;
+            SubQuery = sortQuery;
+            IsDesc = isDesc;
         }
 
         public JsonNode? Query(JsonNode? data)
@@ -243,27 +284,27 @@ namespace JsonQuery.Net
                 return array;
             }
 
-            JsonNode firstItem = _sortQuery.Query(array[0])!;
+            JsonNode firstItem = SubQuery.Query(array[0])!;
             IEnumerable<JsonNode?> orderedNodes;
             if (firstItem.GetValueKind() == JsonValueKind.Number)
             {
-                orderedNodes = _isDesc ? array.OrderByDescending(DecimalKeySelector) : array.OrderBy(DecimalKeySelector);
+                orderedNodes = IsDesc ? array.OrderByDescending(DecimalKeySelector) : array.OrderBy(DecimalKeySelector);
             }
             else // items kind is String
             {
-                orderedNodes = _isDesc ? array.OrderByDescending(StringKeySelector, StringComparer.Ordinal) : array.OrderBy(StringKeySelector, StringComparer.Ordinal);
+                orderedNodes = IsDesc ? array.OrderByDescending(StringKeySelector, StringComparer.Ordinal) : array.OrderBy(StringKeySelector, StringComparer.Ordinal);
             }
 
             return new JsonArray(orderedNodes.Select(item => item?.DeepClone()).ToArray());
 
             decimal DecimalKeySelector(JsonNode? item)
             {
-                return _sortQuery.Query(item)!.GetValue<decimal>();
+                return SubQuery.Query(item)!.GetValue<decimal>();
             }
 
             string StringKeySelector(JsonNode? item)
             {
-                return _sortQuery.Query(item)!.GetValue<string>();
+                return SubQuery.Query(item)!.GetValue<string>();
             }
         }
     }
@@ -324,11 +365,7 @@ namespace JsonQuery.Net
                 if (reader.TokenType == JsonTokenType.String && reader.GetString() == "desc")
                 {
                     isDesc = true;
-                }
-
-                if (reader.TokenType != JsonTokenType.EndArray)
-                {
-                    reader.Read(); // to the end of current json node
+                    reader.Read();
                 }
             }
 
@@ -337,7 +374,17 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, SortQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+
+            writer.WriteStringValue(value.GetKeyword());
+            JsonSerializer.Serialize(writer, value.SubQuery);
+
+            if (value.IsDesc)
+            {
+                writer.WriteStringValue("desc");
+            }
+
+            writer.WriteEndArray();
         }
     }
 
@@ -380,7 +427,7 @@ namespace JsonQuery.Net
         }
     }
 
-    public class OperatorConverter<TOperator> : JsonConverter<TOperator>
+    public class OperatorConverter<TOperator> : JsonConverter<TOperator> where TOperator : OperatorQuery
     {
         public override TOperator? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -400,34 +447,40 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, TOperator value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+            writer.WriteStringValue(value.GetKeyword());
+            JsonSerializer.Serialize(writer, value.Left);
+            JsonSerializer.Serialize(writer, value.Right);
+            writer.WriteEndArray();
         }
     }
 
     [JsonConverter(typeof(QueryCollectionConverter<PipeQuery>))]
     [JsonQueryConverter(typeof(QueryCollectionParserConverter<PipeQuery>))]
-    public class PipeQuery : IJsonQueryable
+    public class PipeQuery : IJsonQueryable, IMultipleSubQuery
     {
         internal const string Keyword = "pipe";
 
-        public IJsonQueryable[] Queries { get; }
+        private readonly IJsonQueryable[] _queries;
 
         public PipeQuery(IJsonQueryable[] queries)
         {
-            Queries = queries;
+            _queries = queries;
         }
 
         public JsonNode? Query(JsonNode? data)
         {
             JsonNode? curNode = data;
 
-            foreach (IJsonQueryable query in Queries)
+            foreach (IJsonQueryable query in _queries)
             {
                 curNode = query.Query(curNode);
             }
 
             return curNode;
         }
+
+        public IEnumerable<IJsonQueryable> SubQueries => _queries;
     }
 
     public class QueryCollectionParserConverter<TQuery> : JsonQueryConverter<TQuery> where TQuery : IJsonQueryable
@@ -454,11 +507,11 @@ namespace JsonQuery.Net
     {
         internal const string Keyword = "pick";
 
-        private readonly GetQuery[] _getQueries;
+        public GetQuery[] GetQueries { get; }
 
         public PickQuery(GetQuery[] getQueries)
         {
-            _getQueries = getQueries;
+            GetQueries = getQueries;
         }
 
         public JsonNode? Query(JsonNode? data)
@@ -485,7 +538,7 @@ namespace JsonQuery.Net
 
         private JsonObject PickObject(JsonObject sourceObject)
         {
-            IEnumerable<KeyValuePair<string, JsonNode?>> properties = _getQueries.Select(propQuery => propQuery.QueryPropertyNameAndValue(sourceObject))
+            IEnumerable<KeyValuePair<string, JsonNode?>> properties = GetQueries.Select(propQuery => propQuery.QueryPropertyNameAndValue(sourceObject))
                 .Where(prop => prop.propertyName is not null)
                 .Select(prop => KeyValuePair.Create(prop.propertyName!, prop.propertyValue?.DeepClone()));
 
@@ -538,7 +591,14 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, PickQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+
+            foreach (GetQuery getQuery in value.GetQueries)
+            {
+                JsonSerializer.Serialize(writer, getQuery);
+            }
+
+            writer.WriteEndArray();
         }
     }
 
@@ -548,13 +608,13 @@ namespace JsonQuery.Net
     {
         internal const string Keyword = "mapObject";
 
-        private readonly IJsonQueryable _keyQuery;
-        private readonly IJsonQueryable _valueQuery;
+        public IJsonQueryable KeyQuery { get; }
+        public IJsonQueryable ValueQuery { get; }
 
         public MapObjectQuery(IJsonQueryable keyQuery, IJsonQueryable valueQuery)
         {
-            _keyQuery = keyQuery;
-            _valueQuery = valueQuery;
+            KeyQuery = keyQuery;
+            ValueQuery = valueQuery;
         }
 
         public JsonNode? Query(JsonNode? data)
@@ -564,7 +624,7 @@ namespace JsonQuery.Net
             foreach (KeyValuePair<string, JsonNode?> prop in data!.AsObject())
             {
                 var origPropObject = new JsonObject { { "key", prop.Key }, { "value", prop.Value?.DeepClone() } };
-                result.Add(_keyQuery.Query(origPropObject)!.GetValue<string>(), _valueQuery.Query(origPropObject)?.DeepClone());
+                result.Add(KeyQuery.Query(origPropObject)!.GetValue<string>(), ValueQuery.Query(origPropObject)?.DeepClone());
             }
 
             return result;
@@ -607,13 +667,19 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, MapObjectQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+
+            var dic = new Dictionary<string, IJsonQueryable>(2) { { "key", value.KeyQuery }, { "value", value.ValueQuery } };
+
+            JsonSerializer.Serialize(writer, dic);
+
+            writer.WriteEndArray();
         }
     }
 
     [JsonConverter(typeof(SingleQueryParameterConverter<MapKeysQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<MapKeysQuery>))]
-    class MapKeysQuery : IJsonQueryable
+    class MapKeysQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "mapKeys";
 
@@ -635,11 +701,13 @@ namespace JsonQuery.Net
 
             return result;
         }
+
+        public IJsonQueryable SubQuery => _keyQuery;
     }
 
     [JsonConverter(typeof(SingleQueryParameterConverter<MapValuesQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<MapValuesQuery>))]
-    class MapValuesQuery : IJsonQueryable
+    class MapValuesQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "mapValues";
 
@@ -661,11 +729,13 @@ namespace JsonQuery.Net
 
             return result;
         }
+
+        public IJsonQueryable SubQuery => _valueQuery;
     }
 
     [JsonConverter(typeof(SingleQueryParameterConverter<MapQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<MapQuery>))]
-    class MapQuery : IJsonQueryable
+    class MapQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "map";
 
@@ -680,26 +750,28 @@ namespace JsonQuery.Net
         {
             return new JsonArray(data!.AsArray().Select(item => _itemQuery.Query(item)?.DeepClone()).ToArray());
         }
+
+        public IJsonQueryable SubQuery => _itemQuery;
     }
 
     [JsonConverter(typeof(GetQueryParameterConverter<GroupByQuery>))]
     [JsonQueryConverter(typeof(GetQueryParameterParserConverter<GroupByQuery>))]
-    class GroupByQuery : IJsonQueryable
+    class GroupByQuery : IJsonQueryable, ISubGetQuery
     {
         internal const string Keyword = "groupBy";
 
-        private readonly GetQuery _getQuery;
-
         public GroupByQuery(GetQuery getQuery)
         {
-            _getQuery = getQuery;
+            SubGetQuery = getQuery;
         }
+
+        public GetQuery SubGetQuery { get; }
 
         public JsonNode? Query(JsonNode? data)
         {
             JsonArray array = data!.AsArray();
 
-            IEnumerable<IGrouping<string, JsonNode?>> groupByResult = array.GroupBy(itemNode => _getQuery.Query(itemNode)!.GetValue<string>());
+            IEnumerable<IGrouping<string, JsonNode?>> groupByResult = array.GroupBy(itemNode => SubGetQuery.Query(itemNode)!.GetValue<string>());
             IEnumerable<KeyValuePair<string, JsonNode?>> newProperties = groupByResult.Select(group => KeyValuePair.Create<string, JsonNode?>(group.Key, new JsonArray(group.Select(item => item?.DeepClone()).ToArray())));
 
             return new JsonObject(newProperties);
@@ -723,16 +795,16 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(GetQueryParameterConverter<KeyByQuery>))]
     [JsonQueryConverter(typeof(GetQueryParameterParserConverter<KeyByQuery>))]
-    class KeyByQuery : IJsonQueryable
+    class KeyByQuery : IJsonQueryable, ISubGetQuery
     {
         internal const string Keyword = "keyBy";
 
-        private readonly GetQuery _getQuery;
-
         public KeyByQuery(GetQuery getQuery)
         {
-            _getQuery = getQuery;
+            SubGetQuery = getQuery;
         }
+
+        public GetQuery SubGetQuery { get; }
 
         public JsonNode? Query(JsonNode? data)
         {
@@ -740,7 +812,7 @@ namespace JsonQuery.Net
 
             foreach (JsonNode? item in data!.AsArray())
             {
-                JsonNode? keyNode = _getQuery.Query(item);
+                JsonNode? keyNode = SubGetQuery.Query(item);
 
                 string key = keyNode is null ? "null" : keyNode.ToString();
 
@@ -779,7 +851,7 @@ namespace JsonQuery.Net
         }
     }
 
-    internal class ParameterlessQueryConverter<TQuery> : JsonConverter<TQuery> where TQuery : new()
+    internal class ParameterlessQueryConverter<TQuery> : JsonConverter<TQuery> where TQuery : IJsonQueryable, new()
     {
         public override TQuery? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -791,7 +863,9 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, TQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+            writer.WriteStringValue(value.GetKeyword());
+            writer.WriteEndArray();
         }
     }
 
@@ -815,16 +889,16 @@ namespace JsonQuery.Net
     {
         internal const string Keyword = "join";
 
-        private readonly string _separator;
+        public string Separator { get; }
 
         public JoinQuery(string separator = "")
         {
-            _separator = separator;
+            Separator = separator;
         }
 
         public JsonNode? Query(JsonNode? data)
         {
-            return string.Join(_separator, data!.AsArray().Select(node => node!.GetValue<string>()));
+            return string.Join(Separator, data!.AsArray().Select(node => node!.GetValue<string>()));
         }
     }
 
@@ -867,7 +941,11 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, JoinQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+
+            writer.WriteStringValue(value.Separator);
+
+            writer.WriteEndArray();
         }
     }
 
@@ -877,31 +955,31 @@ namespace JsonQuery.Net
     {
         internal const string Keyword = "split";
 
-        private readonly IJsonQueryable _query;
-        private readonly string? _separator;
+        public IJsonQueryable SubQuery { get; }
+        public string? Separator { get; }
 
         public SplitQuery(IJsonQueryable query, string? separator = null)
         {
-            _query = query;
-            _separator = separator;
+            SubQuery = query;
+            Separator = separator;
         }
 
         public JsonNode? Query(JsonNode? data)
         {
-            string stringContent = _query.Query(data)!.GetValue<string>();
+            string stringContent = SubQuery.Query(data)!.GetValue<string>();
 
             IEnumerable<string> words;
-            if (_separator is null)
+            if (Separator is null)
             {
                 words = stringContent.Split(Array.Empty<char>(), StringSplitOptions.RemoveEmptyEntries);
             }
-            else if (_separator == string.Empty)
+            else if (Separator == string.Empty)
             {
                 words = stringContent.Select(c => c.ToString());
             }
             else
             {
-                words = stringContent.Split(_separator, StringSplitOptions.RemoveEmptyEntries);
+                words = stringContent.Split(Separator, StringSplitOptions.RemoveEmptyEntries);
             }
 
             return new JsonArray(words.Select(word => JsonValue.Create(word)).ToArray<JsonNode?>());
@@ -955,7 +1033,16 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, SplitQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+
+            writer.WriteStringValue(value.GetKeyword());
+            JsonSerializer.Serialize(writer, value.SubQuery);
+            if (value.Separator is not null)
+            {
+                writer.WriteStringValue(value.Separator);
+            }
+
+            writer.WriteEndArray();
         }
     }
 
@@ -965,39 +1052,39 @@ namespace JsonQuery.Net
     {
         internal const string Keyword = "substring";
 
-        private readonly IJsonQueryable _query;
-        private readonly int _startIdx;
-        private readonly int? _endIdx;
+        public IJsonQueryable SubQuery { get; }
+        public int StartIdx { get; }
+        public int? EndIdx { get; }
 
         public SubstringQuery(IJsonQueryable query, int startIdx, int? endIdx = null)
         {
-            _query = query;
-            _startIdx = startIdx < 0 ? 0 : startIdx;
-            _endIdx = endIdx;
+            SubQuery = query;
+            StartIdx = startIdx < 0 ? 0 : startIdx;
+            EndIdx = endIdx;
         }
 
         public JsonNode? Query(JsonNode? data)
         {
-            string stringContent = _query.Query(data)!.GetValue<string>();
+            string stringContent = SubQuery.Query(data)!.GetValue<string>();
 
-            if (_startIdx >= stringContent.Length)
+            if (StartIdx >= stringContent.Length)
             {
                 return string.Empty;
             }
 
-            if (!_endIdx.HasValue || _endIdx.Value >= stringContent.Length)
+            if (!EndIdx.HasValue || EndIdx.Value >= stringContent.Length)
             {
-                return stringContent.Substring(_startIdx);
+                return stringContent.Substring(StartIdx);
             }
 
-            Debug.Assert(_endIdx.HasValue);
+            Debug.Assert(EndIdx.HasValue);
 
-            if (_startIdx >= _endIdx.Value)
+            if (StartIdx >= EndIdx.Value)
             {
                 return string.Empty;
             }
 
-            return stringContent.Substring(_startIdx, _endIdx.Value - _startIdx);
+            return stringContent.Substring(StartIdx, EndIdx.Value - StartIdx);
         }
     }
 
@@ -1069,7 +1156,17 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, SubstringQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+
+            writer.WriteStringValue(value.GetKeyword());
+            JsonSerializer.Serialize(writer, value.SubQuery);
+            writer.WriteNumberValue(value.StartIdx);
+            if (value.EndIdx.HasValue)
+            {
+                writer.WriteNumberValue(value.EndIdx.Value);
+            }
+
+            writer.WriteEndArray();
         }
     }
 
@@ -1097,16 +1194,16 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(SingleQueryParameterConverter<UniqByQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<UniqByQuery>))]
-    class UniqByQuery : IJsonQueryable
+    class UniqByQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "uniqBy";
 
-        private readonly IJsonQueryable _query;
-
         public UniqByQuery(IJsonQueryable query)
         {
-            _query = query;
+            SubQuery = query;
         }
+
+        public IJsonQueryable SubQuery { get; }
 
         public JsonNode? Query(JsonNode? data)
         {
@@ -1116,7 +1213,7 @@ namespace JsonQuery.Net
 
             foreach (JsonNode? item in sourceArray)
             {
-                JsonNode? key = _query.Query(item);
+                JsonNode? key = SubQuery.Query(item);
 
                 if (resultArray.All(kv => !JsonNode.DeepEquals(kv.key, key)))
                 {
@@ -1134,17 +1231,17 @@ namespace JsonQuery.Net
     {
         internal const string Keyword = "limit";
 
-        private readonly int _limitSize;
+        public int LimitSize { get; }
 
         public LimitQuery(int limitSize)
         {
-            _limitSize = limitSize;
+            LimitSize = limitSize;
         }
 
         public JsonNode? Query(JsonNode? data)
         {
             JsonArray array = data!.AsArray();
-            return new JsonArray(array.SkipLast(array.Count - _limitSize).Select(item => item?.DeepClone()).ToArray());
+            return new JsonArray(array.SkipLast(array.Count - LimitSize).Select(item => item?.DeepClone()).ToArray());
         }
     }
 
@@ -1184,7 +1281,11 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, LimitQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+
+            writer.WriteNumberValue(value.LimitSize);
+
+            writer.WriteEndArray();
         }
     }
 
@@ -1269,20 +1370,20 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(SingleQueryParameterConverter<NotQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<NotQuery>))]
-    class NotQuery : IJsonQueryable
+    class NotQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "not";
 
-        private readonly IJsonQueryable _query;
-
         public NotQuery(IJsonQueryable query)
         {
-            _query = query;
+            SubQuery = query;
         }
+
+        public IJsonQueryable SubQuery { get; }
 
         public JsonNode? Query(JsonNode? data)
         {
-            bool queryResult = _query.Query(data)!.GetBooleanValue();
+            bool queryResult = SubQuery.Query(data)!.GetBooleanValue();
 
             return JsonValue.Create(!queryResult);
         }
@@ -1290,20 +1391,20 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(GetQueryParameterConverter<ExistsQuery>))]
     [JsonQueryConverter(typeof(GetQueryParameterParserConverter<ExistsQuery>))]
-    class ExistsQuery : IJsonQueryable
+    class ExistsQuery : IJsonQueryable, ISubGetQuery
     {
         internal const string Keyword = "exists";
 
-        private readonly GetQuery _getQuery;
-
         public ExistsQuery(GetQuery getQuery)
         {
-            _getQuery = getQuery;
+            SubGetQuery = getQuery;
         }
+
+        public GetQuery SubGetQuery { get; }
 
         public JsonNode? Query(JsonNode? data)
         {
-            bool exist = _getQuery.QueryPropertyNameAndValue(data).exist;
+            bool exist = SubGetQuery.QueryPropertyNameAndValue(data).exist;
 
             return JsonValue.Create(exist);
         }
@@ -1315,22 +1416,22 @@ namespace JsonQuery.Net
     {
         internal const string Keyword = "if";
 
-        private readonly IJsonQueryable _ifQuery;
-        private readonly IJsonQueryable _thenQuery;
-        private readonly IJsonQueryable _elseQuery;
+        public IJsonQueryable IfSubQuery { get; }
+        public IJsonQueryable ThenSubQuery { get; }
+        public IJsonQueryable ElseSubQuery { get; }
 
         public IfQuery(IJsonQueryable ifQuery, IJsonQueryable thenQuery, IJsonQueryable elseQuery)
         {
-            _ifQuery = ifQuery;
-            _thenQuery = thenQuery;
-            _elseQuery = elseQuery;
+            IfSubQuery = ifQuery;
+            ThenSubQuery = thenQuery;
+            ElseSubQuery = elseQuery;
         }
 
         public JsonNode? Query(JsonNode? data)
         {
-            bool condition = _ifQuery.Query(data)!.GetBooleanValue();
+            bool condition = IfSubQuery.Query(data)!.GetBooleanValue();
 
-            return condition ? _thenQuery.Query(data) : _elseQuery.Query(data);
+            return condition ? ThenSubQuery.Query(data) : ElseSubQuery.Query(data);
         }
     }
 
@@ -1381,7 +1482,13 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, IfQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+
+            JsonSerializer.Serialize(writer, value.IfSubQuery);
+            JsonSerializer.Serialize(writer, value.ThenSubQuery);
+            JsonSerializer.Serialize(writer, value.ElseSubQuery);
+
+            writer.WriteEndArray();
         }
     }
 
@@ -1391,24 +1498,24 @@ namespace JsonQuery.Net
     {
         internal const string Keyword = "regex";
 
-        private readonly IJsonQueryable _query;
-        private readonly string _regex;
-        private readonly RegexOptions _options;
+        public IJsonQueryable SubQuery { get; }
+        public string RegexValue { get; }
+        public RegexOptions Options { get; }
 
         public RegexQuery(IJsonQueryable query, string regex, RegexOptions options)
         {
-            _query = query;
-            _regex = regex;
-            _options = options;
+            SubQuery = query;
+            RegexValue = regex;
+            Options = options;
         }
 
         public JsonNode? Query(JsonNode? data)
         {
-            JsonNode? jsonNode = _query.Query(data);
+            JsonNode? jsonNode = SubQuery.Query(data);
 
             string content = jsonNode!.GetValue<string>();
 
-            return JsonValue.Create(Regex.IsMatch(content, _regex, _options));
+            return JsonValue.Create(Regex.IsMatch(content, RegexValue, Options));
         }
     }
 
@@ -1478,7 +1585,18 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, RegexQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+
+            writer.WriteStringValue(value.GetKeyword());
+            JsonSerializer.Serialize(writer, value.SubQuery);
+            writer.WriteStringValue(value.RegexValue);
+
+            if (value.Options == RegexOptions.IgnoreCase)
+            {
+                writer.WriteStringValue("i");
+            }
+
+            writer.WriteEndArray();
         }
     }
 
@@ -1488,19 +1606,19 @@ namespace JsonQuery.Net
     {
         internal const string Keyword = "round";
 
-        private readonly IJsonQueryable _query;
-        private readonly int _digits;
+        public IJsonQueryable SubQuery { get; }
+        public int Digits { get; }
 
         public RoundQuery(IJsonQueryable query, int digits = 0)
         {
-            _query = query;
-            _digits = digits;
+            SubQuery = query;
+            Digits = digits;
         }
 
         public JsonNode? Query(JsonNode? data)
         {
-            decimal value = _query.Query(data)!.GetValue<decimal>();
-            decimal roundResult = Math.Round(value, _digits, MidpointRounding.AwayFromZero);
+            decimal value = SubQuery.Query(data)!.GetValue<decimal>();
+            decimal roundResult = Math.Round(value, Digits, MidpointRounding.AwayFromZero);
 
             return JsonValue.Create(roundResult);
         }
@@ -1551,26 +1669,32 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, RoundQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+
+            writer.WriteStringValue(value.GetKeyword());
+            JsonSerializer.Serialize(writer, value.SubQuery);
+            writer.WriteNumberValue(value.Digits);
+
+            writer.WriteEndArray();
         }
     }
 
     [JsonConverter(typeof(SingleQueryParameterConverter<AbsQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<AbsQuery>))]
-    class AbsQuery : IJsonQueryable
+    class AbsQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "abs";
 
-        private readonly IJsonQueryable _query;
-
         public AbsQuery(IJsonQueryable query)
         {
-            _query = query;
+            SubQuery = query;
         }
+
+        public IJsonQueryable SubQuery { get; }
 
         public JsonNode? Query(JsonNode? data)
         {
-            decimal value = _query.Query(data)!.GetValue<decimal>();
+            decimal value = SubQuery.Query(data)!.GetValue<decimal>();
 
             return JsonValue.Create(Math.Abs(value));
         }
@@ -1578,20 +1702,20 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(SingleQueryParameterConverter<NumberQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<NumberQuery>))]
-    class NumberQuery : IJsonQueryable
+    class NumberQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "number";
 
-        private readonly IJsonQueryable _query;
-
         public NumberQuery(IJsonQueryable query)
         {
-            _query = query;
+            SubQuery = query;
         }
+
+        public IJsonQueryable SubQuery { get; }
 
         public JsonNode? Query(JsonNode? data)
         {
-            string numericString = _query.Query(data)!.GetValue<string>();
+            string numericString = SubQuery.Query(data)!.GetValue<string>();
 
             return decimal.TryParse(numericString, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal numericValue) 
                 ? numericValue 
@@ -1599,22 +1723,37 @@ namespace JsonQuery.Net
         }
     }
 
+    public interface ISingleSubQuery
+    {
+        IJsonQueryable SubQuery { get; }
+    }
+
+    public interface IMultipleSubQuery
+    {
+        IEnumerable<IJsonQueryable> SubQueries { get; }
+    }
+
+    public interface ISubGetQuery
+    {
+        GetQuery SubGetQuery { get; }
+    }
+
     [JsonConverter(typeof(SingleQueryParameterConverter<StringQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<StringQuery>))]
-    class StringQuery : IJsonQueryable
+    class StringQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "string";
 
-        private readonly IJsonQueryable _query;
-
         public StringQuery(IJsonQueryable query)
         {
-            _query = query;
+            SubQuery = query;
         }
+
+        public IJsonQueryable SubQuery { get; }
 
         public JsonNode? Query(JsonNode? data)
         {
-            JsonNode? node = _query.Query(data);
+            JsonNode? node = SubQuery.Query(data);
 
             return node is null ? "null" : node.ToString();
         }
@@ -1641,8 +1780,8 @@ namespace JsonQuery.Net
 
     public abstract class OperatorQuery : IJsonQueryable
     {
-        protected readonly IJsonQueryable Left;
-        protected readonly IJsonQueryable Right;
+        public IJsonQueryable Left { get; }
+        public IJsonQueryable Right { get; }
 
         protected OperatorQuery(IJsonQueryable left, IJsonQueryable right)
         {
@@ -1916,7 +2055,7 @@ namespace JsonQuery.Net
         }
     }
 
-    internal class GetQueryParameterConverter<TQuery> : JsonConverter<TQuery> where TQuery : IJsonQueryable
+    internal class GetQueryParameterConverter<TQuery> : JsonConverter<TQuery> where TQuery : IJsonQueryable, ISubGetQuery
     {
         public override TQuery? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -1932,7 +2071,11 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, TQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+
+            JsonSerializer.Serialize(writer, value.SubGetQuery);
+
+            writer.WriteEndArray();
         }
     }
 
@@ -1942,11 +2085,11 @@ namespace JsonQuery.Net
     {
         internal const string Keyword = "get";
 
-        private readonly object[] _path;
+        public object[] Path { get; }
 
         public GetQuery(object[] path)
         {
-            _path = path;
+            Path = path;
         }
 
         public JsonNode? Query(JsonNode? data)
@@ -1957,7 +2100,7 @@ namespace JsonQuery.Net
         public (string? propertyName, JsonNode? propertyValue, bool exist) QueryPropertyNameAndValue(JsonNode? data)
         {
             JsonNode? curNode = data;
-            foreach (object segment in _path)
+            foreach (object segment in Path)
             {
                 if (curNode is null)
                 {
@@ -1995,7 +2138,7 @@ namespace JsonQuery.Net
 
         private string? GetTheLastPropertyName()
         {
-            return _path.Length == 0 ? null : _path[_path.Length - 1].ToString();
+            return Path.Length == 0 ? null : Path[Path.Length - 1].ToString();
         }
     }
 
@@ -2062,22 +2205,38 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, GetQuery value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            writer.WriteStartArray();
+
+            foreach (object item in value.Path)
+            {
+                if (item is string stringItem)
+                {
+                    writer.WriteStringValue(stringItem);
+                }
+                else
+                {
+                    Debug.Assert(item is int);
+
+                    writer.WriteNumberValue((int)item);
+                }
+            }
+
+            writer.WriteEndArray();
         }
     }
 
     public class ConstQueryable : IJsonQueryable
     {
-        private readonly JsonNode? _value;
+        public JsonNode? Value { get; }
 
         public ConstQueryable(JsonNode? value)
         {
-            _value = value;
+            Value = value;
         }
 
         public JsonNode? Query(JsonNode? data)
         {
-            return _value;
+            return Value;
         }
     }
 
@@ -2117,7 +2276,7 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, IJsonQueryable value, JsonSerializerOptions options)
         {
-            throw new NotImplementedException();
+            JsonSerializer.Serialize(writer, value, value.GetType());
         }
 
         public override bool HandleNull => true;
