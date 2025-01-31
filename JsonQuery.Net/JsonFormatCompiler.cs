@@ -31,9 +31,7 @@ namespace JsonQuery.Net
 
         public static string SerializeToJsonFormat(this IJsonQueryable queryable)
         {
-            return queryable is ConstQueryable constQuery 
-                ? (constQuery.Value?.ToJsonString() ?? "null") 
-                : JsonSerializer.Serialize(queryable);
+            return JsonSerializer.Serialize(queryable);
         }
     }
 
@@ -176,6 +174,7 @@ namespace JsonQuery.Net
         {
             writer.WriteStartArray();
 
+            writer.WriteStringValue(value.GetKeyword());
             JsonSerializer.Serialize(writer, value.PropertiesQueries);
 
             writer.WriteEndArray();
@@ -329,9 +328,13 @@ namespace JsonQuery.Net
                 
                 reader.Read();
 
-                if (reader.TokenType == JsonQueryTokenType.String && reader.GetString() == "desc")
+                if (reader.TokenType == JsonQueryTokenType.String)
                 {
-                    isDesc = true;
+                    if (reader.GetString() == "desc")
+                    {
+                        isDesc = true;
+                    }
+                    
                     reader.Read();
                 }
             }
@@ -362,9 +365,13 @@ namespace JsonQuery.Net
                 reader.Read();
 
                 // check to second argument
-                if (reader.TokenType == JsonTokenType.String && reader.GetString() == "desc")
+                if (reader.TokenType == JsonTokenType.String)
                 {
-                    isDesc = true;
+                    if (reader.GetString() == "desc")
+                    {
+                        isDesc = true;
+                    }
+                    
                     reader.Read();
                 }
             }
@@ -377,6 +384,13 @@ namespace JsonQuery.Net
             writer.WriteStartArray();
 
             writer.WriteStringValue(value.GetKeyword());
+
+            if (value.SubQuery is GetQuery getQuery && getQuery.Path.Length == 0 && !value.IsDesc)
+            {
+                writer.WriteEndArray();
+                return;
+            }
+
             JsonSerializer.Serialize(writer, value.SubQuery);
 
             if (value.IsDesc)
@@ -593,6 +607,7 @@ namespace JsonQuery.Net
         {
             writer.WriteStartArray();
 
+            writer.WriteStringValue(value.GetKeyword());
             foreach (GetQuery getQuery in value.GetQueries)
             {
                 JsonSerializer.Serialize(writer, getQuery);
@@ -2207,6 +2222,8 @@ namespace JsonQuery.Net
         {
             writer.WriteStartArray();
 
+            writer.WriteStringValue(value.GetKeyword());
+
             foreach (object item in value.Path)
             {
                 if (item is string stringItem)
@@ -2276,7 +2293,21 @@ namespace JsonQuery.Net
 
         public override void Write(Utf8JsonWriter writer, IJsonQueryable value, JsonSerializerOptions options)
         {
-            JsonSerializer.Serialize(writer, value, value.GetType());
+            if (value is ConstQueryable constQuery)
+            {
+                if (constQuery.Value is null)
+                {
+                    writer.WriteNullValue();
+                }
+                else
+                {
+                    constQuery.Value.WriteTo(writer);
+                }
+            }
+            else
+            {
+                JsonSerializer.Serialize(writer, value, value.GetType());
+            }
         }
 
         public override bool HandleNull => true;

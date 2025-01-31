@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace JsonQuery.Net;
 
@@ -50,14 +52,24 @@ public ref struct JsonQueryReader
 
         if (!SkipWhiteSpace())
         {
+            if (TokenType == JsonQueryTokenType.None)
+            {
+                throw new JsonQueryParseException("Empty json query is invalid", _index);
+            }
+
+            if (TokenType == JsonQueryTokenType.Pipe)
+            {
+                throw new JsonQueryParseException("Pipe missing 'right hand value'", _index);
+            }
+
             // check missing 'right hand value' firstly
+            if (TokenType == JsonQueryTokenType.Operator)
+            {
+                throw new JsonQueryParseException("Operator missing 'right hand value'", _index);
+            }
+
             if (_positionStack.TryPeek(out position) && position == ReaderStackPosition.MeetOperator)
             {
-                if (TokenType == JsonQueryTokenType.Operator)
-                {
-                    throw new JsonQueryParseException("Missing 'right hand value'", _index);
-                }
-
                 _positionStack.Pop();
             }
 
@@ -154,7 +166,10 @@ public ref struct JsonQueryReader
 
             meetComma = true;
             _index++;
-            SkipWhiteSpace();
+            if (!SkipWhiteSpace())
+            {
+                throw new JsonQueryParseException("Missing token", _index);
+            }
         }
         else if (_jsonQuery[_index] == ':')
         {
@@ -165,7 +180,10 @@ public ref struct JsonQueryReader
 
             meetColon = true;
             _index++;
-            SkipWhiteSpace();
+            if (!SkipWhiteSpace())
+            {
+                throw new JsonQueryParseException("Missing property value", _index);
+            }
         }
 
         Position = _index;
@@ -175,12 +193,6 @@ public ref struct JsonQueryReader
             ValidateValueToken(meetComma, meetColon, ".");
 
             ReadPropertyPath();
-            return true;
-        }
-
-        if (_jsonQuery[_index] == '"')
-        {
-            ReadStringLiteral(meetComma, meetColon);
             return true;
         }
 
@@ -200,6 +212,11 @@ public ref struct JsonQueryReader
             {
                 if (position == ReaderStackPosition.InObjectKeyValuePair)
                 {
+                    if (TokenType == JsonQueryTokenType.PropertyName)
+                    {
+                        throw new JsonQueryParseException("Unexpected '}'", _index);
+                    }
+
                     position = _positionStack.Pop();
                     Debug.Assert(position == ReaderStackPosition.InObject);
                 }
@@ -222,9 +239,13 @@ public ref struct JsonQueryReader
         // Property name check should be after processing of '}' for case: { a : b, }
         if (_positionStack.TryPeek(out position) && position == ReaderStackPosition.InObject)
         {
-            Debug.Assert(_jsonQuery[_index] != '"');
+            ReadObjectPropertyName();
+            return true;
+        }
 
-            ReadUnquotedPropertyName();
+        if (_jsonQuery[_index] == '"')
+        {
+            ReadStringLiteral(meetComma, meetColon);
             return true;
         }
 
@@ -315,16 +336,19 @@ public ref struct JsonQueryReader
             return true;
         }
 
-        _operatorValue = FindOperator();
-        if (_operatorValue is not null)
+        if (ValidateOperator(meetComma))
         {
-            ValidateOperator(meetComma, _operatorValue);
+            string? operatorValue = FindOperator();
+            if (operatorValue is not null)
+            {
+                _operatorValue = operatorValue;
 
-            _positionStack.Push(ReaderStackPosition.MeetOperator);
-            TokenType = JsonQueryTokenType.Operator;
-            _index += _operatorValue.Length;
+                _positionStack.Push(ReaderStackPosition.MeetOperator);
+                TokenType = JsonQueryTokenType.Operator;
+                _index += _operatorValue.Length;
 
-            return true;
+                return true;
+            }
         }
 
         int idx = _index;
@@ -381,7 +405,7 @@ public ref struct JsonQueryReader
             return true;
         }
 
-        if (decimal.TryParse(tokenSegment, out _decimalValue))
+        if (TryParseNumericValue(out _decimalValue, out idx))
         {
             TokenType = JsonQueryTokenType.Number;
             _index = idx;
@@ -392,11 +416,52 @@ public ref struct JsonQueryReader
         throw new JsonQueryParseException($"Unexpected token: '{tokenSegment.ToString()}'", _index);
     }
 
-    private void ValidateOperator(bool meetComma, string operatorName)
+    private bool TryParseNumericValue(out decimal numericValue, out int idx)
+    {
+        idx = _index;
+
+        if (_jsonQuery[idx] == '+' || _jsonQuery[idx] == '-') // jump out first '+' or '-'
+        {
+            idx++;
+        }
+
+        while (!HitSeparators(idx))
+        {
+            idx++;
+        }
+
+        if (decimal.TryParse(_jsonQuery.Slice(_index, idx - _index), NumberStyles.Any, CultureInfo.InvariantCulture, out numericValue))
+        {
+            return true;
+        }
+
+        if (!OutOfJsonQuery(idx) 
+            && (_jsonQuery[idx] == '+' || _jsonQuery[idx] == '-') 
+            && idx > 0 
+            && (_jsonQuery[idx - 1] == 'e' || _jsonQuery[idx - 1] == 'E')) // 12e+3
+        {
+            idx++;
+
+            while (!HitSeparators(idx))
+            {
+                idx++;
+            }
+
+            var numericString = _jsonQuery.Slice(_index, idx - _index).ToString();
+            if (decimal.TryParse(numericString, NumberStyles.AllowExponent | NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out numericValue))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool ValidateOperator(bool meetComma)
     {
         if (_positionStack.TryPeek(out ReaderStackPosition position) && position == ReaderStackPosition.MeetOperator)
         {
-            throw new JsonQueryParseException($"Unexpected operator: {operatorName}", _index);
+            return false;
         }
 
         if (meetComma || TokenType == JsonQueryTokenType.PropertyName || TokenType == JsonQueryTokenType.None
@@ -404,8 +469,10 @@ public ref struct JsonQueryReader
             || TokenType == JsonQueryTokenType.StartParenthesis || TokenType == JsonQueryTokenType.FunctionName
             || TokenType == JsonQueryTokenType.Pipe)
         {
-            throw new JsonQueryParseException($"Unexpected operator: {operatorName}", _index);
+            return false;
         }
+
+        return true;
     }
 
     private void ValidateEndParenthesisChar(bool meetComma)
@@ -631,16 +698,30 @@ public ref struct JsonQueryReader
         return null;
     }
 
-    private void ReadUnquotedPropertyName()
+    private void ReadObjectPropertyName()
     {
-        int idx = _index;
-        while (!HitSeparators(idx))
+        ReadOnlySpan<char> propertyName;
+
+        if (_jsonQuery[_index] == '"')
         {
-            idx++;
+            propertyName = ReadQuotedString(ref _index);
+            _index++; // make idx be after right side '"'
+        }
+        else
+        {
+            int idx = _index;
+            while (!HitSeparators(idx))
+            {
+                idx++;
+            }
+
+            propertyName = _jsonQuery.Slice(_index, idx - _index);
+            VerifySingleUnquotedPropertyName(propertyName);
+
+            _index = idx;
         }
 
-        _propertyName = _jsonQuery.Slice(_index, idx - _index).ToString();
-        _index = idx;
+        _propertyName = propertyName.ToString();
         TokenType = JsonQueryTokenType.PropertyName;
         _positionStack.Push(ReaderStackPosition.InObjectKeyValuePair);
     }
@@ -649,30 +730,11 @@ public ref struct JsonQueryReader
     {
         Debug.Assert(_jsonQuery[_index] == '"');
 
-        ReadOnlySpan<char> stringPart = _jsonQuery.Slice(_index + 1);
-        int length = stringPart.IndexOf('"');
-
-        if (length == -1)
-        {
-            throw new JsonQueryParseException("Missing '\"'", _index);
-        }
-
-        string stringValue = stringPart.Slice(0, length).ToString();
-        if (_positionStack.TryPeek(out ReaderStackPosition position) && position == ReaderStackPosition.InObject)
-        {
-            _propertyName = stringValue;
-            TokenType = JsonQueryTokenType.PropertyName;
-            _positionStack.Push(ReaderStackPosition.InObjectKeyValuePair);
-        }
-        else
-        {
-            ValidateValueToken(meetComma, meetColon, "\"");
-
-            _stringLiteral = stringValue;
-            TokenType = JsonQueryTokenType.String;
-        }
+        ValidateValueToken(meetComma, meetColon, "\"");
         
-        _index += length + 2;
+        _stringLiteral = ReadQuotedString(ref _index);
+        TokenType = JsonQueryTokenType.String;
+        _index++;
     }
 
     /// <returns>false when <see cref="_index"/> is out of <see cref="_jsonQuery"/>; otherwise true</returns>
@@ -713,36 +775,128 @@ public ref struct JsonQueryReader
         Debug.Assert(_jsonQuery[_index] == '.');
 
         var propertiesPath = new List<object>();
-        int startIdx = _index + 1;
-        int idx = startIdx;
-        while (true)
+        int idx = _index + 1;
+        bool isPathEnd = false;
+
+        while (!isPathEnd)
         {
-            if (HitSeparators(idx) || _jsonQuery[idx] == '.')
+            ReadOnlySpan<char> onePropertySpan;
+            int startIdx = idx;
+
+            if (HitSeparators(startIdx) || _jsonQuery[startIdx] != '"')
             {
-                ReadOnlySpan<char> onePropertySpan = _jsonQuery.Slice(startIdx, idx - startIdx);
-                if (int.TryParse(onePropertySpan, out int arrayIdx))
+                while (!HitSeparators(idx) && _jsonQuery[idx] != '.')
                 {
-                    propertiesPath.Add(arrayIdx);
+                    idx++;
+                }
+
+                onePropertySpan = _jsonQuery.Slice(startIdx, idx - startIdx);
+                VerifySingleUnquotedPropertyName(onePropertySpan);
+
+                if (HitSeparators(idx))
+                {
+                    isPathEnd = true;
                 }
                 else
                 {
-                    propertiesPath.Add(onePropertySpan.ToString());
+                    Debug.Assert(_jsonQuery[idx] == '.');
+                    idx++;
                 }
-
-                startIdx = idx + 1;
             }
-
-            if (HitSeparators(idx))
+            else
             {
-                break;
+                Debug.Assert(_jsonQuery[startIdx] == '"');
+
+                onePropertySpan = ReadQuotedString(ref idx);
+
+                idx++; // make idx be after right side '"'
+
+                if (!OutOfJsonQuery(idx) && _jsonQuery[idx] == '.')
+                {
+                    idx++;
+                }
+                else
+                {
+                    isPathEnd = true;
+                }
             }
 
-            idx++;
+            if (int.TryParse(onePropertySpan, out int arrayIdx))
+            {
+                propertiesPath.Add(arrayIdx);
+            }
+            else
+            {
+                propertiesPath.Add(onePropertySpan.ToString());
+            }
         }
 
         TokenType = JsonQueryTokenType.PropertyPath;
         _propertyPath = propertiesPath.ToArray();
         _index = idx;
+    }
+
+    private string ReadQuotedString(ref int idx)
+    {
+        Debug.Assert(_jsonQuery[idx] == '"');
+
+        int startIdx = idx;
+        
+        idx++;
+
+        for (; !OutOfJsonQuery(idx); idx++)
+        {
+            if (_jsonQuery[idx] == '\\')
+            {
+                idx++;
+                if (OutOfJsonQuery(idx))
+                {
+                    throw new JsonQueryParseException("Unrecognized escape sequence", idx);
+                }
+            }
+            else if (_jsonQuery[idx] == '"') // found end of string
+            {
+                ReadOnlySpan<char> escapedString = _jsonQuery.Slice(startIdx, idx - startIdx + 1);
+                try
+                {
+                    return JsonSerializer.Deserialize<string>(escapedString)!;
+                }
+                catch (Exception)
+                {
+                    throw new JsonQueryParseException($"Invalid quoted string: {escapedString.ToString()}", idx);
+                }
+            }
+        }
+
+        throw new JsonQueryParseException("Missing '\"'", idx);
+    }
+
+    private void VerifySingleUnquotedPropertyName(ReadOnlySpan<char> propertyName)
+    {
+        if (propertyName.IsEmpty)
+        {
+            throw new JsonQueryParseException("Unquoted empty property name is invalid", _index);
+        }
+
+        if (propertyName[0] >= '0' && propertyName[0] <= '9')
+        {
+            if (uint.TryParse(propertyName, out _))
+            {
+                return;
+            }
+
+            throw new JsonQueryParseException($"Invalid unquoted property name: '{propertyName.ToString()}'", _index);
+        }
+
+        foreach (char c in propertyName)
+        {
+            if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '$')
+            {
+                continue;
+            }
+
+            throw new JsonQueryParseException($"Invalid unquoted property name: '{propertyName.ToString()}'", _index);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
