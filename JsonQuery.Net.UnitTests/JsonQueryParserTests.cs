@@ -22,10 +22,25 @@ public class JsonQueryParserTests
         Assert.Throws<JsonQueryParseException>(() => JsonQueryParser.Parse(jsonQuery));
     }
 
-    public static IEnumerable<object[]> ValidJsonQueryData => GetParseTestData(true);
-    public static IEnumerable<object[]> InvalidJsonQueryData => GetParseTestData(false);
+    public static IEnumerable<object[]> ValidJsonQueryData => GetParseTestDataFromTestSuite(true).Concat(GetAllFunctionsParseTestData());
 
-    private static IEnumerable<object[]> GetParseTestData(bool validCase)
+    private static IEnumerable<object[]> GetAllFunctionsParseTestData()
+    {
+        using (var fs = new FileStream("all_functions.parse.test.json", FileMode.Open))
+        {
+            using (JsonDocument jsonDoc = JsonDocument.Parse(fs))
+            {
+                foreach (JsonElement testCase in jsonDoc.RootElement.EnumerateArray())
+                {
+                    yield return new object[] { testCase.GetProperty("query").GetString()!, JsonSerializer.Serialize(testCase.GetProperty("json")) };
+                }
+            }
+        }
+    }
+
+    public static IEnumerable<object[]> InvalidJsonQueryData => GetParseTestDataFromTestSuite(false);
+
+    private static IEnumerable<object[]> GetParseTestDataFromTestSuite(bool validCase)
     {
         using (var fs = new FileStream(Path.Combine("test-suite", "parse.test.json"), FileMode.Open))
         {

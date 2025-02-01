@@ -684,6 +684,7 @@ namespace JsonQuery.Net
         {
             writer.WriteStartArray();
 
+            writer.WriteStringValue(value.GetKeyword());
             var dic = new Dictionary<string, IJsonQueryable>(2) { { "key", value.KeyQuery }, { "value", value.ValueQuery } };
 
             JsonSerializer.Serialize(writer, dic);
@@ -958,7 +959,12 @@ namespace JsonQuery.Net
         {
             writer.WriteStartArray();
 
-            writer.WriteStringValue(value.Separator);
+            writer.WriteStringValue(value.GetKeyword());
+            
+            if (!string.IsNullOrEmpty(value.Separator))
+            {
+                writer.WriteStringValue(value.Separator);
+            }
 
             writer.WriteEndArray();
         }
@@ -1298,6 +1304,7 @@ namespace JsonQuery.Net
         {
             writer.WriteStartArray();
 
+            writer.WriteStringValue(value.GetKeyword());
             writer.WriteNumberValue(value.LimitSize);
 
             writer.WriteEndArray();
@@ -1499,6 +1506,7 @@ namespace JsonQuery.Net
         {
             writer.WriteStartArray();
 
+            writer.WriteStringValue(value.GetKeyword());
             JsonSerializer.Serialize(writer, value.IfSubQuery);
             JsonSerializer.Serialize(writer, value.ThenSubQuery);
             JsonSerializer.Serialize(writer, value.ElseSubQuery);
@@ -1688,7 +1696,10 @@ namespace JsonQuery.Net
 
             writer.WriteStringValue(value.GetKeyword());
             JsonSerializer.Serialize(writer, value.SubQuery);
-            writer.WriteNumberValue(value.Digits);
+            if (value.Digits != 0)
+            {
+                writer.WriteNumberValue(value.Digits);
+            }
 
             writer.WriteEndArray();
         }
@@ -2088,6 +2099,7 @@ namespace JsonQuery.Net
         {
             writer.WriteStartArray();
 
+            writer.WriteStringValue(value.GetKeyword());
             JsonSerializer.Serialize(writer, value.SubGetQuery);
 
             writer.WriteEndArray();
