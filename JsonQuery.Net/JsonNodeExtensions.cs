@@ -22,6 +22,11 @@ internal static class JsonNodeExtensions
             return jsonNode.GetValue<decimal>() != 0;
         }
 
-        return jsonNode.GetValue<bool>();
+        if (jsonNode.GetValueKind() == JsonValueKind.True || jsonNode.GetValueKind() == JsonValueKind.False)
+        {
+            return jsonNode.GetValue<bool>();
+        }
+
+        return true;
     }
 }

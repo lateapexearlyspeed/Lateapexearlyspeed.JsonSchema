@@ -198,11 +198,16 @@ namespace JsonQuery.Net
         {
             var result = new JsonArray();
 
-            foreach (JsonNode? item in data!.AsArray())
+            if (data is not JsonArray array)
+            {
+                return null;
+            }
+
+            foreach (JsonNode? item in array)
             {
                 JsonNode? predictResult = _filter.Query(item);
 
-                if (predictResult is not null && predictResult.GetBooleanValue())
+                if (predictResult.GetBooleanValue())
                 {
                     result.Add(item?.DeepClone());
                 }
@@ -271,25 +276,29 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            if (data is null)
+            if (data is not JsonArray array)
             {
                 return null;
             }
-
-            JsonArray array = data.AsArray();
 
             if (array.Count == 0)
             {
                 return array;
             }
 
-            JsonNode firstItem = SubQuery.Query(array[0])!;
+            JsonNode? firstItem = SubQuery.Query(array[0]);
+
+            if (firstItem is null)
+            {
+                return null;
+            }
+
             IEnumerable<JsonNode?> orderedNodes;
             if (firstItem.GetValueKind() == JsonValueKind.Number)
             {
                 orderedNodes = IsDesc ? array.OrderByDescending(DecimalKeySelector) : array.OrderBy(DecimalKeySelector);
             }
-            else // items kind is String
+            else // assume items kind is String
             {
                 orderedNodes = IsDesc ? array.OrderByDescending(StringKeySelector, StringComparer.Ordinal) : array.OrderBy(StringKeySelector, StringComparer.Ordinal);
             }
@@ -298,12 +307,23 @@ namespace JsonQuery.Net
 
             decimal DecimalKeySelector(JsonNode? item)
             {
-                return SubQuery.Query(item)!.GetValue<decimal>();
+                JsonNode? jsonNode = SubQuery.Query(item);
+                if (jsonNode is null || jsonNode.GetValueKind() != JsonValueKind.Number)
+                {
+                    return 0;
+                }
+                return jsonNode.GetValue<decimal>();
             }
 
             string StringKeySelector(JsonNode? item)
             {
-                return SubQuery.Query(item)!.GetValue<string>();
+                JsonNode? jsonNode = SubQuery.Query(item);
+                if (jsonNode is null || jsonNode.GetValueKind() != JsonValueKind.String)
+                {
+                    return string.Empty;
+                }
+
+                return jsonNode.GetValue<string>();
             }
         }
     }
@@ -408,9 +428,14 @@ namespace JsonQuery.Net
     {
         internal const string Keyword = "reverse";
 
-        public JsonNode Query(JsonNode? data)
+        public JsonNode? Query(JsonNode? data)
         {
-            return new JsonArray(data!.AsArray().Reverse().Select(item => item?.DeepClone()).ToArray());
+            if (data is not JsonArray array)
+            {
+                return null;
+            }
+
+            return new JsonArray(array.Reverse().Select(item => item?.DeepClone()).ToArray());
         }
     }
 
@@ -536,7 +561,10 @@ namespace JsonQuery.Net
 
                 foreach (JsonNode? item in array)
                 {
-                    newArray.Add(PickObject(item!.AsObject()));
+                    if (item is JsonObject itemObject)
+                    {
+                        newArray.Add(PickObject(itemObject));
+                    }
                 }
 
                 return newArray;
@@ -547,7 +575,7 @@ namespace JsonQuery.Net
                 return PickObject(jsonObject);
             }
 
-            throw new InvalidOperationException("Invalid data format for pick query");
+            return null;
         }
 
         private JsonObject PickObject(JsonObject sourceObject)
@@ -634,12 +662,23 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
+            if (data is not JsonObject objectData)
+            {
+                return null;
+            }
+
             var result = new JsonObject();
 
-            foreach (KeyValuePair<string, JsonNode?> prop in data!.AsObject())
+            foreach (KeyValuePair<string, JsonNode?> prop in objectData)
             {
                 var origPropObject = new JsonObject { { "key", prop.Key }, { "value", prop.Value?.DeepClone() } };
-                result.Add(KeyQuery.Query(origPropObject)!.GetValue<string>(), ValueQuery.Query(origPropObject)?.DeepClone());
+
+                JsonNode? keyNode = KeyQuery.Query(origPropObject);
+
+                if (keyNode is not null && keyNode.GetValueKind() == JsonValueKind.String)
+                {
+                    result.Add(keyNode.GetValue<string>(), ValueQuery.Query(origPropObject)?.DeepClone());
+                }
             }
 
             return result;
@@ -708,11 +747,21 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
+            if (data is not JsonObject objectData)
+            {
+                return null;
+            }
+
             var result = new JsonObject();
 
-            foreach (KeyValuePair<string, JsonNode?> prop in data!.AsObject())
+            foreach (KeyValuePair<string, JsonNode?> prop in objectData)
             {
-                result.Add(_keyQuery.Query(JsonValue.Create(prop.Key))!.GetValue<string>(), prop.Value?.DeepClone());
+                JsonNode? newKeyNode = _keyQuery.Query(JsonValue.Create(prop.Key));
+
+                if (newKeyNode is not null && newKeyNode.GetValueKind() == JsonValueKind.String)
+                {
+                    result.Add(newKeyNode.GetValue<string>(), prop.Value?.DeepClone());
+                }
             }
 
             return result;
@@ -736,9 +785,14 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
+            if (data is not JsonObject objectData)
+            {
+                return null;
+            }
+
             var result = new JsonObject();
 
-            foreach (KeyValuePair<string, JsonNode?> prop in data!.AsObject())
+            foreach (KeyValuePair<string, JsonNode?> prop in objectData)
             {
                 result.Add(prop.Key, _valueQuery.Query(prop.Value)?.DeepClone());
             }
@@ -764,7 +818,12 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            return new JsonArray(data!.AsArray().Select(item => _itemQuery.Query(item)?.DeepClone()).ToArray());
+            if (data is not JsonArray array)
+            {
+                return null;
+            }
+
+            return new JsonArray(array.Select(item => _itemQuery.Query(item)?.DeepClone()).ToArray());
         }
 
         public IJsonQueryable SubQuery => _itemQuery;
@@ -785,9 +844,23 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            JsonArray array = data!.AsArray();
+            if (data is not JsonArray array)
+            {
+                return null;
+            }
 
-            IEnumerable<IGrouping<string, JsonNode?>> groupByResult = array.GroupBy(itemNode => SubGetQuery.Query(itemNode)!.GetValue<string>());
+            IEnumerable<IGrouping<string, JsonNode?>> groupByResult = array.GroupBy(itemNode =>
+            {
+                JsonNode? keyNode = SubGetQuery.Query(itemNode);
+
+                if (keyNode is null || keyNode.GetValueKind() != JsonValueKind.String)
+                {
+                    return string.Empty;
+                }
+
+                return keyNode.GetValue<string>();
+            });
+
             IEnumerable<KeyValuePair<string, JsonNode?>> newProperties = groupByResult.Select(group => KeyValuePair.Create<string, JsonNode?>(group.Key, new JsonArray(group.Select(item => item?.DeepClone()).ToArray())));
 
             return new JsonObject(newProperties);
@@ -824,9 +897,14 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
+            if (data is not JsonArray array)
+            {
+                return null;
+            }
+
             var newProperties = new Dictionary<string, JsonNode?>();
 
-            foreach (JsonNode? item in data!.AsArray())
+            foreach (JsonNode? item in array)
             {
                 JsonNode? keyNode = SubGetQuery.Query(item);
 
@@ -847,7 +925,12 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            IEnumerable<JsonValue> keys = data!.AsObject().Select(prop => JsonValue.Create(prop.Key)!);
+            if (data is not JsonObject objectData)
+            {
+                return null;
+            }
+
+            IEnumerable<JsonValue> keys = objectData.Select(prop => JsonValue.Create(prop.Key));
 
             return new JsonArray(keys.ToArray<JsonNode>());
         }
@@ -861,7 +944,12 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            IEnumerable<JsonNode?> values = data!.AsObject().Select(prop => prop.Value?.DeepClone());
+            if (data is not JsonObject objectData)
+            {
+                return null;
+            }
+
+            IEnumerable<JsonNode?> values = objectData.Select(prop => prop.Value?.DeepClone());
 
             return new JsonArray(values.ToArray());
         }
@@ -893,7 +981,12 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            IEnumerable<JsonNode?> flattenArray = data!.AsArray().SelectMany(item => item!.AsArray().Select(subItem => subItem?.DeepClone()));
+            if (data is not JsonArray array)
+            {
+                return null;
+            }
+
+            IEnumerable<JsonNode?> flattenArray = array.Where(item => item is JsonArray).SelectMany(item => item!.AsArray().Select(subItem => subItem?.DeepClone()));
 
             return new JsonArray(flattenArray.ToArray());
         }
@@ -914,7 +1007,12 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            return string.Join(Separator, data!.AsArray().Select(node => node!.GetValue<string>()));
+            if (data is not JsonArray array)
+            {
+                return null;
+            }
+
+            return string.Join(Separator, array.Where(item => item is not null && item.GetValueKind() == JsonValueKind.String).Select(item => item!.GetValue<string>()));
         }
     }
 
@@ -987,7 +1085,14 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            string stringContent = SubQuery.Query(data)!.GetValue<string>();
+            JsonNode? stringNode = SubQuery.Query(data);
+
+            if (stringNode is null || stringNode.GetValueKind() != JsonValueKind.String)
+            {
+                return null;
+            }
+
+            string stringContent = stringNode.GetValue<string>();
 
             IEnumerable<string> words;
             if (Separator is null)
@@ -1086,7 +1191,14 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            string stringContent = SubQuery.Query(data)!.GetValue<string>();
+            JsonNode? stringNode = SubQuery.Query(data);
+
+            if (stringNode is null || stringNode.GetValueKind() != JsonValueKind.String)
+            {
+                return null;
+            }
+
+            string stringContent = stringNode.GetValue<string>();
 
             if (StartIdx >= stringContent.Length)
             {
@@ -1199,9 +1311,14 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
+            if (data is not JsonArray array)
+            {
+                return null;
+            }
+
             var result = new List<JsonNode?>();
 
-            foreach (JsonNode? item in data!.AsArray())
+            foreach (JsonNode? item in array)
             {
                 if (result.All(node => !JsonNode.DeepEquals(node, item)))
                 {
@@ -1228,7 +1345,10 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            var sourceArray = data!.AsArray();
+            if (data is not JsonArray sourceArray)
+            {
+                return null;
+            }
 
             var resultArray = new List<(JsonNode? key, JsonNode? value)>(sourceArray.Count);
 
@@ -1261,7 +1381,11 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            JsonArray array = data!.AsArray();
+            if (data is not JsonArray array)
+            {
+                return null;
+            }
+
             return new JsonArray(array.SkipLast(array.Count - LimitSize).Select(item => item?.DeepClone()).ToArray());
         }
     }
@@ -1294,7 +1418,7 @@ namespace JsonQuery.Net
             reader.Read();
 
             int limitSize = reader.GetInt32();
-            
+
             reader.Read();
 
             return new LimitQuery(limitSize);
@@ -1324,7 +1448,12 @@ namespace JsonQuery.Net
                 return JsonValue.Create(array.Count);
             }
 
-            return JsonValue.Create(data!.GetValue<string>().Length);
+            if (data is not null && data.GetValueKind() == JsonValueKind.String)
+            {
+                return JsonValue.Create(data.GetValue<string>().Length);
+            }
+
+            return null;
         }
     }
 
@@ -1336,7 +1465,12 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            return data!.AsArray().Sum(item => item!.GetValue<decimal>());
+            if (data is not JsonArray array)
+            {
+                return null;
+            }
+
+            return array.Where(item => item is not null && item.GetValueKind() == JsonValueKind.Number).Sum(item => item!.GetValue<decimal>());
         }
     }
 
@@ -1348,7 +1482,19 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            return JsonValue.Create(data!.AsArray().Min(item => item!.GetValue<decimal>()));
+            if (data is not JsonArray array)
+            {
+                return null;
+            }
+
+            JsonNode?[] numericArray = array.Where(item => item is not null && item.GetValueKind() == JsonValueKind.Number).ToArray();
+
+            if (numericArray.Length == 0)
+            {
+                return null;
+            }
+
+            return JsonValue.Create(numericArray.Min(item => item!.GetValue<decimal>()));
         }
     }
 
@@ -1360,7 +1506,19 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            return JsonValue.Create(data!.AsArray().Max(item => item!.GetValue<decimal>()));
+            if (data is not JsonArray array)
+            {
+                return null;
+            }
+
+            JsonNode?[] numericArray = array.Where(item => item is not null && item.GetValueKind() == JsonValueKind.Number).ToArray();
+
+            if (numericArray.Length == 0)
+            {
+                return null;
+            }
+
+            return JsonValue.Create(numericArray.Max(item => item!.GetValue<decimal>()));
         }
     }
 
@@ -1372,7 +1530,14 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            decimal result = data!.AsArray().Select(item => item!.GetValue<decimal>()).Aggregate((pre, current) => current * pre);
+            if (data is not JsonArray array)
+            {
+                return null;
+            }
+
+            decimal result = array.Where(item => item is not null && item.GetValueKind() == JsonValueKind.Number)
+                .Select(item => item!.GetValue<decimal>()).Aggregate((pre, current) => current * pre);
+            
             return JsonValue.Create(result);
         }
     }
@@ -1385,7 +1550,19 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            decimal result = data!.AsArray().Average(item => item!.GetValue<decimal>());
+            if (data is not JsonArray array)
+            {
+                return null;
+            }
+
+            var numericArray = array.Where(item => item is not null && item.GetValueKind() == JsonValueKind.Number).ToArray();
+
+            if (numericArray.Length == 0)
+            {
+                return null;
+            }
+            
+            decimal result = numericArray.Average(item => item!.GetValue<decimal>());
             return JsonValue.Create(result);
         }
     }
@@ -1405,7 +1582,7 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            bool queryResult = SubQuery.Query(data)!.GetBooleanValue();
+            bool queryResult = SubQuery.Query(data).GetBooleanValue();
 
             return JsonValue.Create(!queryResult);
         }
@@ -1451,7 +1628,7 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            bool condition = IfSubQuery.Query(data)!.GetBooleanValue();
+            bool condition = IfSubQuery.Query(data).GetBooleanValue();
 
             return condition ? ThenSubQuery.Query(data) : ElseSubQuery.Query(data);
         }
@@ -1536,7 +1713,12 @@ namespace JsonQuery.Net
         {
             JsonNode? jsonNode = SubQuery.Query(data);
 
-            string content = jsonNode!.GetValue<string>();
+            if (jsonNode is null || jsonNode.GetValueKind() != JsonValueKind.String)
+            {
+                return null;
+            }
+
+            string content = jsonNode.GetValue<string>();
 
             return JsonValue.Create(Regex.IsMatch(content, RegexValue, Options));
         }
@@ -1640,7 +1822,14 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            decimal value = SubQuery.Query(data)!.GetValue<decimal>();
+            JsonNode? numericNode = SubQuery.Query(data);
+
+            if (numericNode is null || numericNode.GetValueKind() != JsonValueKind.Number)
+            {
+                return null;
+            }
+
+            decimal value = numericNode.GetValue<decimal>();
             decimal roundResult = Math.Round(value, Digits, MidpointRounding.AwayFromZero);
 
             return JsonValue.Create(roundResult);
@@ -1720,7 +1909,13 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            decimal value = SubQuery.Query(data)!.GetValue<decimal>();
+            JsonNode? numericNode = SubQuery.Query(data);
+            if (numericNode is null || numericNode.GetValueKind() != JsonValueKind.Number)
+            {
+                return null;
+            }
+
+            decimal value = numericNode.GetValue<decimal>();
 
             return JsonValue.Create(Math.Abs(value));
         }
@@ -1741,7 +1936,13 @@ namespace JsonQuery.Net
 
         public JsonNode? Query(JsonNode? data)
         {
-            string numericString = SubQuery.Query(data)!.GetValue<string>();
+            JsonNode? stringNode = SubQuery.Query(data);
+            if (stringNode is null || stringNode.GetValueKind() != JsonValueKind.String)
+            {
+                return null;
+            }
+
+            string numericString = stringNode.GetValue<string>();
 
             return decimal.TryParse(numericString, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal numericValue) 
                 ? numericValue 
@@ -1815,8 +2016,19 @@ namespace JsonQuery.Net
             Right = right;
         }
 
-        protected decimal QueryLeftDecimal(JsonNode? data) => Left.Query(data)!.GetValue<decimal>();
-        protected decimal QueryRightDecimal(JsonNode? data) => Right.Query(data)!.GetValue<decimal>();
+        protected decimal QueryLeftDecimal(JsonNode? data) => QueryDecimal(Left, data);
+        protected decimal QueryRightDecimal(JsonNode? data) => QueryDecimal(Right, data);
+
+        private static decimal QueryDecimal(IJsonQueryable query, JsonNode? data)
+        {
+            JsonNode? jsonNode = query.Query(data);
+            if (jsonNode is null || jsonNode.GetValueKind() != JsonValueKind.Number)
+            {
+                return 0;
+            }
+
+            return jsonNode.GetValue<decimal>();
+        }
 
         protected bool QueryLeftBoolean(JsonNode? data) => QueryBoolean(Left, data);
         protected bool QueryRightBoolean(JsonNode? data) => QueryBoolean(Right, data);
@@ -1825,7 +2037,7 @@ namespace JsonQuery.Net
         {
             JsonNode? jsonNode = query.Query(data);
             
-            return jsonNode!.GetBooleanValue();
+            return jsonNode.GetBooleanValue();
         }
 
         public abstract JsonNode? Query(JsonNode? data);
@@ -1955,9 +2167,13 @@ namespace JsonQuery.Net
 
         public override JsonNode? Query(JsonNode? data)
         {
-            JsonArray array = Right.Query(data)!.AsArray();
+            JsonNode? rightArray = Right.Query(data);
+            if (rightArray is not JsonArray array)
+            {
+                return null;
+            }
 
-            JsonNode value = Left.Query(data)!;
+            JsonNode? value = Left.Query(data);
 
             return array.Any(item => JsonNode.DeepEquals(item, value));
         }
@@ -1975,9 +2191,13 @@ namespace JsonQuery.Net
 
         public override JsonNode? Query(JsonNode? data)
         {
-            JsonArray array = Right.Query(data)!.AsArray();
+            JsonNode? rightArray = Right.Query(data);
+            if (rightArray is not JsonArray array)
+            {
+                return null;
+            }
 
-            JsonNode value = Left.Query(data)!;
+            JsonNode? value = Left.Query(data);
 
             return !array.Any(item => JsonNode.DeepEquals(item, value));
         }
@@ -2013,7 +2233,7 @@ namespace JsonQuery.Net
                 return leftValue.ToString() + rightValue;
             }
 
-            return null; // todo
+            return null;
         }
     }
 
@@ -2129,27 +2349,27 @@ namespace JsonQuery.Net
             JsonNode? curNode = data;
             foreach (object segment in Path)
             {
-                if (curNode is null)
-                {
-                    return (GetTheLastPropertyName(), null, false);
-                }
-
                 if (curNode is JsonObject jsonObject)
                 {
-                    string propertyName = (string)segment;
+                    string propertyName;
+                    if (segment is string stringSegment)
+                    {
+                        propertyName = stringSegment;
+                    }
+                    else
+                    {
+                        Debug.Assert(segment is int);
+                        propertyName = segment.ToString();
+                    }
 
                     if (!jsonObject.TryGetPropertyValue(propertyName, out curNode))
                     {
                         return (GetTheLastPropertyName(), null, false);
                     }
                 }
-                else
+                else if (curNode is JsonArray jsonArray)
                 {
-                    JsonArray jsonArray = curNode.AsArray();
-
-                    int index = (int)segment;
-
-                    if (index < jsonArray.Count)
+                    if (segment is int index && index < jsonArray.Count)
                     {
                         curNode = jsonArray[index];
                     }
@@ -2157,6 +2377,10 @@ namespace JsonQuery.Net
                     {
                         return (GetTheLastPropertyName(), null, false);
                     }
+                }
+                else
+                {
+                    return (GetTheLastPropertyName(), null, false);
                 }
             }
 
@@ -2289,6 +2513,11 @@ namespace JsonQuery.Net
             if (detectorReader.TokenType == JsonTokenType.StartArray)
             {
                 detectorReader.Read();
+
+                if (detectorReader.TokenType != JsonTokenType.String)
+                {
+                    throw new JsonException($"Invalid token type '{detectorReader.TokenType}' for json query keyword");
+                }
 
                 string queryKeyword = detectorReader.GetString()!;
 
