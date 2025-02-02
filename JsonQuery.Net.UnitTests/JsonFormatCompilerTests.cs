@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -12,7 +11,7 @@ namespace JsonQuery.Net.UnitTests
         [MemberData(nameof(TestCases))]
         public void CompileAndQuery(string category, string description, string input, string query, string expectedOutput)
         {
-            IJsonQueryable jsonQueryable = new JsonFormatCompiler().Compile(query);
+            IJsonQueryable jsonQueryable = JsonQueryable.Compile(query);
 
             JsonNode? actualJson = jsonQueryable.Query(JsonNode.Parse(input));
             JsonAssertion.Equivalent(expectedOutput, actualJson?.ToJsonString() ?? "null");

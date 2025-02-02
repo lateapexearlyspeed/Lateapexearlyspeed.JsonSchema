@@ -9,7 +9,7 @@ public class JsonQueryParserTests
     [MemberData(nameof(ValidJsonQueryData))]
     public void Parse_ValidQuery_ShouldReturn(string jsonQuery, string expectedJsonFormat)
     {
-        IJsonQueryable jsonQueryable = JsonQueryParser.Parse(jsonQuery);
+        IJsonQueryable jsonQueryable = JsonQueryable.Parse(jsonQuery);
         string actualJsonFormat = jsonQueryable.SerializeToJsonFormat();
 
         JsonAssertion.Equivalent(expectedJsonFormat, actualJsonFormat);
@@ -19,7 +19,7 @@ public class JsonQueryParserTests
     [MemberData(nameof(InvalidJsonQueryData))]
     public void Parse_InvalidQuery_ShouldThrow(string jsonQuery)
     {
-        Assert.Throws<JsonQueryParseException>(() => JsonQueryParser.Parse(jsonQuery));
+        Assert.Throws<JsonQueryParseException>(() => JsonQueryable.Parse(jsonQuery));
     }
 
     public static IEnumerable<object[]> ValidJsonQueryData => GetParseTestDataFromTestSuite(true).Concat(GetAllFunctionsParseTestData());

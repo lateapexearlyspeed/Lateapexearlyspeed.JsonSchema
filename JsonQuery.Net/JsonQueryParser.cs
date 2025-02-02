@@ -2,19 +2,9 @@
 
 namespace JsonQuery.Net;
 
-public static class JsonQueryParser
+internal static class JsonQueryParser
 {
-    public static IJsonQueryable Parse(string jsonQuery)
-    {
-        JsonQueryReader reader = new JsonQueryReader(jsonQuery);
-        
-        reader.Read();
-        IJsonQueryable jsonQueryable = ParseQueryCombination(ref reader);
-
-        return jsonQueryable;
-    }
-
-    internal static IJsonQueryable ParseQueryCombination(ref JsonQueryReader reader)
+    public static IJsonQueryable ParseQueryCombination(ref JsonQueryReader reader)
     {
         var pipedQueries = new List<IJsonQueryable>();
 

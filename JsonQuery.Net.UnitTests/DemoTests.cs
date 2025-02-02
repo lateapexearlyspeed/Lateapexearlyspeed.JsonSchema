@@ -10,7 +10,7 @@ public class DemoTests
     public void TestDemoData(string input, string jsonQuery, string expectedJsonFormatQuery, string expectedOutput)
     {
         // Use jsonQuery to query
-        IJsonQueryable queryable = JsonQueryParser.Parse(jsonQuery);
+        IJsonQueryable queryable = JsonQueryable.Parse(jsonQuery);
 
         string actualOutput = queryable.Query(JsonNode.Parse(input))!.ToJsonString();
 
@@ -22,7 +22,7 @@ public class DemoTests
         JsonAssertion.Equivalent(expectedJsonFormatQuery, actualJsonFormatQuery);
 
         // Use jsonFormatQuery to query
-        queryable = new JsonFormatCompiler().Compile(actualJsonFormatQuery);
+        queryable = JsonQueryable.Compile(actualJsonFormatQuery);
 
         actualOutput = queryable.Query(JsonNode.Parse(input))!.ToJsonString();
 

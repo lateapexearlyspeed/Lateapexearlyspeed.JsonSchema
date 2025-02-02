@@ -9,16 +9,26 @@ using System.Text.RegularExpressions;
 
 namespace JsonQuery.Net
 {
-    public class JsonFormatCompiler
+    public static class JsonQueryable
     {
-        public IJsonQueryable Compile(string jsonFormatQuery)
+        public static IJsonQueryable Compile(string jsonFormatQuery)
         {
             return JsonSerializer.Deserialize<IJsonQueryable>(jsonFormatQuery)!;
         }
 
-        public IJsonQueryable Compile(JsonNode? jsonFormatQuery)
+        public static IJsonQueryable Compile(JsonNode? jsonFormatQuery)
         {
             return jsonFormatQuery.Deserialize<IJsonQueryable>()!;
+        }
+
+        public static IJsonQueryable Parse(string jsonQuery)
+        {
+            JsonQueryReader reader = new JsonQueryReader(jsonQuery);
+
+            reader.Read();
+            IJsonQueryable jsonQueryable = JsonQueryParser.ParseQueryCombination(ref reader);
+
+            return jsonQueryable;
         }
     }
 
@@ -647,7 +657,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(MapObjectQueryConverter))]
     [JsonQueryConverter(typeof(MapObjectQueryParserConverter))]
-    class MapObjectQuery : IJsonQueryable
+    public class MapObjectQuery : IJsonQueryable
     {
         internal const string Keyword = "mapObject";
 
@@ -734,7 +744,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(SingleQueryParameterConverter<MapKeysQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<MapKeysQuery>))]
-    class MapKeysQuery : IJsonQueryable, ISingleSubQuery
+    public class MapKeysQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "mapKeys";
 
@@ -772,7 +782,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(SingleQueryParameterConverter<MapValuesQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<MapValuesQuery>))]
-    class MapValuesQuery : IJsonQueryable, ISingleSubQuery
+    public class MapValuesQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "mapValues";
 
@@ -805,7 +815,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(SingleQueryParameterConverter<MapQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<MapQuery>))]
-    class MapQuery : IJsonQueryable, ISingleSubQuery
+    public class MapQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "map";
 
@@ -831,7 +841,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(GetQueryParameterConverter<GroupByQuery>))]
     [JsonQueryConverter(typeof(GetQueryParameterParserConverter<GroupByQuery>))]
-    class GroupByQuery : IJsonQueryable, ISubGetQuery
+    public class GroupByQuery : IJsonQueryable, ISubGetQuery
     {
         internal const string Keyword = "groupBy";
 
@@ -884,7 +894,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(GetQueryParameterConverter<KeyByQuery>))]
     [JsonQueryConverter(typeof(GetQueryParameterParserConverter<KeyByQuery>))]
-    class KeyByQuery : IJsonQueryable, ISubGetQuery
+    public class KeyByQuery : IJsonQueryable, ISubGetQuery
     {
         internal const string Keyword = "keyBy";
 
@@ -919,7 +929,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(ParameterlessQueryConverter<KeysQuery>))]
     [JsonQueryConverter(typeof(ParameterlessQueryParserConverter<KeysQuery>))]
-    class KeysQuery : IJsonQueryable
+    public class KeysQuery : IJsonQueryable
     {
         internal const string Keyword = "keys";
 
@@ -938,7 +948,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(ParameterlessQueryConverter<ValuesQuery>))]
     [JsonQueryConverter(typeof(ParameterlessQueryParserConverter<ValuesQuery>))]
-    class ValuesQuery : IJsonQueryable
+    public class ValuesQuery : IJsonQueryable
     {
         internal const string Keyword = "values";
 
@@ -975,7 +985,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(ParameterlessQueryConverter<FlattenQuery>))]
     [JsonQueryConverter(typeof(ParameterlessQueryParserConverter<FlattenQuery>))]
-    class FlattenQuery : IJsonQueryable
+    public class FlattenQuery : IJsonQueryable
     {
         internal const string Keyword = "flatten";
 
@@ -994,7 +1004,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(JoinQueryConverter))]
     [JsonQueryConverter(typeof(JoinQueryParserConverter))]
-    class JoinQuery : IJsonQueryable
+    public class JoinQuery : IJsonQueryable
     {
         internal const string Keyword = "join";
 
@@ -1070,7 +1080,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(SplitQueryConverter))]
     [JsonQueryConverter(typeof(SplitQueryParserConverter))]
-    class SplitQuery : IJsonQueryable
+    public class SplitQuery : IJsonQueryable
     {
         internal const string Keyword = "split";
 
@@ -1174,7 +1184,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(SubstringQueryConverter))]
     [JsonQueryConverter(typeof(SubstringQueryParserConverter))]
-    class SubstringQuery : IJsonQueryable
+    public class SubstringQuery : IJsonQueryable
     {
         internal const string Keyword = "substring";
 
@@ -1305,7 +1315,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(ParameterlessQueryConverter<UniqQuery>))]
     [JsonQueryConverter(typeof(ParameterlessQueryParserConverter<UniqQuery>))]
-    class UniqQuery : IJsonQueryable
+    public class UniqQuery : IJsonQueryable
     {
         internal const string Keyword = "uniq";
 
@@ -1332,7 +1342,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(SingleQueryParameterConverter<UniqByQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<UniqByQuery>))]
-    class UniqByQuery : IJsonQueryable, ISingleSubQuery
+    public class UniqByQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "uniqBy";
 
@@ -1368,7 +1378,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(LimitQueryConverter))]
     [JsonQueryConverter(typeof(LimitQueryParserConverter))]
-    class LimitQuery : IJsonQueryable
+    public class LimitQuery : IJsonQueryable
     {
         internal const string Keyword = "limit";
 
@@ -1437,7 +1447,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(ParameterlessQueryConverter<SizeQuery>))]
     [JsonQueryConverter(typeof(ParameterlessQueryParserConverter<SizeQuery>))]
-    class SizeQuery : IJsonQueryable
+    public class SizeQuery : IJsonQueryable
     {
         internal const string Keyword = "size";
 
@@ -1459,7 +1469,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(ParameterlessQueryConverter<SumQuery>))]
     [JsonQueryConverter(typeof(ParameterlessQueryParserConverter<SumQuery>))]
-    class SumQuery : IJsonQueryable
+    public class SumQuery : IJsonQueryable
     {
         internal const string Keyword = "sum";
 
@@ -1476,7 +1486,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(ParameterlessQueryConverter<MinQuery>))]
     [JsonQueryConverter(typeof(ParameterlessQueryParserConverter<MinQuery>))]
-    class MinQuery : IJsonQueryable
+    public class MinQuery : IJsonQueryable
     {
         internal const string Keyword = "min";
 
@@ -1500,7 +1510,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(ParameterlessQueryConverter<MaxQuery>))]
     [JsonQueryConverter(typeof(ParameterlessQueryParserConverter<MaxQuery>))]
-    class MaxQuery : IJsonQueryable
+    public class MaxQuery : IJsonQueryable
     {
         internal const string Keyword = "max";
 
@@ -1524,7 +1534,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(ParameterlessQueryConverter<ProdQuery>))]
     [JsonQueryConverter(typeof(ParameterlessQueryParserConverter<ProdQuery>))]
-    class ProdQuery : IJsonQueryable
+    public class ProdQuery : IJsonQueryable
     {
         internal const string Keyword = "prod";
 
@@ -1544,7 +1554,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(ParameterlessQueryConverter<AverageQuery>))]
     [JsonQueryConverter(typeof(ParameterlessQueryParserConverter<AverageQuery>))]
-    class AverageQuery : IJsonQueryable
+    public class AverageQuery : IJsonQueryable
     {
         internal const string Keyword = "average";
 
@@ -1569,7 +1579,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(SingleQueryParameterConverter<NotQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<NotQuery>))]
-    class NotQuery : IJsonQueryable, ISingleSubQuery
+    public class NotQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "not";
 
@@ -1590,7 +1600,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(GetQueryParameterConverter<ExistsQuery>))]
     [JsonQueryConverter(typeof(GetQueryParameterParserConverter<ExistsQuery>))]
-    class ExistsQuery : IJsonQueryable, ISubGetQuery
+    public class ExistsQuery : IJsonQueryable, ISubGetQuery
     {
         internal const string Keyword = "exists";
 
@@ -1611,7 +1621,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(IfQueryConverter))]
     [JsonQueryConverter(typeof(IfQueryParserConverter))]
-    class IfQuery : IJsonQueryable
+    public class IfQuery : IJsonQueryable
     {
         internal const string Keyword = "if";
 
@@ -1694,7 +1704,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(RegexQueryConverter))]
     [JsonQueryConverter(typeof(RegexQueryParserConverter))]
-    class RegexQuery : IJsonQueryable
+    public class RegexQuery : IJsonQueryable
     {
         internal const string Keyword = "regex";
 
@@ -1807,7 +1817,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(RoundQueryConverter))]
     [JsonQueryConverter(typeof(RoundQueryParserConverter))]
-    class RoundQuery : IJsonQueryable
+    public class RoundQuery : IJsonQueryable
     {
         internal const string Keyword = "round";
 
@@ -1896,7 +1906,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(SingleQueryParameterConverter<AbsQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<AbsQuery>))]
-    class AbsQuery : IJsonQueryable, ISingleSubQuery
+    public class AbsQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "abs";
 
@@ -1923,7 +1933,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(SingleQueryParameterConverter<NumberQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<NumberQuery>))]
-    class NumberQuery : IJsonQueryable, ISingleSubQuery
+    public class NumberQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "number";
 
@@ -1967,7 +1977,7 @@ namespace JsonQuery.Net
 
     [JsonConverter(typeof(SingleQueryParameterConverter<StringQuery>))]
     [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<StringQuery>))]
-    class StringQuery : IJsonQueryable, ISingleSubQuery
+    public class StringQuery : IJsonQueryable, ISingleSubQuery
     {
         internal const string Keyword = "string";
 
@@ -1987,7 +1997,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<EqQuery>))]
-    class EqQuery : OperatorQuery
+    public class EqQuery : OperatorQuery
     {
         internal const string Keyword = "eq";
         internal const string Operator = "==";
@@ -2044,7 +2054,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<GtQuery>))]
-    class GtQuery : OperatorQuery
+    public class GtQuery : OperatorQuery
     {
         internal const string Keyword = "gt";
         internal const string Operator = ">";
@@ -2060,7 +2070,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<GteQuery>))]
-    class GteQuery : OperatorQuery
+    public class GteQuery : OperatorQuery
     {
         internal const string Keyword = "gte";
         internal const string Operator = ">=";
@@ -2076,7 +2086,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<LtQuery>))]
-    class LtQuery : OperatorQuery
+    public class LtQuery : OperatorQuery
     {
         internal const string Keyword = "lt";
         internal const string Operator = "<";
@@ -2092,7 +2102,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<LteQuery>))]
-    class LteQuery : OperatorQuery
+    public class LteQuery : OperatorQuery
     {
         internal const string Keyword = "lte";
         internal const string Operator = "<=";
@@ -2108,7 +2118,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<NeQuery>))]
-    class NeQuery : OperatorQuery
+    public class NeQuery : OperatorQuery
     {
         internal const string Keyword = "ne";
         internal const string Operator = "!=";
@@ -2124,7 +2134,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<AndQuery>))]
-    class AndQuery : OperatorQuery
+    public class AndQuery : OperatorQuery
     {
         internal const string Keyword = "and";
         internal const string Operator = "and";
@@ -2140,7 +2150,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<OrQuery>))]
-    class OrQuery : OperatorQuery
+    public class OrQuery : OperatorQuery
     {
         internal const string Keyword = "or";
         internal const string Operator = "or";
@@ -2156,7 +2166,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<InQuery>))]
-    class InQuery : OperatorQuery
+    public class InQuery : OperatorQuery
     {
         internal const string Keyword = "in";
         internal const string Operator = "in";
@@ -2180,7 +2190,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<NotInQuery>))]
-    class NotInQuery : OperatorQuery
+    public class NotInQuery : OperatorQuery
     {
         internal const string Keyword = "not in";
         internal const string Operator = "not in";
@@ -2204,7 +2214,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<AddOperator>))]
-    class AddOperator : OperatorQuery
+    public class AddOperator : OperatorQuery
     {
         internal const string Keyword = "add";
         internal const string Operator = "+";
@@ -2238,7 +2248,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<SubtractQuery>))]
-    class SubtractQuery : OperatorQuery
+    public class SubtractQuery : OperatorQuery
     {
         internal const string Keyword = "subtract";
         internal const string Operator = "-";
@@ -2254,7 +2264,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<DivideQuery>))]
-    class DivideQuery : OperatorQuery
+    public class DivideQuery : OperatorQuery
     {
         internal const string Keyword = "divide";
         internal const string Operator = "/";
@@ -2270,7 +2280,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<PowQuery>))]
-    class PowQuery : OperatorQuery
+    public class PowQuery : OperatorQuery
     {
         internal const string Keyword = "pow";
         internal const string Operator = "^";
@@ -2286,7 +2296,7 @@ namespace JsonQuery.Net
     }
 
     [JsonConverter(typeof(OperatorConverter<ModQuery>))]
-    class ModQuery : OperatorQuery
+    public class ModQuery : OperatorQuery
     {
         internal const string Keyword = "mod";
         internal const string Operator = "%";
