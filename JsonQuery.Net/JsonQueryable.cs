@@ -11,16 +11,31 @@ namespace JsonQuery.Net
 {
     public static class JsonQueryable
     {
+        /// <summary>
+        /// Compile "json format" query to <see cref="IJsonQueryable"/> query engine
+        /// </summary>
+        /// <param name="jsonFormatQuery">json query which is json format</param>
+        /// <returns>The generated <see cref="IJsonQueryable"/> instance which can be used to query actual json data</returns>
         public static IJsonQueryable Compile(string jsonFormatQuery)
         {
             return JsonSerializer.Deserialize<IJsonQueryable>(jsonFormatQuery)!;
         }
 
+        /// <summary>
+        /// Compile "json format" query to <see cref="IJsonQueryable"/> query engine
+        /// </summary>
+        /// <param name="jsonFormatQuery">json query which is json format</param>
+        /// <returns>The generated <see cref="IJsonQueryable"/> instance which can be used to query actual json data</returns>
         public static IJsonQueryable Compile(JsonNode? jsonFormatQuery)
         {
             return jsonFormatQuery.Deserialize<IJsonQueryable>()!;
         }
 
+        /// <summary>
+        /// Parse json query to <see cref="IJsonQueryable"/> query engine
+        /// </summary>
+        /// <param name="jsonQuery">The query which is human friendly syntax</param>
+        /// <returns>The generated <see cref="IJsonQueryable"/> instance which can be used to query actual json data</returns>
         public static IJsonQueryable Parse(string jsonQuery)
         {
             JsonQueryReader reader = new JsonQueryReader(jsonQuery);
@@ -39,6 +54,11 @@ namespace JsonQuery.Net
             return JsonQueryableRegistry.GetKeyword(queryable.GetType());
         }
 
+        /// <summary>
+        /// Serialize query engine to json format query
+        /// </summary>
+        /// <param name="queryable">query engine</param>
+        /// <returns>json format query string</returns>
         public static string SerializeToJsonFormat(this IJsonQueryable queryable)
         {
             return JsonSerializer.Serialize(queryable);
