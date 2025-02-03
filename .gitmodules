@@ -2,3 +2,7 @@
 	path = JSON-Schema-Test-Suite
 	url = https://github.com/json-schema-org/JSON-Schema-Test-Suite.git
 	branch = main
+[submodule "jsonquery"]
+	path = jsonquery
+	url = https://github.com/jsonquerylang/jsonquery.git
+	branch = develop

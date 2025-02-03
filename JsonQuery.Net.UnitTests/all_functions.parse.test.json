@@ -1,0 +1,478 @@
+[
+  {
+    "query": "get()",
+    "json": [ "get" ]
+  },
+  {
+    "query": "get(1, \"a 1\", 2, \"b 2\")",
+    "json": [ "get", 1, "a 1", 2, "b 2" ]
+  },
+  {
+    "query": ".1.a.\"b 2\".0",
+    "json": [ "get", 1, "a", "b 2", 0 ]
+  },
+  {
+    "query": "filter(.address.city == 1)",
+    "json": [
+      "filter",
+      [
+        "eq",
+        [ "get", "address", "city" ],
+        1
+      ]
+    ]
+  },
+  {
+    "query": "sort()",
+    "json": [ "sort" ]
+  },
+  {
+    "query": "sort(\"a\")",
+    "json": [ "sort", "a" ]
+  },
+  {
+    "query": "sort(.a.\"b 2\")",
+    "json": [
+      "sort",
+      [ "get", "a", "b 2" ]
+    ]
+  },
+  {
+    "query": "sort(.a.\"b 2\", \"asc\")",
+    "json": [
+      "sort",
+      [ "get", "a", "b 2" ]
+    ]
+  },
+  {
+    "query": "sort(.a.\"b 2\", \"desc\")",
+    "json": [
+      "sort",
+      [ "get", "a", "b 2" ],
+      "desc"
+    ]
+  },
+  {
+    "query": "reverse()",
+    "json": [
+      "reverse"
+    ]
+  },
+  {
+    "query": "pick(.name, .address.city)",
+    "json": [
+      "pick",
+      [ "get", "name" ],
+      [ "get", "address", "city" ]
+    ]
+  },
+  {
+    "query": "map(.price * .quantity)",
+    "json": [
+      "map",
+      [
+        "multiply",
+        [ "get", "price" ],
+        [ "get", "quantity" ]
+      ]
+    ]
+  },
+  {
+    "query": "mapObject({  key: .a, value: .b})",
+    "json": [
+      "mapObject",
+      {
+        "key": [ "get", "a" ],
+        "value": [ "get", "b" ]
+      }
+    ]
+  },
+  {
+    "query": "mapKeys(\"#\" + .1)",
+    "json": [
+      "mapKeys",
+      [
+        "add",
+        "#",
+        [ "get", 1 ]
+      ]
+    ]
+  },
+  {
+    "query": "sort() | (1 | 1 * 2) | (5 - 4) / 3",
+    "json": [
+      "pipe",
+      [ "sort" ],
+      [
+        "pipe",
+        1,
+        [ "multiply", 1, 2 ]
+      ],
+      [
+        "divide",
+        [ "subtract", 5, 4 ],
+        3
+      ]
+    ]
+  },
+  {
+    "query": "groupBy(.city)",
+    "json": [
+      "groupBy",
+      [ "get", "city" ]
+    ]
+  },
+  {
+    "query": "keyBy(.city)",
+    "json": [
+      "keyBy",
+      [ "get", "city" ]
+    ]
+  },
+  {
+    "query": "keys()",
+    "json": [
+      "keys"
+    ]
+  },
+  {
+    "query": "values()",
+    "json": [
+      "values"
+    ]
+  },
+  {
+    "query": "flatten()",
+    "json": [
+      "flatten"
+    ]
+  },
+  {
+    "query": "join()",
+    "json": [
+      "join"
+    ]
+  },
+  {
+    "query": "join(\"a b\")",
+    "json": [
+      "join",
+      "a b"
+    ]
+  },
+  {
+    "query": "split(.age)",
+    "json": [
+      "split",
+      [ "get", "age" ]
+    ]
+  },
+  {
+    "query": "split(.age, \"\")",
+    "json": [
+      "split",
+      [ "get", "age" ],
+      ""
+    ]
+  },
+  {
+    "query": "split(.age, \", \")",
+    "json": [
+      "split",
+      [ "get", "age" ],
+      ", "
+    ]
+  },
+  {
+    "query": "substring(.time, 0)",
+    "json": [
+      "substring",
+      [ "get", "time" ],
+      0
+    ]
+  },
+  {
+    "query": "substring(.time, 1)",
+    "json": [
+      "substring",
+      [ "get", "time" ],
+      1
+    ]
+  },
+  {
+    "query": "substring(.time, 0, 5)",
+    "json": [
+      "substring",
+      [ "get", "time" ],
+      0,
+      5
+    ]
+  },
+  {
+    "query": "uniq()",
+    "json": [
+      "uniq"
+    ]
+  },
+  {
+    "query": "uniqBy(.address.city)",
+    "json": [
+      "uniqBy",
+      [ "get", "address", "city" ]
+    ]
+  },
+  {
+    "query": "limit(1)",
+    "json": [
+      "limit",
+      1
+    ]
+  },
+  {
+    "query": "size()",
+    "json": [
+      "size"
+    ]
+  },
+  {
+    "query": "sum()",
+    "json": [
+      "sum"
+    ]
+  },
+  {
+    "query": "min()",
+    "json": [
+      "min"
+    ]
+  },
+  {
+    "query": "max()",
+    "json": [
+      "max"
+    ]
+  },
+  {
+    "query": "prod()",
+    "json": [
+      "prod"
+    ]
+  },
+  {
+    "query": "average()",
+    "json": [
+      "average"
+    ]
+  },
+  {
+    "query": "not(.age == 18)",
+    "json": [
+      "not",
+      [
+        "eq",
+        [ "get", "age" ],
+        18
+      ]
+    ]
+  },
+  {
+    "query": "exists(.details)",
+    "json": [
+      "exists",
+      [ "get", "details" ]
+    ]
+  },
+  {
+    "query": "if(.kid.age == .minAge, .messageOk, .messageFail)",
+    "json": [
+      "if",
+      [
+        "eq",
+        [ "get", "kid", "age" ],
+        [ "get", "minAge" ]
+      ],
+      [ "get", "messageOk" ],
+      [ "get", "messageFail" ]
+    ]
+  },
+  {
+    "query": "regex(.message, \"like|awesome\")",
+    "json": [
+      "regex",
+      [ "get", "message" ],
+      "like|awesome"
+    ]
+  },
+  {
+    "query": "regex(.message, \"like|awesome\", \"i\")",
+    "json": [
+      "regex",
+      [ "get", "message" ],
+      "like|awesome",
+      "i"
+    ]
+  },
+  {
+    "query": "round(.a)",
+    "json": [
+      "round",
+      [ "get", "a" ]
+    ]
+  },
+  {
+    "query": "round(.a, 2)",
+    "json": [
+      "round",
+      [ "get", "a" ],
+      2
+    ]
+  },
+  {
+    "query": "abs(.a)",
+    "json": [
+      "abs",
+      [ "get", "a" ]
+    ]
+  },
+  {
+    "query": "number(.a)",
+    "json": [
+      "number",
+      [ "get", "a" ]
+    ]
+  },
+  {
+    "query": "number(get())",
+    "json": [
+      "number",
+      [ "get" ]
+    ]
+  },
+  {
+    "query": "string(get())",
+    "json": [
+      "string",
+      [ "get" ]
+    ]
+  },
+  {
+    "query": "string(.a)",
+    "json": [
+      "string",
+      [ "get", "a" ]
+    ]
+  },
+  {
+    "query": "(.a | (.a)) and (.a + abs(.a)) | .a - abs(.a) | abs(.a) | (abs(.a)) | abs(.a | .b) | abs(.a + .b)",
+    "json": [
+      "pipe",
+      [
+        "and",
+        [
+          "pipe",
+          [ "get", "a" ],
+          [ "get", "a" ]
+        ],
+        [
+          "add",
+          [ "get", "a" ],
+          [
+            "abs",
+            [ "get", "a" ]
+          ]
+        ]
+      ],
+      [
+        "subtract",
+        [ "get", "a" ],
+        [
+          "abs",
+          [ "get", "a" ]
+        ]
+      ],
+      [
+        "abs",
+        [ "get", "a" ]
+      ],
+      [
+        "abs",
+        [ "get", "a" ]
+      ],
+      [
+        "abs",
+        [
+          "pipe",
+          [ "get", "a" ],
+          [ "get", "b" ]
+        ]
+      ],
+      [
+        "abs",
+        [
+          "add",
+          [ "get", "a" ],
+          [ "get", "b" ]
+        ]
+      ]
+    ]
+  },
+  {
+    "query": "1 | {a : {} + 1 | 2, b: abs(1), c: [] }",
+    "json": [
+      "pipe",
+      1,
+      [
+        "object",
+        {
+          "a": [
+            "pipe",
+            [
+              "add",
+              [
+                "object",
+                {}
+              ],
+              1
+            ],
+            2
+          ],
+          "b": [ "abs", 1 ],
+          "c": [ "array" ]
+        }
+      ]
+    ]
+  },
+  {
+    "query": "[\"a\", abs(true), false + abs(null), {a: null, b: true or false} and 1, 1 | 2 | true | false | null | \"a\"]",
+    "json": [
+      "array",
+      "a",
+      [ "abs", true ],
+      [
+        "add",
+        false,
+        [ "abs", null ]
+      ],
+      [
+        "and",
+        [
+          "object",
+          {
+            "a": null,
+            "b": [ "or", true, false ]
+          }
+        ],
+        1
+      ],
+      [
+        "pipe",
+        1,
+        2,
+        true,
+        false,
+        null,
+        "a"
+      ]
+    ]
+  }
+]
