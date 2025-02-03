@@ -112,7 +112,7 @@ jobs:
     
     - name: Create Nuget pack
       run: dotnet pack LateApexEarlySpeed.Json.Schema/ -c Release
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: Upload Nuget pack artifact
         path: LateApexEarlySpeed.Json.Schema/bin/Release/NugetPackage/
@@ -146,7 +146,7 @@ jobs:
     
     - name: Create Nuget pack
       run: dotnet pack LateApexEarlySpeed.Xunit.Assertion.Json/ -c Release
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: Upload Nuget pack artifact
         path: LateApexEarlySpeed.Xunit.Assertion.Json/bin/Release/NugetPackage/
@@ -182,7 +182,7 @@ jobs:
     
     - name: Create Nuget pack
       run: dotnet pack LateApexEarlySpeed.Nullability.Generic/ -c Release
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: Upload Nuget pack artifact
         path: LateApexEarlySpeed.Nullability.Generic/bin/Release/NugetPackage/
@@ -218,7 +218,7 @@ jobs:
     
     - name: Create Nuget pack
       run: dotnet pack JsonQuery.Net/ -c Release
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: Upload Nuget pack artifact
         path: JsonQuery.Net/bin/Release/NugetPackage/
