@@ -13,6 +13,7 @@
 ![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Json.Schema?label=LateApexEarlySpeed.Json.Schema)
 ![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Xunit.Assertion.Json?label=LateApexEarlySpeed.Xunit.Assertion.Json)
 ![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Nullability.Generic?label=LateApexEarlySpeed.Nullability.Generic)
+![NuGet Version](https://img.shields.io/nuget/v/JsonQuery.Net?label=JsonQuery.Net)
 
 # What is all in Lateapexearlyspeed.JsonSchema
 
@@ -23,6 +24,8 @@ The core library is 'Lateapexearlyspeed.Json.Schema' which is a simple and high 
 Based on the core library, there is a Xunit assertion extensions which has powerful json assertion capability.
 
 During developing core library, there are some basic requirement which turns to other reusable library, like: dealing with Nullability info of type (even if it is generic type).
+
+There is also [JsonQuery](https://jsonquerylang.org/) .Net implementation library 'JsonQuery.Net'.
 
 nuget packages:
 
@@ -39,6 +42,10 @@ nuget packages:
 <tr>
 <td>LateApexEarlySpeed.Nullability.Generic<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.Nullability.Generic/"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.Nullability.Generic"></img></a></td>
 <td>Nullability info reader including for generic type - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema?tab=readme-ov-file#lateapexearlyspeednullabilitygeneric">doc</a></td>
+</tr>
+<tr>
+<td>JsonQuery.Net<br><a href="https://www.nuget.org/packages/JsonQuery.Net/"><img alt="NuGet version" src="https://img.shields.io/nuget/v/JsonQuery.Net"></img></a></td>
+<td>JsonQuery .net implementation - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema?tab=readme-ov-file#jsonquerynet">doc</a></td>
 </tr>
 </tbody>
 </table>
@@ -317,3 +324,35 @@ Assert.Same(propertyInfo.NullabilityPropertyType, propertyInfo2.NullabilityPrope
 ```
 
 There are thread safe caches in nullability related types. (This is another difference with standard .net core `NullabilityInfoContext` which is not thread safe)
+
+## JsonQuery.Net
+
+This is [JsonQuery](https://jsonquerylang.org/) .Net implementation library, which passed official [test suite](https://github.com/jsonquerylang/jsonquery/blob/develop/test-suite/README.md). 
+
+For syntax and advantages of JsonQuery, check [official page](https://github.com/jsonquerylang/jsonquery).
+
+#### Compile json format query to query engine:
+
+```csharp
+IJsonQueryable queryable = JsonQueryable.Compile(jsonFormatQuery);
+```
+
+#### Parse json query statement to query engine:
+
+```csharp
+IJsonQueryable queryable = JsonQueryable.Parse(jsonQuery);
+```
+
+#### Execute query against json data by query engine:
+
+```csharp
+JsonNode? result = queryable.Query(jsonData);
+```
+
+#### Serialize query engine itself to json format
+
+```csharp
+string jsonFormatQuery = queryable.SerializeToJsonFormat();
+```
+
+#### More functionalities later.
