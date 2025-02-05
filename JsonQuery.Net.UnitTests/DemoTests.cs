@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Nodes;
+using JsonQuery.Net.Queryables;
 using LateApexEarlySpeed.Xunit.Assertion.Json;
 
 namespace JsonQuery.Net.UnitTests;

@@ -1,4 +1,6 @@
-﻿namespace JsonQuery.Net;
+﻿using JsonQuery.Net.Queryables;
+
+namespace JsonQuery.Net;
 
 public abstract class JsonQueryConverter<TQuery> : IJsonQueryConverter where TQuery : IJsonQueryable
 {

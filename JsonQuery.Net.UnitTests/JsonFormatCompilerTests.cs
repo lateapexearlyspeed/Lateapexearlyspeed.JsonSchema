@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using JsonQuery.Net.Queryables;
 using LateApexEarlySpeed.Xunit.Assertion.Json;
 
 namespace JsonQuery.Net.UnitTests
