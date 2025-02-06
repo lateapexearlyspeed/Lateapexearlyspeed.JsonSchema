@@ -1,20 +1,16 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-public class GetQueryParameterConverter<TQuery> : JsonConverter<TQuery> where TQuery : IJsonQueryable, ISubGetQuery
+public class GetQueryParameterConverter<TQuery> : JsonFormatQueryJsonConverter<TQuery> where TQuery : IJsonQueryable, ISubGetQuery
 {
-    public override TQuery? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    protected override TQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        reader.Read();
-        reader.Read();
-
         GetQuery getQuery = JsonSerializer.Deserialize<GetQuery>(ref reader)!;
 
         reader.Read();
 
-        return (TQuery?)Activator.CreateInstance(typeof(TQuery), getQuery);
+        return (TQuery)Activator.CreateInstance(typeof(TQuery), getQuery);
     }
 
     public override void Write(Utf8JsonWriter writer, TQuery value, JsonSerializerOptions options)

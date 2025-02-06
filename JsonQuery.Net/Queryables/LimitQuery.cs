@@ -48,14 +48,14 @@ public class LimitQueryParserConverter : JsonQueryConverter<LimitQuery>
     }
 }
 
-public class LimitQueryConverter : JsonConverter<LimitQuery>
+public class LimitQueryConverter : JsonFormatQueryJsonConverter<LimitQuery>
 {
-    public override LimitQuery Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    protected override LimitQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        reader.Read();
-        reader.Read();
-
-        int limitSize = reader.GetInt32();
+        if (reader.TokenType != JsonTokenType.Number || !reader.TryGetInt32(out int limitSize))
+        {
+            throw new JsonException("Invalid json value for limit query value");
+        }
 
         reader.Read();
 

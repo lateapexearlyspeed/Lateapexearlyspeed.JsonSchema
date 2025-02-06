@@ -72,16 +72,18 @@ public class RegexQueryParserConverter : JsonQueryConverter<RegexQuery>
     }
 }
 
-public class RegexQueryConverter : JsonConverter<RegexQuery>
+public class RegexQueryConverter : JsonFormatQueryJsonConverter<RegexQuery>
 {
-    public override RegexQuery Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    protected override RegexQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        reader.Read();
-        reader.Read();
-
         IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
 
         reader.Read();
+
+        if (reader.TokenType != JsonTokenType.String)
+        {
+            throw new JsonException($"Invalid json type: {reader.TokenType} for regex value");
+        }
 
         string regex = reader.GetString()!;
 

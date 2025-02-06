@@ -77,13 +77,10 @@ public class PickQueryParserConverter : JsonQueryConverter<PickQuery>
     }
 }
 
-public class PickQueryConverter : JsonConverter<PickQuery>
+public class PickQueryConverter : JsonFormatQueryJsonConverter<PickQuery>
 {
-    public override PickQuery Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    protected override PickQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        reader.Read();
-        reader.Read();
-
         var getQueries = new List<GetQuery>();
         while (reader.TokenType != JsonTokenType.EndArray)
         {

@@ -52,13 +52,10 @@ public class IfQueryParserConverter : JsonQueryConverter<IfQuery>
     }
 }
 
-public class IfQueryConverter : JsonConverter<IfQuery>
+public class IfQueryConverter : JsonFormatQueryJsonConverter<IfQuery>
 {
-    public override IfQuery Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    protected override IfQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        reader.Read();
-        reader.Read();
-
         IJsonQueryable ifQuery = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
 
         reader.Read();

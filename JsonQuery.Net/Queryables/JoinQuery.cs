@@ -47,13 +47,10 @@ internal class JoinQueryParserConverter : JsonQueryConverter<JoinQuery>
     }
 }
 
-internal class JoinQueryConverter : JsonConverter<JoinQuery>
+internal class JoinQueryConverter : JsonFormatQueryJsonConverter<JoinQuery>
 {
-    public override JoinQuery Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    protected override JoinQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        reader.Read();
-        reader.Read();
-
         if (reader.TokenType == JsonTokenType.String)
         {
             var joinQuery = new JoinQuery(reader.GetString()!);

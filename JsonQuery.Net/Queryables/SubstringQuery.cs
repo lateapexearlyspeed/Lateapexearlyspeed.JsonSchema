@@ -90,18 +90,20 @@ internal class SubstringQueryParserConverter : JsonQueryConverter<SubstringQuery
     }
 }
 
-internal class SubstringQueryConverter : JsonConverter<SubstringQuery>
+internal class SubstringQueryConverter : JsonFormatQueryJsonConverter<SubstringQuery>
 {
-    public override SubstringQuery Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    protected override SubstringQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        reader.Read();
-        reader.Read();
-
         IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
 
         reader.Read();
 
-        int start = reader.GetInt32();
+        if (reader.TokenType != JsonTokenType.Number)
+        {
+            throw new JsonException($"Invalid json type {reader.TokenType} for 'substring' 's start value");
+        }
+
+        int start = (int)reader.GetDecimal();
 
         reader.Read();
 
@@ -109,7 +111,7 @@ internal class SubstringQueryConverter : JsonConverter<SubstringQuery>
 
         if (reader.TokenType == JsonTokenType.Number)
         {
-            end = reader.GetInt32();
+            end = (int)reader.GetDecimal();
             reader.Read();
         }
         else

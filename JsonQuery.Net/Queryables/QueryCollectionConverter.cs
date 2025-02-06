@@ -1,15 +1,11 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-public class QueryCollectionConverter<TQuery> : JsonConverter<TQuery> where TQuery : IJsonQueryable, IMultipleSubQuery
+public class QueryCollectionConverter<TQuery> : JsonFormatQueryJsonConverter<TQuery> where TQuery : IJsonQueryable, IMultipleSubQuery
 {
-    public override TQuery? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    protected override TQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        reader.Read(); // pass start array token
-        reader.Read(); // pass keyword
-
         var queries = new List<IJsonQueryable>();
         while (reader.TokenType != JsonTokenType.EndArray)
         {

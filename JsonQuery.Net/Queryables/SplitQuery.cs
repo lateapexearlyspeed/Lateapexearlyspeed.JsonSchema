@@ -71,13 +71,10 @@ internal class SplitQueryParserConverter : JsonQueryConverter<SplitQuery>
     }
 }
 
-internal class SplitQueryConverter : JsonConverter<SplitQuery>
+internal class SplitQueryConverter : JsonFormatQueryJsonConverter<SplitQuery>
 {
-    public override SplitQuery Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    protected override SplitQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        reader.Read();
-        reader.Read();
-
         IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
 
         reader.Read();

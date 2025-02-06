@@ -105,14 +105,10 @@ public class GetQueryParserConverter : JsonQueryConverter<GetQuery>
     }
 }
 
-public class GetQueryConverter : JsonConverter<GetQuery>
+public class GetQueryConverter : JsonFormatQueryJsonConverter<GetQuery>
 {
-    public override GetQuery Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    protected override GetQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        reader.Read();
-
-        reader.Read();
-
         var propertyPath = new List<object>();
         while (reader.TokenType != JsonTokenType.EndArray)
         {
@@ -121,10 +117,15 @@ public class GetQueryConverter : JsonConverter<GetQuery>
             {
                 segment = reader.GetString()!;
             }
+            else if (reader.TokenType == JsonTokenType.Number)
+            {
+                segment = (int)reader.GetDecimal();
+            }
             else
             {
-                segment = reader.GetInt32();
+                throw new JsonException($"Invalid json type: {reader.TokenType} for get path");
             }
+
             propertyPath.Add(segment);
 
             reader.Read();

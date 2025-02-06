@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
@@ -42,13 +41,10 @@ public abstract class OperatorQuery : IJsonQueryable
     public abstract JsonNode? Query(JsonNode? data);
 }
 
-public class OperatorConverter<TOperator> : JsonConverter<TOperator> where TOperator : OperatorQuery
+public class OperatorConverter<TOperator> : JsonFormatQueryJsonConverter<TOperator> where TOperator : OperatorQuery
 {
-    public override TOperator? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    protected override TOperator ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        reader.Read();
-        reader.Read();
-
         IJsonQueryable left = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
 
         reader.Read();
@@ -57,7 +53,7 @@ public class OperatorConverter<TOperator> : JsonConverter<TOperator> where TOper
 
         reader.Read();
 
-        return (TOperator?)Activator.CreateInstance(typeof(TOperator), left, right);
+        return (TOperator)Activator.CreateInstance(typeof(TOperator), left, right);
     }
 
     public override void Write(Utf8JsonWriter writer, TOperator value, JsonSerializerOptions options)

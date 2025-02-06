@@ -22,13 +22,10 @@ public class ObjectQuery : IJsonQueryable
     }
 }
 
-public class ObjectQueryConverter : JsonConverter<ObjectQuery>
+public class ObjectQueryConverter : JsonFormatQueryJsonConverter<ObjectQuery>
 {
-    public override ObjectQuery Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    protected override ObjectQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        reader.Read();
-        reader.Read();
-
         var objectQuery = new ObjectQuery(JsonSerializer.Deserialize<Dictionary<string, IJsonQueryable>>(ref reader)!);
 
         reader.Read();

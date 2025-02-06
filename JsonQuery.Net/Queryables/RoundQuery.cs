@@ -57,13 +57,10 @@ public class RoundQueryParserConverter : JsonQueryConverter<RoundQuery>
     }
 }
 
-public class RoundQueryConverter : JsonConverter<RoundQuery>
+public class RoundQueryConverter : JsonFormatQueryJsonConverter<RoundQuery>
 {
-    public override RoundQuery Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    protected override RoundQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        reader.Read();
-        reader.Read();
-
         IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
 
         reader.Read();
@@ -71,7 +68,7 @@ public class RoundQueryConverter : JsonConverter<RoundQuery>
         int digits = 0;
         if (reader.TokenType == JsonTokenType.Number)
         {
-            digits = reader.GetInt32();
+            digits = (int)reader.GetDecimal();
             reader.Read();
         }
 
