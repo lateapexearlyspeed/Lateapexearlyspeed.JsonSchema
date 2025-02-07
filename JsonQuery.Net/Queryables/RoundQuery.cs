@@ -35,13 +35,10 @@ public class RoundQuery : IJsonQueryable
     }
 }
 
-public class RoundQueryParserConverter : JsonQueryConverter<RoundQuery>
+public class RoundQueryParserConverter : JsonQueryFunctionConverter<RoundQuery>
 {
-    public override RoundQuery Read(ref JsonQueryReader reader)
+    protected override RoundQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
-
         IJsonQueryable query = JsonQueryParser.ParseQueryCombination(ref reader);
 
         reader.Read();

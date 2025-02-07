@@ -28,13 +28,10 @@ public class JoinQuery : IJsonQueryable
     }
 }
 
-internal class JoinQueryParserConverter : JsonQueryConverter<JoinQuery>
+internal class JoinQueryParserConverter : JsonQueryFunctionConverter<JoinQuery>
 {
-    public override JoinQuery Read(ref JsonQueryReader reader)
+    protected override JoinQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
-
         if (reader.TokenType == JsonQueryTokenType.String)
         {
             var joinQuery = new JoinQuery(reader.GetString());

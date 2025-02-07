@@ -48,13 +48,10 @@ public class SplitQuery : IJsonQueryable
     }
 }
 
-internal class SplitQueryParserConverter : JsonQueryConverter<SplitQuery>
+internal class SplitQueryParserConverter : JsonQueryFunctionConverter<SplitQuery>
 {
-    public override SplitQuery Read(ref JsonQueryReader reader)
+    protected override SplitQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
-
         IJsonQueryable query = JsonQueryParser.ParseQueryCombination(ref reader);
 
         reader.Read();

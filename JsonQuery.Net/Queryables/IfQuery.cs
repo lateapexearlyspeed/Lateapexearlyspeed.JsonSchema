@@ -29,13 +29,10 @@ public class IfQuery : IJsonQueryable
     }
 }
 
-public class IfQueryParserConverter : JsonQueryConverter<IfQuery>
+public class IfQueryParserConverter : JsonQueryFunctionConverter<IfQuery>
 {
-    public override IfQuery Read(ref JsonQueryReader reader)
+    protected override IfQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
-
         IJsonQueryable ifQuery = JsonQueryParser.ParseQueryCombination(ref reader);
 
         reader.Read();

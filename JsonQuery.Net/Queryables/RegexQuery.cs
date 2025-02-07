@@ -37,20 +37,17 @@ public class RegexQuery : IJsonQueryable
     }
 }
 
-public class RegexQueryParserConverter : JsonQueryConverter<RegexQuery>
+public class RegexQueryParserConverter : JsonQueryFunctionConverter<RegexQuery>
 {
-    public override RegexQuery Read(ref JsonQueryReader reader)
+    protected override RegexQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
-
         IJsonQueryable query = JsonQueryParser.ParseQueryCombination(ref reader);
 
         reader.Read();
 
         if (reader.TokenType != JsonQueryTokenType.String)
         {
-            throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for {typeof(RegexQuery)}", reader.Position);
+            throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for regex value", reader.Position);
         }
 
         string regex = reader.GetString();

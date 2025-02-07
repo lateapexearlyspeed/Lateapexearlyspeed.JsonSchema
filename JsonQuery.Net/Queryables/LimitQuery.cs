@@ -28,16 +28,13 @@ public class LimitQuery : IJsonQueryable
     }
 }
 
-public class LimitQueryParserConverter : JsonQueryConverter<LimitQuery>
+public class LimitQueryParserConverter : JsonQueryFunctionConverter<LimitQuery>
 {
-    public override LimitQuery Read(ref JsonQueryReader reader)
+    protected override LimitQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
-
         if (reader.TokenType != JsonQueryTokenType.Number)
         {
-            throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for {typeof(LimitQuery)}", reader.Position);
+            throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for 'limit' value", reader.Position);
         }
 
         int limitSize = (int)reader.GetDecimal();

@@ -73,13 +73,10 @@ public class SortQuery : IJsonQueryable
     }
 }
 
-public class SortQueryParserConverter : JsonQueryConverter<SortQuery>
+public class SortQueryParserConverter : JsonQueryFunctionConverter<SortQuery>
 {
-    public override SortQuery Read(ref JsonQueryReader reader)
+    protected override SortQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
-
         IJsonQueryable sortQuery;
         bool isDesc = false;
 

@@ -17,13 +17,10 @@ public class ParameterlessQueryConverter<TQuery> : JsonFormatQueryJsonConverter<
     }
 }
 
-public class ParameterlessQueryParserConverter<TQuery> : JsonQueryConverter<TQuery> where TQuery : IJsonQueryable, new()
+public class ParameterlessQueryParserConverter<TQuery> : JsonQueryFunctionConverter<TQuery> where TQuery : IJsonQueryable, new()
 {
-    public override TQuery Read(ref JsonQueryReader reader)
+    protected override TQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
-
         return new TQuery();
     }
 }

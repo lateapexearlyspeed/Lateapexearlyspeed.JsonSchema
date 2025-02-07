@@ -44,23 +44,30 @@ public class MapObjectQuery : IJsonQueryable
     }
 }
 
-internal class MapObjectQueryParserConverter : JsonQueryConverter<MapObjectQuery>
+internal class MapObjectQueryParserConverter : JsonQueryFunctionConverter<MapObjectQuery>
 {
-    public override MapObjectQuery Read(ref JsonQueryReader reader)
+    protected override MapObjectQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
-
         if (reader.TokenType != JsonQueryTokenType.StartBrace)
         {
-            throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for {typeof(MapObjectQuery)}", reader.Position);
+            throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for 'mapObject' query", reader.Position);
         }
 
         ObjectQuery objectQuery = JsonQueryParser.ParseObjectQuery(ref reader);
 
         reader.Read();
 
-        return new MapObjectQuery(objectQuery.PropertiesQueries["key"], objectQuery.PropertiesQueries["value"]);
+        if (!objectQuery.PropertiesQueries.TryGetValue("key", out IJsonQueryable? keyQuery))
+        {
+            throw new JsonQueryParseException("Missed 'key' property for 'mapObject' query", reader.Position);
+        }
+
+        if (!objectQuery.PropertiesQueries.TryGetValue("value", out IJsonQueryable? valueQuery))
+        {
+            throw new JsonQueryParseException("Missed 'value' property for 'mapObject' query", reader.Position);
+        }
+
+        return new MapObjectQuery(keyQuery, valueQuery);
     }
 }
 
@@ -72,7 +79,17 @@ internal class MapObjectQueryConverter : JsonFormatQueryJsonConverter<MapObjectQ
 
         reader.Read();
 
-        return new MapObjectQuery(objectQuery.PropertiesQueries["key"], objectQuery.PropertiesQueries["value"]);
+        if (!objectQuery.PropertiesQueries.TryGetValue("key", out IJsonQueryable? keyQuery))
+        {
+            throw new JsonException("Missed 'key' property for 'mapObject' query");
+        }
+
+        if (!objectQuery.PropertiesQueries.TryGetValue("value", out IJsonQueryable? valueQuery))
+        {
+            throw new JsonException("Missed 'value' property for 'mapObject' query");
+        }
+
+        return new MapObjectQuery(keyQuery, valueQuery);
     }
 
     public override void Write(Utf8JsonWriter writer, MapObjectQuery value, JsonSerializerOptions options)

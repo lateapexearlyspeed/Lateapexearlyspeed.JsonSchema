@@ -72,13 +72,10 @@ public class GetQuery : IJsonQueryable
     }
 }
 
-public class GetQueryParserConverter : JsonQueryConverter<GetQuery>
+public class GetQueryParserConverter : JsonQueryFunctionConverter<GetQuery>
 {
-    public override GetQuery Read(ref JsonQueryReader reader)
+    protected override GetQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
-
         var propertyPath = new List<object>();
         while (reader.TokenType != JsonQueryTokenType.EndParenthesis)
         {
@@ -93,7 +90,7 @@ public class GetQueryParserConverter : JsonQueryConverter<GetQuery>
             }
             else
             {
-                throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for {typeof(GetQuery)}", reader.Position);
+                throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for 'get' query", reader.Position);
             }
 
             propertyPath.Add(segment);

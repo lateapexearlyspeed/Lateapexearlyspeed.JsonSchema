@@ -54,20 +54,17 @@ public class SubstringQuery : IJsonQueryable
     }
 }
 
-internal class SubstringQueryParserConverter : JsonQueryConverter<SubstringQuery>
+internal class SubstringQueryParserConverter : JsonQueryFunctionConverter<SubstringQuery>
 {
-    public override SubstringQuery Read(ref JsonQueryReader reader)
+    protected override SubstringQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
-
         IJsonQueryable query = JsonQueryParser.ParseQueryCombination(ref reader);
 
         reader.Read();
 
         if (reader.TokenType != JsonQueryTokenType.Number)
         {
-            throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for {typeof(SubstringQuery)}", reader.Position);
+            throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for 'substring' 's start value", reader.Position);
         }
 
         int start = (int)reader.GetDecimal();

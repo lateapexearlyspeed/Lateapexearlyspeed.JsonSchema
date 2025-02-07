@@ -31,13 +31,10 @@ public class QueryCollectionConverter<TQuery> : JsonFormatQueryJsonConverter<TQu
     }
 }
 
-public class QueryCollectionParserConverter<TQuery> : JsonQueryConverter<TQuery> where TQuery : IJsonQueryable
+public class QueryCollectionParserConverter<TQuery> : JsonQueryFunctionConverter<TQuery> where TQuery : IJsonQueryable
 {
-    public override TQuery Read(ref JsonQueryReader reader)
+    protected override TQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
-
         var queries = new List<IJsonQueryable>();
         while (reader.TokenType != JsonQueryTokenType.EndParenthesis)
         {

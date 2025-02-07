@@ -24,14 +24,16 @@ public class GetQueryParameterConverter<TQuery> : JsonFormatQueryJsonConverter<T
     }
 }
 
-public class GetQueryParameterParserConverter<TQuery> : JsonQueryConverter<TQuery> where TQuery : IJsonQueryable
+public class GetQueryParameterParserConverter<TQuery> : JsonQueryFunctionConverter<TQuery> where TQuery : IJsonQueryable
 {
-    public override TQuery Read(ref JsonQueryReader reader)
+    protected override TQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
+        IJsonQueryable query = JsonQueryParser.ParseSingleQuery(ref reader);
 
-        GetQuery getQuery = (GetQuery)JsonQueryParser.ParseSingleQuery(ref reader);
+        if (query is not GetQuery getQuery)
+        {
+            throw new JsonQueryParseException($"'{QueryKeyword}' function needs 'get' query as argument", reader.Position);
+        }
 
         reader.Read();
 

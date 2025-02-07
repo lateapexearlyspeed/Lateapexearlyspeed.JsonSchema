@@ -52,20 +52,17 @@ public class PickQuery : IJsonQueryable
     }
 }
 
-public class PickQueryParserConverter : JsonQueryConverter<PickQuery>
+public class PickQueryParserConverter : JsonQueryFunctionConverter<PickQuery>
 {
-    public override PickQuery Read(ref JsonQueryReader reader)
+    protected override PickQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
-
         var getQueries = new List<GetQuery>();
         while (reader.TokenType != JsonQueryTokenType.EndParenthesis)
         {
             IJsonQueryable query = JsonQueryParser.ParseSingleQuery(ref reader);
             if (query is not GetQuery getQuery)
             {
-                throw new JsonQueryParseException($"Invalid query type: {query.GetType()} for {typeof(PickQuery)}", reader.Position);
+                throw new JsonQueryParseException("'pick' query needs 'get' query as arguments", reader.Position);
             }
 
             getQueries.Add(getQuery);

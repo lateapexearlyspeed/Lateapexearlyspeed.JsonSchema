@@ -22,13 +22,10 @@ public class SingleQueryParameterConverter<TQuery> : JsonFormatQueryJsonConverte
     }
 }
 
-public class SingleQueryParameterParserConverter<TQuery> : JsonQueryConverter<TQuery> where TQuery : IJsonQueryable
+public class SingleQueryParameterParserConverter<TQuery> : JsonQueryFunctionConverter<TQuery> where TQuery : IJsonQueryable
 {
-    public override TQuery Read(ref JsonQueryReader reader)
+    protected override TQuery ReadArguments(ref JsonQueryReader reader)
     {
-        reader.Read();
-        reader.Read();
-
         IJsonQueryable query = JsonQueryParser.ParseQueryCombination(ref reader);
 
         reader.Read(); // ')'
