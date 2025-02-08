@@ -1,0 +1,57 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Title>Provide fluent json assertion for Xunit v3</Title>
+    <Authors>Lateapexearlyspeed</Authors>
+    <Description>Provide fluent json assertion for Xunit v3</Description>
+    <PackageReadmeFile>nuget.readme.md</PackageReadmeFile>
+    <PackageIcon>nuget.icon.jpg</PackageIcon>
+    <PackageTags>Xunit;Json;Assertion;Assert;Test;Fluent</PackageTags>
+    <PackageOutputPath>bin\Release\NugetPackage</PackageOutputPath>
+    <Version>1.0.6</Version>
+    <AssemblyVersion>1.0.6</AssemblyVersion>
+    <FileVersion>1.0.6</FileVersion>
+    <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema</PackageProjectUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>6</WarningLevel>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <NoWarn>1701;1702;1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>6</WarningLevel>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <NoWarn>1701;1702;1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LateApexEarlySpeed.Json.Schema" Version="1.1.12" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <PackageReference Include="xunit.v3.assert" Version="1.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="nuget.icon.jpg">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+    <None Update="nuget.readme.md">
+      <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
+    </None>
+  </ItemGroup>
+
+</Project>
