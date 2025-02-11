@@ -12,6 +12,7 @@
 ![GitHub top language](https://img.shields.io/github/languages/top/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema)
 ![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Json.Schema?label=LateApexEarlySpeed.Json.Schema)
 ![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Xunit.Assertion.Json?label=LateApexEarlySpeed.Xunit.Assertion.Json)
+![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Xunit.V3.Assertion.Json?label=LateApexEarlySpeed.Xunit.V3.Assertion.Json)
 ![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Nullability.Generic?label=LateApexEarlySpeed.Nullability.Generic)
 ![NuGet Version](https://img.shields.io/nuget/v/JsonQuery.Net?label=JsonQuery.Net)
 
@@ -37,7 +38,11 @@ nuget packages:
 </tr>
 <tr>
 <td>LateApexEarlySpeed.Xunit.Assertion.Json<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.Xunit.Assertion.Json"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.Xunit.Assertion.Json"></img></a></td>
-<td>Xunit assertion extension for json - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema?tab=readme-ov-file#lateapexearlyspeedxunitassertionjson">doc</a></td>
+<td>Xunit v2 assertion extension for json - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema?tab=readme-ov-file#lateapexearlyspeedxunitassertionjson">doc</a></td>
+</tr>
+<tr>
+<td>LateApexEarlySpeed.Xunit.V3.Assertion.Json<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.Xunit.V3.Assertion.Json"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.Xunit.V3.Assertion.Json"></img></a></td>
+<td>Xunit v3 assertion extension for json - see <a href="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema?tab=readme-ov-file#lateapexearlyspeedxunitassertionjson">doc</a></td>
 </tr>
 <tr>
 <td>LateApexEarlySpeed.Nullability.Generic<br><a href="https://www.nuget.org/packages/LateApexEarlySpeed.Nullability.Generic/"><img alt="NuGet version" src="https://img.shields.io/nuget/v/LateApexEarlySpeed.Nullability.Generic"></img></a></td>
@@ -143,6 +148,10 @@ Assert.Throws<NotSupportedException>(() => jsonValidator.GetStandardJsonSchemaTe
 Extend keyword involved build method list is [here](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Output-standard-Json-schema-text-from-JsonValidator).
 
 ## LateApexEarlySpeed.Xunit.Assertion.Json
+
+[xunit v2 extension package](https://www.nuget.org/packages/LateApexEarlySpeed.Xunit.Assertion.Json)
+
+[xunit v3 extension package](https://www.nuget.org/packages/LateApexEarlySpeed.Xunit.V3.Assertion.Json)
 
 There were already json related test assertion libraries, most ones were asserting json's equivalent.
 
