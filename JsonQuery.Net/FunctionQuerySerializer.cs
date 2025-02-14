@@ -7,7 +7,12 @@ internal static class FunctionQuerySerializer
 {
     public static IJsonQueryable Deserialize(ref JsonQueryReader reader, Type queryType)
     {
-        JsonQueryConverterAttribute converterAttribute = queryType.GetCustomAttribute<JsonQueryConverterAttribute>();
+        JsonQueryConverterAttribute? converterAttribute = queryType.GetCustomAttribute<JsonQueryConverterAttribute>();
+
+        if (converterAttribute is null)
+        {
+            throw new NotSupportedException($"Query type: {queryType} needs to be decorated with {nameof(JsonQueryConverterAttribute)}");
+        }
 
         Type parserConverterType = converterAttribute.ParserType;
 

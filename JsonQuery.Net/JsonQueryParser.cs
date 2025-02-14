@@ -3,7 +3,7 @@ using JsonQuery.Net.Queryables;
 
 namespace JsonQuery.Net;
 
-internal static class JsonQueryParser
+public static class JsonQueryParser
 {
     public static IJsonQueryable ParseQueryCombination(ref JsonQueryReader reader)
     {
@@ -69,7 +69,7 @@ internal static class JsonQueryParser
         return true;
     }
 
-    internal static IJsonQueryable ParseSingleQuery(ref JsonQueryReader reader)
+    public static IJsonQueryable ParseSingleQuery(ref JsonQueryReader reader)
     {
         IJsonQueryable query;
         switch (reader.TokenType)
