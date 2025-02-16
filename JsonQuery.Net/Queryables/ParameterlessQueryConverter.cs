@@ -1,19 +1,38 @@
-﻿using System.Text.Json;
+﻿using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-public class ParameterlessQueryConverter<TQuery> : JsonFormatQueryJsonConverter<TQuery> where TQuery : IJsonQueryable, new()
+public class ParameterlessQueryConverter : JsonConverterFactory
 {
-    protected override TQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override bool CanConvert(Type typeToConvert)
     {
-        return new TQuery();
+        ConstructorInfo? constructorInfo = typeToConvert.GetConstructor(Type.EmptyTypes);
+
+        return constructorInfo is not null;
     }
 
-    public override void Write(Utf8JsonWriter writer, TQuery value, JsonSerializerOptions options)
+    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
-        writer.WriteStartArray();
-        writer.WriteStringValue(value.GetKeyword());
-        writer.WriteEndArray();
+        Type converterType = typeof(ParameterlessQueryConverterInner<>).MakeGenericType(typeToConvert);
+
+        return (JsonConverter)Activator.CreateInstance(converterType);
+    }
+
+    private class ParameterlessQueryConverterInner<TQuery> : JsonFormatQueryJsonConverter<TQuery> where TQuery : IJsonQueryable, new()
+    {
+        protected override TQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            return new TQuery();
+        }
+
+        public override void Write(Utf8JsonWriter writer, TQuery value, JsonSerializerOptions options)
+        {
+            writer.WriteStartArray();
+            writer.WriteStringValue(value.GetKeyword());
+            writer.WriteEndArray();
+        }
     }
 }
 

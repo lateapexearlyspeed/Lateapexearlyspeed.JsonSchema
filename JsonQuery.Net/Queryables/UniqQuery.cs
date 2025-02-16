@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-[JsonConverter(typeof(ParameterlessQueryConverter<UniqQuery>))]
+[JsonConverter(typeof(ParameterlessQueryConverter))]
 [JsonQueryConverter(typeof(ParameterlessQueryParserConverter<UniqQuery>))]
 public class UniqQuery : IJsonQueryable
 {

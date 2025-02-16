@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-[JsonConverter(typeof(SingleQueryParameterConverter<StringQuery>))]
+[JsonConverter(typeof(SingleQueryParameterConverter))]
 [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<StringQuery>))]
 public class StringQuery : IJsonQueryable, ISingleSubQuery
 {

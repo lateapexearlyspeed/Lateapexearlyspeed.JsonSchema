@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-[JsonConverter(typeof(GetQueryParameterConverter<GroupByQuery>))]
+[JsonConverter(typeof(GetQueryParameterConverter))]
 [JsonQueryConverter(typeof(GetQueryParameterParserConverter<GroupByQuery>))]
 public class GroupByQuery : IJsonQueryable, ISubGetQuery
 {

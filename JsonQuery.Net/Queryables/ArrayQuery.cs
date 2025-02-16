@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-[JsonConverter(typeof(QueryCollectionConverter<ArrayQuery>))]
+[JsonConverter(typeof(QueryCollectionConverter))]
 public class ArrayQuery : IJsonQueryable, IMultipleSubQuery
 {
     internal const string Keyword = "array";

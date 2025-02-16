@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-[JsonConverter(typeof(SingleQueryParameterConverter<MapKeysQuery>))]
+[JsonConverter(typeof(SingleQueryParameterConverter))]
 [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<MapKeysQuery>))]
 public class MapKeysQuery : IJsonQueryable, ISingleSubQuery
 {

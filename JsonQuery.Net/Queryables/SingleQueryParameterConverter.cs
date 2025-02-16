@@ -1,24 +1,43 @@
-﻿using System.Text.Json;
+﻿using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-public class SingleQueryParameterConverter<TQuery> : JsonFormatQueryJsonConverter<TQuery> where TQuery : IJsonQueryable, ISingleSubQuery
+public class SingleQueryParameterConverter : JsonConverterFactory
 {
-    protected override TQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override bool CanConvert(Type typeToConvert)
     {
-        IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
+        ConstructorInfo? constructorInfo = typeToConvert.GetConstructor(new[] { typeof(IJsonQueryable) });
 
-        reader.Read();
-
-        return (TQuery)Activator.CreateInstance(typeof(TQuery), query);
+        return constructorInfo is not null;
     }
 
-    public override void Write(Utf8JsonWriter writer, TQuery value, JsonSerializerOptions options)
+    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
-        writer.WriteStartArray();
-        writer.WriteStringValue(value.GetKeyword());
-        JsonSerializer.Serialize(writer, value.SubQuery);
-        writer.WriteEndArray();
+        Type converterType = typeof(SingleQueryParameterConverterInner<>).MakeGenericType(typeToConvert);
+
+        return (JsonConverter)Activator.CreateInstance(converterType);
+    }
+
+    private class SingleQueryParameterConverterInner<TQuery> : JsonFormatQueryJsonConverter<TQuery> where TQuery : IJsonQueryable, ISingleSubQuery
+    {
+        protected override TQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
+
+            reader.Read();
+
+            return (TQuery)Activator.CreateInstance(typeof(TQuery), query);
+        }
+
+        public override void Write(Utf8JsonWriter writer, TQuery value, JsonSerializerOptions options)
+        {
+            writer.WriteStartArray();
+            writer.WriteStringValue(value.GetKeyword());
+            JsonSerializer.Serialize(writer, value.SubQuery);
+            writer.WriteEndArray();
+        }
     }
 }
 

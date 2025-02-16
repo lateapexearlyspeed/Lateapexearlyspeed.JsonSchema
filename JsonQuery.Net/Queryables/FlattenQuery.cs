@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-[JsonConverter(typeof(ParameterlessQueryConverter<FlattenQuery>))]
+[JsonConverter(typeof(ParameterlessQueryConverter))]
 [JsonQueryConverter(typeof(ParameterlessQueryParserConverter<FlattenQuery>))]
 public class FlattenQuery : IJsonQueryable
 {

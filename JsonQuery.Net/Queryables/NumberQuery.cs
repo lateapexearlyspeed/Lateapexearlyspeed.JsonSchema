@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-[JsonConverter(typeof(SingleQueryParameterConverter<NumberQuery>))]
+[JsonConverter(typeof(SingleQueryParameterConverter))]
 [JsonQueryConverter(typeof(SingleQueryParameterParserConverter<NumberQuery>))]
 public class NumberQuery : IJsonQueryable, ISingleSubQuery
 {

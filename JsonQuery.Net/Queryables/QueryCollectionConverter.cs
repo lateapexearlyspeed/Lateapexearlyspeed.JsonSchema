@@ -1,33 +1,52 @@
-﻿using System.Text.Json;
+﻿using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-public class QueryCollectionConverter<TQuery> : JsonFormatQueryJsonConverter<TQuery> where TQuery : IJsonQueryable, IMultipleSubQuery
+public class QueryCollectionConverter : JsonConverterFactory
 {
-    protected override TQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override bool CanConvert(Type typeToConvert)
     {
-        var queries = new List<IJsonQueryable>();
-        while (reader.TokenType != JsonTokenType.EndArray)
-        {
-            queries.Add(JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!);
+        ConstructorInfo? constructorInfo = typeToConvert.GetConstructor(new[] { typeof(IJsonQueryable[])});
 
-            reader.Read();
-        }
-
-        return (TQuery)Activator.CreateInstance(typeof(TQuery), new object[] { queries.ToArray() });
+        return constructorInfo is not null;
     }
 
-    public override void Write(Utf8JsonWriter writer, TQuery value, JsonSerializerOptions options)
+    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
-        writer.WriteStartArray();
+        Type converterType = typeof(QueryCollectionConverterInner<>).MakeGenericType(typeToConvert);
 
-        writer.WriteStringValue(value.GetKeyword());
-        foreach (IJsonQueryable subQuery in value.SubQueries)
+        return (JsonConverter)Activator.CreateInstance(converterType);
+    }
+
+    private class QueryCollectionConverterInner<TQuery> : JsonFormatQueryJsonConverter<TQuery> where TQuery : IJsonQueryable, IMultipleSubQuery
+    {
+        protected override TQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            JsonSerializer.Serialize(writer, subQuery);
+            var queries = new List<IJsonQueryable>();
+            while (reader.TokenType != JsonTokenType.EndArray)
+            {
+                queries.Add(JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!);
+
+                reader.Read();
+            }
+
+            return (TQuery)Activator.CreateInstance(typeof(TQuery), new object[] { queries.ToArray() });
         }
 
-        writer.WriteEndArray();
+        public override void Write(Utf8JsonWriter writer, TQuery value, JsonSerializerOptions options)
+        {
+            writer.WriteStartArray();
+
+            writer.WriteStringValue(value.GetKeyword());
+            foreach (IJsonQueryable subQuery in value.SubQueries)
+            {
+                JsonSerializer.Serialize(writer, subQuery);
+            }
+
+            writer.WriteEndArray();
+        }
     }
 }
 

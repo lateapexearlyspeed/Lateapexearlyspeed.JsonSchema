@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-[JsonConverter(typeof(ParameterlessQueryConverter<ReverseQuery>))]
+[JsonConverter(typeof(ParameterlessQueryConverter))]
 [JsonQueryConverter(typeof(ParameterlessQueryParserConverter<ReverseQuery>))]
 public class ReverseQuery : IJsonQueryable
 {

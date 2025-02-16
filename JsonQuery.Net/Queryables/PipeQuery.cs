@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-[JsonConverter(typeof(QueryCollectionConverter<PipeQuery>))]
+[JsonConverter(typeof(QueryCollectionConverter))]
 [JsonQueryConverter(typeof(QueryCollectionParserConverter<PipeQuery>))]
 public class PipeQuery : IJsonQueryable, IMultipleSubQuery
 {
