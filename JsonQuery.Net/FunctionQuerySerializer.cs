@@ -16,7 +16,28 @@ internal static class FunctionQuerySerializer
 
         Type parserConverterType = converterAttribute.ParserType;
 
-        IJsonQueryConverter converter = (IJsonQueryConverter)Activator.CreateInstance(parserConverterType);
+        if (!typeof(IJsonQueryConverter).IsAssignableFrom(parserConverterType) && !typeof(IJsonQueryConverterFactory).IsAssignableFrom(parserConverterType))
+        {
+            throw new NotSupportedException($"Parser type:{parserConverterType} is invalid.");
+        }
+
+        IJsonQueryTypeChecker converterOrFactory = (IJsonQueryTypeChecker)Activator.CreateInstance(parserConverterType);
+
+        if (!converterOrFactory.CanConvert(queryType))
+        {
+            throw new NotSupportedException($"Query type: {queryType} is decorated with {parserConverterType} but it cannot convert {queryType}");
+        }
+
+        IJsonQueryConverter converter;
+
+        if (converterOrFactory is IJsonQueryConverterFactory factory)
+        {
+            converter = factory.CreateConverter(queryType);
+        }
+        else
+        {
+            converter = (IJsonQueryConverter)converterOrFactory;
+        }
 
         return converter.Read(ref reader);
     }

@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(SingleQueryParameterConverter))]
-[JsonQueryConverter(typeof(SingleQueryParameterParserConverter<AbsQuery>))]
+[JsonQueryConverter(typeof(SingleQueryParameterParserConverter))]
 public class AbsQuery : IJsonQueryable, ISingleSubQuery
 {
     internal const string Keyword = "abs";

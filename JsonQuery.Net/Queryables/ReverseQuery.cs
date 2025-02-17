@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(ParameterlessQueryConverter))]
-[JsonQueryConverter(typeof(ParameterlessQueryParserConverter<ReverseQuery>))]
+[JsonQueryConverter(typeof(ParameterlessQueryParserConverter))]
 public class ReverseQuery : IJsonQueryable
 {
     internal const string Keyword = "reverse";

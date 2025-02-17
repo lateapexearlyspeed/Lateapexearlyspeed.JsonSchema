@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(ParameterlessQueryConverter))]
-[JsonQueryConverter(typeof(ParameterlessQueryParserConverter<ValuesQuery>))]
+[JsonQueryConverter(typeof(ParameterlessQueryParserConverter))]
 public class ValuesQuery : IJsonQueryable
 {
     internal const string Keyword = "values";

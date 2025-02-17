@@ -440,7 +440,7 @@ public class AnyJsonConverter : JsonFormatQueryJsonConverter<AnyQueryable>
 }
 
 [JsonConverter(typeof(SingleQueryParameterConverter))]
-[JsonQueryConverter(typeof(SingleQueryParameterParserConverter<AllQueryable>))]
+[JsonQueryConverter(typeof(SingleQueryParameterParserConverter))]
 public class AllQueryable : IJsonQueryable, ISingleSubQuery
 {
     private readonly IJsonQueryable _query;

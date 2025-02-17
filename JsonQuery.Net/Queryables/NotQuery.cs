@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(SingleQueryParameterConverter))]
-[JsonQueryConverter(typeof(SingleQueryParameterParserConverter<NotQuery>))]
+[JsonQueryConverter(typeof(SingleQueryParameterParserConverter))]
 public class NotQuery : IJsonQueryable, ISingleSubQuery
 {
     internal const string Keyword = "not";

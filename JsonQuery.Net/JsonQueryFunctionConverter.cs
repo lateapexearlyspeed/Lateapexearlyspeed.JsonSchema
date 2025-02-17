@@ -27,9 +27,24 @@ public abstract class JsonQueryFunctionConverter<TQuery> : IJsonQueryConverter w
 
         return query;
     }
+
+    public virtual bool CanConvert(Type typeToConvert)
+    {
+        return typeToConvert == typeof(TQuery);
+    }
 }
 
-internal interface IJsonQueryConverter
+public interface IJsonQueryConverter : IJsonQueryTypeChecker
 {
     IJsonQueryable Read(ref JsonQueryReader reader);
+}
+
+public interface IJsonQueryConverterFactory : IJsonQueryTypeChecker
+{
+    IJsonQueryConverter CreateConverter(Type typeToConvert);
+}
+
+public interface IJsonQueryTypeChecker
+{
+    bool CanConvert(Type typeToConvert);
 }

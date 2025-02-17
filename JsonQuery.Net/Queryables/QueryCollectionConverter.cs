@@ -1,17 +1,17 @@
-﻿using System.Reflection;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
 public class QueryCollectionConverter : JsonConverterFactory
 {
-    public override bool CanConvert(Type typeToConvert)
+    internal static bool CanConvertInternal(Type typeToConvert)
     {
-        ConstructorInfo? constructorInfo = typeToConvert.GetConstructor(new[] { typeof(IJsonQueryable[])});
-
-        return constructorInfo is not null;
+        return typeof(IJsonQueryable).IsAssignableFrom(typeToConvert)
+               && typeToConvert.GetConstructor(new[] { typeof(IJsonQueryable[]) }) is not null;
     }
+
+    public override bool CanConvert(Type typeToConvert) => CanConvertInternal(typeToConvert);
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
@@ -50,17 +50,31 @@ public class QueryCollectionConverter : JsonConverterFactory
     }
 }
 
-public class QueryCollectionParserConverter<TQuery> : JsonQueryFunctionConverter<TQuery> where TQuery : IJsonQueryable
+public class QueryCollectionParserConverter : IJsonQueryConverterFactory
 {
-    protected override TQuery ReadArguments(ref JsonQueryReader reader)
-    {
-        var queries = new List<IJsonQueryable>();
-        while (reader.TokenType != JsonQueryTokenType.EndParenthesis)
-        {
-            queries.Add(JsonQueryParser.ParseQueryCombination(ref reader));
-            reader.Read();
-        }
+    public bool CanConvert(Type typeToConvert) => QueryCollectionConverter.CanConvertInternal(typeToConvert);
 
-        return (TQuery)Activator.CreateInstance(typeof(TQuery), new object[] { queries.ToArray() });
+    public IJsonQueryConverter CreateConverter(Type typeToConvert)
+    {
+        Type converterType = typeof(QueryCollectionParserConverterInner<>).MakeGenericType(typeToConvert);
+
+        return (IJsonQueryConverter)Activator.CreateInstance(converterType);
+    }
+
+    private class QueryCollectionParserConverterInner<TQuery> : JsonQueryFunctionConverter<TQuery> where TQuery : IJsonQueryable
+    {
+        protected override TQuery ReadArguments(ref JsonQueryReader reader)
+        {
+            var queries = new List<IJsonQueryable>();
+            while (reader.TokenType != JsonQueryTokenType.EndParenthesis)
+            {
+                queries.Add(JsonQueryParser.ParseQueryCombination(ref reader));
+                reader.Read();
+            }
+
+            return (TQuery)Activator.CreateInstance(typeof(TQuery), new object[] { queries.ToArray() });
+        }
     }
 }
+
+

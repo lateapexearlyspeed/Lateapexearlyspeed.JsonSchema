@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(QueryCollectionConverter))]
-[JsonQueryConverter(typeof(QueryCollectionParserConverter<PipeQuery>))]
+[JsonQueryConverter(typeof(QueryCollectionParserConverter))]
 public class PipeQuery : IJsonQueryable, IMultipleSubQuery
 {
     internal const string Keyword = "pipe";

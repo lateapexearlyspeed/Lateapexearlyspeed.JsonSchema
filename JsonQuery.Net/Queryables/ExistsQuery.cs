@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(GetQueryParameterConverter))]
-[JsonQueryConverter(typeof(GetQueryParameterParserConverter<ExistsQuery>))]
+[JsonQueryConverter(typeof(GetQueryParameterParserConverter))]
 public class ExistsQuery : IJsonQueryable, ISubGetQuery
 {
     internal const string Keyword = "exists";

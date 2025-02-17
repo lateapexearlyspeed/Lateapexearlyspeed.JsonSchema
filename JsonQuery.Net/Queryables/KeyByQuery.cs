@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(GetQueryParameterConverter))]
-[JsonQueryConverter(typeof(GetQueryParameterParserConverter<KeyByQuery>))]
+[JsonQueryConverter(typeof(GetQueryParameterParserConverter))]
 public class KeyByQuery : IJsonQueryable, ISubGetQuery
 {
     internal const string Keyword = "keyBy";

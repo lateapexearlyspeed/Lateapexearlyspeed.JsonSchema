@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(ParameterlessQueryConverter))]
-[JsonQueryConverter(typeof(ParameterlessQueryParserConverter<SizeQuery>))]
+[JsonQueryConverter(typeof(ParameterlessQueryParserConverter))]
 public class SizeQuery : IJsonQueryable
 {
     internal const string Keyword = "size";

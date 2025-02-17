@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(SingleQueryParameterConverter))]
-[JsonQueryConverter(typeof(SingleQueryParameterParserConverter<NumberQuery>))]
+[JsonQueryConverter(typeof(SingleQueryParameterParserConverter))]
 public class NumberQuery : IJsonQueryable, ISingleSubQuery
 {
     internal const string Keyword = "number";

@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(SingleQueryParameterConverter))]
-[JsonQueryConverter(typeof(SingleQueryParameterParserConverter<UniqByQuery>))]
+[JsonQueryConverter(typeof(SingleQueryParameterParserConverter))]
 public class UniqByQuery : IJsonQueryable, ISingleSubQuery
 {
     internal const string Keyword = "uniqBy";

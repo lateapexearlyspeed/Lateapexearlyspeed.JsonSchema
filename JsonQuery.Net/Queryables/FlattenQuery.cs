@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(ParameterlessQueryConverter))]
-[JsonQueryConverter(typeof(ParameterlessQueryParserConverter<FlattenQuery>))]
+[JsonQueryConverter(typeof(ParameterlessQueryParserConverter))]
 public class FlattenQuery : IJsonQueryable
 {
     internal const string Keyword = "flatten";

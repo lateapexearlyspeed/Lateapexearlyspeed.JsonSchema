@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(GetQueryParameterConverter))]
-[JsonQueryConverter(typeof(GetQueryParameterParserConverter<GroupByQuery>))]
+[JsonQueryConverter(typeof(GetQueryParameterParserConverter))]
 public class GroupByQuery : IJsonQueryable, ISubGetQuery
 {
     internal const string Keyword = "groupBy";

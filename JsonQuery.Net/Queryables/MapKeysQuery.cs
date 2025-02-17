@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(SingleQueryParameterConverter))]
-[JsonQueryConverter(typeof(SingleQueryParameterParserConverter<MapKeysQuery>))]
+[JsonQueryConverter(typeof(SingleQueryParameterParserConverter))]
 public class MapKeysQuery : IJsonQueryable, ISingleSubQuery
 {
     internal const string Keyword = "mapKeys";

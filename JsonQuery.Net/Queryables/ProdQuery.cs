@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(ParameterlessQueryConverter))]
-[JsonQueryConverter(typeof(ParameterlessQueryParserConverter<ProdQuery>))]
+[JsonQueryConverter(typeof(ParameterlessQueryParserConverter))]
 public class ProdQuery : IJsonQueryable
 {
     internal const string Keyword = "prod";

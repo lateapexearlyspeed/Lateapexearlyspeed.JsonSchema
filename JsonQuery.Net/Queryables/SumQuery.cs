@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(ParameterlessQueryConverter))]
-[JsonQueryConverter(typeof(ParameterlessQueryParserConverter<SumQuery>))]
+[JsonQueryConverter(typeof(ParameterlessQueryParserConverter))]
 public class SumQuery : IJsonQueryable
 {
     internal const string Keyword = "sum";

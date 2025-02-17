@@ -1,17 +1,17 @@
-﻿using System.Reflection;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
 public class ParameterlessQueryConverter : JsonConverterFactory
 {
-    public override bool CanConvert(Type typeToConvert)
+    internal static bool CanConvertInternal(Type typeToConvert)
     {
-        ConstructorInfo? constructorInfo = typeToConvert.GetConstructor(Type.EmptyTypes);
-
-        return constructorInfo is not null;
+        return typeof(IJsonQueryable).IsAssignableFrom(typeToConvert)
+               && typeToConvert.GetConstructor(Type.EmptyTypes) is not null;
     }
+
+    public override bool CanConvert(Type typeToConvert) => CanConvertInternal(typeToConvert);
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
@@ -36,10 +36,23 @@ public class ParameterlessQueryConverter : JsonConverterFactory
     }
 }
 
-public class ParameterlessQueryParserConverter<TQuery> : JsonQueryFunctionConverter<TQuery> where TQuery : IJsonQueryable, new()
+public class ParameterlessQueryParserConverter : IJsonQueryConverterFactory
 {
-    protected override TQuery ReadArguments(ref JsonQueryReader reader)
+    public bool CanConvert(Type typeToConvert) => ParameterlessQueryConverter.CanConvertInternal(typeToConvert);
+
+    public IJsonQueryConverter CreateConverter(Type typeToConvert)
     {
-        return new TQuery();
+        Type converterType = typeof(ParameterlessQueryParserConverterInner<>).MakeGenericType(typeToConvert);
+
+        return (IJsonQueryConverter)Activator.CreateInstance(converterType);
+    }
+
+    private class ParameterlessQueryParserConverterInner<TQuery> : JsonQueryFunctionConverter<TQuery> where TQuery : IJsonQueryable, new()
+    {
+        protected override TQuery ReadArguments(ref JsonQueryReader reader)
+        {
+            return new TQuery();
+        }
     }
 }
+

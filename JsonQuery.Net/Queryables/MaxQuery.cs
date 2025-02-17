@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(ParameterlessQueryConverter))]
-[JsonQueryConverter(typeof(ParameterlessQueryParserConverter<MaxQuery>))]
+[JsonQueryConverter(typeof(ParameterlessQueryParserConverter))]
 public class MaxQuery : IJsonQueryable
 {
     internal const string Keyword = "max";

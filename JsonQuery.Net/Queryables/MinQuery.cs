@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(ParameterlessQueryConverter))]
-[JsonQueryConverter(typeof(ParameterlessQueryParserConverter<MinQuery>))]
+[JsonQueryConverter(typeof(ParameterlessQueryParserConverter))]
 public class MinQuery : IJsonQueryable
 {
     internal const string Keyword = "min";

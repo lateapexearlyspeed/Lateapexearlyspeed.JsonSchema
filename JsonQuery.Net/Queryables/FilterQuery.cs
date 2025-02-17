@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace JsonQuery.Net.Queryables;
 
 [JsonConverter(typeof(SingleQueryParameterConverter))]
-[JsonQueryConverter(typeof(SingleQueryParameterParserConverter<FilterQuery>))]
+[JsonQueryConverter(typeof(SingleQueryParameterParserConverter))]
 public class FilterQuery : IJsonQueryable, ISingleSubQuery
 {
     internal const string Keyword = "filter";

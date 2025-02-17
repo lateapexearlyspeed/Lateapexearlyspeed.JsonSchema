@@ -1,17 +1,17 @@
-﻿using System.Reflection;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
 public class SingleQueryParameterConverter : JsonConverterFactory
 {
-    public override bool CanConvert(Type typeToConvert)
+    internal static bool CanConvertInternal(Type typeToConvert)
     {
-        ConstructorInfo? constructorInfo = typeToConvert.GetConstructor(new[] { typeof(IJsonQueryable) });
-
-        return constructorInfo is not null;
+        return typeof(IJsonQueryable).IsAssignableFrom(typeToConvert) 
+               && typeToConvert.GetConstructor(new[] { typeof(IJsonQueryable) }) is not null;
     }
+
+    public override bool CanConvert(Type typeToConvert) => CanConvertInternal(typeToConvert);
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
@@ -41,14 +41,26 @@ public class SingleQueryParameterConverter : JsonConverterFactory
     }
 }
 
-public class SingleQueryParameterParserConverter<TQuery> : JsonQueryFunctionConverter<TQuery> where TQuery : IJsonQueryable
+public class SingleQueryParameterParserConverter : IJsonQueryConverterFactory
 {
-    protected override TQuery ReadArguments(ref JsonQueryReader reader)
+    public bool CanConvert(Type typeToConvert) => SingleQueryParameterConverter.CanConvertInternal(typeToConvert);
+
+    public IJsonQueryConverter CreateConverter(Type typeToConvert)
     {
-        IJsonQueryable query = JsonQueryParser.ParseQueryCombination(ref reader);
+        Type converterType = typeof(SingleQueryParameterParserConverterInner<>).MakeGenericType(typeToConvert);
 
-        reader.Read(); // ')'
+        return (IJsonQueryConverter)Activator.CreateInstance(converterType);
+    }
 
-        return (TQuery)Activator.CreateInstance(typeof(TQuery), query);
+    private class SingleQueryParameterParserConverterInner<TQuery> : JsonQueryFunctionConverter<TQuery> where TQuery : IJsonQueryable
+    {
+        protected override TQuery ReadArguments(ref JsonQueryReader reader)
+        {
+            IJsonQueryable query = JsonQueryParser.ParseQueryCombination(ref reader);
+
+            reader.Read(); // ')'
+
+            return (TQuery)Activator.CreateInstance(typeof(TQuery), query);
+        }
     }
 }
