@@ -340,6 +340,8 @@ This is [JsonQuery](https://jsonquerylang.org/) .Net implementation library, whi
 
 For syntax and advantages of JsonQuery, check [official page](https://github.com/jsonquerylang/jsonquery).
 
+### Basic usage
+
 #### Compile json format query to query engine:
 
 ```csharp
@@ -364,4 +366,164 @@ JsonNode? result = queryable.Query(jsonData);
 string jsonFormatQuery = queryable.SerializeToJsonFormat();
 ```
 
-#### More functionalities later.
+### Custom function support
+
+JsonQuery.Net supports creating custom function. It involves 3 components to create and is easy because of available base classes and helper methods.
+
+Let's take one simple example for this part: create 'any' function which determines whether any element of a json array satisfies a condition.
+
+#### Implement `IJsonQueryable` for 'any' function
+
+```csharp
+[JsonConverter(typeof(AnyJsonConverter))]
+[JsonQueryConverter(typeof(AnyJsonParserConverter))]
+public class AnyQueryable : IJsonQueryable
+{
+    public IJsonQueryable SubQuery { get; }
+
+    public AnyQueryable(IJsonQueryable query)
+    {
+        SubQuery = query;
+    }
+
+    public JsonNode Query(JsonNode? data)
+    {
+        return data!.AsArray().Any(item => SubQuery.Query(item)!.GetValue<bool>()); // note here doesn't show complete data type verification logic for demo purpose
+    }
+}
+```
+
+#### Implement JsonConverter for `AnyQueryable` (used for deserializing/serializing `AnyQueryable` from/to Json format query text)
+
+```csharp
+public class AnyJsonConverter : JsonFormatQueryJsonConverter<AnyQueryable>
+{
+    protected override AnyQueryable ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
+        
+        reader.Read();
+
+        return new AnyQueryable(query);
+    }
+
+    public override void Write(Utf8JsonWriter writer, AnyQueryable value, JsonSerializerOptions options)
+    {
+        writer.WriteStartArray();
+        
+        writer.WriteStringValue(value.GetKeyword());
+        JsonSerializer.Serialize(writer, value.SubQuery);
+        
+        writer.WriteEndArray();
+    }
+}
+```
+
+The `JsonFormatQueryJsonConverter<TQuery>` is inherited from JsonConverter<TQuery> to wrap common basic deserialization to simplify implementation. Refer to [ms doc](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/converters-how-to) if not familiar with this part.
+
+Besides of implementing json converter manually as above, there are some built-in Json converters to be reused for common cases:
+
+```csharp
+ParameterlessQueryConverter
+SingleQueryParameterConverter
+QueryCollectionConverter
+GetQueryParameterConverter
+```
+
+For 'any' function, because its `AnyQueryable` takes one `IJsonQueryable` as parameter of constructor, so we can use `SingleQueryParameterConverter`.
+
+```csharp
+[JsonConverter(typeof(SingleQueryParameterConverter))]
+class AnyQueryable : IJsonQueryable, ISingleSubQuery
+```
+
+#### Implement JsonQueryFunctionConverter for `AnyQueryable`(used for deserializing/serializing `AnyQueryable` from/to Json query text)
+
+```csharp
+public class AnyJsonParserConverter : JsonQueryFunctionConverter<AnyQueryable>
+{
+    protected override AnyQueryable ReadArguments(ref JsonQueryReader reader)
+    {
+        IJsonQueryable query = JsonQueryParser.ParseQueryCombination(ref reader); // helper method to parse one whole query value, no matter query type
+
+        reader.Read();
+
+        return new AnyQueryable(query);
+    }
+}
+```
+
+Besides of implementing JsonQueryFunctionConverter manually, there are some built-in JsonQueryFunction converters to be reused for common cases:
+
+```csharp
+ParameterlessQueryParserConverter
+SingleQueryParameterParserConverter
+QueryCollectionParserConverter
+GetQueryParameterParserConverter
+```
+
+So for 'any' function, because its `AnyQueryable` takes one `IJsonQueryable` as parameter of constructor, we can use `SingleQueryParameterParserConverter`.
+
+```csharp
+[JsonQueryConverter(typeof(SingleQueryParameterParserConverter))]
+class AnyQueryable : IJsonQueryable, ISingleSubQuery
+```
+
+> [!IMPORTANT]
+>
+> How to understand Json query syntax serialization related classes in this library ?
+>
+> Although Json query syntax itself is different from Json, this library is designed to be similiar use experience as `System.Text.Json` and similiar concept levels.
+> So just think `JsonQueryFunctionConverter<TQuery>` as `JsonConverter<TQuery>`, and `JsonQueryReader` as `Utf8JsonReader`, they are almost same behavior.
+> 
+> For example, when you want to implement custom JsonQueryFunctionConverter<T> manually, you may need to touch low level `JsonQueryReader`. `JsonQueryReader.Read()` will consume one token then you can get that token by calling `JsonQueryReader.Get` related methods.
+> ```csharp
+> public enum JsonQueryTokenType
+> {
+>    None,
+>    FunctionName,
+>    PropertyPath,
+>    PropertyName,
+>    StartParenthesis,
+>    EndParenthesis,
+>    Pipe,
+>   Operator,
+>    String,
+>   Number,
+>    Null,
+>    StartBrace,
+>    EndBrace,
+>    EndBracket,
+>    StartBracket,
+>    True,
+>    False
+>}
+>```
+>
+> ```csharp
+>  // example: myFunc(.prop1.prop2)
+>  reader.Read();
+>  string functionName = reader.GetFunctionName(); // myFunc
+>   reader.Read();
+>   // reader.TokenKind = StartParenthesis
+>   reader.Read();
+>   object[] propPath = reader.GetPropertyPath(); // prop1.prop2
+>   reader.Read();
+>   // reader.TokenKind = EndParenthesis
+> ```
+>
+> Please refer to [ms doc](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/converters-how-to) to understand if not familiar with this part. You can also refer to the [built-in JsonQueryFunction converters source code](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/tree/master/JsonQuery.Net/Queryables) as reference implementations for writing custom `JsonQueryFunctionConverter<T>`. 
+>
+> Keep in mind that there is `JsonQueryParser` which can help use `reader` to consume "whole" query value if need.
+>
+>```csharp
+>  // example: myFunc(.prop1.prop2)
+>IJsonQueryable query = JsonQueryParser.ParseQueryCombination(ref reader); // here this helper method can parse one whole function (and sub query arguments inside)
+>// query = myFunc(.prop1.prop2)
+>```
+
+### The use of JsonQueryReader in the ReadArguments method of JsonQueryFunctionConverter
+
+The JsonQueryReader will be positioned on the begin token of first argument when the ReadArguments() method begins (the current functionName part was already read by underlying logic in JsonQueryFunctionConverter). You must then read through all the tokens in current function and exit the method with the reader positioned on the corresponding end parenthesis token of current function.
+
+### More functionalities later.
