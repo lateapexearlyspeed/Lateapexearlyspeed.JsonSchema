@@ -368,7 +368,7 @@ string jsonFormatQuery = queryable.SerializeToJsonFormat();
 
 ### Custom function support
 
-JsonQuery.Net supports creating custom function. It involves 3 components to create and is easy because of available base classes and helper methods.
+JsonQuery.Net supports creating custom function. It involves 3 components to create and is easy because of available base classes and helper methods. (Note if you don't need json format query text or json query text, you can just skip corresponding component implementation shown below)
 
 Let's take one simple example for this part: create 'any' function which determines whether any element of a json array satisfies a condition.
 
@@ -467,6 +467,51 @@ So for 'any' function, because its `AnyQueryable` takes one `IJsonQueryable` as 
 ```csharp
 [JsonQueryConverter(typeof(SingleQueryParameterParserConverter))]
 class AnyQueryable : IJsonQueryable, ISingleSubQuery
+```
+
+#### Register new function
+
+```csharp
+JsonQueryableRegistry.AddQueryableType<AnyQueryable>("any");
+```
+
+#### Effect
+
+input:
+
+```json
+{
+  "friends": [
+    {"name": "Chris", "age": 23, "city": "New York"},
+    {"name": "Emily", "age": 19, "city": "Atlanta"},
+    {"name": "Kevin", "age": 19, "city": "Atlanta"},
+    {"name": "Michelle", "age": 27, "city": "Los Angeles"},
+    {"name": "Robert", "age": 45, "city": "Manhattan"}
+  ]
+}
+```
+
+Json query text:
+
+```
+.friends 
+| any(.city == "New York")
+```
+
+Json format query text:
+
+```json
+[
+   "pipe",
+   ["get", "friends"],
+   ["any", ["eq", ["get", "city"], "New York"]]
+]
+```
+
+Query result:
+
+```json
+true
 ```
 
 > [!IMPORTANT]
