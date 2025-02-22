@@ -27,9 +27,9 @@ public class FilterQuery : IJsonQueryable, ISingleSubQuery
 
         foreach (JsonNode? item in array)
         {
-            JsonNode? predictResult = _filter.Query(item);
+            JsonNode? predicateResult = _filter.Query(item);
 
-            if (predictResult.GetBooleanValue())
+            if (predicateResult.GetBooleanValue())
             {
                 result.Add(item?.DeepClone());
             }

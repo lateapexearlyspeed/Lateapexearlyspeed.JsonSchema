@@ -4,7 +4,7 @@ public class CustomFunctionTestFixture
 {
     public CustomFunctionTestFixture()
     {
-        JsonQueryableRegistry.AddQueryableType<AnyQueryable>("any");
-        JsonQueryableRegistry.AddQueryableType<AllQueryable>("all");
+        JsonQueryableRegistry.AddQueryableType<AnyTestQueryable>("anyTest");
+        JsonQueryableRegistry.AddQueryableType<AllTestQueryable>("allTest");
     }
 }

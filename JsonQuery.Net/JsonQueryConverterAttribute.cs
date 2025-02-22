@@ -1,6 +1,6 @@
 ﻿namespace JsonQuery.Net;
 
-[AttributeUsage(AttributeTargets.Class)]
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public class JsonQueryConverterAttribute : Attribute
 {
     public Type ParserType { get; }

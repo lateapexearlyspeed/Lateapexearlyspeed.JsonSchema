@@ -13,9 +13,9 @@ public class SortQuery : IJsonQueryable
     public IJsonQueryable SubQuery { get; }
     public bool IsDesc { get; }
 
-    public SortQuery(IJsonQueryable sortQuery, bool isDesc = false)
+    public SortQuery(IJsonQueryable keySelector, bool isDesc = false)
     {
-        SubQuery = sortQuery;
+        SubQuery = keySelector;
         IsDesc = isDesc;
     }
 

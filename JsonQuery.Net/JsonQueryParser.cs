@@ -192,4 +192,37 @@ public static class JsonQueryParser
 
         return (IJsonQueryable)Activator.CreateInstance(operatorType, leftQuery, rightQuery);
     }
+
+    // TODO: support more types when need
+    internal static object Deserialize(ref JsonQueryReader reader, Type returnType)
+    {
+        if (returnType == typeof(int))
+        {
+            if (reader.TokenType != JsonQueryTokenType.Number)
+            {
+                throw new JsonQueryParseException($"Invalid token type: {reader.TokenType} for 'int32'", reader.Position);
+            }
+
+            return (int)reader.GetDecimal();
+        }
+
+        if (typeof(IJsonQueryable).IsAssignableFrom(returnType))
+        {
+            IJsonQueryable query = ParseQueryCombination(ref reader);
+
+            if (returnType.IsInstanceOfType(query))
+            {
+                return query;
+            }
+
+            if (query is ConstQueryable)
+            {
+                throw new JsonQueryParseException($"Invalid const query for '{returnType}'", reader.Position);
+            }
+
+            throw new JsonQueryParseException($"Invalid query: {query.GetKeyword()} for '{returnType}'", reader.Position);
+        }
+
+        throw new NotSupportedException($"Not support to deserialize '{returnType}' for json query currently");
+    }
 }

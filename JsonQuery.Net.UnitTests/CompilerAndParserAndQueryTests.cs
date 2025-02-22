@@ -54,7 +54,7 @@ public class CompilerAndParserAndQueryTests : IClassFixture<CustomFunctionTestFi
                 """
                 .friends 
                 | sort(.age)
-                | any(.city == "New York")
+                | anyTest(.city == "New York")
                 """,
                 """
                 [
@@ -85,7 +85,7 @@ public class CompilerAndParserAndQueryTests : IClassFixture<CustomFunctionTestFi
                 """
                 .friends 
                 | sort(.age)
-                | any(.city == "New York")
+                | anyTest(.city == "New York")
                 """,
                 """
                 [
@@ -116,7 +116,7 @@ public class CompilerAndParserAndQueryTests : IClassFixture<CustomFunctionTestFi
                 """
                 .friends 
                 | sort(.age)
-                | all(.age >= 19)
+                | allTest(.age >= 19)
                 """,
                 """
                 [
@@ -147,7 +147,7 @@ public class CompilerAndParserAndQueryTests : IClassFixture<CustomFunctionTestFi
                 """
                 .friends 
                 | sort(.age)
-                | all(.age < 45)
+                | allTest(.age < 45)
                 """,
                 """
                 [
@@ -388,13 +388,13 @@ public class CompilerAndParserAndQueryTests : IClassFixture<CustomFunctionTestFi
     }
 }
 
-[JsonConverter(typeof(AnyJsonConverter))]
-[JsonQueryConverter(typeof(AnyJsonParserConverter))]
-public class AnyQueryable : IJsonQueryable
+[JsonConverter(typeof(AnyTestJsonConverter))]
+[JsonQueryConverter(typeof(AnyTestJsonParserConverter))]
+public class AnyTestQueryable : IJsonQueryable
 {
     public IJsonQueryable SubQuery { get; }
 
-    public AnyQueryable(IJsonQueryable query)
+    public AnyTestQueryable(IJsonQueryable query)
     {
         SubQuery = query;
     }
@@ -405,30 +405,30 @@ public class AnyQueryable : IJsonQueryable
     }
 }
 
-public class AnyJsonParserConverter : JsonQueryFunctionConverter<AnyQueryable>
+public class AnyTestJsonParserConverter : JsonQueryFunctionConverter<AnyTestQueryable>
 {
-    protected override AnyQueryable ReadArguments(ref JsonQueryReader reader)
+    protected override AnyTestQueryable ReadArguments(ref JsonQueryReader reader)
     {
         IJsonQueryable query = JsonQueryParser.ParseQueryCombination(ref reader);
 
         reader.Read();
 
-        return new AnyQueryable(query);
+        return new AnyTestQueryable(query);
     }
 }
 
-public class AnyJsonConverter : JsonFormatQueryJsonConverter<AnyQueryable>
+public class AnyTestJsonConverter : JsonFormatQueryJsonConverter<AnyTestQueryable>
 {
-    protected override AnyQueryable ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    protected override AnyTestQueryable ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
         
         reader.Read();
 
-        return new AnyQueryable(query);
+        return new AnyTestQueryable(query);
     }
 
-    public override void Write(Utf8JsonWriter writer, AnyQueryable value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, AnyTestQueryable value, JsonSerializerOptions options)
     {
         writer.WriteStartArray();
         
@@ -441,11 +441,11 @@ public class AnyJsonConverter : JsonFormatQueryJsonConverter<AnyQueryable>
 
 [JsonConverter(typeof(SingleQueryParameterConverter))]
 [JsonQueryConverter(typeof(SingleQueryParameterParserConverter))]
-public class AllQueryable : IJsonQueryable, ISingleSubQuery
+public class AllTestQueryable : IJsonQueryable, ISingleSubQuery
 {
     private readonly IJsonQueryable _query;
 
-    public AllQueryable(IJsonQueryable query)
+    public AllTestQueryable(IJsonQueryable query)
     {
         _query = query;
     }
