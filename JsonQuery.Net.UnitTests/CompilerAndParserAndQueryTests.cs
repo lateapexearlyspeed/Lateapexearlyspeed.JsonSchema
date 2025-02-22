@@ -61,7 +61,7 @@ public class CompilerAndParserAndQueryTests : IClassFixture<CustomFunctionTestFi
                   "pipe",
                   ["get", "friends"],
                   ["sort", ["get", "age"]],
-                  ["any", ["eq", ["get", "city"], "New York"]]
+                  ["anyTest", ["eq", ["get", "city"], "New York"]]
                 ]
                 """,
                 """
@@ -92,7 +92,7 @@ public class CompilerAndParserAndQueryTests : IClassFixture<CustomFunctionTestFi
                   "pipe",
                   ["get", "friends"],
                   ["sort", ["get", "age"]],
-                  ["any", ["eq", ["get", "city"], "New York"]]
+                  ["anyTest", ["eq", ["get", "city"], "New York"]]
                 ]
                 """,
                 """
@@ -123,7 +123,7 @@ public class CompilerAndParserAndQueryTests : IClassFixture<CustomFunctionTestFi
                   "pipe",
                   ["get", "friends"],
                   ["sort", ["get", "age"]],
-                  ["all", ["gte", ["get", "age"], 19]]
+                  ["allTest", ["gte", ["get", "age"], 19]]
                 ]
                 """,
                 """
@@ -154,7 +154,7 @@ public class CompilerAndParserAndQueryTests : IClassFixture<CustomFunctionTestFi
                   "pipe",
                   ["get", "friends"],
                   ["sort", ["get", "age"]],
-                  ["all", ["lt", ["get", "age"], 45]]
+                  ["allTest", ["lt", ["get", "age"], 45]]
                 ]
                 """,
                 """
