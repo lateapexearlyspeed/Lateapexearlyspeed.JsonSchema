@@ -24,7 +24,7 @@ public class SingleQueryParameterConverter : JsonConverterFactory
     {
         protected override TQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
+            IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader, options)!;
 
             reader.Read();
 
@@ -35,7 +35,7 @@ public class SingleQueryParameterConverter : JsonConverterFactory
         {
             writer.WriteStartArray();
             writer.WriteStringValue(value.GetKeyword());
-            JsonSerializer.Serialize(writer, value.SubQuery);
+            JsonSerializer.Serialize(writer, value.SubQuery, options);
             writer.WriteEndArray();
         }
     }

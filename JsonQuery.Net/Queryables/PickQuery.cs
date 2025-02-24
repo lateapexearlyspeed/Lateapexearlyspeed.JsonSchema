@@ -81,7 +81,7 @@ public class PickQueryConverter : JsonFormatQueryJsonConverter<PickQuery>
         var getQueries = new List<GetQuery>();
         while (reader.TokenType != JsonTokenType.EndArray)
         {
-            getQueries.Add(JsonSerializer.Deserialize<GetQuery>(ref reader)!);
+            getQueries.Add(JsonSerializer.Deserialize<GetQuery>(ref reader, options)!);
 
             reader.Read();
         }
@@ -96,7 +96,7 @@ public class PickQueryConverter : JsonFormatQueryJsonConverter<PickQuery>
         writer.WriteStringValue(value.GetKeyword());
         foreach (GetQuery getQuery in value.GetQueries)
         {
-            JsonSerializer.Serialize(writer, getQuery);
+            JsonSerializer.Serialize(writer, getQuery, options);
         }
 
         writer.WriteEndArray();

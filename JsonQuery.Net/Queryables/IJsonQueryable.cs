@@ -34,7 +34,7 @@ public class JsonQueryableConverter : JsonConverter<IJsonQueryable>
 
             if (JsonQueryableRegistry.TryGetQueryableType(queryKeyword, out Type? queryableType))
             {
-                return (IJsonQueryable)JsonSerializer.Deserialize(ref reader, queryableType)!;
+                return (IJsonQueryable)JsonSerializer.Deserialize(ref reader, queryableType, options)!;
             }
 
             throw new JsonException($"Invalid json query keyword: {queryKeyword}");
@@ -45,21 +45,7 @@ public class JsonQueryableConverter : JsonConverter<IJsonQueryable>
 
     public override void Write(Utf8JsonWriter writer, IJsonQueryable value, JsonSerializerOptions options)
     {
-        if (value is ConstQueryable constQuery)
-        {
-            if (constQuery.Value is null)
-            {
-                writer.WriteNullValue();
-            }
-            else
-            {
-                constQuery.Value.WriteTo(writer);
-            }
-        }
-        else
-        {
-            JsonSerializer.Serialize(writer, value, value.GetType());
-        }
+        JsonSerializer.Serialize(writer, value, value.GetType(), options);
     }
 
     public override bool HandleNull => true;

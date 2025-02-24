@@ -6,6 +6,7 @@ public class CountQuery : IJsonQueryable
 {
     internal const string Keyword = "count";
 
+    [QueryArgument(0)]
     public IJsonQueryable Filter { get; }
 
     public CountQuery(IJsonQueryable filter)

@@ -6,7 +6,10 @@ public class PrependQuery : IJsonQueryable
 {
     internal const string Keyword = "prepend";
 
+    [QueryArgument(0)]
     public IJsonQueryable ArrayQuery { get; }
+
+    [QueryArgument(1)] 
     public IJsonQueryable PrependedElementQuery { get; }
 
     public PrependQuery(IJsonQueryable arrayQuery, IJsonQueryable prependedElementQuery)

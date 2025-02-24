@@ -75,7 +75,7 @@ internal class MapObjectQueryConverter : JsonFormatQueryJsonConverter<MapObjectQ
 {
     protected override MapObjectQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        ObjectQuery objectQuery = JsonSerializer.Deserialize<ObjectQuery>(ref reader)!;
+        ObjectQuery objectQuery = JsonSerializer.Deserialize<ObjectQuery>(ref reader, options)!;
 
         reader.Read();
 
@@ -99,7 +99,7 @@ internal class MapObjectQueryConverter : JsonFormatQueryJsonConverter<MapObjectQ
         writer.WriteStringValue(value.GetKeyword());
         var dic = new Dictionary<string, IJsonQueryable>(2) { { "key", value.KeyQuery }, { "value", value.ValueQuery } };
 
-        JsonSerializer.Serialize(writer, dic);
+        JsonSerializer.Serialize(writer, dic, options);
 
         writer.WriteEndArray();
     }

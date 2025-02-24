@@ -24,7 +24,7 @@ public class GetQueryParameterConverter : JsonConverterFactory
     {
         protected override TQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            GetQuery getQuery = JsonSerializer.Deserialize<GetQuery>(ref reader)!;
+            GetQuery getQuery = JsonSerializer.Deserialize<GetQuery>(ref reader, options)!;
 
             reader.Read();
 
@@ -36,7 +36,7 @@ public class GetQueryParameterConverter : JsonConverterFactory
             writer.WriteStartArray();
 
             writer.WriteStringValue(value.GetKeyword());
-            JsonSerializer.Serialize(writer, value.SubGetQuery);
+            JsonSerializer.Serialize(writer, value.SubGetQuery, options);
 
             writer.WriteEndArray();
         }

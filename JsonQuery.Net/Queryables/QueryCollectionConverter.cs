@@ -27,7 +27,7 @@ public class QueryCollectionConverter : JsonConverterFactory
             var queries = new List<IJsonQueryable>();
             while (reader.TokenType != JsonTokenType.EndArray)
             {
-                queries.Add(JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!);
+                queries.Add(JsonSerializer.Deserialize<IJsonQueryable>(ref reader, options)!);
 
                 reader.Read();
             }
@@ -42,7 +42,7 @@ public class QueryCollectionConverter : JsonConverterFactory
             writer.WriteStringValue(value.GetKeyword());
             foreach (IJsonQueryable subQuery in value.SubQueries)
             {
-                JsonSerializer.Serialize(writer, subQuery);
+                JsonSerializer.Serialize(writer, subQuery, options);
             }
 
             writer.WriteEndArray();

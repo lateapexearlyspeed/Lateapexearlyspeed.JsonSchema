@@ -6,6 +6,7 @@ public class AggregateQuery : IJsonQueryable
 {
     internal const string Keyword = "aggregate";
 
+    [QueryArgument(0)]
     public IJsonQueryable SubQuery { get; }
 
     public AggregateQuery(IJsonQueryable subQuery)

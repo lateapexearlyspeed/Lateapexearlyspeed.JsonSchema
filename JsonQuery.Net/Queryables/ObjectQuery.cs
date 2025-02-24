@@ -26,7 +26,7 @@ public class ObjectQueryConverter : JsonFormatQueryJsonConverter<ObjectQuery>
 {
     protected override ObjectQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        var objectQuery = new ObjectQuery(JsonSerializer.Deserialize<Dictionary<string, IJsonQueryable>>(ref reader)!);
+        var objectQuery = new ObjectQuery(JsonSerializer.Deserialize<Dictionary<string, IJsonQueryable>>(ref reader, options)!);
 
         reader.Read();
 
@@ -38,7 +38,7 @@ public class ObjectQueryConverter : JsonFormatQueryJsonConverter<ObjectQuery>
         writer.WriteStartArray();
 
         writer.WriteStringValue(value.GetKeyword());
-        JsonSerializer.Serialize(writer, value.PropertiesQueries);
+        JsonSerializer.Serialize(writer, value.PropertiesQueries, options);
 
         writer.WriteEndArray();
     }

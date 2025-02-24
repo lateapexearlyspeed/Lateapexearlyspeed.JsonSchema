@@ -72,7 +72,7 @@ internal class SplitQueryConverter : JsonFormatQueryJsonConverter<SplitQuery>
 {
     protected override SplitQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
+        IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader, options)!;
 
         reader.Read();
 
@@ -92,7 +92,7 @@ internal class SplitQueryConverter : JsonFormatQueryJsonConverter<SplitQuery>
         writer.WriteStartArray();
 
         writer.WriteStringValue(value.GetKeyword());
-        JsonSerializer.Serialize(writer, value.SubQuery);
+        JsonSerializer.Serialize(writer, value.SubQuery, options);
         if (value.Separator is not null)
         {
             writer.WriteStringValue(value.Separator);

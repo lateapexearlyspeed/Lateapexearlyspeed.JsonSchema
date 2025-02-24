@@ -45,11 +45,11 @@ public class OperatorConverter<TOperator> : JsonFormatQueryJsonConverter<TOperat
 {
     protected override TOperator ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        IJsonQueryable left = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
+        IJsonQueryable left = JsonSerializer.Deserialize<IJsonQueryable>(ref reader, options)!;
 
         reader.Read();
 
-        IJsonQueryable right = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
+        IJsonQueryable right = JsonSerializer.Deserialize<IJsonQueryable>(ref reader, options)!;
 
         reader.Read();
 
@@ -60,8 +60,8 @@ public class OperatorConverter<TOperator> : JsonFormatQueryJsonConverter<TOperat
     {
         writer.WriteStartArray();
         writer.WriteStringValue(value.GetKeyword());
-        JsonSerializer.Serialize(writer, value.Left);
-        JsonSerializer.Serialize(writer, value.Right);
+        JsonSerializer.Serialize(writer, value.Left, options);
+        JsonSerializer.Serialize(writer, value.Right, options);
         writer.WriteEndArray();
     }
 }

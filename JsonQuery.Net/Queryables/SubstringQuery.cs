@@ -91,7 +91,7 @@ internal class SubstringQueryConverter : JsonFormatQueryJsonConverter<SubstringQ
 {
     protected override SubstringQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
+        IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader, options)!;
 
         reader.Read();
 
@@ -124,7 +124,7 @@ internal class SubstringQueryConverter : JsonFormatQueryJsonConverter<SubstringQ
         writer.WriteStartArray();
 
         writer.WriteStringValue(value.GetKeyword());
-        JsonSerializer.Serialize(writer, value.SubQuery);
+        JsonSerializer.Serialize(writer, value.SubQuery, options);
         writer.WriteNumberValue(value.StartIdx);
         if (value.EndIdx.HasValue)
         {

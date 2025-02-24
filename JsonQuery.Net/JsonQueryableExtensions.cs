@@ -17,6 +17,6 @@ public static class JsonQueryableExtensions
     /// <returns>json format query string</returns>
     public static string SerializeToJsonFormat(this IJsonQueryable queryable)
     {
-        return JsonSerializer.Serialize(queryable);
+        return JsonSerializer.Serialize(queryable, JsonQueryable.JsonSerializerOptions);
     }
 }

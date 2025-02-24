@@ -6,7 +6,10 @@ public class ConcatQuery : IJsonQueryable
 {
     internal const string Keyword = "concat";
 
+    [QueryArgument(0)]
     public IJsonQueryable FirstArrayQuery { get; }
+
+    [QueryArgument(1)]
     public IJsonQueryable SecondArrayQuery { get; }
 
     public ConcatQuery(IJsonQueryable firstArrayQuery, IJsonQueryable secondArrayQuery)

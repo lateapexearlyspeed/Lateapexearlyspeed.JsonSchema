@@ -421,7 +421,7 @@ public class AnyTestJsonConverter : JsonFormatQueryJsonConverter<AnyTestQueryabl
 {
     protected override AnyTestQueryable ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
+        IJsonQueryable query = JsonSerializer.Deserialize<IJsonQueryable>(ref reader, options)!;
         
         reader.Read();
 

@@ -6,7 +6,10 @@ public class UnionQuery : IJsonQueryable
 {
     internal const string Keyword = "union";
 
+    [QueryArgument(0)]
     public IJsonQueryable FirstArrayQuery { get; }
+
+    [QueryArgument(1)] 
     public IJsonQueryable SecondArrayQuery { get; }
 
     public UnionQuery(IJsonQueryable firstArrayQuery, IJsonQueryable secondArrayQuery)

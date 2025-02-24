@@ -119,7 +119,7 @@ public class SortQueryConverter : JsonFormatQueryJsonConverter<SortQuery>
         }
         else
         {
-            sortQuery = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
+            sortQuery = JsonSerializer.Deserialize<IJsonQueryable>(ref reader, options)!;
 
             reader.Read();
 
@@ -150,7 +150,7 @@ public class SortQueryConverter : JsonFormatQueryJsonConverter<SortQuery>
             return;
         }
 
-        JsonSerializer.Serialize(writer, value.SubQuery);
+        JsonSerializer.Serialize(writer, value.SubQuery, options);
 
         if (value.IsDesc)
         {

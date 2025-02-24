@@ -6,6 +6,7 @@ public class TakeLastQuery : IJsonQueryable
 {
     internal const string Keyword = "takeLast";
 
+    [QueryArgument(0)]
     public int Count { get; }
 
     public TakeLastQuery(int count)

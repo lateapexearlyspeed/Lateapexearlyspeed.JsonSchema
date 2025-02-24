@@ -53,15 +53,15 @@ public class IfQueryConverter : JsonFormatQueryJsonConverter<IfQuery>
 {
     protected override IfQuery ReadArguments(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        IJsonQueryable ifQuery = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
+        IJsonQueryable ifQuery = JsonSerializer.Deserialize<IJsonQueryable>(ref reader, options)!;
 
         reader.Read();
 
-        IJsonQueryable thenQuery = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
+        IJsonQueryable thenQuery = JsonSerializer.Deserialize<IJsonQueryable>(ref reader, options)!;
 
         reader.Read();
 
-        IJsonQueryable elseQuery = JsonSerializer.Deserialize<IJsonQueryable>(ref reader)!;
+        IJsonQueryable elseQuery = JsonSerializer.Deserialize<IJsonQueryable>(ref reader, options)!;
 
         reader.Read();
 
@@ -73,9 +73,9 @@ public class IfQueryConverter : JsonFormatQueryJsonConverter<IfQuery>
         writer.WriteStartArray();
 
         writer.WriteStringValue(value.GetKeyword());
-        JsonSerializer.Serialize(writer, value.IfSubQuery);
-        JsonSerializer.Serialize(writer, value.ThenSubQuery);
-        JsonSerializer.Serialize(writer, value.ElseSubQuery);
+        JsonSerializer.Serialize(writer, value.IfSubQuery, options);
+        JsonSerializer.Serialize(writer, value.ThenSubQuery, options);
+        JsonSerializer.Serialize(writer, value.ElseSubQuery, options);
 
         writer.WriteEndArray();
     }

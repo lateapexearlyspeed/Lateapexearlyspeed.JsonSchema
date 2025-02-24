@@ -6,6 +6,8 @@ namespace JsonQuery.Net;
 
 public static class JsonQueryable
 {
+    internal static readonly JsonSerializerOptions JsonSerializerOptions = new() {Converters = { new DefaultJsonQueryableConverter() }};
+
     /// <summary>
     /// Compile "json format" query to <see cref="IJsonQueryable"/> query engine
     /// </summary>
@@ -13,7 +15,7 @@ public static class JsonQueryable
     /// <returns>The generated <see cref="IJsonQueryable"/> instance which can be used to query actual json data</returns>
     public static IJsonQueryable Compile(string jsonFormatQuery)
     {
-        return JsonSerializer.Deserialize<IJsonQueryable>(jsonFormatQuery)!;
+        return JsonSerializer.Deserialize<IJsonQueryable>(jsonFormatQuery, JsonSerializerOptions)!;
     }
 
     /// <summary>
@@ -23,7 +25,7 @@ public static class JsonQueryable
     /// <returns>The generated <see cref="IJsonQueryable"/> instance which can be used to query actual json data</returns>
     public static IJsonQueryable Compile(JsonNode? jsonFormatQuery)
     {
-        return jsonFormatQuery.Deserialize<IJsonQueryable>()!;
+        return jsonFormatQuery.Deserialize<IJsonQueryable>(JsonSerializerOptions)!;
     }
 
     /// <summary>
