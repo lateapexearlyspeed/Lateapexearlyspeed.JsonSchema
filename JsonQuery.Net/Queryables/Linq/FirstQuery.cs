@@ -6,7 +6,7 @@ public class FirstQuery : IJsonQueryable
 {
     internal const string Keyword = "first";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public IJsonQueryable Filter { get; }
 
     public FirstQuery(IJsonQueryable filter)

@@ -6,10 +6,10 @@ public class GroupByQuery : IJsonQueryable
 {
     internal const string Keyword = "groupByLinq";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public IJsonQueryable KeySelector { get; }
 
-    [QueryArgument(1)]
+    [QueryParam(1)]
     public IJsonQueryable ElementSelector { get; }
 
     public GroupByQuery(IJsonQueryable keySelector, IJsonQueryable elementSelector)

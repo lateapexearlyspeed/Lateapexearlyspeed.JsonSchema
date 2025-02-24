@@ -6,10 +6,10 @@ public class AppendQuery : IJsonQueryable
 {
     internal const string Keyword = "append";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public IJsonQueryable ArrayQuery { get; }
 
-    [QueryArgument(1)]
+    [QueryParam(1)]
     public IJsonQueryable AppendedElementQuery { get; }
 
     public AppendQuery(IJsonQueryable arrayQuery, IJsonQueryable appendedElementQuery)

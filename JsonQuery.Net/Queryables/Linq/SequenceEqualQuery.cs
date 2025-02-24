@@ -6,10 +6,10 @@ public class SequenceEqualQuery : IJsonQueryable
 {
     internal const string Keyword = "sequenceEqual";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public IJsonQueryable FirstSequenceQuery { get; }
     
-    [QueryArgument(1)] 
+    [QueryParam(1)] 
     public IJsonQueryable SecondSequenceQuery { get; }
 
     public SequenceEqualQuery(IJsonQueryable firstSequenceQuery, IJsonQueryable secondSequenceQuery)

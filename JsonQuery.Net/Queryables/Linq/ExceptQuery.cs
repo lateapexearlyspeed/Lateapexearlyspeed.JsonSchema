@@ -6,10 +6,10 @@ public class ExceptQuery : IJsonQueryable
 {
     internal const string Keyword = "except";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public IJsonQueryable FirstArrayQuery { get; }
 
-    [QueryArgument(1)]
+    [QueryParam(1)]
     public IJsonQueryable SecondArrayQuery { get; }
 
     public ExceptQuery(IJsonQueryable firstArrayQuery, IJsonQueryable secondArrayQuery)

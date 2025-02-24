@@ -6,13 +6,13 @@ public class ZipQuery : IJsonQueryable
 {
     internal const string Keyword = "zip";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public IJsonQueryable FirstArrayQuery { get; }
 
-    [QueryArgument(1)] 
+    [QueryParam(1)] 
     public IJsonQueryable SecondArrayQuery { get; }
 
-    [QueryArgument(2)] 
+    [QueryParam(2)] 
     public IJsonQueryable ResultSelectorQuery { get; }
 
     public ZipQuery(IJsonQueryable firstArrayQuery, IJsonQueryable secondArrayQuery, IJsonQueryable resultSelectorQuery)

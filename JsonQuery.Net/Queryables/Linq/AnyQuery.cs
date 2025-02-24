@@ -6,7 +6,7 @@ public class AnyQuery : IJsonQueryable
 {
     internal const string Keyword = "any";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public IJsonQueryable SubQuery { get; }
 
     public AnyQuery(IJsonQueryable query)

@@ -6,7 +6,7 @@ public class SkipQuery : IJsonQueryable
 {
     internal const string Keyword = "skip";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public int Count { get; }
 
     public SkipQuery(int count)

@@ -1,11 +1,11 @@
 ﻿namespace JsonQuery.Net;
 
 [AttributeUsage(AttributeTargets.Property)]
-public class QueryArgumentAttribute : Attribute
+public class QueryParamAttribute : Attribute
 {
     public int Index { get; }
 
-    public QueryArgumentAttribute(int index)
+    public QueryParamAttribute(int index)
     {
         Index = index;
     }

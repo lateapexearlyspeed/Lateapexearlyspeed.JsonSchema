@@ -6,7 +6,7 @@ public class SelectManyQuery : IJsonQueryable
 {
     internal const string Keyword = "selectMany";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public IJsonQueryable SelectorQuery { get; }
 
     public SelectManyQuery(IJsonQueryable selectorQuery)

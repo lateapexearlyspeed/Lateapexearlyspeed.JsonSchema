@@ -81,7 +81,7 @@ public class DefaultJsonQueryableConverter : JsonConverterFactory
 
             foreach (PropertyInfo prop in properties)
             {
-                QueryArgumentAttribute? queryArgumentAttribute = prop.GetCustomAttribute<QueryArgumentAttribute>();
+                QueryParamAttribute? queryArgumentAttribute = prop.GetCustomAttribute<QueryParamAttribute>();
 
                 if (queryArgumentAttribute is not null)
                 {

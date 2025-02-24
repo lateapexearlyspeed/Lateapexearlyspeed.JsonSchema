@@ -6,7 +6,7 @@ public class TakeWhileQuery : IJsonQueryable
 {
     internal const string Keyword = "takeWhile";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public IJsonQueryable PredicateQuery { get; }
 
     public TakeWhileQuery(IJsonQueryable predicateQuery)

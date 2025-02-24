@@ -6,7 +6,7 @@ public class ElementAtQuery : IJsonQueryable
 {
     internal const string Keyword = "elementAt";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public int Index { get; }
 
     public ElementAtQuery(int index)

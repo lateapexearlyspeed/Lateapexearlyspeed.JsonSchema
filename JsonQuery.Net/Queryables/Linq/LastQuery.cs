@@ -6,7 +6,7 @@ public class LastQuery : IJsonQueryable
 {
     internal const string Keyword = "last";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public IJsonQueryable Filter { get; }
 
     public LastQuery(IJsonQueryable filter)

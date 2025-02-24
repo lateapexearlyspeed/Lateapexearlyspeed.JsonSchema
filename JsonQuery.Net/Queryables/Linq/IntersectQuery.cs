@@ -6,10 +6,10 @@ public class IntersectQuery : IJsonQueryable
 {
     internal const string Keyword = "intersect";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public IJsonQueryable FirstArrayQuery { get; }
 
-    [QueryArgument(1)] 
+    [QueryParam(1)] 
     public IJsonQueryable SecondArrayQuery { get; }
 
     public IntersectQuery(IJsonQueryable firstArrayQuery, IJsonQueryable secondArrayQuery)

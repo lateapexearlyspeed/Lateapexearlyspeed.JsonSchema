@@ -6,7 +6,7 @@ public class SkipLastQuery : IJsonQueryable
 {
     internal const string Keyword = "skipLast";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public int Count { get; }
 
     public SkipLastQuery(int count)

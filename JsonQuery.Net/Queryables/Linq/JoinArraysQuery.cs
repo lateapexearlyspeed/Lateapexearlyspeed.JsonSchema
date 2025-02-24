@@ -6,19 +6,19 @@ public class JoinArraysQuery : IJsonQueryable
 {
     internal const string Keyword = "joinLinq";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public IJsonQueryable OuterArrayQuery { get; }
 
-    [QueryArgument(1)] 
+    [QueryParam(1)] 
     public IJsonQueryable InnerArrayQuery { get; }
 
-    [QueryArgument(2)] 
+    [QueryParam(2)] 
     public IJsonQueryable OuterKeySelector { get; }
 
-    [QueryArgument(3)] 
+    [QueryParam(3)] 
     public IJsonQueryable InnerKeySelector { get; }
 
-    [QueryArgument(4)] 
+    [QueryParam(4)] 
     public IJsonQueryable ResultSelector { get; }
 
     public JoinArraysQuery(IJsonQueryable outerArrayQuery, IJsonQueryable innerArrayQuery, IJsonQueryable outerKeySelector, IJsonQueryable innerKeySelector, IJsonQueryable resultSelector)

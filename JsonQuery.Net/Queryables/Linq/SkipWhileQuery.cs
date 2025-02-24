@@ -6,7 +6,7 @@ public class SkipWhileQuery : IJsonQueryable
 {
     internal const string Keyword = "skipWhile";
 
-    [QueryArgument(0)]
+    [QueryParam(0)]
     public IJsonQueryable PredicateQuery { get; }
 
     public SkipWhileQuery(IJsonQueryable predicateQuery)
