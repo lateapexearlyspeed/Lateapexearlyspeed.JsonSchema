@@ -12,7 +12,7 @@ public class DefaultJsonQueryableConverter : JsonConverterFactory
     {
         return typeof(IJsonQueryable).IsAssignableFrom(typeToConvert)
                && typeToConvert.GetConstructors().Length == 1
-               && typeToConvert.GetCustomAttribute<JsonConverterAttribute>() is null;
+               && typeToConvert.GetCustomAttribute<JsonConverterAttribute>(false) is null;
     }
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
@@ -75,7 +75,7 @@ public class DefaultJsonQueryableConverter : JsonConverterFactory
 
             Type type = value.GetType();
 
-            PropertyInfo[] properties = type.GetProperties(BindingFlags.GetProperty | BindingFlags.Public);
+            PropertyInfo[] properties = type.GetProperties(BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.Instance);
 
             List<(int index, PropertyInfo prop)> indexedProperties = new(properties.Length);
 

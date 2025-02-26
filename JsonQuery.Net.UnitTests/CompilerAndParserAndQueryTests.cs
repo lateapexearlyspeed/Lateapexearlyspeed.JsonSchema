@@ -32,7 +32,680 @@ public class CompilerAndParserAndQueryTests : IClassFixture<CustomFunctionTestFi
         JsonAssertion.Equivalent(expectedOutput, actualOutput);
     }
 
-    public static IEnumerable<object[]> TestData => DemoData.Concat(CustomFunctionData);
+    public static IEnumerable<object[]> TestData => DemoData.Concat(CustomFunctionData).Concat(LinqData);
+
+    private static IEnumerable<object[]> LinqData
+    {
+        get
+        {
+            yield return new object[]
+            {
+                """
+                {
+                  "friends": [
+                    {"name": "Chris", "age": 1, "city": "New York"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"},
+                    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                  ]
+                }
+                """,
+                """
+                .friends 
+                | select(.age)
+                | aggregate(.0 + .1)
+                """,
+                """
+                [
+                  "pipe",
+                  ["get", "friends"],
+                  ["select", ["get", "age"]],
+                  ["aggregate", ["add", ["get", 0], ["get", 1]]]
+                ]
+                """,
+                """
+                6
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                  [
+                    {"name": "Chris", "age": 1, "city": "New York"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"},
+                    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                  ]
+                """,
+                """
+                all(.age > 0)
+                """,
+                """
+                  ["all", ["gt", ["get", "age"], 0]]
+                """,
+                """
+                true
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                  [
+                    {"name": "Chris", "age": 1, "city": "New York"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"},
+                    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                  ]
+                """,
+                """
+                any(.age > 2)
+                """,
+                """
+                  ["any", ["gt", ["get", "age"], 2]]
+                """,
+                """
+                true
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                {
+                  "a": [1],
+                  "b": 2
+                }
+                """,
+                """
+                append(.a, .b)
+                """,
+                """
+                  ["append", ["get", "a"], ["get", "b"]]
+                """,
+                """
+                [1, 2]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                {
+                  "a": [1],
+                  "b": [2]
+                }
+                """,
+                """
+                concat(.a, .b)
+                """,
+                """
+                  ["concat", ["get", "a"], ["get", "b"]]
+                """,
+                """
+                [1, 2]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                  [
+                    {"name": "Chris", "age": 1, "city": "New York"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"},
+                    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                  ]
+                """,
+                """
+                contains(.age > 2)
+                """,
+                """
+                  ["contains", ["gt", ["get", "age"], 2]]
+                """,
+                """
+                true
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                  [
+                    {"name": "Chris", "age": 1, "city": "New York"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"},
+                    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                  ]
+                """,
+                """
+                count(.age > 1)
+                """,
+                """
+                  ["count", ["gt", ["get", "age"], 1]]
+                """,
+                """
+                2
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                [1, 2, 1]
+                """,
+                """
+                distinct()
+                """,
+                """
+                  ["distinct"]
+                """,
+                """
+                [1, 2]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                [1, 2, 3]
+                """,
+                """
+                elementAtOrDefault(1)
+                """,
+                """
+                  ["elementAtOrDefault", 1]
+                """,
+                """
+                2
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                [1, 2, 3]
+                """,
+                """
+                elementAt(1)
+                """,
+                """
+                  ["elementAt", 1]
+                """,
+                """
+                2
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                {
+                  "a": [1, 2, 3],
+                  "b": [1, 3]
+                }
+                """,
+                """
+                except(.a, .b)
+                """,
+                """
+                  ["except", ["get", "a"], ["get", "b"]]
+                """,
+                """
+                [2]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                [1, 2, 3]
+                """,
+                """
+                firstOrDefault(get() > 1)
+                """,
+                """
+                  ["firstOrDefault", ["gt", ["get"], 1]]
+                """,
+                """
+                2
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                [1, 2, 3]
+                """,
+                """
+                first(get() > 1)
+                """,
+                """
+                  ["first", ["gt", ["get"], 1]]
+                """,
+                """
+                2
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                  [
+                    {"name": "Chris", "age": 1, "city": "New York"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"},
+                    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                  ]
+                """,
+                """
+                groupByLinq(.city, .name)
+                """,
+                """
+                  ["groupByLinq", ["get", "city"], ["get", "name"]]
+                """,
+                """
+                [
+                  {"key": "New York", "value": ["Chris"] },
+                  {"key": "Atlanta", "value": ["Emily", "Kevin"] }
+                ]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                {
+                  "a": [1, 2, 3],
+                  "b": [2, 3, 4]
+                }
+                
+                """,
+                """
+                intersect(.a, .b)
+                """,
+                """
+                  ["intersect", ["get", "a"], ["get", "b"]]
+                """,
+                """
+                [2, 3]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                {
+                  "a": [
+                    {"name": "Chris", "age": 1},
+                    {"name": "Emily", "age": 2},
+                    {"name": "Kevin", "age": 3}
+                  ],
+                  "b": [
+                    {"name": "Chris", "city": "New York"},
+                    {"name": "Emily", "city": "Atlanta"},
+                    {"name": "Kevin", "city": "Atlanta"}
+                  ]
+                }
+                  
+                """,
+                """
+                joinLinq(.a, .b, .name, .name, [.0.age, .1.city])
+                """,
+                """
+                  ["joinLinq", ["get", "a"], ["get", "b"], ["get", "name"], ["get", "name"], ["array", ["get", 0, "age"], ["get", 1, "city"]]]
+                """,
+                """
+                [
+                  [1, "New York"],
+                  [2, "Atlanta"],
+                  [3, "Atlanta"]
+                ]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                  [
+                    {"name": "Chris", "age": 1, "city": "New York"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"},
+                    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                  ]
+                """,
+                """
+                lastOrDefault(.city == "Atlanta")
+                """,
+                """
+                  ["lastOrDefault", ["eq", ["get", "city"], "Atlanta"]]
+                """,
+                """
+                {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                  [
+                    {"name": "Chris", "age": 1, "city": "New York"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"},
+                    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                  ]
+                """,
+                """
+                last(.city == "Atlanta")
+                """,
+                """
+                  ["last", ["eq", ["get", "city"], "Atlanta"]]
+                """,
+                """
+                {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                  [
+                    {"name": "Chris", "age": 1, "city": "New York"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"},
+                    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                  ]
+                """,
+                """
+                orderByDescending(.age)
+                """,
+                """
+                  ["orderByDescending", ["get", "age"]]
+                """,
+                """
+                [
+                    {"name": "Kevin", "age": 3, "city": "Atlanta"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"},
+                    {"name": "Chris", "age": 1, "city": "New York"} 
+                ]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                  [
+                    {"name": "Chris", "age": 1, "city": "New York"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"},
+                    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                  ]
+                """,
+                """
+                orderBy(.age)
+                """,
+                """
+                  ["orderBy", ["get", "age"]]
+                """,
+                """
+                [
+                    {"name": "Chris", "age": 1, "city": "New York"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"},
+                    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                ]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                {
+                  "a": [1, 2, 3],
+                  "b": "hello"
+                }
+                
+                """,
+                """
+                prepend(.a, .b)
+                """,
+                """
+                  ["prepend", ["get", "a"], ["get", "b"]]
+                """,
+                """
+                ["hello", 1, 2, 3]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                [
+                  {"a": [1, 2, 3]},
+                  {"a": [4, 5, 6]}
+                ]
+                """,
+                """
+                selectMany(.a)
+                """,
+                """
+                  ["selectMany", ["get", "a"]]
+                """,
+                """
+                [1, 2, 3, 4, 5, 6]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                  [
+                    {"name": "Chris", "age": 1, "city": "New York"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"},
+                    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                  ]
+                """,
+                """
+                select(.age)
+                """,
+                """
+                  ["select", ["get", "age"]]
+                """,
+                """
+                [1, 2, 3]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                {
+                  "a": [1, 2, 3],
+                  "b": [3, 2, 1]
+                }
+                
+                """,
+                """
+                sequenceEqual(.a, .b)
+                """,
+                """
+                  ["sequenceEqual", ["get", "a"], ["get", "b"]]
+                """,
+                """
+                false
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                {
+                  "a": [1, 2, 3],
+                  "b": [1, 2, 3]
+                }
+                
+                """,
+                """
+                sequenceEqual(.a, .b)
+                """,
+                """
+                  ["sequenceEqual", ["get", "a"], ["get", "b"]]
+                """,
+                """
+                true
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                [1, 2, 3]
+                """,
+                """
+                skipLast(1)
+                """,
+                """
+                  ["skipLast", 1]
+                """,
+                """
+                [1, 2]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                [1, 2, 3]
+                """,
+                """
+                skip(1)
+                """,
+                """
+                  ["skip", 1]
+                """,
+                """
+                [2, 3]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                [1, 2, 3]
+                """,
+                """
+                skipWhile(get() < 2)
+                """,
+                """
+                  ["skipWhile", ["lt", ["get"], 2]]
+                """,
+                """
+                [2, 3]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                [1, 2, 3]
+                """,
+                """
+                takeLast(2)
+                """,
+                """
+                  ["takeLast", 2]
+                """,
+                """
+                [2, 3]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                [1, 2, 3]
+                """,
+                """
+                take(2)
+                """,
+                """
+                  ["take", 2]
+                """,
+                """
+                [1, 2]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                [1, 2, 3]
+                """,
+                """
+                takeWhile(get() < 2)
+                """,
+                """
+                  ["takeWhile", ["lt", ["get"], 2]]
+                """,
+                """
+                [1]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                {
+                  "a": [1, 2, 3],
+                  "b": [2, 3, 4]
+                }
+                
+                """,
+                """
+                union(.a, .b)
+                """,
+                """
+                  ["union", ["get", "a"], ["get", "b"]]
+                """,
+                """
+                [1, 2, 3, 4]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                  [
+                    {"name": "Chris", "age": 1, "city": "New York"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"},
+                    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+                  ]
+                """,
+                """
+                where(.age < 3)
+                """,
+                """
+                  ["where", ["lt", ["get", "age"], 3]]
+                """,
+                """
+                [
+                    {"name": "Chris", "age": 1, "city": "New York"},
+                    {"name": "Emily", "age": 2, "city": "Atlanta"}
+                ]
+                """
+            };
+
+            yield return new object[]
+            {
+                """
+                {
+                  "a": [1, 2, 3, 4],
+                  "b": [2, 3, 4]
+                }
+                
+                """,
+                """
+                zip(.a, .b, .0 + .1)
+                """,
+                """
+                  ["zip", ["get", "a"], ["get", "b"], ["add", ["get", 0], ["get", 1]]]
+                """,
+                """
+                [3, 5, 7]
+                """
+            };
+        }
+    }
 
     private static IEnumerable<object[]> CustomFunctionData
     {

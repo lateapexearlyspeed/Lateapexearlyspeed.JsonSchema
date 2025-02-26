@@ -30,7 +30,7 @@ public class GroupByQuery : IJsonQueryable
         JsonNode[] jsonObjects = groupByResult.Select<IGrouping<JsonNode?, JsonNode?>, JsonNode>(
             group =>
         {
-            var properties = new[] { KeyValuePair.Create("key", group.Key), KeyValuePair.Create<string, JsonNode?>("value", new JsonArray(group.Select(groupItem => groupItem?.DeepClone()).ToArray())) };
+            var properties = new[] { KeyValuePair.Create("key", group.Key?.DeepClone()), KeyValuePair.Create<string, JsonNode?>("value", new JsonArray(group.Select(groupItem => groupItem?.DeepClone()).ToArray())) };
             return new JsonObject(properties);
         }).ToArray();
 

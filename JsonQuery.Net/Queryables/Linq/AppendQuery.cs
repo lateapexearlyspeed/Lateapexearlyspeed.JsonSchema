@@ -25,8 +25,8 @@ public class AppendQuery : IJsonQueryable
             return null;
         }
 
-        IEnumerable<JsonNode?> result = array.Append(AppendedElementQuery.Query(data)?.DeepClone());
+        IEnumerable<JsonNode?> result = array.Append(AppendedElementQuery.Query(data));
 
-        return new JsonArray(result.ToArray());
+        return new JsonArray(result.Select(item => item?.DeepClone()).ToArray());
     }
 }

@@ -21,7 +21,17 @@ public class SelectManyQuery : IJsonQueryable
             return null;
         }
 
-        IEnumerable<JsonNode?> result = array.Where(item => item is JsonArray subArray && SelectorQuery.Query(subArray) is JsonArray).SelectMany(item => SelectorQuery.Query(item)!.AsArray());
+        var jsonArrays = new List<JsonArray>(array.Count);
+
+        foreach (JsonNode? item in array)
+        {
+            if (SelectorQuery.Query(item) is JsonArray subArray)
+            {
+                jsonArrays.Add(subArray);
+            }
+        }
+
+        IEnumerable<JsonNode?> result = jsonArrays.SelectMany(subArray => subArray);
 
         return new JsonArray(result.Select(item => item?.DeepClone()).ToArray());
     }
