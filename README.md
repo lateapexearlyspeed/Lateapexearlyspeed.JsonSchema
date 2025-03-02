@@ -571,4 +571,36 @@ true
 
 The JsonQueryReader will be positioned on the begin token of first argument when the ReadArguments() method begins (the current functionName part was already read by underlying logic in JsonQueryFunctionConverter). You must then read through all the tokens in current function and exit the method with the reader positioned on the corresponding end parenthesis token of current function.
 
+### .net Linq methods support
+
+This library implements more functions and now has supported most of related `IEnumerable<T>` extension methods from System.Linq.Enumerable. So now you can write json query language against json data by familiar Linq methods (only one note, function name in this query language is CamelCase). For example:
+
+input:
+
+```json
+[
+  {"name": "Kevin", "age": 3, "city": "Atlanta"},
+  {"name": "Chris", "age": 1, "city": "New York"},
+  {"name": "Emily", "age": 2, "city": "Atlanta"}
+]
+```
+
+query:
+
+```
+orderBy(.age)
+```
+
+output:
+
+```json
+[
+    {"name": "Chris", "age": 1, "city": "New York"},
+    {"name": "Emily", "age": 2, "city": "Atlanta"},
+    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+]
+```
+
+Full list of Linq methods is in [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/JsonQuery.Net-%E2%80%90-.net-Linq-methods-support).
+
 ### More functionalities later.
