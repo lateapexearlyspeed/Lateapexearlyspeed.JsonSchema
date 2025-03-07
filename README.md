@@ -577,7 +577,7 @@ As shown, by implementing `JsonFormatQueryJsonConverter` and `JsonQueryFunctionC
 
 Default contract:
 
-If type has one public constructor, and all of its parameters are `IJsonQueryable` or `int32` (more supported default contract parameter types later), then engine can take all these parameters as function's parameters and deserialize or parse from function's text format by constructor paramters info.
+If type has one public constructor, and all of its parameters are `IJsonQueryable` or `int32` (more supported default contract parameter types later), then engine can take all these parameters as function's parameters and deserialize or parse from function's text format by constructor parameters info.
 
 ```csharp
 // Note there is no attribute decorating for this GroupByQuery
@@ -596,7 +596,7 @@ public class GroupByQuery : IJsonQueryable
 }    
 ```
 
-query (Note `.city` will be parsed to `keySeelctor` and `.name` will be parsed to `elementSelector`):
+query (Note `.city` will be parsed to `keySelector` and `.name` will be parsed to `elementSelector`):
 
 ```
 groupByLinq(.city, .name)
