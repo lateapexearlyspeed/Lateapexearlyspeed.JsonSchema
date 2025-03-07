@@ -571,6 +571,56 @@ true
 
 The JsonQueryReader will be positioned on the begin token of first argument when the ReadArguments() method begins (the current functionName part was already read by underlying logic in JsonQueryFunctionConverter). You must then read through all the tokens in current function and exit the method with the reader positioned on the corresponding end parenthesis token of current function.
 
+### Default contract for creating custom function
+
+As shown, by implementing `JsonFormatQueryJsonConverter` and `JsonQueryFunctionConverter`, library user can deserialize and parse query with any format into the new query engine types. Now this library also introduces concept of default contract. If query engine type don't provide its `JsonConverterAttribute` or `JsonQueryConverterAttribute`, it will use default contract to deserialize or parse.
+
+Default contract:
+
+If type has one public constructor, and all of its parameters are `IJsonQueryable` or `int32` (more supported default contract parameter types later), then engine can take all these parameters as function's parameters and deserialize or parse from function's text format by constructor paramters info.
+
+```csharp
+// Note there is no attribute decorating for this GroupByQuery
+public class GroupByQuery : IJsonQueryable
+{
+    internal const string Keyword = "groupByLinq";
+
+    public GroupByQuery(IJsonQueryable keySelector, IJsonQueryable elementSelector)
+    {
+        KeySelector = keySelector;
+        ElementSelector = elementSelector;
+    }
+
+    public JsonNode? Query(JsonNode? data)
+    { ... }
+}    
+```
+
+query (Note `.city` will be parsed to `keySeelctor` and `.name` will be parsed to `elementSelector`):
+
+```
+groupByLinq(.city, .name)
+```
+
+input:
+
+```json
+[
+    {"name": "Chris", "age": 1, "city": "New York"},
+    {"name": "Emily", "age": 2, "city": "Atlanta"},
+    {"name": "Kevin", "age": 3, "city": "Atlanta"}
+]
+```
+
+output:
+
+```json
+[
+    {"key": "New York", "value": ["Chris"] },
+    {"key": "Atlanta", "value": ["Emily", "Kevin"] }
+]
+```
+
 ### .net Linq methods support
 
 This library implements more functions and now has supported most of related `IEnumerable<T>` extension methods from System.Linq.Enumerable. So now you can write json query language against json data by familiar Linq methods (only one note, function name in this query language is CamelCase). For example:
