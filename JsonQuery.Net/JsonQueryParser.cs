@@ -33,22 +33,22 @@ public static class JsonQueryParser
 
     private static IJsonQueryable ParseOperatorQuery(ref JsonQueryReader reader)
     {
-        IJsonQueryable query = ParseSingleQuery(ref reader);
+        var operatorExpressionTree = new OperatorExpressionTree();
 
-        if (!TryMoveNextIfNextIsNotTerminal(ref reader, IsTerminalToken))
+        operatorExpressionTree.AppendOperandQuery(ParseSingleQuery(ref reader));
+
+        while (TryMoveNextIfNextIsNotTerminal(ref reader, IsTerminalToken))
         {
-            return query;
+            Debug.Assert(reader.TokenType == JsonQueryTokenType.Operator);
+
+            operatorExpressionTree.AppendOperator(reader.GetOperator());
+
+            reader.Read();
+
+            operatorExpressionTree.AppendOperandQuery(ParseSingleQuery(ref reader));
         }
 
-        Debug.Assert(reader.TokenType == JsonQueryTokenType.Operator);
-
-        string operatorName = reader.GetOperator();
-
-        reader.Read();
-
-        IJsonQueryable rightQuery = ParseSingleQuery(ref reader);
-
-        return CreateOperatorQuery(operatorName, query, rightQuery);
+        return operatorExpressionTree.Evaluate();
 
         static bool IsTerminalToken(JsonQueryTokenType tokenType)
         {
@@ -186,13 +186,6 @@ public static class JsonQueryParser
         return query;
     }
 
-    private static IJsonQueryable CreateOperatorQuery(string operatorName, IJsonQueryable leftQuery, IJsonQueryable rightQuery)
-    {
-        Type operatorType = OperatorRegistry.FindOperatorType(operatorName);
-
-        return (IJsonQueryable)Activator.CreateInstance(operatorType, leftQuery, rightQuery);
-    }
-
     // TODO: support more types when need
     internal static object Deserialize(ref JsonQueryReader reader, Type returnType)
     {
@@ -224,5 +217,70 @@ public static class JsonQueryParser
         }
 
         throw new NotSupportedException($"Not support to deserialize '{returnType}' for json query currently");
+    }
+}
+
+internal readonly ref struct OperatorExpressionTree
+{
+    private readonly LinkedList<string> _operatorsList;
+    private readonly LinkedList<IJsonQueryable> _operandQueriesList;
+
+    public OperatorExpressionTree()
+    {
+        _operatorsList = new();
+        _operandQueriesList = new();
+    }
+
+    public void AppendOperator(string operatorKeyword)
+    {
+        _operatorsList.AddLast(operatorKeyword);
+    }
+
+    public void AppendOperandQuery(IJsonQueryable query)
+    {
+        _operandQueriesList.AddLast(query);
+    }
+
+    public IJsonQueryable Evaluate()
+    {
+        while (_operatorsList.Count != 0)
+        {
+            LinkedListNode<string>? highestPrecedenceOperatorNode, curOperatorNode;
+            highestPrecedenceOperatorNode = curOperatorNode = _operatorsList.First;
+            LinkedListNode<IJsonQueryable> leftOperandOfHighestPrecedenceOperator, curLeftOperandNode;
+            leftOperandOfHighestPrecedenceOperator = curLeftOperandNode = _operandQueriesList.First;
+
+            while (curOperatorNode is not null)
+            {
+                if (OperatorRegistry.FindOperatorPrecedenceValue(curOperatorNode.Value) > OperatorRegistry.FindOperatorPrecedenceValue(highestPrecedenceOperatorNode.Value))
+                {
+                    highestPrecedenceOperatorNode = curOperatorNode;
+                    leftOperandOfHighestPrecedenceOperator = curLeftOperandNode;
+                }
+
+                curOperatorNode = curOperatorNode.Next;
+                curLeftOperandNode = curLeftOperandNode.Next!;
+            }
+
+            string operatorName = highestPrecedenceOperatorNode.Value;
+            IJsonQueryable leftOperandQuery = leftOperandOfHighestPrecedenceOperator.Value;
+            IJsonQueryable rightOperandQuery = leftOperandOfHighestPrecedenceOperator.Next!.Value;
+
+            IJsonQueryable newOperatorQuery = CreateOperatorQuery(operatorName, leftOperandQuery, rightOperandQuery);
+
+            _operatorsList.Remove(highestPrecedenceOperatorNode);
+            _operandQueriesList.Remove(leftOperandOfHighestPrecedenceOperator.Next);
+            leftOperandOfHighestPrecedenceOperator.Value = newOperatorQuery;
+        }
+
+        Debug.Assert(_operandQueriesList.Count == 1);
+        return _operandQueriesList.First.Value;
+    }
+
+    private static IJsonQueryable CreateOperatorQuery(string operatorName, IJsonQueryable leftQuery, IJsonQueryable rightQuery)
+    {
+        Type operatorType = OperatorRegistry.FindOperatorType(operatorName);
+
+        return (IJsonQueryable)Activator.CreateInstance(operatorType, leftQuery, rightQuery);
     }
 }
