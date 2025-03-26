@@ -68,11 +68,6 @@ public ref struct JsonQueryReader
                 throw new JsonQueryParseException("Operator missing 'right hand value'", _index);
             }
 
-            if (_positionStack.TryPeek(out position) && position == ReaderStackPosition.MeetOperator)
-            {
-                _positionStack.Pop();
-            }
-
             if (_positionStack.TryPop(out position)) // (a or (a + b
             {
                 char missingToken;
@@ -103,16 +98,6 @@ public ref struct JsonQueryReader
 
         if (_jsonQuery[_index] == ',')
         {
-            if (_positionStack.TryPeek(out position) && position == ReaderStackPosition.MeetOperator)
-            {
-                if (TokenType == JsonQueryTokenType.Operator)
-                {
-                    throw new JsonQueryParseException("Unexpected ','", _index);
-                }
-
-                _positionStack.Pop();
-            }
-
             bool shouldThrow = false;
 
             if (_positionStack.TryPeek(out position))
@@ -143,7 +128,7 @@ public ref struct JsonQueryReader
                 {
                     Debug.Assert(position == ReaderStackPosition.InObjectKeyValuePair);
                     
-                    if (TokenType == JsonQueryTokenType.PropertyName)
+                    if (TokenType == JsonQueryTokenType.PropertyName || TokenType == JsonQueryTokenType.Operator || TokenType == JsonQueryTokenType.Pipe)
                     {
                         shouldThrow = true;
                     }
@@ -198,21 +183,11 @@ public ref struct JsonQueryReader
 
         if (_jsonQuery[_index] == '}')
         {
-            if (_positionStack.TryPeek(out position) && position == ReaderStackPosition.MeetOperator)
-            {
-                if (TokenType == JsonQueryTokenType.Operator)
-                {
-                    throw new JsonQueryParseException("Unexpected '}'", _index);
-                }
-
-                _positionStack.Pop();
-            }
-
             if (_positionStack.TryPop(out position))
             {
                 if (position == ReaderStackPosition.InObjectKeyValuePair)
                 {
-                    if (TokenType == JsonQueryTokenType.PropertyName)
+                    if (TokenType == JsonQueryTokenType.PropertyName || TokenType == JsonQueryTokenType.Operator || TokenType == JsonQueryTokenType.Pipe)
                     {
                         throw new JsonQueryParseException("Unexpected '}'", _index);
                     }
@@ -270,11 +245,6 @@ public ref struct JsonQueryReader
 
             position = _positionStack.Pop();
 
-            if (position == ReaderStackPosition.MeetOperator)
-            {
-                position = _positionStack.Pop();
-            }
-
             Debug.Assert(position == ReaderStackPosition.InFunction || position == ReaderStackPosition.InParenthesis);
 
             TokenType = JsonQueryTokenType.EndParenthesis;
@@ -299,10 +269,6 @@ public ref struct JsonQueryReader
             ValidateEndBracketChar(meetComma);
 
             position = _positionStack.Pop();
-            if (position == ReaderStackPosition.MeetOperator)
-            {
-                position = _positionStack.Pop();
-            }
             Debug.Assert(position == ReaderStackPosition.InArray);
 
             TokenType = JsonQueryTokenType.EndBracket;
@@ -326,11 +292,6 @@ public ref struct JsonQueryReader
         {
             ValidatePipeChar(meetComma);
 
-            if (_positionStack.TryPeek(out position) && position == ReaderStackPosition.MeetOperator)
-            {
-                _positionStack.Pop();
-            }
-
             TokenType = JsonQueryTokenType.Pipe;
             _index++;
             return true;
@@ -343,7 +304,6 @@ public ref struct JsonQueryReader
             {
                 _operatorValue = operatorValue;
 
-                _positionStack.Push(ReaderStackPosition.MeetOperator);
                 TokenType = JsonQueryTokenType.Operator;
                 _index += _operatorValue.Length;
 
@@ -459,15 +419,10 @@ public ref struct JsonQueryReader
 
     private bool ValidateOperator(bool meetComma)
     {
-        if (_positionStack.TryPeek(out ReaderStackPosition position) && position == ReaderStackPosition.MeetOperator)
-        {
-            return false;
-        }
-
         if (meetComma || TokenType == JsonQueryTokenType.PropertyName || TokenType == JsonQueryTokenType.None
             || TokenType == JsonQueryTokenType.StartBrace || TokenType == JsonQueryTokenType.StartBracket
             || TokenType == JsonQueryTokenType.StartParenthesis || TokenType == JsonQueryTokenType.FunctionName
-            || TokenType == JsonQueryTokenType.Pipe)
+            || TokenType == JsonQueryTokenType.Pipe || TokenType == JsonQueryTokenType.Operator)
         {
             return false;
         }
@@ -477,22 +432,9 @@ public ref struct JsonQueryReader
 
     private void ValidateEndParenthesisChar(bool meetComma)
     {
-        bool needToRestoreOperator = false;
-
-        if (_positionStack.TryPeek(out ReaderStackPosition position) && position == ReaderStackPosition.MeetOperator)
-        {
-            if (TokenType == JsonQueryTokenType.Operator)
-            {
-                throw new JsonQueryParseException("Unexpected ')'", _index);
-            }
-
-            _positionStack.Pop();
-            needToRestoreOperator = true;
-        }
-
         bool shouldThrow = false;
 
-        if (_positionStack.TryPeek(out position) && (position == ReaderStackPosition.InFunction || position == ReaderStackPosition.InParenthesis))
+        if (_positionStack.TryPeek(out ReaderStackPosition position) && (position == ReaderStackPosition.InFunction || position == ReaderStackPosition.InParenthesis))
         {
             if (meetComma || TokenType == JsonQueryTokenType.Operator || TokenType == JsonQueryTokenType.Pipe)
             {
@@ -508,31 +450,13 @@ public ref struct JsonQueryReader
         {
             throw new JsonQueryParseException("Unexpected ')'", _index);
         }
-
-        if (needToRestoreOperator)
-        {
-            _positionStack.Push(ReaderStackPosition.MeetOperator);
-        }
     }
 
     private void ValidateEndBracketChar(bool meetComma)
     {
-        bool needToRestoreOperator = false;
-
-        if (_positionStack.TryPeek(out ReaderStackPosition position) && position == ReaderStackPosition.MeetOperator)
-        {
-            if (TokenType == JsonQueryTokenType.Operator)
-            {
-                throw new JsonQueryParseException("Unexpected ']'", _index);
-            }
-
-            _positionStack.Pop();
-            needToRestoreOperator = true;
-        }
-
         bool shouldThrow = false;
 
-        if (_positionStack.TryPeek(out position) && position == ReaderStackPosition.InArray)
+        if (_positionStack.TryPeek(out ReaderStackPosition position) && position == ReaderStackPosition.InArray)
         {
             if (meetComma || TokenType == JsonQueryTokenType.Operator || TokenType == JsonQueryTokenType.Pipe)
             {
@@ -548,42 +472,24 @@ public ref struct JsonQueryReader
         {
             throw new JsonQueryParseException("Unexpected ']'", _index);
         }
-
-        if (needToRestoreOperator)
-        {
-            _positionStack.Push(ReaderStackPosition.MeetOperator);
-        }
     }
 
     private void ValidatePipeChar(bool meetComma)
     {
-        bool needToRestoreOperator = false;
-
-        if (_positionStack.TryPeek(out ReaderStackPosition position) && position == ReaderStackPosition.MeetOperator)
-        {
-            if (TokenType == JsonQueryTokenType.Operator)
-            {
-                throw new JsonQueryParseException("Unexpected '|'", _index);
-            }
-
-            _positionStack.Pop();
-            needToRestoreOperator = true;
-        }
-
         bool shouldThrow = false;
 
-        if (_positionStack.TryPeek(out position))
+        if (_positionStack.TryPeek(out ReaderStackPosition position))
         {
             if (position == ReaderStackPosition.InArray)
             {
-                if (TokenType == JsonQueryTokenType.StartBracket || meetComma || TokenType == JsonQueryTokenType.Operator)
+                if (TokenType == JsonQueryTokenType.StartBracket || meetComma || TokenType == JsonQueryTokenType.Operator || TokenType == JsonQueryTokenType.Pipe)
                 {
                     shouldThrow = true;
                 }
             }
             else if (position == ReaderStackPosition.InFunction || position == ReaderStackPosition.InParenthesis)
             {
-                if (meetComma || TokenType == JsonQueryTokenType.StartParenthesis || TokenType == JsonQueryTokenType.Operator)
+                if (meetComma || TokenType == JsonQueryTokenType.StartParenthesis || TokenType == JsonQueryTokenType.Operator || TokenType == JsonQueryTokenType.Pipe)
                 {
                     shouldThrow = true;
                 }
@@ -596,7 +502,7 @@ public ref struct JsonQueryReader
             {
                 Debug.Assert(position == ReaderStackPosition.InObjectKeyValuePair);
 
-                if (TokenType == JsonQueryTokenType.PropertyName || TokenType == JsonQueryTokenType.Operator)
+                if (TokenType == JsonQueryTokenType.PropertyName || TokenType == JsonQueryTokenType.Operator || TokenType == JsonQueryTokenType.Pipe)
                 {
                     shouldThrow = true;
                 }
@@ -604,7 +510,7 @@ public ref struct JsonQueryReader
         }
         else
         {
-            if (TokenType == JsonQueryTokenType.None || TokenType == JsonQueryTokenType.Operator)
+            if (TokenType == JsonQueryTokenType.None || TokenType == JsonQueryTokenType.Operator || TokenType == JsonQueryTokenType.Pipe)
             {
                 shouldThrow = true;
             }
@@ -614,11 +520,6 @@ public ref struct JsonQueryReader
         {
             throw new JsonQueryParseException("Unexpected '|'", _index);
         }
-
-        if (needToRestoreOperator)
-        {
-            _positionStack.Push(ReaderStackPosition.MeetOperator);
-        }
     }
 
     private void ValidateValueToken(bool meetComma, bool meetColon, string segment)
@@ -627,14 +528,7 @@ public ref struct JsonQueryReader
 
         if (_positionStack.TryPeek(out ReaderStackPosition position))
         {
-            if (position == ReaderStackPosition.MeetOperator)
-            {
-                if (TokenType != JsonQueryTokenType.Operator) // a + b value
-                {
-                    shouldThrow = true;
-                }
-            }
-            else if (position == ReaderStackPosition.InArray)
+            if (position == ReaderStackPosition.InArray)
             {
                 if (!meetComma && TokenType != JsonQueryTokenType.StartBracket && TokenType != JsonQueryTokenType.Pipe && TokenType != JsonQueryTokenType.Operator)
                 {
@@ -1029,6 +923,5 @@ internal enum ReaderStackPosition
     InParenthesis,
     InArray,
     InObject,
-    InObjectKeyValuePair,
-    MeetOperator
+    InObjectKeyValuePair
 }
