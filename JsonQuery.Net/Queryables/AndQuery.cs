@@ -3,18 +3,30 @@ using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-[JsonConverter(typeof(OperatorConverter<AndQuery>))]
-public class AndQuery : OperatorQuery
+[JsonConverter(typeof(QueryCollectionConverter))]
+public class AndQuery : IJsonQueryable, IMultipleSubQuery
 {
     internal const string Keyword = "and";
     internal const string Operator = "and";
 
-    public AndQuery(IJsonQueryable left, IJsonQueryable right) : base(left, right)
+    private readonly IJsonQueryable[] _operandQueries;
+
+    public AndQuery(IJsonQueryable[] operandQueries)
     {
+        if (operandQueries.Length < 2)
+        {
+            throw new ArgumentException($"Operands count of '{Operator}' operator should be greater than 1.", nameof(operandQueries));
+        }
+
+        _operandQueries = operandQueries;
     }
 
-    public override JsonNode Query(JsonNode? data)
+    public JsonNode Query(JsonNode? data)
     {
-        return QueryLeftBoolean(data) && QueryRightBoolean(data);
+        IEnumerable<bool> operands = _operandQueries.Select(operandQuery => operandQuery.Query(data).GetBooleanValue());
+
+        return operands.All(operand => operand);
     }
+
+    public IEnumerable<IJsonQueryable> SubQueries => _operandQueries;
 }

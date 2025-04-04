@@ -22,6 +22,18 @@ internal static class OperatorRegistry
         new[] { typeof(OrQuery) }
     };
 
+    private static readonly HashSet<Type> VarargOperatorTypes = new HashSet<Type>
+    {
+        typeof(AddOperator),
+        typeof(SubtractQuery),
+        typeof(MultiplyOperator),
+        typeof(DivideQuery),
+        typeof(ModQuery),
+
+        typeof(AndQuery),
+        typeof(OrQuery)
+    };
+
     public static string[] SortedOperatorKeywords { get; } = new[]
     {
         EqQuery.Operator,
@@ -58,8 +70,16 @@ internal static class OperatorRegistry
     }
 
     public static Type FindOperatorType(string operatorName) => OperatorNameTypeMaps[operatorName];
-
-    public static int FindOperatorPrecedenceValue(Type operatorType) => OperatorTypePrecedenceMaps[operatorType];
     
-    public static int FindOperatorPrecedenceValue(string operatorName) => FindOperatorPrecedenceValue(FindOperatorType(operatorName));
+    public static int FindOperatorPrecedenceValue(string operatorName)
+    {
+        Type operatorType = FindOperatorType(operatorName);
+        return OperatorTypePrecedenceMaps[operatorType];
+    }
+
+    public static bool IsVarargOperator(string operatorName)
+    {
+        Type operatorType = FindOperatorType(operatorName);
+        return VarargOperatorTypes.Contains(operatorType);
+    }
 }

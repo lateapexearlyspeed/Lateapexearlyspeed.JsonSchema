@@ -5,6 +5,16 @@ namespace JsonQuery.Net;
 
 internal static class JsonNodeExtensions
 {
+    public static decimal GetDecimalValue(this JsonNode? jsonNode)
+    {
+        if (jsonNode is null || jsonNode.GetValueKind() != JsonValueKind.Number)
+        {
+            return 0;
+        }
+
+        return jsonNode.GetValue<decimal>();
+    }
+
     public static bool GetBooleanValue(this JsonNode? jsonNode)
     {
         if (jsonNode is null)

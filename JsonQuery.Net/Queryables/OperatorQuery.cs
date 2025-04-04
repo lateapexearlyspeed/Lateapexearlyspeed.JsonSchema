@@ -20,12 +20,8 @@ public abstract class OperatorQuery : IJsonQueryable
     private static decimal QueryDecimal(IJsonQueryable query, JsonNode? data)
     {
         JsonNode? jsonNode = query.Query(data);
-        if (jsonNode is null || jsonNode.GetValueKind() != JsonValueKind.Number)
-        {
-            return 0;
-        }
 
-        return jsonNode.GetValue<decimal>();
+        return jsonNode.GetDecimalValue();
     }
 
     protected bool QueryLeftBoolean(JsonNode? data) => QueryBoolean(Left, data);

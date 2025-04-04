@@ -6,7 +6,7 @@ namespace JsonQuery.Net.Queryables;
 
 public abstract class JsonFormatQueryJsonConverter<TQuery> : JsonConverter<TQuery> where TQuery : IJsonQueryable
 {
-    private static readonly string QueryKeyword = JsonQueryableRegistry.GetKeyword(typeof(TQuery));
+    protected static readonly string QueryKeyword = JsonQueryableRegistry.GetKeyword(typeof(TQuery));
 
     public override TQuery Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

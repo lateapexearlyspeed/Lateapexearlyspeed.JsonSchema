@@ -243,6 +243,16 @@ internal readonly ref struct OperatorExpressionTree
 
     public IJsonQueryable Evaluate()
     {
+        if (_operatorsList.Count > 0)
+        {
+            string firstOperator = _operatorsList.First.Value;
+
+            if (OperatorRegistry.IsVarargOperator(firstOperator) && _operatorsList.All(operatorItem => operatorItem == firstOperator))
+            {
+                return CreateVarArgOperatorQuery(firstOperator, _operandQueriesList);
+            }
+        }
+
         while (_operatorsList.Count != 0)
         {
             LinkedListNode<string>? highestPrecedenceOperatorNode, curOperatorNode;
@@ -266,7 +276,7 @@ internal readonly ref struct OperatorExpressionTree
             IJsonQueryable leftOperandQuery = leftOperandOfHighestPrecedenceOperator.Value;
             IJsonQueryable rightOperandQuery = leftOperandOfHighestPrecedenceOperator.Next!.Value;
 
-            IJsonQueryable newOperatorQuery = CreateOperatorQuery(operatorName, leftOperandQuery, rightOperandQuery);
+            IJsonQueryable newOperatorQuery = CreateTwoArgsOperatorQuery(operatorName, leftOperandQuery, rightOperandQuery);
 
             _operatorsList.Remove(highestPrecedenceOperatorNode);
             _operandQueriesList.Remove(leftOperandOfHighestPrecedenceOperator.Next);
@@ -277,10 +287,17 @@ internal readonly ref struct OperatorExpressionTree
         return _operandQueriesList.First.Value;
     }
 
-    private static IJsonQueryable CreateOperatorQuery(string operatorName, IJsonQueryable leftQuery, IJsonQueryable rightQuery)
+    private static IJsonQueryable CreateTwoArgsOperatorQuery(string operatorName, IJsonQueryable leftQuery, IJsonQueryable rightQuery)
     {
         Type operatorType = OperatorRegistry.FindOperatorType(operatorName);
 
         return (IJsonQueryable)Activator.CreateInstance(operatorType, leftQuery, rightQuery);
+    }
+
+    private static IJsonQueryable CreateVarArgOperatorQuery(string operatorName, IEnumerable<IJsonQueryable> operandQueries)
+    {
+        Type operatorType = OperatorRegistry.FindOperatorType(operatorName);
+
+        return (IJsonQueryable)Activator.CreateInstance(operatorType, new object[] { operandQueries.ToArray() });
     }
 }

@@ -4,36 +4,66 @@ using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-[JsonConverter(typeof(OperatorConverter<AddOperator>))]
-public class AddOperator : OperatorQuery
+[JsonConverter(typeof(QueryCollectionConverter))]
+public class AddOperator : IJsonQueryable, IMultipleSubQuery
 {
     internal const string Keyword = "add";
     internal const string Operator = "+";
 
-    public AddOperator(IJsonQueryable left, IJsonQueryable right) : base(left, right)
+    private readonly IJsonQueryable[] _operandQueries;
+
+    public AddOperator(IJsonQueryable[] operandQueries)
     {
+        if (operandQueries.Length < 2)
+        {
+            throw new ArgumentException($"Operands count of '{Operator}' operator should be greater than 1.", nameof(operandQueries));
+        }
+
+        _operandQueries = operandQueries;
     }
 
-    public override JsonNode? Query(JsonNode? data)
+    public JsonNode? Query(JsonNode? data)
     {
-        JsonNode? leftNode = Left.Query(data);
-        JsonNode? rightNode = Right.Query(data);
+        IEnumerable<JsonNode?> operandNodes = _operandQueries.Select(operandQuery => operandQuery.Query(data));
 
-        if (leftNode is not JsonValue leftValue || rightNode is not JsonValue rightValue)
+        var operandValues = new List<JsonValue>();
+
+        foreach (JsonNode? operandNode in operandNodes)
         {
-            return null;
+            if (operandNode is not JsonValue operandValue)
+            {
+                return null;
+            }
+
+            operandValues.Add(operandValue);
         }
 
-        if (leftValue.TryGetValue(out decimal leftNumber) && rightValue.TryGetValue(out decimal rightNumber))
+        bool allDecimal = true;
+        var decimalOperands = new decimal[operandValues.Count];
+
+        for (int i = 0; i < operandValues.Count; i++)
         {
-            return leftNumber + rightNumber;
+            if (!operandValues[i].TryGetValue(out decimal decimalValue))
+            {
+                allDecimal = false;
+                break;
+            }
+
+            decimalOperands[i] = decimalValue;
         }
 
-        if (leftValue.GetValueKind() == JsonValueKind.String || rightValue.GetValueKind() == JsonValueKind.String)
+        if (allDecimal)
         {
-            return leftValue.ToString() + rightValue;
+            return decimalOperands.Sum();
+        }
+
+        if (operandValues.Any(operand => operand.GetValueKind() == JsonValueKind.String))
+        {
+            return string.Concat(operandValues);
         }
 
         return null;
     }
+
+    public IEnumerable<IJsonQueryable> SubQueries => _operandQueries;
 }

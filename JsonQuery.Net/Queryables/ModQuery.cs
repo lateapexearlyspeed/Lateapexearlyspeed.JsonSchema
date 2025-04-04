@@ -1,20 +1,52 @@
-﻿using System.Text.Json.Nodes;
+﻿using System.Diagnostics;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-[JsonConverter(typeof(OperatorConverter<ModQuery>))]
-public class ModQuery : OperatorQuery
+[JsonConverter(typeof(QueryCollectionConverter))]
+public class ModQuery : IJsonQueryable, IMultipleSubQuery
 {
     internal const string Keyword = "mod";
     internal const string Operator = "%";
 
-    public ModQuery(IJsonQueryable left, IJsonQueryable right) : base(left, right)
+    private readonly IJsonQueryable[] _operandQueries;
+
+    public ModQuery(IJsonQueryable[] operandQueries)
     {
+        if (operandQueries.Length < 2)
+        {
+            throw new ArgumentException($"Operands count of '{Operator}' operator should be greater than 1.", nameof(operandQueries));
+        }
+
+        _operandQueries = operandQueries;
     }
 
-    public override JsonNode Query(JsonNode? data)
+    public JsonNode? Query(JsonNode? data)
     {
-        return QueryLeftDecimal(data) % QueryRightDecimal(data);
+        IEnumerable<decimal> decimalOperands = _operandQueries.Select(operandQuery => operandQuery.Query(data).GetDecimalValue());
+
+        using (IEnumerator<decimal> enumerator = decimalOperands.GetEnumerator())
+        {
+            bool moveNext = enumerator.MoveNext();
+
+            Debug.Assert(moveNext);
+
+            decimal result = enumerator.Current;
+
+            while (enumerator.MoveNext())
+            {
+                if (enumerator.Current == 0)
+                {
+                    return null;
+                }
+
+                result %= enumerator.Current;
+            }
+
+            return result;
+        }
     }
+
+    public IEnumerable<IJsonQueryable> SubQueries => _operandQueries;
 }

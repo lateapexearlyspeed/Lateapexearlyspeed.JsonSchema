@@ -3,18 +3,34 @@ using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
 
-[JsonConverter(typeof(OperatorConverter<SubtractQuery>))]
-public class SubtractQuery : OperatorQuery
+[JsonConverter(typeof(QueryCollectionConverter))]
+public class SubtractQuery : IJsonQueryable, IMultipleSubQuery
 {
     internal const string Keyword = "subtract";
     internal const string Operator = "-";
 
-    public SubtractQuery(IJsonQueryable left, IJsonQueryable right) : base(left, right)
+    private readonly IJsonQueryable[] _operandQueries;
+
+    public SubtractQuery(IJsonQueryable[] operandQueries)
     {
+        if (operandQueries.Length < 2)
+        {
+            throw new ArgumentException($"Operands count of '{Operator}' operator should be greater than 1.", nameof(operandQueries));
+        }
+
+        _operandQueries = operandQueries;
     }
 
-    public override JsonNode Query(JsonNode? data)
+    public JsonNode Query(JsonNode? data)
     {
-        return QueryLeftDecimal(data) - QueryRightDecimal(data);
+        decimal[] decimalOperands = _operandQueries.Select(operandQuery => operandQuery.Query(data).GetDecimalValue()).ToArray();
+
+        decimal firstOperand = decimalOperands[0];
+
+        IEnumerable<decimal> subtractOperands = decimalOperands.Skip(1);
+
+        return subtractOperands.Aggregate(firstOperand, (aggregateValue, cur) => aggregateValue - cur);
     }
+
+    public IEnumerable<IJsonQueryable> SubQueries => _operandQueries;
 }

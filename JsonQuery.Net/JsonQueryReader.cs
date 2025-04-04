@@ -890,6 +890,10 @@ public class JsonQueryParseException : Exception
     public JsonQueryParseException(string message, int pos) : base($"{message} (pos: {pos})")
     {
     }
+
+    public JsonQueryParseException(string message, int pos, Exception? innerException) : base($"{message} (pos: {pos})", innerException)
+    {
+    }
 }
 
 public enum JsonQueryTokenType

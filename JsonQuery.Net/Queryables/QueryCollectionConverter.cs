@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace JsonQuery.Net.Queryables;
@@ -8,6 +9,7 @@ public class QueryCollectionConverter : JsonConverterFactory
     internal static bool CanConvertInternal(Type typeToConvert)
     {
         return typeof(IJsonQueryable).IsAssignableFrom(typeToConvert)
+               && typeof(IMultipleSubQuery).IsAssignableFrom(typeToConvert)
                && typeToConvert.GetConstructor(new[] { typeof(IJsonQueryable[]) }) is not null;
     }
 
@@ -32,7 +34,14 @@ public class QueryCollectionConverter : JsonConverterFactory
                 reader.Read();
             }
 
-            return (TQuery)Activator.CreateInstance(typeof(TQuery), new object[] { queries.ToArray() });
+            try
+            {
+                return (TQuery)Activator.CreateInstance(typeof(TQuery), new object[] { queries.ToArray() });
+            }
+            catch (TargetInvocationException targetInvocationException)
+            {
+                throw new JsonException($"Failed to deserialize '{QueryKeyword}' query", targetInvocationException.InnerException);
+            }
         }
 
         public override void Write(Utf8JsonWriter writer, TQuery value, JsonSerializerOptions options)
@@ -72,7 +81,14 @@ public class QueryCollectionParserConverter : IJsonQueryConverterFactory
                 reader.Read();
             }
 
-            return (TQuery)Activator.CreateInstance(typeof(TQuery), new object[] { queries.ToArray() });
+            try
+            {
+                return (TQuery)Activator.CreateInstance(typeof(TQuery), new object[] { queries.ToArray() });
+            }
+            catch (TargetInvocationException targetInvocationException)
+            {
+                throw new JsonQueryParseException($"Failed to parse '{QueryKeyword}' function", reader.Position, targetInvocationException.InnerException);
+            }
         }
     }
 }
