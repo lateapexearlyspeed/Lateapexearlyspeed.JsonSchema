@@ -25,7 +25,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonQuery.Net.UnitTests", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LateApexEarlySpeed.Xunit.V3.Assertion.Json", "LateApexEarlySpeed.Xunit.V3.Assertion.Json\LateApexEarlySpeed.Xunit.V3.Assertion.Json.csproj", "{E711458E-DBDD-441C-B9EC-0A3D9744E566}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LateApexEarlySpeed.V3.Assertion.Json.UnitTests", "LateApexEarlySpeed.V3.Assertion.Json.UnitTests\LateApexEarlySpeed.V3.Assertion.Json.UnitTests.csproj", "{814B48C4-87D2-4692-A1D2-EE5338371AA3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LateApexEarlySpeed.V3.Assertion.Json.UnitTests", "LateApexEarlySpeed.V3.Assertion.Json.UnitTests\LateApexEarlySpeed.V3.Assertion.Json.UnitTests.csproj", "{814B48C4-87D2-4692-A1D2-EE5338371AA3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Json.Schema.Libraries.Benchmark", "Json.Schema.Libraries.Benchmark\Json.Schema.Libraries.Benchmark.csproj", "{DD892059-D7A4-4AF7-B38A-E8CBF6747112}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -81,6 +83,10 @@ Global
 		{814B48C4-87D2-4692-A1D2-EE5338371AA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{814B48C4-87D2-4692-A1D2-EE5338371AA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{814B48C4-87D2-4692-A1D2-EE5338371AA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD892059-D7A4-4AF7-B38A-E8CBF6747112}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD892059-D7A4-4AF7-B38A-E8CBF6747112}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD892059-D7A4-4AF7-B38A-E8CBF6747112}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD892059-D7A4-4AF7-B38A-E8CBF6747112}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
