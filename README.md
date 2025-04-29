@@ -61,7 +61,7 @@ This is a high performance Json schema .Net implementation library based on [Jso
 
 This library also supports fluent validation and validator generation from your class code.
 
-**High performance** - this .Net library has good performance compared with existing more popular and excellent .Net implementations in common cases by BenchmarkDotnet [result](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Performance).
+**High performance** - this .Net library has good performance compared with existing more popular and excellent .Net implementations in common cases by BenchmarkDotnet [result](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Performance). **Update**: there is a [blog article](https://medium.com/@lateapexearlyspeed/performance-comparison-of-json-schema-implementations-for-net-ead3d092a473) to demonstrate performance advantage of this library comparing with other existing popular implementations based on official Json Schema test suite.
 
 ### Basic Usage
 
