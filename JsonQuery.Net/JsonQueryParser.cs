@@ -255,6 +255,8 @@ internal readonly ref struct OperatorExpressionTree
 
         while (_operatorsList.Count != 0)
         {
+            ThrowIfContinuousNonVarargOperatorOccurs();
+
             LinkedListNode<string>? highestPrecedenceOperatorNode, curOperatorNode;
             highestPrecedenceOperatorNode = curOperatorNode = _operatorsList.First;
             LinkedListNode<IJsonQueryable> leftOperandOfHighestPrecedenceOperator, curLeftOperandNode;
@@ -285,6 +287,26 @@ internal readonly ref struct OperatorExpressionTree
 
         Debug.Assert(_operandQueriesList.Count == 1);
         return _operandQueriesList.First.Value;
+    }
+
+    private void ThrowIfContinuousNonVarargOperatorOccurs()
+    {
+        string? preOperator = null;
+
+        foreach (string curOperator in _operatorsList)
+        {
+            if (curOperator == preOperator)
+            {
+                if (!OperatorRegistry.IsVarargOperator(curOperator))
+                {
+                    throw new JsonQueryParseException($"Continuous operator:'{curOperator}' occurs");
+                }
+            }
+            else
+            {
+                preOperator = curOperator;
+            }
+        }
     }
 
     private static IJsonQueryable CreateTwoArgsOperatorQuery(string operatorName, IJsonQueryable leftQuery, IJsonQueryable rightQuery)

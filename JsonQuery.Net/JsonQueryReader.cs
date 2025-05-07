@@ -887,6 +887,10 @@ public ref struct JsonQueryReader
 
 public class JsonQueryParseException : Exception
 {
+    public JsonQueryParseException(string message) : base(message)
+    {
+    }
+
     public JsonQueryParseException(string message, int pos) : base($"{message} (pos: {pos})")
     {
     }
