@@ -26,18 +26,17 @@ namespace JsonQuery.Net.UnitTests
                 {
                     using (JsonDocument jsonDoc = JsonDocument.Parse(fs))
                     {
-                        JsonElement jsonElement = jsonDoc.RootElement.GetProperty("tests");
+                        JsonElement jsonElement = jsonDoc.RootElement.GetProperty("groups");
 
-                        TestCase[] testCases = jsonElement.Deserialize<TestCase[]>()!;
+                        Group[] groups = jsonElement.Deserialize<Group[]>()!;
 
-                        return testCases.Select(testCase => new object[] { testCase.Category, testCase.Description, JsonSerializer.Serialize(testCase.Input), JsonSerializer.Serialize(testCase.Query), JsonSerializer.Serialize(testCase.ExpectedOutput) });
+                        return groups.SelectMany(group => group.Tests.Select(test => new object[] { group.Category, group.Description, JsonSerializer.Serialize(test.Input), JsonSerializer.Serialize(test.Query), JsonSerializer.Serialize(test.ExpectedOutput) }));
                     }
                 }
-                    
             }
         }
 
-        public class TestCase
+        public class Group
         {
             [JsonPropertyName("category")]
             public string Category { get; set; } = null!;
@@ -45,6 +44,12 @@ namespace JsonQuery.Net.UnitTests
             [JsonPropertyName("description")]
             public string Description { get; set; } = null!;
 
+            [JsonPropertyName("tests")]
+            public TestCase[] Tests { get; set; } = null!;
+        }
+
+        public class TestCase
+        {
             [JsonPropertyName("input")]
             public JsonNode? Input { get; set; }
 
