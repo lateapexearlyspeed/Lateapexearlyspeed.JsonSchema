@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
@@ -52,24 +53,66 @@ internal class PrefixItemsKeyword : KeywordBase, ISchemaContainerElement, ISubSc
             return ValidationResult.ValidResult;
         }
 
-        int schemaIdx = 0;
-        foreach (JsonInstanceElement instanceItem in instance.EnumerateArray())
+        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+    }
+
+    private class Validator : IValidator
+    {
+        private readonly PrefixItemsKeyword _prefixItemsKeyword;
+        private readonly JsonInstanceElement _instance;
+        private readonly JsonSchemaOptions _options;
+
+        private ValidationResult? _fastReturnResult;
+
+        public Validator(PrefixItemsKeyword prefixItemsKeyword, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            if (schemaIdx >= SubSchemas.Count)
-            {
-                break;
-            }
-
-            ValidationResult validationResult = SubSchemas[schemaIdx].Validate(instanceItem, options);
-            if (!validationResult.IsValid)
-            {
-                return validationResult;
-            }
-
-            schemaIdx++;
+            _prefixItemsKeyword = prefixItemsKeyword;
+            _instance = instance;
+            _options = options;
         }
 
-        return ValidationResult.ValidResult;
+        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        {
+            int schemaIdx = 0;
+            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
+            {
+                if (schemaIdx >= _prefixItemsKeyword.SubSchemas.Count)
+                {
+                    break;
+                }
+
+                ValidationResult validationResult = _prefixItemsKeyword.SubSchemas[schemaIdx].Validate(instanceItem, _options);
+                if (!validationResult.IsValid)
+                {
+                    _fastReturnResult = validationResult;
+                }
+
+                yield return validationResult;
+
+                schemaIdx++;
+            }
+        }
+
+        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
+        {
+            validationResult = _fastReturnResult;
+
+            return _fastReturnResult is not null;
+        }
+
+        public ResultTuple Result
+        {
+            get
+            {
+                if (_fastReturnResult is null)
+                {
+                    return ResultTuple.Valid();
+                }
+
+                var error = new ValidationError(ResultCode.FailedInSubSchema, ValidationError.ErrorMessageForFailedInSubSchema, _options.ValidationPathStack, _prefixItemsKeyword.Name, _instance.Location);
+                return ResultTuple.WithError(error);
+            }
+        }
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

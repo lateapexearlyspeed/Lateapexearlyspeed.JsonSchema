@@ -33,12 +33,12 @@ internal class DateTimeCustomValidationKeyword : KeywordBase
 
         if (!canParse)
         {
-            return ValidationResult.CreateFailedResult(ResultCode.InvalidFormat, DateTimeFormatExtensionKeyword.ErrorMessage(), options.ValidationPathStack, Name, instance.Location);
+            return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.InvalidFormat, DateTimeFormatExtensionKeyword.ErrorMessage(), options.ValidationPathStack, Name, instance.Location));
         }
 
         return _validator(data)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.FailedForCustomValidation, _errorMessageFunc(data), options.ValidationPathStack,
-                Name, instance.Location);
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.FailedForCustomValidation, _errorMessageFunc(data), options.ValidationPathStack,
+                Name, instance.Location));
     }
 }

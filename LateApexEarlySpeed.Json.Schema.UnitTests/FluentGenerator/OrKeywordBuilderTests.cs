@@ -40,16 +40,16 @@ public class OrKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("""{"A": 1}""");
-        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Number, InstanceType.Null), ImmutableJsonPointer.Create("/A"));
+        AssertValidationResult(validationResult, false, AnyOfKeyword.ErrorMessage(), ImmutableJsonPointer.Create("/A"));
     }
 
     private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, ImmutableJsonPointer? expectedInstanceLocation = null)
     {
         Assert.Equal(expectedValidStatus, actualValidationResult.IsValid);
-        Assert.Equal(expectedErrorMessage, actualValidationResult.ErrorMessage);
-        Assert.Equal(expectedInstanceLocation, actualValidationResult.InstanceLocation);
-    }
 
-    private static string GetInvalidTokenErrorMessage(InstanceType actualType, InstanceType expectedType)
-        => $"Expect type(s): '{expectedType}' but actual is '{actualType}'";
+        ValidationError? error = actualValidationResult.ValidationErrors.SingleOrDefault();
+
+        Assert.Equal(expectedErrorMessage, error?.ErrorMessage);
+        Assert.Equal(expectedInstanceLocation, error?.InstanceLocation);
+    }
 }

@@ -21,7 +21,7 @@ internal class BooleanJsonSchema : JsonSchema
     {
         return AlwaysValid 
             ? ValidationResult.ValidResult 
-            : ValidationResult.CreateFailedResult(ResultCode.AlwaysFailedJsonSchema, "Boolean false json schema occurs", options.ValidationPathStack, null, instance.Location);
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.AlwaysFailedJsonSchema, "Boolean false json schema occurs", options.ValidationPathStack, null, instance.Location));
     }
 
     public override ISchemaContainerElement? GetSubElement(string name)

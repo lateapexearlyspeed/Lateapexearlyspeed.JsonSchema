@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -26,25 +27,67 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
             return ValidationResult.ValidResult;
         }
 
-        foreach (JsonInstanceProperty jsonProperty in instance.EnumerateObject())
-        {
-            string propertyName = jsonProperty.Name;
-            JsonInstanceElement propertyValue = jsonProperty.Value;
+        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+    }
 
-            foreach (KeyValuePair<string, JsonSchema> patternSchema in PatternSchemas)
+    private class Validator : IValidator
+    {
+        private readonly PatternPropertiesKeyword _patternPropertiesKeyword;
+        private readonly JsonInstanceElement _instance;
+        private readonly JsonSchemaOptions _options;
+
+        private ValidationResult? _fastReturnResult;
+
+        public Validator(PatternPropertiesKeyword patternPropertiesKeyword, JsonInstanceElement instance, JsonSchemaOptions options)
+        {
+            _patternPropertiesKeyword = patternPropertiesKeyword;
+            _instance = instance;
+            _options = options;
+        }
+
+        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        {
+            foreach (JsonInstanceProperty jsonProperty in _instance.EnumerateObject())
             {
-                if (RegexMatcher.IsMatch(patternSchema.Key, propertyName, options.RegexMatchTimeout))
+                string propertyName = jsonProperty.Name;
+                JsonInstanceElement propertyValue = jsonProperty.Value;
+
+                foreach (KeyValuePair<string, JsonSchema> patternSchema in _patternPropertiesKeyword.PatternSchemas)
                 {
-                    ValidationResult validationResult = patternSchema.Value.Validate(propertyValue, options);
-                    if (!validationResult.IsValid)
+                    if (RegexMatcher.IsMatch(patternSchema.Key, propertyName, _options.RegexMatchTimeout))
                     {
-                        return validationResult;
+                        ValidationResult validationResult = patternSchema.Value.Validate(propertyValue, _options);
+                        if (!validationResult.IsValid)
+                        {
+                            _fastReturnResult = validationResult;
+                        }
+
+                        yield return validationResult;
                     }
                 }
             }
         }
 
-        return ValidationResult.ValidResult;
+        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
+        {
+            validationResult = _fastReturnResult;
+
+            return _fastReturnResult is not null;
+        }
+
+        public ResultTuple Result
+        {
+            get
+            {
+                if (_fastReturnResult is null)
+                {
+                    return ResultTuple.Valid();
+                }
+
+                var curError = new ValidationError(ResultCode.FailedInSubSchema, ValidationError.ErrorMessageForFailedInSubSchema, _options.ValidationPathStack, _patternPropertiesKeyword.Name, _instance.Location);
+                return ResultTuple.WithError(curError);
+            }
+        }
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

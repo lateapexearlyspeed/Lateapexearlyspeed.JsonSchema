@@ -31,12 +31,12 @@ internal class EqualsDateTimeExtensionKeyword : KeywordBase
 
         if (!canParse)
         {
-            return ValidationResult.CreateFailedResult(ResultCode.InvalidFormat, DateTimeFormatExtensionKeyword.ErrorMessage(), options.ValidationPathStack, Name, instance.Location);
+            return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.InvalidFormat, DateTimeFormatExtensionKeyword.ErrorMessage(), options.ValidationPathStack, Name, instance.Location));
         }
 
         return data == _value
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.UnexpectedValue, ErrorMessage(data, _value), options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.UnexpectedValue, ErrorMessage(data, _value), options.ValidationPathStack, Name, instance.Location));
     }
 
     private static string ErrorMessage(DateTime actual, DateTime expectedValue)

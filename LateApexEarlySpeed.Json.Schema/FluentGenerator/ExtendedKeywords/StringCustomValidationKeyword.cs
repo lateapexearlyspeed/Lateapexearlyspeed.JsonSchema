@@ -30,7 +30,7 @@ public class StringCustomValidationKeyword : KeywordBase
         string instanceData = instance.GetString()!;
         return _validator(instanceData)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.FailedForCustomValidation, _errorMessageFunc(instanceData), options.ValidationPathStack,
-                Name, instance.Location);
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.FailedForCustomValidation, _errorMessageFunc(instanceData), options.ValidationPathStack,
+                Name, instance.Location));
     }
 }

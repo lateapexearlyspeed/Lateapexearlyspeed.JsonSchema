@@ -30,6 +30,6 @@ internal class ConstKeyword : KeywordBase
 
         Debug.Assert(equivalentResult.DetailedMessage is not null);
         Debug.Assert(equivalentResult.OtherLocation is not null);
-        return ValidationResult.CreateFailedResult(ResultCode.UnexpectedValue, equivalentResult.DetailedMessage, options.ValidationPathStack, Name, equivalentResult.OtherLocation);
+        return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.UnexpectedValue, equivalentResult.DetailedMessage, options.ValidationPathStack, Name, equivalentResult.OtherLocation));
     }
 }

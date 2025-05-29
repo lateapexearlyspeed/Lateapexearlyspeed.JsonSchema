@@ -20,7 +20,7 @@ internal abstract class StringLengthKeywordBase : KeywordBase, IBenchmarkValueKe
         int instanceStringLength = new StringInfo(instance.GetString()!).LengthInTextElements;
         return IsStringLengthInRange(instanceStringLength)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.StringLengthOutOfRange, GetErrorMessage(instanceStringLength), options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.StringLengthOutOfRange, GetErrorMessage(instanceStringLength), options.ValidationPathStack, Name, instance.Location));
     }
 
     protected abstract bool IsStringLengthInRange(int instanceStringLength);

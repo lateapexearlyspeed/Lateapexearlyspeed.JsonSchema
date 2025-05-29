@@ -29,8 +29,8 @@ internal class NoPropertiesKeyword : KeywordBase
         {
             if (_propertyBlackList.Contains(property.Name))
             {
-                return ValidationResult.CreateFailedResult(ResultCode.InvalidPropertyName, ErrorMessage(property.Name), options.ValidationPathStack,
-                    Name, instance.Location);
+                return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.InvalidPropertyName, ErrorMessage(property.Name), options.ValidationPathStack,
+                    Name, instance.Location));
             }
         }
 

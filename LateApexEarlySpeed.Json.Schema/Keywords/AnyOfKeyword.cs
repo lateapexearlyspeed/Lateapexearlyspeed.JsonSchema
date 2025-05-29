@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -46,18 +47,59 @@ internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        ValidationResult result = ValidationResult.ValidResult;
+        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+    }
 
-        foreach (JsonSchema subSchema in SubSchemas)
+    private class Validator : IValidator
+    {
+        private readonly AnyOfKeyword _anyOfKeyword;
+        private readonly JsonInstanceElement _instance;
+        private readonly JsonSchemaOptions _options;
+        
+        private ValidationResult? _fastReturnResult;
+
+        public Validator(AnyOfKeyword anyOfKeyword, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            result = subSchema.Validate(instance, options);
-            if (result.IsValid)
+            _anyOfKeyword = anyOfKeyword;
+            _instance = instance;
+            _options = options;
+        }
+
+        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        {
+            foreach (JsonSchema subSchema in _anyOfKeyword.SubSchemas)
             {
-                return result;
+                ValidationResult result = subSchema.Validate(_instance, _options);
+                if (result.IsValid)
+                {
+                    _fastReturnResult = result;
+                }
+
+                yield return result;
             }
         }
 
-        return result;
+        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
+        {
+            validationResult = _fastReturnResult;
+
+            return _fastReturnResult is not null;
+        }
+
+        public ResultTuple Result
+        {
+            get
+            {
+                if (_fastReturnResult is null)
+                {
+                    var curError = new ValidationError(ResultCode.AllSubSchemaFailed, ErrorMessage(), _options.ValidationPathStack, _anyOfKeyword.Name, _instance.Location);
+
+                    return ResultTuple.WithError(curError);
+                }
+
+                return ResultTuple.Valid();
+            }
+        }
     }
 
     public ISchemaContainerElement? GetSubElement(string name)
@@ -76,4 +118,6 @@ internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
     {
         throw new InvalidOperationException();
     }
+
+    public static string ErrorMessage() => "All sub-schemas not validated instance";
 }

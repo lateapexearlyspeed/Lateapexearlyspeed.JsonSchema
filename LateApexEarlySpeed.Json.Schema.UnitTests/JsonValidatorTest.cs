@@ -266,13 +266,16 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             ValidationResult validationResult = jsonValidator.Validate(instance);
 
             Assert.False(validationResult.IsValid);
-            Assert.Equal(ResultCode.InvalidTokenKind, validationResult.ResultCode);
-            Assert.Equal("Expect type(s): 'Integer' but actual is 'String'", validationResult.ErrorMessage);
-            Assert.Equal("type", validationResult.Keyword);
-            Assert.Equal(ImmutableJsonPointer.Create("/propArray/4"), validationResult.InstanceLocation);
-            Assert.Equal(ImmutableJsonPointer.Create("/properties/propArray/items/type"), validationResult.RelativeKeywordLocation);
-            Assert.Equal(new Uri("http://main"), validationResult.SchemaResourceBaseUri);
-            Assert.Equal(new Uri("http://main"), validationResult.SubSchemaRefFullUri);
+
+            ValidationError error = validationResult.ValidationErrors.Single();
+
+            Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
+            Assert.Equal("Expect type(s): 'Integer' but actual is 'String'", error.ErrorMessage);
+            Assert.Equal("type", error.Keyword);
+            Assert.Equal(ImmutableJsonPointer.Create("/propArray/4"), error.InstanceLocation);
+            Assert.Equal(ImmutableJsonPointer.Create("/properties/propArray/items/type"), error.RelativeKeywordLocation);
+            Assert.Equal(new Uri("http://main"), error.SchemaResourceBaseUri);
+            Assert.Equal(new Uri("http://main"), error.SubSchemaRefFullUri);
         }
 
         [Theory]
@@ -307,8 +310,11 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             ValidationResult validationResult = new JsonValidator(jsonSchema, new JsonValidatorOptions{PropertyNameCaseInsensitive = true}).Validate(jsonInstance);
 
             Assert.Equal(expectedIsValid, validationResult.IsValid);
-            Assert.Equal(expectedInstanceLocation, validationResult.InstanceLocation?.ToString());
-            Assert.Equal(expectedKeywordLocation, validationResult.RelativeKeywordLocation?.ToString());
+
+            ValidationError? error = validationResult.ValidationErrors.SingleOrDefault();
+
+            Assert.Equal(expectedInstanceLocation, error?.InstanceLocation.ToString());
+            Assert.Equal(expectedKeywordLocation, error?.RelativeKeywordLocation?.ToString());
         }
 
         public static IEnumerable<object?[]> TestDataForPropertyNameIgnoreCase
