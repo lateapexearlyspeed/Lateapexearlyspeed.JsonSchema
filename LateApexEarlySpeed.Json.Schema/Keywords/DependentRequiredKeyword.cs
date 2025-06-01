@@ -79,9 +79,14 @@ internal class DependentRequiredKeyword : KeywordBase
                     return ResultTuple.Valid();
                 }
 
-                ValidationError curError = new ValidationError(ResultCode.FailedInSubSchema, ValidationError.ErrorMessageForFailedInSubSchema, _options.ValidationPathStack, _dependentRequiredKeyword.Name, _instance.Location);
+                ValidationError curError = new ValidationError(ResultCode.NotFoundRequiredDependentProperty, ErrorMessage(), _options.ValidationPathStack, _dependentRequiredKeyword.Name, _instance.Location);
                 return ResultTuple.WithError(curError);
             }
         }
+    }
+
+    public static string ErrorMessage()
+    {
+        return "Not found required dependent properties";
     }
 }

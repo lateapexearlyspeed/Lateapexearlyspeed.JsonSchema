@@ -92,10 +92,15 @@ internal class RequiredKeyword : KeywordBase
                     return ResultTuple.Valid();
                 }
 
-                var curError = new ValidationError(ResultCode.FailedInSubSchema, ValidationError.ErrorMessageForFailedInSubSchema, _options.ValidationPathStack, _requiredKeyword.Name, _instance.Location);
+                var curError = new ValidationError(ResultCode.NotFoundRequiredProperty, ErrorMessage(), _options.ValidationPathStack, _requiredKeyword.Name, _instance.Location);
                 return ResultTuple.WithError(curError);
             }
         }
+    }
+
+    public static string ErrorMessage()
+    {
+        return "Instance not contain required property";
     }
 
     public static string ErrorMessage(string missedPropertyName)

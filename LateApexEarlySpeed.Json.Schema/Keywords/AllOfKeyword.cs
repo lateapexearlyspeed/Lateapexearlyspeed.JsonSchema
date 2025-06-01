@@ -97,7 +97,7 @@ internal class AllOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
                     return ResultTuple.Valid();
                 }
 
-                ValidationError curError = new ValidationError(ResultCode.FailedInSubSchema, ValidationError.ErrorMessageForFailedInSubSchema, _options.ValidationPathStack, _allOfKeyword.Name, _instance.Location);
+                ValidationError curError = new ValidationError(ResultCode.FailedInSubSchema, ErrorMessage(), _options.ValidationPathStack, _allOfKeyword.Name, _instance.Location);
 
                 return ResultTuple.WithError(curError);
             }
@@ -119,6 +119,11 @@ internal class AllOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
     public JsonSchema GetSchema()
     {
         throw new InvalidOperationException();
+    }
+
+    public static string ErrorMessage()
+    {
+        return "Not all sub-schemas validated instance";
     }
 }
 
