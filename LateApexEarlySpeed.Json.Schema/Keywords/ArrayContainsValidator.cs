@@ -20,7 +20,9 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
 
     public ArrayContainsValidator(JsonSchema containsSchema, uint? minContains, uint? maxContains)
     {
+        containsSchema.Name = ContainsKeywordName;
         ContainsSchema = containsSchema;
+
         MinContains = minContains;
         MaxContains = maxContains;
     }
@@ -114,7 +116,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
                 }
 
                 ValidationError error = CreateValidationErrorWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMinContainsErrorMessage(_instance.ToString(), _arrayContainsValidator.MinContains.Value), MinContainsKeywordName, _options.ValidationPathStack, _instance.Location);
-                return ResultTuple.WithError(error);
+                return ResultTuple.Invalid(error);
             }
         }
     }
@@ -175,7 +177,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
                 if (_validatedItemCount > _arrayContainsValidator.MaxContains)
                 {
                     ValidationError error = CreateValidationErrorWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMaxContainsErrorMessage(_instance.ToString(), _arrayContainsValidator.MaxContains.Value), MaxContainsKeywordName, _options.ValidationPathStack, _instance.Location);
-                    return ResultTuple.WithError(error);
+                    return ResultTuple.Invalid(error);
                 }
 
                 if (_arrayContainsValidator.MinContains.HasValue)
@@ -184,7 +186,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
                     {
                         ValidationError error = CreateValidationErrorWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMinContainsErrorMessage(_instance.ToString(), _arrayContainsValidator.MinContains.Value), MinContainsKeywordName, _options.ValidationPathStack, _instance.Location);
 
-                        return ResultTuple.WithError(error);
+                        return ResultTuple.Invalid(error);
                     }
                 }
                 else
@@ -193,7 +195,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
                     {
                         ValidationError error = CreateValidationErrorWithLocation(ResultCode.NotFoundAnyValidatedArrayItem, GetFailedContainsErrorMessage(_instance.ToString()), ContainsKeywordName, _options.ValidationPathStack, _instance.Location);
 
-                        return ResultTuple.WithError(error);
+                        return ResultTuple.Invalid(error);
                     }
                 }
 
@@ -264,7 +266,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
 
                 ValidationError curError = CreateValidationErrorWithLocation(ResultCode.NotFoundAnyValidatedArrayItem, GetFailedContainsErrorMessage(_instance.ToString()), ContainsKeywordName, _options.ValidationPathStack, _instance.Location);
 
-                return ResultTuple.WithError(curError);
+                return ResultTuple.Invalid(curError);
             }
         }
     }

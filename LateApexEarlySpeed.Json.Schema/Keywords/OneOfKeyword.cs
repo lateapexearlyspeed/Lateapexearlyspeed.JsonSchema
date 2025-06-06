@@ -92,14 +92,14 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
                 {
                     var error = new ValidationError(ResultCode.AllSubSchemaFailed, "All schemas not validated instance", _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
 
-                    return ResultTuple.WithError(error);
+                    return ResultTuple.Invalid(error);
                 }
 
                 if (_validatedSchemaCount > 1)
                 {
                     var error = new ValidationError(ResultCode.MoreThanOnePassedSchemaFound, "More than one schema validate instance", _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
 
-                    return ResultTuple.WithError(error);
+                    return ResultTuple.Invalid(error);
                 }
 
                 Debug.Assert(_validatedSchemaCount == 1);

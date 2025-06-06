@@ -1,4 +1,5 @@
-﻿using LateApexEarlySpeed.Json.Schema.Common.interfaces;
+﻿using System.Diagnostics;
+using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
 
@@ -37,11 +38,16 @@ internal static class ValidationResultsComposer
 
         if (outputFormat == OutputFormat.FailFast)
         {
+            Debug.Assert(resultTuple.CurError is not null);
             errorCollection = new ImmutableValidationErrorCollection(resultTuple.CurError);
         }
         else
         {
-            validationErrorsBuilder.SetCurrent(resultTuple.CurError);
+            if (resultTuple.CurError is not null)
+            {
+                validationErrorsBuilder.SetCurrent(resultTuple.CurError);
+            }
+            
             errorCollection = validationErrorsBuilder.ToImmutable();
         }
 

@@ -48,7 +48,7 @@ internal class PropertyNamesKeyword : KeywordBase, ISchemaContainerElement, ISin
                 ValidationResult validationResult = _propertyNamesKeyword.Schema.Validate(new JsonInstanceElement(JsonSerializer.SerializeToElement(jsonProperty.Name), ImmutableJsonPointer.Empty), _options);
                 if (!validationResult.IsValid)
                 {
-                    _fastReturnError = new ValidationError(ResultCode.InvalidPropertyName, $"Found invalid property name: {jsonProperty.Name}", _options.ValidationPathStack, _propertyNamesKeyword.Name, _instance.Location);
+                    _fastReturnError = new ValidationError(ResultCode.InvalidPropertyName, ErrorMessage(jsonProperty.Name), _options.ValidationPathStack, _propertyNamesKeyword.Name, _instance.Location);
                 }
 
                 yield return validationResult;
@@ -67,7 +67,12 @@ internal class PropertyNamesKeyword : KeywordBase, ISchemaContainerElement, ISin
             return true;
         }
 
-        public ResultTuple Result => _fastReturnError is null ? ResultTuple.Valid() : ResultTuple.WithError(_fastReturnError);
+        public ResultTuple Result => _fastReturnError is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
+    }
+
+    public static string ErrorMessage(string propertyName)
+    {
+        return $"Found invalid property name: {propertyName}";
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

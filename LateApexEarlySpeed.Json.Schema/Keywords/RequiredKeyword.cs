@@ -83,24 +83,7 @@ internal class RequiredKeyword : KeywordBase
             return (validationResult = _fastReturnResult) is not null;
         }
 
-        public ResultTuple Result
-        {
-            get
-            {
-                if (_fastReturnResult is null)
-                {
-                    return ResultTuple.Valid();
-                }
-
-                var curError = new ValidationError(ResultCode.NotFoundRequiredProperty, ErrorMessage(), _options.ValidationPathStack, _requiredKeyword.Name, _instance.Location);
-                return ResultTuple.WithError(curError);
-            }
-        }
-    }
-
-    public static string ErrorMessage()
-    {
-        return "Instance not contain required property";
+        public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
     public static string ErrorMessage(string missedPropertyName)

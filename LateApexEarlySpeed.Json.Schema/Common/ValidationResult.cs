@@ -70,9 +70,18 @@ internal class ImmutableValidationErrorCollection
 
         public ImmutableValidationErrorCollection ToImmutable()
         {
-            if (_curValidationError is null && _validationErrorChildren is null)
+            // try to reuse existing ImmutableValidationErrorCollection instance
+            if (_curValidationError is null)
             {
-                return Empty;
+                if (_validationErrorChildren is null)
+                {
+                    return Empty;
+                }
+
+                if (_validationErrorChildren.Count == 1)
+                {
+                    return _validationErrorChildren.First.Value;
+                }
             }
 
             return new ImmutableValidationErrorCollection(_curValidationError, _validationErrorChildren?.ToArray());

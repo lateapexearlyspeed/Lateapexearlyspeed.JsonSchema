@@ -24,6 +24,11 @@ internal class DependentRequiredKeyword : KeywordBase
         return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
     }
 
+    public static string ErrorMessage(string dependentProperty, string requiredProp)
+    {
+        return $"Instance contains property: '{dependentProperty}' but not contains dependent property: '{requiredProp}'";
+    }
+
     private class Validator : IValidator
     {
         private readonly DependentRequiredKeyword _dependentRequiredKeyword;
@@ -53,7 +58,7 @@ internal class DependentRequiredKeyword : KeywordBase
                         {
                             _fastReturnResult = ValidationResult.SingleErrorFailedResult(new ValidationError(
                                 ResultCode.NotFoundRequiredDependentProperty,
-                                $"Instance contains property: '{dependentProperty.Key}' but not contains dependent property: '{requiredProp}'",
+                                ErrorMessage(dependentProperty.Key, requiredProp),
                                 _options.ValidationPathStack,
                                 _dependentRequiredKeyword.Name,
                                 _instance.Location));
@@ -70,23 +75,6 @@ internal class DependentRequiredKeyword : KeywordBase
             return (validationResult = _fastReturnResult) is not null;
         }
 
-        public ResultTuple Result
-        {
-            get
-            {
-                if (_fastReturnResult is null)
-                {
-                    return ResultTuple.Valid();
-                }
-
-                ValidationError curError = new ValidationError(ResultCode.NotFoundRequiredDependentProperty, ErrorMessage(), _options.ValidationPathStack, _dependentRequiredKeyword.Name, _instance.Location);
-                return ResultTuple.WithError(curError);
-            }
-        }
-    }
-
-    public static string ErrorMessage()
-    {
-        return "Not found required dependent properties";
+        public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 }

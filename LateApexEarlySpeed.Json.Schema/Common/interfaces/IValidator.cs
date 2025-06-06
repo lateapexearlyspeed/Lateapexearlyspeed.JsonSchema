@@ -6,6 +6,11 @@ internal interface IValidator
 {
     IEnumerable<ValidationResult> EnumerateValidationResults();
     bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult);
+
+    /// <remarks>
+    /// NOTE for implementations: there are some cases in which <see cref="ResultTuple.CurError"/> of <see cref="Result"/> Must NOT null.
+    /// Check <see cref="ValidationResultsComposer"/> code to understand.
+    /// </remarks>>
     ResultTuple Result { get; }
 }
 
@@ -16,7 +21,7 @@ internal readonly ref struct ResultTuple
         return new ResultTuple(true, null);
     }
 
-    public static ResultTuple WithError(ValidationError curError)
+    public static ResultTuple Invalid(ValidationError? curError)
     {
         return new ResultTuple(false, curError);
     }
@@ -27,7 +32,6 @@ internal readonly ref struct ResultTuple
         CurError = curError;
     }
 
-    [MemberNotNullWhen(false, nameof(CurError))]
     public bool IsValid { get; }
 
     public ValidationError? CurError { get; }

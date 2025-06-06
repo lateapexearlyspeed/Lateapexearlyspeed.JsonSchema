@@ -73,20 +73,7 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement
             return _fastReturnResult is not null;
         }
 
-        public ResultTuple Result
-        {
-            get
-            {
-                if (_fastReturnResult is null)
-                {
-                    return ResultTuple.Valid();
-                }
-
-                var curError = new ValidationError(ResultCode.FailedInSubSchema, ValidationError.ErrorMessageForFailedInSubSchema, _options.ValidationPathStack, _dependentSchemasKeyword.Name, _instance.Location);
-
-                return ResultTuple.WithError(curError);
-            }
-        }
+        public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

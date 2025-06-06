@@ -191,7 +191,7 @@ internal class BodyJsonSchema : JsonSchema
                 }
 
                 ValidationError curError = new ValidationError(ResultCode.FailedInSubSchema, ValidationError.ErrorMessageForFailedInSubSchema, _options.ValidationPathStack, _bodyJsonSchema.Name, _instance.Location);
-                return ResultTuple.WithError(curError);
+                return ResultTuple.Invalid(curError);
             }
         }
     }
