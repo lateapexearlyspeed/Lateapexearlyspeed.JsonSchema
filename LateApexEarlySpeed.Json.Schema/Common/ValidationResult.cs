@@ -6,6 +6,9 @@
 /// </summary>
 public class ValidationResult
 {
+    /// <summary>
+    /// Gets the value to indicate flag result of validation
+    /// </summary>
     public bool IsValid { get; }
     internal readonly ImmutableValidationErrorCollection ValidationErrorsList;
 
@@ -25,6 +28,10 @@ public class ValidationResult
         return new ValidationResult(false, new ImmutableValidationErrorCollection(singleError));
     }
 
+    /// <summary>
+    /// Gets all failed validation nodes during validation.
+    /// If <see cref="JsonSchemaOptions.OutputFormat"/> is set to <see cref="OutputFormat.FailFast"/>, this will contain only first found failed validation node.
+    /// </summary>
     public IEnumerable<ValidationError> ValidationErrors => ValidationErrorsList.Enumerate();
 }
 
@@ -139,15 +146,46 @@ public class ValidationError
         SubSchemaRefFullUri = subSchemaRefFullUri;
     }
 
+    /// <summary>
+    /// Gets value to indicate json instance's location
+    /// </summary>
     public ImmutableJsonPointer InstanceLocation { get; init; }
+
+    /// <summary>
+    /// Gets value to indicate relative location of keyword
+    /// </summary>
     public ImmutableJsonPointer? RelativeKeywordLocation { get; init; }
+
+    /// <summary>
+    /// Gets value to indicate base uri of current json schema resource
+    /// </summary>
     public Uri? SchemaResourceBaseUri { get; init; }
+
+    /// <summary>
+    /// Gets value to indicate full uri of referenced sub-schema
+    /// </summary>
     public Uri? SubSchemaRefFullUri { get; init; }
+
+    /// <summary>
+    /// Gets value to indicate current keyword.
+    /// Note: in some scenarios of json schema node, this value may be null
+    /// </summary>
     public string? Keyword { get; init; }
+
+    /// <summary>
+    /// The error message to briefly describe failure reason
+    /// </summary>
     public string ErrorMessage { get; init; }
+
+    /// <summary>
+    /// Gets value to indicate failure type
+    /// </summary>
     public ResultCode ResultCode { get; init; }
 }
 
+/// <summary>
+/// Type to indicate failure types
+/// </summary>
 public enum ResultCode
 {
     FailedToMultiple,

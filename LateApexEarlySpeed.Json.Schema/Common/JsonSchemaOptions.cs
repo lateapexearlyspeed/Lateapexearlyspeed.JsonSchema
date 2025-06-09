@@ -49,6 +49,9 @@ public class JsonSchemaOptions
     }
 }
 
+/// <summary>
+/// Type to indicate the format of validation output
+/// </summary>
 public enum OutputFormat
 {
     /// <summary>

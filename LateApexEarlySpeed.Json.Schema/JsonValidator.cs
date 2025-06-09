@@ -8,6 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace LateApexEarlySpeed.Json.Schema;
 
+/// <summary>
+/// class to provide functionality of json schema validation
+/// </summary>
 public class JsonValidator
 {
     private const string HttpClientName = "lateapexearlyspeed";
@@ -25,10 +28,20 @@ public class JsonValidator
         HttpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
     }
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="JsonValidator"/> class for specified <paramref name="jsonSchema"/> and with specified <paramref name="options"/>
+    /// </summary>
+    /// <param name="jsonSchema">A json schema this <see cref="JsonValidator"/> represents</param>
+    /// <param name="options">Options to control validation behavior</param>
     public JsonValidator(string jsonSchema, JsonValidatorOptions? options = null) : this(jsonSchema.AsSpan(), options)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="JsonValidator"/> class for specified <paramref name="jsonSchema"/> and with specified <paramref name="options"/>
+    /// </summary>
+    /// <param name="jsonSchema">A json schema this <see cref="JsonValidator"/> represents</param>
+    /// <param name="options">Options to control validation behavior</param>
     public JsonValidator(ReadOnlySpan<char> jsonSchema, JsonValidatorOptions? options = null)
     {
         _jsonValidatorOptions = InitializeJsonValidatorOptions(options);
@@ -52,13 +65,26 @@ public class JsonValidator
             : options;
     }
 
+    /// <summary>
+    /// Add external json schema document
+    /// </summary>
+    /// <param name="externalJsonSchema">The content of external json schema document</param>
     public void AddExternalDocument(string externalJsonSchema) => AddExternalDocument(externalJsonSchema.AsSpan());
 
+    /// <summary>
+    /// Add external json schema document
+    /// </summary>
+    /// <param name="externalJsonSchema">The content of external json schema document</param>
     public void AddExternalDocument(ReadOnlySpan<char> externalJsonSchema)
     {
         JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalJsonSchema, _globalSchemaResourceRegistry, _jsonValidatorOptions);
     }
 
+    /// <summary>
+    /// Add external json schema document which needs to be accessed by sending HTTP request
+    /// </summary>
+    /// <param name="remoteUri">The <see cref="Uri"/> of document the HTTP request is sent to access</param>
+    /// <returns></returns>
     public async Task AddHttpDocumentAsync(Uri remoteUri)
     {
         HttpClient httpClient = HttpClientFactory.CreateClient(HttpClientName);
