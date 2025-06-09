@@ -29,7 +29,7 @@ public class FormatKeyword : KeywordBase
 
         return _formatValidator.Validate(instance.GetString()!)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.InvalidFormat, ErrorMessage(Format), options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.InvalidFormat, ErrorMessage(Format), options.ValidationPathStack, Name, instance.Location));
     }
 
     public static string ErrorMessage(string format)

@@ -22,6 +22,11 @@ public class JsonSchemaOptions
     public TimeSpan RegexMatchTimeout { get; set; } = RegexFactory.DefaultMatchTimeout;
 
     /// <summary>
+    /// Gets or sets a value that specifies the format of validation output
+    /// </summary>
+    public OutputFormat OutputFormat { get; set; }
+
+    /// <summary>
     /// User entry point to create <see cref="JsonSchemaOptions"/> instance
     /// </summary>
     public JsonSchemaOptions()
@@ -39,8 +44,26 @@ public class JsonSchemaOptions
         {
             ValidateFormat = options.ValidateFormat;
             RegexMatchTimeout = options.RegexMatchTimeout;
+            OutputFormat = options.OutputFormat;
         }
     }
+}
+
+/// <summary>
+/// Type to indicate the format of validation output
+/// </summary>
+public enum OutputFormat
+{
+    /// <summary>
+    /// Indicates that only first failed validation node found out will be returned.
+    /// This will enable fast-fail pattern (eg. one of the cases is when one failed validation keyword is found, it may skip follow-up keywords validation inside same json schema)
+    /// </summary>
+    FailFast,
+
+    /// <summary>
+    /// Indicates that all failed validations will be returned
+    /// </summary>
+    List
 }
 
 public class ValidationPathStack

@@ -17,7 +17,7 @@ internal class NotKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSche
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         return Schema.Validate(instance, options).IsValid 
-            ? ValidationResult.CreateFailedResult(ResultCode.SubSchemaPassedUnexpected, ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location)
+            ? ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.SubSchemaPassedUnexpected, ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location))
             : ValidationResult.ValidResult;
     }
 

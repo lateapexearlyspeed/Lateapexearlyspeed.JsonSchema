@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -131,28 +132,68 @@ internal class BodyJsonSchema : JsonSchema
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        IEnumerable<IValidationNode> validationNodes = _keywords.Concat<IValidationNode>(_schemaContainerValidators);
+        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+    }
 
-        if (SchemaReference is not null)
+    private class Validator : IValidator
+    {
+        private readonly BodyJsonSchema _bodyJsonSchema;
+        private readonly JsonInstanceElement _instance;
+        private readonly JsonSchemaOptions _options;
+
+        private ValidationResult? _fastReturnResult;
+
+        public Validator(BodyJsonSchema bodyJsonSchema, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            validationNodes = validationNodes.Append(SchemaReference);
+            _bodyJsonSchema = bodyJsonSchema;
+            _instance = instance;
+            _options = options;
         }
 
-        if (SchemaDynamicReference is not null)
+        public IEnumerable<ValidationResult> EnumerateValidationResults()
         {
-            validationNodes = validationNodes.Append(SchemaDynamicReference);
-        }
+            IEnumerable<IValidationNode> validationNodes = _bodyJsonSchema._keywords.Concat<IValidationNode>(_bodyJsonSchema._schemaContainerValidators);
 
-        foreach (IValidationNode validationNode in validationNodes)
-        {
-            ValidationResult result = validationNode.Validate(instance, options);
-            if (!result.IsValid)
+            if (_bodyJsonSchema.SchemaReference is not null)
             {
-                return result;
+                validationNodes = validationNodes.Append(_bodyJsonSchema.SchemaReference);
+            }
+
+            if (_bodyJsonSchema.SchemaDynamicReference is not null)
+            {
+                validationNodes = validationNodes.Append(_bodyJsonSchema.SchemaDynamicReference);
+            }
+
+            foreach (IValidationNode validationNode in validationNodes)
+            {
+                ValidationResult result = validationNode.Validate(_instance, _options);
+                if (!result.IsValid)
+                {
+                    _fastReturnResult = result;
+                }
+
+                yield return result;
             }
         }
 
-        return ValidationResult.ValidResult;
+        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
+        {
+            return (validationResult = _fastReturnResult) is not null;
+        }
+
+        public ResultTuple Result
+        {
+            get
+            {
+                if (_fastReturnResult is null)
+                {
+                    return ResultTuple.Valid();
+                }
+
+                ValidationError curError = new ValidationError(ResultCode.FailedInSubSchema, ValidationError.ErrorMessageForFailedInSubSchema, _options.ValidationPathStack, _bodyJsonSchema.Name, _instance.Location);
+                return ResultTuple.Invalid(curError);
+            }
+        }
     }
 
     public override ISchemaContainerElement? GetSubElement(string name)

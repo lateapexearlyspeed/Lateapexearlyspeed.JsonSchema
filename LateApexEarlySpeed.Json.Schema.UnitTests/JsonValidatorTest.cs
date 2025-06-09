@@ -45,19 +45,19 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
         [Theory]
         [MemberData(nameof(JsonSchemaTestSuiteForDraft2020))]
-        public async Task ValidateByStringSchema_InputFromJsonSchemaTestSuite(string schema, string instance, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        public async Task ValidateByStringSchema_InputFromJsonSchemaTestSuite(string schema, string instance, OutputFormat outputFormat, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
             _testOutputHelper.WriteLine($"Test description: {testDescription}");
 
             JsonValidator jsonValidator = await CreateJsonValidatorWithExternalDocumentSupportAsync(schema, testCaseDescription);
 
-            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ValidateFormat = false}).IsValid);
+            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ValidateFormat = false, OutputFormat = outputFormat}).IsValid);
         }
 
         [Theory]
         [MemberData(nameof(JsonSchemaTestSuiteForDraft2020))]
-        public async Task GetStandardJsonSchemaText_InputFromJsonSchemaTestSuite(string schema, string instance, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        public async Task GetStandardJsonSchemaText_InputFromJsonSchemaTestSuite(string schema, string instance, OutputFormat outputFormat, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
             _testOutputHelper.WriteLine($"Test description: {testDescription}");
@@ -71,7 +71,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             // Generate jsonValidator from previous generated json schema text
             jsonValidator = await CreateJsonValidatorWithExternalDocumentSupportAsync(generatedSchemaText, testCaseDescription);
 
-            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions { ValidateFormat = false }).IsValid);
+            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions { ValidateFormat = false, OutputFormat = outputFormat}).IsValid);
         }
 
         private async Task<JsonValidator> CreateJsonValidatorWithExternalDocumentSupportAsync(string schema, string testCaseDescription)
@@ -95,7 +95,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
         [Theory]
         [MemberData(nameof(JsonSchemaTestSuiteForDraft2020))]
-        public async Task ValidateBySpanSchema_InputFromJsonSchemaTestSuite(string schema, string instance, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        public async Task ValidateBySpanSchema_InputFromJsonSchemaTestSuite(string schema, string instance, OutputFormat outputFormat, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
             _testOutputHelper.WriteLine($"Test description: {testDescription}");
@@ -114,30 +114,30 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                 }
             }
 
-            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ValidateFormat = false}).IsValid);
+            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ValidateFormat = false, OutputFormat = outputFormat }).IsValid);
         }
 
         [Theory]
         [MemberData(nameof(JsonSchemaTestCasesForFormatKeyword))]
-        public void ValidateByStringSchema_ValidateFormatKeyword(string schema, string instance, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        public void ValidateByStringSchema_ValidateFormatKeyword(string schema, string instance, OutputFormat outputFormat, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
             _testOutputHelper.WriteLine($"Test description: {testDescription}");
 
             var jsonValidator = new JsonValidator(schema);
 
-            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance).IsValid);
+            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ OutputFormat = outputFormat }).IsValid);
         }
 
         [Theory]
         [MemberData(nameof(JsonSchemaTestCasesForCustomFormat))]
-        public void Validate_CustomFormatKeyword(string schema, string instance, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        public void Validate_CustomFormatKeyword(string schema, string instance, OutputFormat outputFormat, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             // 'custom_format' should have been registered during 'JsonValidatorTestFixture'
             Assert.NotNull(FormatRegistry.GetFormatType("custom_format"));
 
             var jsonValidator = new JsonValidator(schema);
-            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance).IsValid);
+            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ OutputFormat = outputFormat }).IsValid);
         }
 
         /// <summary>
@@ -244,14 +244,18 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             {
                 foreach (Test test in testCase.Tests)
                 {
-                    yield return new object[]
+                    foreach (OutputFormat outputFormat in Enum.GetValues<OutputFormat>())
                     {
-                        JsonSerializer.Serialize(testCase.JsonSchema),
-                        JsonSerializer.Serialize(test.Instance),
-                        test.ValidationResult,
-                        testCase.Description,
-                        test.Description
-                    };
+                        yield return new object[]
+                        {
+                            JsonSerializer.Serialize(testCase.JsonSchema),
+                            JsonSerializer.Serialize(test.Instance),
+                            outputFormat,
+                            test.ValidationResult,
+                            testCase.Description,
+                            test.Description
+                        };
+                    }
                 }
             }
         }
@@ -266,13 +270,16 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             ValidationResult validationResult = jsonValidator.Validate(instance);
 
             Assert.False(validationResult.IsValid);
-            Assert.Equal(ResultCode.InvalidTokenKind, validationResult.ResultCode);
-            Assert.Equal("Expect type(s): 'Integer' but actual is 'String'", validationResult.ErrorMessage);
-            Assert.Equal("type", validationResult.Keyword);
-            Assert.Equal(ImmutableJsonPointer.Create("/propArray/4"), validationResult.InstanceLocation);
-            Assert.Equal(ImmutableJsonPointer.Create("/properties/propArray/items/type"), validationResult.RelativeKeywordLocation);
-            Assert.Equal(new Uri("http://main"), validationResult.SchemaResourceBaseUri);
-            Assert.Equal(new Uri("http://main"), validationResult.SubSchemaRefFullUri);
+
+            ValidationError error = validationResult.ValidationErrors.Single();
+
+            Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
+            Assert.Equal("Expect type(s): 'Integer' but actual is 'String'", error.ErrorMessage);
+            Assert.Equal("type", error.Keyword);
+            Assert.Equal(ImmutableJsonPointer.Create("/propArray/4"), error.InstanceLocation);
+            Assert.Equal(ImmutableJsonPointer.Create("/properties/propArray/items/type"), error.RelativeKeywordLocation);
+            Assert.Equal(new Uri("http://main"), error.SchemaResourceBaseUri);
+            Assert.Equal(new Uri("http://main"), error.SubSchemaRefFullUri);
         }
 
         [Theory]
@@ -307,8 +314,11 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             ValidationResult validationResult = new JsonValidator(jsonSchema, new JsonValidatorOptions{PropertyNameCaseInsensitive = true}).Validate(jsonInstance);
 
             Assert.Equal(expectedIsValid, validationResult.IsValid);
-            Assert.Equal(expectedInstanceLocation, validationResult.InstanceLocation?.ToString());
-            Assert.Equal(expectedKeywordLocation, validationResult.RelativeKeywordLocation?.ToString());
+
+            ValidationError? error = validationResult.ValidationErrors.SingleOrDefault();
+
+            Assert.Equal(expectedInstanceLocation, error?.InstanceLocation.ToString());
+            Assert.Equal(expectedKeywordLocation, error?.RelativeKeywordLocation?.ToString());
         }
 
         public static IEnumerable<object?[]> TestDataForPropertyNameIgnoreCase

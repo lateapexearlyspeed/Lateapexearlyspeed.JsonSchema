@@ -1,6 +1,8 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
@@ -33,17 +35,55 @@ internal class RequiredKeyword : KeywordBase
             return ValidationResult.ValidResult;
         }
 
-        HashSet<string> instanceProperties = instance.EnumerateObject().Select(prop => prop.Name)
-            .ToHashSet(_propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
-        foreach (string requiredProperty in _requiredProperties)
+        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+    }
+
+    private class Validator : IValidator
+    {
+        private readonly RequiredKeyword _requiredKeyword;
+        private readonly JsonInstanceElement _instance;
+        private readonly JsonSchemaOptions _options;
+
+        private ValidationResult? _fastReturnResult;
+
+        public Validator(RequiredKeyword requiredKeyword, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            if (!instanceProperties.Contains(requiredProperty))
+            _requiredKeyword = requiredKeyword;
+            _instance = instance;
+            _options = options;
+        }
+
+        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        {
+            HashSet<string> instanceProperties = _instance.EnumerateObject().Select(prop => prop.Name)
+                .ToHashSet(_requiredKeyword._propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
+
+            foreach (string requiredProperty in _requiredKeyword._requiredProperties)
             {
-                return ValidationResult.CreateFailedResult(ResultCode.NotFoundRequiredProperty, ErrorMessage(requiredProperty), options.ValidationPathStack, Name, instance.Location);
+                ValidationResult validationResult;
+
+                if (instanceProperties.Contains(requiredProperty))
+                {
+                    validationResult = ValidationResult.ValidResult;
+                }
+                else
+                {
+                    var curError = new ValidationError(ResultCode.NotFoundRequiredProperty, ErrorMessage(requiredProperty), _options.ValidationPathStack, _requiredKeyword.Name, _instance.Location);
+                    validationResult = ValidationResult.SingleErrorFailedResult(curError);
+
+                    _fastReturnResult = validationResult;
+                }
+
+                yield return validationResult;
             }
         }
 
-        return ValidationResult.ValidResult;
+        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
+        {
+            return (validationResult = _fastReturnResult) is not null;
+        }
+
+        public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
     public static string ErrorMessage(string missedPropertyName)

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -19,7 +20,9 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
 
     public ArrayContainsValidator(JsonSchema containsSchema, uint? minContains, uint? maxContains)
     {
+        containsSchema.Name = ContainsKeywordName;
         ContainsSchema = containsSchema;
+
         MinContains = minContains;
         MaxContains = maxContains;
     }
@@ -56,61 +59,149 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
             return ValidationResult.ValidResult;
         }
 
-        int validatedItemCount = 0;
+        return ValidationResultsComposer.Compose(new WithoutMaxContainsValidator(this, instance, options), options.OutputFormat);
+    }
 
-        Debug.Assert(ContainsSchema is not null);
+    private class WithoutMaxContainsValidator : IValidator
+    {
+        private readonly ArrayContainsValidator _arrayContainsValidator;
+        private readonly JsonInstanceElement _instance;
+        private readonly JsonSchemaOptions _options;
+        private int _validatedItemCount;
 
-        foreach (JsonInstanceElement instanceItem in instance.EnumerateArray())
+        public WithoutMaxContainsValidator(ArrayContainsValidator arrayContainsValidator, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            if (ContainsSchema.Validate(instanceItem, options).IsValid)
-            {
-                validatedItemCount++;
-            }
+            _arrayContainsValidator = arrayContainsValidator;
+            _instance = instance;
+            _options = options;
+        }
 
-            if (validatedItemCount >= MinContains)
+        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        {
+            Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
+
+            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
             {
-                return ValidationResult.ValidResult;
+                ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
+                if (validationResult.IsValid)
+                {
+                    _validatedItemCount++;
+                }
+
+                yield return validationResult;
             }
         }
 
-        return CreateFailedValidationResultWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMinContainsErrorMessage(instance.ToString(), MinContains.Value), MinContainsKeywordName, options.ValidationPathStack, instance.Location);
+        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
+        {
+            if (_validatedItemCount >= _arrayContainsValidator.MinContains)
+            {
+                validationResult = ValidationResult.ValidResult;
+                return true;
+            }
+
+            validationResult = null;
+            return false;
+        }
+
+        public ResultTuple Result
+        {
+            get
+            {
+                Debug.Assert(_arrayContainsValidator.MinContains.HasValue);
+
+                if (_validatedItemCount >= _arrayContainsValidator.MinContains)
+                {
+                    return ResultTuple.Valid();
+                }
+
+                ValidationError error = CreateValidationErrorWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMinContainsErrorMessage(_instance.ToString(), _arrayContainsValidator.MinContains.Value), MinContainsKeywordName, _options.ValidationPathStack, _instance.Location);
+                return ResultTuple.Invalid(error);
+            }
+        }
     }
 
     private ValidationResult ValidateWithMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        int validatedItemCount = 0;
+        return ValidationResultsComposer.Compose(new WithMaxContainsValidator(this, instance, options), options.OutputFormat);
+    }
 
-        Debug.Assert(ContainsSchema is not null);
+    private class WithMaxContainsValidator : IValidator
+    {
+        private readonly ArrayContainsValidator _arrayContainsValidator;
+        private readonly JsonInstanceElement _instance;
+        private readonly JsonSchemaOptions _options;
+        private int _validatedItemCount;
 
-        foreach (JsonInstanceElement instanceItem in instance.EnumerateArray())
+        public WithMaxContainsValidator(ArrayContainsValidator arrayContainsValidator, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            if (ContainsSchema.Validate(instanceItem, options).IsValid)
-            {
-                validatedItemCount++;
-            }
+            _arrayContainsValidator = arrayContainsValidator;
+            _instance = instance;
+            _options = options;
+        }
 
-            if (validatedItemCount > MaxContains)
+        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        {
+            Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
+
+            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
             {
-                return CreateFailedValidationResultWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMaxContainsErrorMessage(instance.ToString(), MaxContains.Value), MaxContainsKeywordName, options.ValidationPathStack, instance.Location);
+                ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
+                if (validationResult.IsValid)
+                {
+                    _validatedItemCount++;
+                }
+
+                yield return validationResult;
             }
         }
 
-        if (MinContains.HasValue)
+        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
         {
-            if (validatedItemCount < MinContains)
+            if (_validatedItemCount > _arrayContainsValidator.MaxContains)
             {
-                return CreateFailedValidationResultWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMinContainsErrorMessage(instance.ToString(), MinContains.Value), MinContainsKeywordName, options.ValidationPathStack, instance.Location);
+                ValidationError error = CreateValidationErrorWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMaxContainsErrorMessage(_instance.ToString(), _arrayContainsValidator.MaxContains.Value), MaxContainsKeywordName, _options.ValidationPathStack, _instance.Location);
+                validationResult = ValidationResult.SingleErrorFailedResult(error);
+
+                return true;
             }
-        }
-        else
-        {
-            if (validatedItemCount == 0)
-            {
-                return CreateFailedValidationResultWithLocation(ResultCode.NotFoundAnyValidatedArrayItem, GetFailedContainsErrorMessage(instance.ToString()), ContainsKeywordName, options.ValidationPathStack, instance.Location);
-            }
+
+            validationResult = null;
+            return false;
         }
 
-        return ValidationResult.ValidResult;
+        public ResultTuple Result
+        {
+            get
+            {
+                if (_validatedItemCount > _arrayContainsValidator.MaxContains)
+                {
+                    ValidationError error = CreateValidationErrorWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMaxContainsErrorMessage(_instance.ToString(), _arrayContainsValidator.MaxContains.Value), MaxContainsKeywordName, _options.ValidationPathStack, _instance.Location);
+                    return ResultTuple.Invalid(error);
+                }
+
+                if (_arrayContainsValidator.MinContains.HasValue)
+                {
+                    if (_validatedItemCount < _arrayContainsValidator.MinContains)
+                    {
+                        ValidationError error = CreateValidationErrorWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMinContainsErrorMessage(_instance.ToString(), _arrayContainsValidator.MinContains.Value), MinContainsKeywordName, _options.ValidationPathStack, _instance.Location);
+
+                        return ResultTuple.Invalid(error);
+                    }
+                }
+                else
+                {
+                    if (_validatedItemCount == 0)
+                    {
+                        ValidationError error = CreateValidationErrorWithLocation(ResultCode.NotFoundAnyValidatedArrayItem, GetFailedContainsErrorMessage(_instance.ToString()), ContainsKeywordName, _options.ValidationPathStack, _instance.Location);
+
+                        return ResultTuple.Invalid(error);
+                    }
+                }
+
+                return ResultTuple.Valid();
+            }
+        }
     }
 
     internal static string GetFailedMaxContainsErrorMessage(string instanceJson, uint maxContains)
@@ -124,26 +215,69 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
 
     private ValidationResult ValidateWithoutMinContainsAndMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        Debug.Assert(ContainsSchema is not null);
+        return ValidationResultsComposer.Compose(new WithoutMinContainsAndMaxContainsValidator(this, instance, options), options.OutputFormat);
+    }
 
-        foreach (JsonInstanceElement instanceItem in instance.EnumerateArray())
+    private class WithoutMinContainsAndMaxContainsValidator : IValidator
+    {
+        private readonly ArrayContainsValidator _arrayContainsValidator;
+        private readonly JsonInstanceElement _instance;
+        private readonly JsonSchemaOptions _options;
+        private ValidationResult? _fastReturnResult;
+
+        public WithoutMinContainsAndMaxContainsValidator(ArrayContainsValidator arrayContainsValidator, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            if (ContainsSchema.Validate(instanceItem, options).IsValid)
+            _arrayContainsValidator = arrayContainsValidator;
+            _instance = instance;
+            _options = options;
+        }
+
+        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        {
+            Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
+
+            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
             {
-                return ValidationResult.ValidResult;
+                ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
+                if (validationResult.IsValid)
+                {
+                    _fastReturnResult = ValidationResult.ValidResult;
+                }
+
+                yield return validationResult;
             }
         }
 
-        return CreateFailedValidationResultWithLocation(ResultCode.NotFoundAnyValidatedArrayItem, GetFailedContainsErrorMessage(instance.ToString()), ContainsKeywordName, options.ValidationPathStack, instance.Location);
+        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
+        {
+            validationResult = _fastReturnResult;
+
+            return _fastReturnResult is not null;
+        }
+
+        public ResultTuple Result
+        {
+            get
+            {
+                if (_fastReturnResult is not null)
+                {
+                    return ResultTuple.Valid();
+                }
+
+                ValidationError curError = CreateValidationErrorWithLocation(ResultCode.NotFoundAnyValidatedArrayItem, GetFailedContainsErrorMessage(_instance.ToString()), ContainsKeywordName, _options.ValidationPathStack, _instance.Location);
+
+                return ResultTuple.Invalid(curError);
+            }
+        }
     }
 
-    private ValidationResult CreateFailedValidationResultWithLocation(ResultCode resultCode, string errorMessage, string locationName, ValidationPathStack validationPathStack, ImmutableJsonPointer instanceLocation)
+    private static ValidationError CreateValidationErrorWithLocation(ResultCode resultCode, string errorMessage, string locationName, ValidationPathStack validationPathStack, ImmutableJsonPointer instanceLocation)
     {
         validationPathStack.PushRelativeLocation(locationName);
-        ValidationResult validationResult = ValidationResult.CreateFailedResult(resultCode, errorMessage, validationPathStack, locationName, instanceLocation);
+        var validationError = new ValidationError(resultCode, errorMessage, validationPathStack, locationName, instanceLocation);
         validationPathStack.PopRelativeLocation();
 
-        return validationResult;
+        return validationError;
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

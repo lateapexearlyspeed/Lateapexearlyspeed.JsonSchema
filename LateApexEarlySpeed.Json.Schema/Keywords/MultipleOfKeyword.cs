@@ -59,7 +59,7 @@ internal class MultipleOfKeyword : KeywordBase
         MultipleOfResult multipleOfResult = _multipleOfChecker.Check(instance.InternalJsonElement);
         return multipleOfResult.IsSuccess
             ? ValidationResult.ValidResult 
-            : ValidationResult.CreateFailedResult(ResultCode.FailedToMultiple, multipleOfResult.ErrorMessage, options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.FailedToMultiple, multipleOfResult.ErrorMessage, options.ValidationPathStack, Name, instance.Location));
     }
 }
 

@@ -22,7 +22,7 @@ internal class EnumKeyword : KeywordBase
     {
         return _enumList.Contains(instance)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.NotFoundInAllowedList, ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.NotFoundInAllowedList, ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location));
     }
 
     internal static string ErrorMessage(string instanceJsonText)

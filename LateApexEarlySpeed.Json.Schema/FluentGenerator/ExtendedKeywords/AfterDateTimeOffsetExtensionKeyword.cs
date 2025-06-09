@@ -31,12 +31,12 @@ internal class AfterDateTimeOffsetExtensionKeyword : KeywordBase
 
         if (!canParse)
         {
-            return ValidationResult.CreateFailedResult(ResultCode.InvalidFormat, DateTimeOffsetFormatExtensionKeyword.ErrorMessage(), options.ValidationPathStack, Name, instance.Location);
+            return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.InvalidFormat, DateTimeOffsetFormatExtensionKeyword.ErrorMessage(), options.ValidationPathStack, Name, instance.Location));
         }
 
         return data > _after
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.NotAfterSpecifiedTimePoint, ErrorMessage(data, _after), options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.NotAfterSpecifiedTimePoint, ErrorMessage(data, _after), options.ValidationPathStack, Name, instance.Location));
     }
 
     private static string ErrorMessage(DateTimeOffset actual, DateTimeOffset expectedAfter)

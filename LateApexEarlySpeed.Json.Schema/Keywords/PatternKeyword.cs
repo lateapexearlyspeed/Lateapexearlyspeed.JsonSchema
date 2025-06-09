@@ -27,7 +27,7 @@ internal class PatternKeyword : KeywordBase
         string instanceText = instance.GetString()!;
         return RegexMatcher.IsMatch(Pattern, instanceText, options.RegexMatchTimeout)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.RegexNotMatch, ErrorMessage(Pattern, instanceText), options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.RegexNotMatch, ErrorMessage(Pattern, instanceText), options.ValidationPathStack, Name, instance.Location));
     }
 
     public static string ErrorMessage(string pattern, string instanceText)

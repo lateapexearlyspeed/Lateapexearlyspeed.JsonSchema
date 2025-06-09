@@ -29,7 +29,7 @@ internal class DateTimeOffsetFormatExtensionKeyword : KeywordBase
 
         return canParse
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.InvalidFormat, ErrorMessage(), options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.InvalidFormat, ErrorMessage(), options.ValidationPathStack, Name, instance.Location));
     }
 
     internal static string ErrorMessage()

@@ -30,8 +30,8 @@ internal class NotContainsKeyword : KeywordBase
         {
             if (_schema.Validate(element, options).IsValid)
             {
-                return ValidationResult.CreateFailedResult(ResultCode.SubSchemaPassedUnexpected, ErrorMessage(element.ToString()), options.ValidationPathStack,
-                    Name, element.Location);
+                return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.SubSchemaPassedUnexpected, ErrorMessage(element.ToString()), options.ValidationPathStack,
+                    Name, element.Location));
             }
         }
 

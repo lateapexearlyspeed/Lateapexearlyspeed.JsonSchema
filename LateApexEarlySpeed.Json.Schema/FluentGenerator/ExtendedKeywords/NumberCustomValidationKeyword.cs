@@ -25,13 +25,13 @@ public abstract class NumberCustomValidationKeyword<T> : KeywordBase
 
         if (!TryGetNumber(instance, out T instanceData))
         {
-            return ValidationResult.CreateFailedResult(ResultCode.FailedForCustomValidation, ErrorMessageForTypeConvert(instance.ToString()), options.ValidationPathStack, Name, instance.Location);
+            return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.FailedForCustomValidation, ErrorMessageForTypeConvert(instance.ToString()), options.ValidationPathStack, Name, instance.Location));
         }
 
         return _validator(instanceData)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.FailedForCustomValidation, _errorMessageFunc(instanceData), options.ValidationPathStack,
-                Name, instance.Location);
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.FailedForCustomValidation, _errorMessageFunc(instanceData), options.ValidationPathStack,
+                Name, instance.Location));
     }
 
     protected abstract bool TryGetNumber(JsonInstanceElement instance, out T value);

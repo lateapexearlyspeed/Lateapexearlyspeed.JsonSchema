@@ -24,7 +24,7 @@ internal class JsonElementBasedObjectCustomValidationKeyword : KeywordBase
     {
         return _validator(instance.InternalJsonElement)
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.FailedForCustomValidation, _errorMessageFunc(instance.InternalJsonElement), options.ValidationPathStack,
-                Name, instance.Location);
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.FailedForCustomValidation, _errorMessageFunc(instance.InternalJsonElement), options.ValidationPathStack,
+                Name, instance.Location));
     }
 }

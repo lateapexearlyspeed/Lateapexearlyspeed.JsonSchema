@@ -917,8 +917,11 @@ public class NumberKeywordBuilderTests
     private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, ImmutableJsonPointer? expectedInstanceLocation = null)
     {
         Assert.Equal(expectedValidStatus, actualValidationResult.IsValid);
-        Assert.Equal(expectedErrorMessage, actualValidationResult.ErrorMessage);
-        Assert.Equal(expectedInstanceLocation, actualValidationResult.InstanceLocation);
+
+        ValidationError? error = actualValidationResult.ValidationErrors.SingleOrDefault();
+
+        Assert.Equal(expectedErrorMessage, error?.ErrorMessage);
+        Assert.Equal(expectedInstanceLocation, error?.InstanceLocation);
     }
 
     private static string GetInvalidTokenErrorMessage(InstanceType actualType)

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -48,18 +49,48 @@ internal class AllOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        foreach (JsonSchema subSchema in SubSchemas)
+        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+    }
+
+    private class Validator : IValidator
+    {
+        private readonly AllOfKeyword _allOfKeyword;
+        private readonly JsonInstanceElement _instance;
+        private readonly JsonSchemaOptions _options;
+        
+        private ValidationResult? _fastReturnResult;
+
+        public Validator(AllOfKeyword allOfKeyword, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            ValidationResult result = subSchema.Validate(instance, options);
-            if (!result.IsValid)
+            _allOfKeyword = allOfKeyword;
+            _instance = instance;
+            _options = options;
+        }
+
+        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        {
+            foreach (JsonSchema subSchema in _allOfKeyword.SubSchemas)
             {
-                return result;
+                ValidationResult result = subSchema.Validate(_instance, _options);
+                if (!result.IsValid)
+                { 
+                    _fastReturnResult = result;
+                }
+
+                yield return result;
             }
         }
 
-        return ValidationResult.ValidResult;
+        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
+        {
+            validationResult = _fastReturnResult;
+
+            return _fastReturnResult is not null;
+        }
+
+        public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
-    
+
     public ISchemaContainerElement? GetSubElement(string name)
     {
         return ((ISubSchemaCollection)this).GetSubElement(name);
@@ -77,3 +108,4 @@ internal class AllOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
         throw new InvalidOperationException();
     }
 }
+

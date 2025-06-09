@@ -49,12 +49,13 @@ namespace JsonSchemaConsoleApp
             }
             else
             {
-                Console.WriteLine($"Failed keyword: {validationResult.Keyword}");
-                Console.WriteLine($"ResultCode: {validationResult.ResultCode}");
-                Console.WriteLine($"Error message: {validationResult.ErrorMessage}");
-                Console.WriteLine($"Failed instance location: {validationResult.InstanceLocation}");
-                Console.WriteLine($"Failed relative keyword location: {validationResult.RelativeKeywordLocation}");
-                Console.WriteLine($"Failed schema resource base uri: {validationResult.SchemaResourceBaseUri}");
+                ValidationError validationError = validationResult.ValidationErrors.First();
+                Console.WriteLine($"Failed keyword: {validationError.Keyword}");
+                Console.WriteLine($"ResultCode: {validationError.ResultCode}");
+                Console.WriteLine($"Error message: {validationError.ErrorMessage}");
+                Console.WriteLine($"Failed instance location: {validationError.InstanceLocation}");
+                Console.WriteLine($"Failed relative keyword location: {validationError.RelativeKeywordLocation}");
+                Console.WriteLine($"Failed schema resource base uri: {validationError.SchemaResourceBaseUri}");
             }
 
             while (true)

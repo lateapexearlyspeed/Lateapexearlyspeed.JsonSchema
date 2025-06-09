@@ -1,6 +1,8 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
@@ -19,27 +21,60 @@ internal class DependentRequiredKeyword : KeywordBase
             return ValidationResult.ValidResult;
         }
 
-        var instancePropertyNames = new HashSet<string>(instance.EnumerateObject().Select(p => p.Name));
+        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+    }
 
-        foreach (KeyValuePair<string, string[]> dependentProperty in DependentProperties)
+    public static string ErrorMessage(string dependentProperty, string requiredProp)
+    {
+        return $"Instance contains property: '{dependentProperty}' but not contains dependent property: '{requiredProp}'";
+    }
+
+    private class Validator : IValidator
+    {
+        private readonly DependentRequiredKeyword _dependentRequiredKeyword;
+        private readonly JsonInstanceElement _instance;
+        private readonly JsonSchemaOptions _options;
+
+        private ValidationResult? _fastReturnResult;
+
+        public Validator(DependentRequiredKeyword dependentRequiredKeyword, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            if (instancePropertyNames.Contains(dependentProperty.Key))
+            _dependentRequiredKeyword = dependentRequiredKeyword;
+            _instance = instance;
+            _options = options;
+        }
+
+        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        {
+            var instancePropertyNames = new HashSet<string>(_instance.EnumerateObject().Select(p => p.Name));
+
+            foreach (KeyValuePair<string, string[]> dependentProperty in _dependentRequiredKeyword.DependentProperties)
             {
-                foreach (string requiredProp in dependentProperty.Value)
+                if (instancePropertyNames.Contains(dependentProperty.Key))
                 {
-                    if (!instancePropertyNames.Contains(requiredProp))
+                    foreach (string requiredProp in dependentProperty.Value)
                     {
-                        return ValidationResult.CreateFailedResult(
-                            ResultCode.NotFoundRequiredDependentProperty, 
-                            $"Instance contains property: '{dependentProperty.Key}' but not contains dependent property: '{requiredProp}'", 
-                            options.ValidationPathStack,
-                            Name,
-                            instance.Location);
+                        if (!instancePropertyNames.Contains(requiredProp))
+                        {
+                            _fastReturnResult = ValidationResult.SingleErrorFailedResult(new ValidationError(
+                                ResultCode.NotFoundRequiredDependentProperty,
+                                ErrorMessage(dependentProperty.Key, requiredProp),
+                                _options.ValidationPathStack,
+                                _dependentRequiredKeyword.Name,
+                                _instance.Location));
+
+                            yield return _fastReturnResult;
+                        }
                     }
                 }
             }
         }
 
-        return ValidationResult.ValidResult;
+        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
+        {
+            return (validationResult = _fastReturnResult) is not null;
+        }
+
+        public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 }

@@ -422,8 +422,8 @@ public class ArrayKeywordBuilderTests
     private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, ImmutableJsonPointer? expectedInstanceLocation = null)
     {
         Assert.Equal(expectedValidStatus, actualValidationResult.IsValid);
-        Assert.Equal(expectedErrorMessage, actualValidationResult.ErrorMessage);
-        Assert.Equal(expectedInstanceLocation, actualValidationResult.InstanceLocation);
+        Assert.Equal(expectedErrorMessage, actualValidationResult.ValidationErrors.SingleOrDefault()?.ErrorMessage);
+        Assert.Equal(expectedInstanceLocation, actualValidationResult.ValidationErrors.SingleOrDefault()?.InstanceLocation);
     }
 
     private static string GetInvalidTokenErrorMessage(InstanceType actualType)

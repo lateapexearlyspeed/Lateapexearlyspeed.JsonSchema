@@ -37,9 +37,30 @@ internal class ConditionalValidator : ISchemaContainerValidationNode
             return ValidationResult.ValidResult;
         }
 
-        return PredictEvaluator.Validate(instance, options).IsValid
-            ? PositiveValidator.Validate(instance, options)
-            : NegativeValidator.Validate(instance, options);
+        if (options.OutputFormat == OutputFormat.FailFast)
+        {
+            return PredictEvaluator.Validate(instance, options).IsValid
+                ? PositiveValidator.Validate(instance, options)
+                : NegativeValidator.Validate(instance, options);
+        }
+
+        var errorsBuilder = new ImmutableValidationErrorCollection.Builder();
+
+        ValidationResult predictResult = PredictEvaluator.Validate(instance, options);
+        errorsBuilder.AddChildCollection(predictResult.ValidationErrorsList);
+
+        if (predictResult.IsValid)
+        {
+            ValidationResult positiveResult = PositiveValidator.Validate(instance, options);
+            errorsBuilder.AddChildCollection(positiveResult.ValidationErrorsList);
+
+            return new ValidationResult(positiveResult.IsValid, errorsBuilder.ToImmutable());
+        }
+
+        ValidationResult negativeResult = NegativeValidator.Validate(instance, options);
+        errorsBuilder.AddChildCollection(negativeResult.ValidationErrorsList);
+
+        return new ValidationResult(negativeResult.IsValid, errorsBuilder.ToImmutable());
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

@@ -19,6 +19,6 @@ internal class BooleanJsonSchemaDocument : IJsonSchemaDocument
 
     public ValidationResult DoValidation(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return AlwaysValid ? ValidationResult.ValidResult : ValidationResult.CreateFailedResult(ResultCode.AlwaysFailedJsonSchema, "Boolean false json schema document occurs", null, null, instance.Location);
+        return AlwaysValid ? ValidationResult.ValidResult : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.AlwaysFailedJsonSchema, "Boolean false json schema document occurs", null, null, instance.Location));
     }
 }

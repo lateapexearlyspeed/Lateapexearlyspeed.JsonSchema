@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -22,16 +23,56 @@ internal class PropertyNamesKeyword : KeywordBase, ISchemaContainerElement, ISin
             return ValidationResult.ValidResult;
         }
 
-        foreach (JsonInstanceProperty jsonProperty in instance.EnumerateObject())
+        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+    }
+
+    private class Validator : IValidator
+    {
+        private readonly PropertyNamesKeyword _propertyNamesKeyword;
+        private readonly JsonInstanceElement _instance;
+        private readonly JsonSchemaOptions _options;
+
+        private ValidationError? _fastReturnError;
+
+        public Validator(PropertyNamesKeyword propertyNamesKeyword, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            ValidationResult validationResult = Schema.Validate(new JsonInstanceElement(JsonSerializer.SerializeToElement(jsonProperty.Name), ImmutableJsonPointer.Empty), options);
-            if (!validationResult.IsValid)
+            _propertyNamesKeyword = propertyNamesKeyword;
+            _instance = instance;
+            _options = options;
+        }
+
+        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        {
+            foreach (JsonInstanceProperty jsonProperty in _instance.EnumerateObject())
             {
-                return ValidationResult.CreateFailedResult(ResultCode.InvalidPropertyName, $"Found invalid property name: {jsonProperty.Name}", options.ValidationPathStack, Name, instance.Location);
+                ValidationResult validationResult = _propertyNamesKeyword.Schema.Validate(new JsonInstanceElement(JsonSerializer.SerializeToElement(jsonProperty.Name), ImmutableJsonPointer.Empty), _options);
+                if (!validationResult.IsValid)
+                {
+                    _fastReturnError = new ValidationError(ResultCode.InvalidPropertyName, ErrorMessage(jsonProperty.Name), _options.ValidationPathStack, _propertyNamesKeyword.Name, _instance.Location);
+                }
+
+                yield return validationResult;
             }
         }
 
-        return ValidationResult.ValidResult;
+        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
+        {
+            if (_fastReturnError is null)
+            {
+                validationResult = null;
+                return false;
+            }
+
+            validationResult = ValidationResult.SingleErrorFailedResult(_fastReturnError);
+            return true;
+        }
+
+        public ResultTuple Result => _fastReturnError is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
+    }
+
+    public static string ErrorMessage(string propertyName)
+    {
+        return $"Found invalid property name: {propertyName}";
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

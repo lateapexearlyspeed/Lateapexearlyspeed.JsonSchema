@@ -19,8 +19,9 @@ public class Tests
 
         ValidationResult result = jsonValidator.Validate("\"@world.com\"");
         Assert.False(result.IsValid);
-        Assert.Equal("format", result.Keyword);
-        Assert.Equal(ResultCode.InvalidFormat, result.ResultCode);
-        Assert.Equal("Invalid string value for format:'email'", result.ErrorMessage);
+        ValidationError validationError = result.ValidationErrors.Single();
+        Assert.Equal("format", validationError.Keyword);
+        Assert.Equal(ResultCode.InvalidFormat, validationError.ResultCode);
+        Assert.Equal("Invalid string value for format:'email'", validationError.ErrorMessage);
     }
 }
