@@ -212,5 +212,5 @@ public enum ResultCode
     NotAfterSpecifiedTimePoint,
     FailedForCustomValidation,
     FailedToDeserialize,
-    FailedInSubSchema
+    FailedBodyJsonSchema
 }

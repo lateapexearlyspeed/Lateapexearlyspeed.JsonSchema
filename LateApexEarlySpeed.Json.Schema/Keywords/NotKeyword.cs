@@ -16,9 +16,29 @@ internal class NotKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSche
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return Schema.Validate(instance, options).IsValid 
-            ? ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.SubSchemaPassedUnexpected, ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location))
-            : ValidationResult.ValidResult;
+        ValidationResult validationResult = Schema.Validate(instance, options);
+
+        if (validationResult.IsValid)
+        {
+            var curError = new ValidationError(ResultCode.SubSchemaPassedUnexpected, ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location);
+
+            if (options.OutputFormat == OutputFormat.FailFast)
+            {
+                return ValidationResult.SingleErrorFailedResult(curError);
+            }
+
+            var errorBuilder = new ImmutableValidationErrorCollection.Builder();
+            errorBuilder.SetCurrent(curError);
+            errorBuilder.AddChildCollection(validationResult.ValidationErrorsList);
+            return new ValidationResult(false, errorBuilder.ToImmutable());
+        }
+
+        if (options.OutputFormat == OutputFormat.FailFast)
+        {
+            return ValidationResult.ValidResult;
+        }
+
+        return new ValidationResult(true, validationResult.ValidationErrorsList);
     }
 
     public static string ErrorMessage(string instanceText)

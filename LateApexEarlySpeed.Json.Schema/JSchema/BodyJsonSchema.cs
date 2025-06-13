@@ -190,7 +190,7 @@ internal class BodyJsonSchema : JsonSchema
                     return ResultTuple.Valid();
                 }
 
-                ValidationError curError = new ValidationError(ResultCode.FailedInSubSchema, ValidationError.ErrorMessageForFailedInSubSchema, _options.ValidationPathStack, _bodyJsonSchema.Name, _instance.Location);
+                ValidationError curError = new ValidationError(ResultCode.FailedBodyJsonSchema, ValidationError.ErrorMessageForFailedInSubSchema, _options.ValidationPathStack, null, _instance.Location);
                 return ResultTuple.Invalid(curError);
             }
         }
