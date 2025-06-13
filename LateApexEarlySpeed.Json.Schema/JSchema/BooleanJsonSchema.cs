@@ -21,7 +21,7 @@ internal class BooleanJsonSchema : JsonSchema
     {
         return AlwaysValid 
             ? ValidationResult.ValidResult 
-            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.AlwaysFailedJsonSchema, ErrorMessage(), options.ValidationPathStack, Name, instance.Location));
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.AlwaysFailedJsonSchema, ErrorMessage(), options.ValidationPathStack, null, instance.Location));
     }
 
     public static string ErrorMessage()

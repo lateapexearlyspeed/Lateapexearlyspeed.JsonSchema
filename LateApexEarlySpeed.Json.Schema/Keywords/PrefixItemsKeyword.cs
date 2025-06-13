@@ -95,9 +95,7 @@ internal class PrefixItemsKeyword : KeywordBase, ISchemaContainerElement, ISubSc
 
         public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
         {
-            validationResult = _fastReturnResult;
-
-            return _fastReturnResult is not null;
+            return (validationResult = _fastReturnResult) is not null;
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
