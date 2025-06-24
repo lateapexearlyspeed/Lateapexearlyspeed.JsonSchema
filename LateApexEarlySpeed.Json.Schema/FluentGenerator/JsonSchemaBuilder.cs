@@ -212,18 +212,20 @@ public class JsonSchemaBuilder
 
     internal BodyJsonSchema Build()
     {
-        if (_keywordBuilder is not null)
-        {
-            KeywordCollection keywordCollection = _keywordBuilder.Build();
+        return _keywordBuilder is not null 
+            ? BuildBodyJsonSchema(_keywordBuilder) 
+            : new BodyJsonSchema(Enumerable.Empty<KeywordBase>());
+    }
 
-            return new BodyJsonSchema(keywordCollection.Keywords, 
-                keywordCollection.ArrayContainsValidator is null
-                  ? Enumerable.Empty<ISchemaContainerValidationNode>() 
-                  : new ISchemaContainerValidationNode[] {keywordCollection.ArrayContainsValidator},
-                null, null, null, null, null);
-        }
+    internal static BodyJsonSchema BuildBodyJsonSchema(KeywordBuilder keywordBuilder)
+    {
+        KeywordCollection keywordCollection = keywordBuilder.Build();
 
-        return new BodyJsonSchema(Enumerable.Empty<KeywordBase>());
+        return new BodyJsonSchema(keywordCollection.Keywords,
+            keywordCollection.ArrayContainsValidator is null
+                ? Enumerable.Empty<ISchemaContainerValidationNode>()
+                : new ISchemaContainerValidationNode[] { keywordCollection.ArrayContainsValidator },
+            null, null, null, null, null);
     }
 
     public JsonValidator BuildValidator()

@@ -62,7 +62,6 @@ public class ArrayKeywordBuilder : KeywordBuilder
     /// <returns></returns>
     public ArrayKeywordBuilder HasCollection(params Action<JsonSchemaBuilder>[] elementInspectors)
     {
-        var schemaBuilder = new JsonSchemaBuilder();
         IEnumerable<BodyJsonSchema> subSchemas = elementInspectors.Select(inspector =>
         {
             var builder = new JsonSchemaBuilder();
@@ -71,9 +70,13 @@ public class ArrayKeywordBuilder : KeywordBuilder
             return builder.Build();
         });
         var prefixItemsKeyword = new PrefixItemsKeyword(subSchemas);
-        schemaBuilder.IsJsonArray().HasLength((uint)elementInspectors.Length).Keywords.Add(prefixItemsKeyword);
 
-        _schemas.Add(schemaBuilder.Build());
+        var keywordBuilder = new KeywordBuilder();
+
+        AddHasLengthKeyword(keywordBuilder.Keywords, (uint)elementInspectors.Length);
+        keywordBuilder.Keywords.Add(prefixItemsKeyword);
+
+        _schemas.Add(JsonSchemaBuilder.BuildBodyJsonSchema(keywordBuilder));
 
         return this;
     }
@@ -85,13 +88,18 @@ public class ArrayKeywordBuilder : KeywordBuilder
     /// <returns></returns>
     public ArrayKeywordBuilder HasLength(uint length)
     {
-        Keywords.AddRange(new KeywordBase[]
+        AddHasLengthKeyword(Keywords, length);
+
+        return this;
+    }
+
+    private static void AddHasLengthKeyword(List<KeywordBase> keywords, uint length)
+    {
+        keywords.AddRange(new KeywordBase[]
         {
             new MinItemsKeyword { BenchmarkValue = length },
             new MaxItemsKeyword {BenchmarkValue = length}
         });
-
-        return this;
     }
 
     /// <summary>
