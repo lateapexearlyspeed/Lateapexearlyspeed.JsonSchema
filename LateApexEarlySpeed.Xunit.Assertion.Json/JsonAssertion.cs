@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using LateApexEarlySpeed.Json.Schema;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.FluentGenerator;
@@ -22,11 +25,15 @@ namespace LateApexEarlySpeed.Xunit.Assertion.Json
             var jsonSchemaBuilder = new JsonSchemaBuilder();
             expectedSchemaConfiguration(jsonSchemaBuilder);
             JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
-            ValidationResult validationResult = jsonValidator.Validate(actualJson);
+            ValidationResult validationResult = jsonValidator.Validate(actualJson, new JsonSchemaOptions{OutputFormat = OutputFormat.List });
 
             if (!validationResult.IsValid)
             {
-                throw new JsonAssertException($"{nameof(JsonAssertion)}.{nameof(Meet)}() Failure: {validationResult.ErrorMessage}, location (in json pointer format): \"{validationResult.InstanceLocation}\"");
+                var errorMessage = new StringBuilder($"{nameof(JsonAssertion)}.{nameof(Meet)}() Failure: ");
+
+                AppendValidationErrorsInfo(errorMessage, validationResult.ValidationErrors);
+
+                throw new JsonAssertException(errorMessage.ToString());
             }
         }
 
@@ -45,7 +52,22 @@ namespace LateApexEarlySpeed.Xunit.Assertion.Json
 
             if (!validationResult.IsValid)
             {
-                throw new JsonAssertException($"{nameof(JsonAssertion)}.{nameof(Equivalent)}() Failure: {validationResult.ErrorMessage}, location (in json pointer format): \"{validationResult.InstanceLocation}\"");
+                var errorMessage = new StringBuilder($"{nameof(JsonAssertion)}.{nameof(Equivalent)}() Failure: ");
+
+                AppendValidationErrorsInfo(errorMessage, validationResult.ValidationErrors);
+
+                throw new JsonAssertException(errorMessage.ToString());
+            }
+        }
+
+        private static void AppendValidationErrorsInfo(StringBuilder sb, IEnumerable<ValidationError> validationErrors)
+        {
+            validationErrors = validationErrors.Where(err => err.ResultCode != ResultCode.FailedBodyJsonSchema);
+            
+            foreach (ValidationError keywordError in validationErrors)
+            {
+                sb.AppendFormat("{0}, location (in json pointer format): \"{1}\"", keywordError.ErrorMessage, keywordError.InstanceLocation)
+                    .AppendLine();
             }
         }
     }
