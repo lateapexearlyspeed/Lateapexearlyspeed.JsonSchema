@@ -4,6 +4,8 @@ public static class ValidationKeywordRegistry
 {
     private static readonly Dictionary<string, Type> KeywordsDictionary;
 
+    private static readonly HashSet<string> IgnoredKeywordNames = new() { "$comment", "$schema", "$vocabulary", "contentEncoding", "contentMediaType", "contentSchema", "default", "deprecated", "description", "examples", "readOnly", "title", "writeOnly" };
+
     static ValidationKeywordRegistry()
     {
         var builtInKeywordTypes = new[] 
@@ -67,5 +69,10 @@ public static class ValidationKeywordRegistry
     public static Type? GetKeyword(string keywordName)
     {
         return KeywordsDictionary.GetValueOrDefault(keywordName);
+    }
+
+    public static bool ContainsIgnoredKeyword(string keywordName)
+    {
+        return IgnoredKeywordNames.Contains(keywordName);
     }
 }

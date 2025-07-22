@@ -39,7 +39,7 @@ internal class ThrowHelper
     [Pure]
     public static JsonException CreateJsonSchemaHasDuplicatedKeywordsJsonException(string duplicatedKeywordName)
     {
-        return new JsonException($"Json schema contains more than one keyword:'{duplicatedKeywordName}'");
+        return new JsonException($"Json schema contains more than one keyword with name: '{duplicatedKeywordName}'");
     }
 
     [Pure]

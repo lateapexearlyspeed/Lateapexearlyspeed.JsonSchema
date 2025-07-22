@@ -12,6 +12,15 @@ internal class BodyJsonSchema : JsonSchema
     private readonly ISchemaContainerValidationNode[] _schemaContainerValidators;
     private readonly IReadOnlyList<KeywordBase> _keywords;
 
+    /// <summary>
+    /// <see cref="_potentialSchemaContainerElements"/> is used to represent all properties nodes which don't belong to any valid keywords.
+    /// It is used to enable reference to any sub nodes as schema. See issue to understand: https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/issues/71
+    /// </summary>
+    /// <remarks>
+    /// Note: Types of nodes inside this tree are: <see cref="BodyJsonSchema"/>, <see cref="JsonSchemaResource"/>, <see cref="BooleanJsonSchema"/> and <see cref="JsonArrayPotentialSchemaContainerElement"/>
+    /// </remarks>
+    private readonly IReadOnlyDictionary<string, ISchemaContainerElement>? _potentialSchemaContainerElements;
+
     // {
     //     "$schema": "https://json-schema.org/draft/2020-12/schema",
     //     "$id": "http://example.com/a.json",
@@ -54,12 +63,12 @@ internal class BodyJsonSchema : JsonSchema
 
     public string? DynamicAnchor { get; }
 
-    public BodyJsonSchema(IEnumerable<KeywordBase> keywords) : this(keywords, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null)
+    public BodyJsonSchema(IEnumerable<KeywordBase> keywords) : this(keywords, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null, null)
     {
 
     }
 
-    public BodyJsonSchema(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor, DefsKeyword? defsKeyword)
+    public BodyJsonSchema(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor, DefsKeyword? defsKeyword, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
     {
         _keywords = MergeKeywords(keywords.ToArray());
 
@@ -76,6 +85,8 @@ internal class BodyJsonSchema : JsonSchema
 
         Anchor = anchor;
         DynamicAnchor = dynamicAnchor;
+
+        _potentialSchemaContainerElements = potentialSchemaContainerElements;
     }
 
     /// <summary>
@@ -83,7 +94,7 @@ internal class BodyJsonSchema : JsonSchema
     /// </summary>
     private static IReadOnlyList<KeywordBase> MergeKeywords(KeywordBase[] keywords)
     {
-        if (FindFirstDuplicatedKeyword(keywords) is null)
+        if (keywords.FindFirstDuplicatedItem(keyword => keyword.Name) is null)
         {
             return keywords;
         }
@@ -220,7 +231,7 @@ internal class BodyJsonSchema : JsonSchema
             return DefsKeyword;
         }
 
-        return null;
+        return _potentialSchemaContainerElements?.GetValueOrDefault(name);
     }
 
     public override IEnumerable<ISchemaContainerElement> EnumerateElements()
@@ -237,6 +248,11 @@ internal class BodyJsonSchema : JsonSchema
         if (DefsKeyword is not null)
         {
             schemaContainers = schemaContainers.Append(DefsKeyword);
+        }
+
+        if (_potentialSchemaContainerElements is not null)
+        {
+            schemaContainers = schemaContainers.Concat(_potentialSchemaContainerElements.Values);
         }
 
         foreach (ISchemaContainerElement containerElement in schemaContainers)
@@ -263,31 +279,11 @@ internal class BodyJsonSchema : JsonSchema
 
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id, DefsKeyword defsKeyword)
     {
-        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, id, defsKeyword);
+        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, _potentialSchemaContainerElements, id, defsKeyword);
     }
 
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id)
     {
-        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, id, DefsKeyword);
-    }
-
-    /// <returns>One of duplicated keyword if duplication occurs; null otherwise.</returns>
-    public static KeywordBase? FindFirstDuplicatedKeyword(ICollection<KeywordBase> keywords)
-    {
-        if (keywords.Count == 0 || keywords.Count == 1)
-        {
-            return null;
-        }
-
-        var keywordHash = new HashSet<string>(keywords.Count);
-        foreach (KeywordBase keyword in keywords)
-        {
-            if (!keywordHash.Add(keyword.Name))
-            {
-                return keyword;
-            }
-        }
-
-        return null;
+        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, _potentialSchemaContainerElements, id, DefsKeyword);
     }
 }

@@ -59,6 +59,8 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         string? anchor = null;
         string? dynamicAnchor = null;
 
+        Dictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements = null;
+
         while (reader.TokenType != JsonTokenType.EndObject)
         {
             string keywordName = reader.GetString()!;
@@ -153,9 +155,13 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             {
                 dynamicAnchor = reader.GetString();
             }
-            else
+            else if (ValidationKeywordRegistry.ContainsIgnoredKeyword(keywordName))
             {
                 reader.Skip();
+            }
+            else if (PotentialSchemaContainerElement.TryDeserialize(ref reader, out ISchemaContainerElement? potentialSchemaContainerElement, options))
+            {
+                (potentialSchemaContainerElements ??= new Dictionary<string, ISchemaContainerElement>()).Add(keywordName, potentialSchemaContainerElement);
             }
 
             reader.Read();
@@ -188,12 +194,12 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         // when there is duplicated keywords, schema structure will be changed)
         // In json schema deserialization case, it is possible that original schema contains "json path" reference, so here we cannot 
         // dare to change original json schema structure at risk of missing reference.
-        ThrowIfKeywordsHasDuplication(validationKeywords);
+        ThrowIfKeywordsHaveDuplication(validationKeywords);
 
         JsonSchema schema;
         if (typeToConvert == typeof(IJsonSchemaDocument))
         {
-            schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, id, defsKeyword);
+            schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, potentialSchemaContainerElements, id, defsKeyword);
         }
         else if (id is not null)
         {
@@ -205,19 +211,19 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 schemaDynamicReference,
                 anchor,
                 dynamicAnchor,
-                defsKeyword);
+                defsKeyword, potentialSchemaContainerElements);
         }
         else
         {
-            schema = new BodyJsonSchema(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeyword);
+            schema = new BodyJsonSchema(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeyword, potentialSchemaContainerElements);
         }
 
         return (T)(object)schema;
     }
 
-    private static void ThrowIfKeywordsHasDuplication(ICollection<KeywordBase> keywords)
+    private static void ThrowIfKeywordsHaveDuplication(ICollection<KeywordBase> keywords)
     {
-        KeywordBase? duplicatedKeyword = BodyJsonSchema.FindFirstDuplicatedKeyword(keywords);
+        KeywordBase? duplicatedKeyword = keywords.FindFirstDuplicatedItem(keyword => keyword.Name);
         if (duplicatedKeyword is not null)
         {
             throw ThrowHelper.CreateJsonSchemaHasDuplicatedKeywordsJsonException(duplicatedKeyword.Name);
