@@ -277,6 +277,9 @@ internal class BodyJsonSchema : JsonSchema
         }
     }
 
+    /// <inheritdoc cref="_potentialSchemaContainerElements"/>
+    public IReadOnlyDictionary<string, ISchemaContainerElement>? PotentialSchemaContainerElements => _potentialSchemaContainerElements;
+
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id, DefsKeyword defsKeyword)
     {
         return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, _potentialSchemaContainerElements, id, defsKeyword);

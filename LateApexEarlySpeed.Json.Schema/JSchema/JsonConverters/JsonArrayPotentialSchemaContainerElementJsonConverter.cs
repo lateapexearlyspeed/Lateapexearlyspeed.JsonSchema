@@ -32,6 +32,13 @@ internal class JsonArrayPotentialSchemaContainerElementJsonConverter : JsonConve
 
     public override void Write(Utf8JsonWriter writer, JsonArrayPotentialSchemaContainerElement value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        writer.WriteStartArray();
+
+        foreach (ISchemaContainerElement potentialSchemaElement in value.PotentialSchemaElements)
+        {
+            PotentialSchemaContainerElement.Serialize(writer, potentialSchemaElement, options);
+        }
+
+        writer.WriteEndArray();
     }
 }

@@ -7,26 +7,28 @@ namespace LateApexEarlySpeed.Json.Schema.JSchema;
 [JsonConverter(typeof(JsonArrayPotentialSchemaContainerElementJsonConverter))]
 internal class JsonArrayPotentialSchemaContainerElement : ISchemaContainerElement
 {
-    private readonly IReadOnlyList<ISchemaContainerElement> _schemaContainerElements;
+    private readonly IReadOnlyList<ISchemaContainerElement> _potentialSchemaElements;
 
-    public JsonArrayPotentialSchemaContainerElement(IReadOnlyList<ISchemaContainerElement> schemaContainerElements)
+    public JsonArrayPotentialSchemaContainerElement(IReadOnlyList<ISchemaContainerElement> potentialSchemaElements)
     {
-        _schemaContainerElements = schemaContainerElements;
+        _potentialSchemaElements = potentialSchemaElements;
     }
 
     public ISchemaContainerElement? GetSubElement(string name)
     {
-        return uint.TryParse(name, out uint idx) && idx < _schemaContainerElements.Count
-            ? _schemaContainerElements[(int)idx] 
+        return uint.TryParse(name, out uint idx) && idx < _potentialSchemaElements.Count
+            ? _potentialSchemaElements[(int)idx] 
             : null;
     }
 
     public IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
-        return _schemaContainerElements;
+        return _potentialSchemaElements;
     }
 
     public bool IsSchemaType => false;
+
+    public IReadOnlyList<ISchemaContainerElement> PotentialSchemaElements => _potentialSchemaElements;
 
     public JsonSchema GetSchema()
     {

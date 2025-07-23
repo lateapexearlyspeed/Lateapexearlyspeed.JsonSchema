@@ -317,6 +317,16 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 }
             }
 
+            // PotentialSchemaContainerElements part:
+            if (schema.PotentialSchemaContainerElements is not null)
+            {
+                foreach ((string propertyName, ISchemaContainerElement potentialSchemaElement) in schema.PotentialSchemaContainerElements)
+                {
+                    writer.WritePropertyName(propertyName);
+                    PotentialSchemaContainerElement.Serialize(writer, potentialSchemaElement, options);
+                }
+            }
+
             writer.WriteEndObject();
         }
     }
