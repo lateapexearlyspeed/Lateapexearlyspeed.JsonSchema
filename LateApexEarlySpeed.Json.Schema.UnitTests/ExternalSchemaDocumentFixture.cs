@@ -7,6 +7,9 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests;
 
 public class JsonValidatorTestFixture
 {
+    private readonly HashSet<string> _ignoredRemoteFiles = new HashSet<string> { "locationIndependentIdentifierPre2019.json", "locationIndependentIdentifierDraft4.json" };
+    private readonly HashSet<string> _ignoredRemoteFolders = new HashSet<string> { "draft6", "draft7" };
+
     public JsonValidatorTestFixture()
     {
         ExternalSchemaDocuments = PrepareRefRemoteDocuments();
@@ -49,6 +52,11 @@ public class JsonValidatorTestFixture
 
         foreach (FileInfo fileInfo in curDirectory.EnumerateFiles())
         {
+            if (_ignoredRemoteFiles.Contains(fileInfo.Name))
+            {
+                continue;
+            }
+
             var id = new Uri(uri, fileInfo.Name);
             using (FileStream fs = fileInfo.OpenRead())
             {
@@ -60,6 +68,11 @@ public class JsonValidatorTestFixture
 
         foreach (DirectoryInfo subDirectory in curDirectory.EnumerateDirectories())
         {
+            if (_ignoredRemoteFolders.Contains(subDirectory.Name))
+            {
+                continue;
+            }
+
             schemaDocs.AddRange(ExtractAllSchemaDocumentsFrom(Path.Combine(path, subDirectory.Name), new Uri(uri, subDirectory.Name + "/")));
         }
 
