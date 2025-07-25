@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\JsonQuery.Net\JsonQuery.Net.csproj" />
     <ProjectReference Include="..\LateApexEarlySpeed.Json.Schema\LateApexEarlySpeed.Json.Schema.csproj" />
   </ItemGroup>
 

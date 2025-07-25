@@ -93,7 +93,7 @@ public class JsonSchemaValidationRunner
     {
         bool result = false;
 
-        var jsonSchemaOptions = new JsonSchemaOptions { ValidateFormat = false };
+        var jsonSchemaOptions = new JsonSchemaOptions { ValidateFormat = false, OutputFormat = LateApexEarlySpeed.Json.Schema.Common.OutputFormat.List};
 
         foreach (TestCase testCase in _testCases)
         {
@@ -116,7 +116,7 @@ public class JsonSchemaValidationRunner
     {
         bool result = false;
 
-        var jsonSchemaOptions = new JsonSchemaOptions { ValidateFormat = false };
+        var jsonSchemaOptions = new JsonSchemaOptions { ValidateFormat = false, OutputFormat = LateApexEarlySpeed.Json.Schema.Common.OutputFormat.List};
 
         foreach (TestCase testCase in _testCases)
         {
@@ -143,6 +143,8 @@ public class JsonSchemaValidationRunner
 
     public bool CreateNewSchema_JsonSchemaDotNet()
     {
+        var evaluationOptions = new EvaluationOptions { OutputFormat = OutputFormat.List };
+
         bool result = false;
 
         foreach (TestCase testCase in _testCases)
@@ -152,7 +154,7 @@ public class JsonSchemaValidationRunner
                 JsonSchema schema = JsonSchema.FromText(testCase.JsonSchema);
 
                 // Just for make sure Evaluate() is invoked
-                if (schema.Evaluate(JsonNode.Parse(test.Instance)).IsValid)
+                if (schema.Evaluate(JsonNode.Parse(test.Instance), evaluationOptions).IsValid)
                 {
                     result = true;
                 }
@@ -164,6 +166,7 @@ public class JsonSchemaValidationRunner
 
     public bool ReuseSchema_JsonSchemaDotNet(TestValidationResult testValidationResult)
     {
+        var evaluationOptions = new EvaluationOptions { OutputFormat = OutputFormat.List };
         bool result = false;
 
         foreach (TestCase testCase in _testCases)
@@ -178,7 +181,7 @@ public class JsonSchemaValidationRunner
                 Debug.Assert(testCase.JsonSchemaDotNetValidator is not null);
 
                 // Just for make sure Evaluate() is invoked
-                if (testCase.JsonSchemaDotNetValidator.Evaluate(JsonNode.Parse(test.Instance)).IsValid)
+                if (testCase.JsonSchemaDotNetValidator.Evaluate(JsonNode.Parse(test.Instance), evaluationOptions).IsValid)
                 {
                     result = true;
                 }
