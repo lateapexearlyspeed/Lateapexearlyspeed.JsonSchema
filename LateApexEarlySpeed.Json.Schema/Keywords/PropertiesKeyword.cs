@@ -11,13 +11,15 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("properties")]
 [JsonConverter(typeof(PropertiesKeywordJsonConverter))]
-internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
+internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
 {
-    public IReadOnlyDictionary<string, JsonSchema> PropertiesSchemas { get; }
+    private readonly Dictionary<string, JsonSchema> _propertiesSchemas;
+
+    public IReadOnlyDictionary<string, JsonSchema> PropertiesSchemas => _propertiesSchemas;
 
     public PropertiesKeyword(IDictionary<string, JsonSchema> propertiesSchemas, bool propertyNameIgnoreCase)
     {
-        PropertiesSchemas = new Dictionary<string, JsonSchema>(propertiesSchemas, propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
+        _propertiesSchemas = new Dictionary<string, JsonSchema>(propertiesSchemas, propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
 
         foreach (var (propName, schema) in PropertiesSchemas)
         {
@@ -97,5 +99,16 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement
     public bool ContainsPropertyName(string propertyName)
     {
         return PropertiesSchemas.ContainsKey(propertyName);
+    }
+
+    public void RemoveIdFromAllChildrenSchemaElements()
+    {
+        foreach ((string property, JsonSchema schema) in _propertiesSchemas)
+        {
+            if (schema is BodyJsonSchema bodyJsonSchema)
+            {
+                BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _propertiesSchemas[property] = newSchema);
+            }
+        }
     }
 }

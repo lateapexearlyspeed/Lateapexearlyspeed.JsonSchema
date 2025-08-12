@@ -5,29 +5,33 @@ using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-internal class ConditionalValidator : ISchemaContainerValidationNode
+internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchemaResourceNodesCleanable
 {
     public const string IfKeywordName = "if";
     public const string ThenKeywordName = "then";
     public const string ElseKeywordName = "else";
 
-    public JsonSchema? PredictEvaluator { get; }
-    public JsonSchema PositiveValidator { get; }
-    public JsonSchema NegativeValidator { get; }
+    private JsonSchema? _predictEvaluator;
+    private JsonSchema _positiveValidator;
+    private JsonSchema _negativeValidator;
+
+    public JsonSchema? PredictEvaluator => _predictEvaluator;
+    public JsonSchema PositiveValidator => _positiveValidator;
+    public JsonSchema NegativeValidator => _negativeValidator;
 
     public ConditionalValidator(JsonSchema? predictEvaluator, JsonSchema? positiveValidator, JsonSchema? negativeValidator)
     {
-        PredictEvaluator = predictEvaluator;
-        if (PredictEvaluator is not null)
+        _predictEvaluator = predictEvaluator;
+        if (_predictEvaluator is not null)
         {
-            PredictEvaluator.Name = IfKeywordName;
+            _predictEvaluator.Name = IfKeywordName;
         }
 
-        PositiveValidator = positiveValidator ?? BooleanJsonSchema.True;
-        PositiveValidator.Name = ThenKeywordName;
+        _positiveValidator = positiveValidator ?? BooleanJsonSchema.True;
+        _positiveValidator.Name = ThenKeywordName;
 
-        NegativeValidator = negativeValidator ?? BooleanJsonSchema.True;
-        NegativeValidator.Name = ElseKeywordName;
+        _negativeValidator = negativeValidator ?? BooleanJsonSchema.True;
+        _negativeValidator.Name = ElseKeywordName;
     }
 
     public ValidationResult Validate(JsonInstanceElement instance, JsonSchemaOptions options)
@@ -94,5 +98,23 @@ internal class ConditionalValidator : ISchemaContainerValidationNode
     public JsonSchema GetSchema()
     {
         throw new InvalidOperationException();
+    }
+
+    public void RemoveIdFromAllChildrenSchemaElements()
+    {
+        if (_predictEvaluator is BodyJsonSchema predictEvaluatorSchema)
+        {
+            BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(predictEvaluatorSchema, newSchema => _predictEvaluator = newSchema);
+        }
+
+        if (_positiveValidator is BodyJsonSchema positiveValidatorSchema)
+        {
+            BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(positiveValidatorSchema, newSchema => _positiveValidator = newSchema);
+        }
+
+        if (_negativeValidator is BodyJsonSchema negativeValidatorSchema)
+        {
+            BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(negativeValidatorSchema, newSchema => _negativeValidator = newSchema);
+        }
     }
 }

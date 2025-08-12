@@ -12,7 +12,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("anyOf")]
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<AnyOfKeyword>))]
-internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContainerElement
+internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
 {
     private readonly JsonSchema[] _subSchemas = null!;
 
@@ -117,6 +117,18 @@ internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
     public JsonSchema GetSchema()
     {
         throw new InvalidOperationException();
+    }
+
+    public void RemoveIdFromAllChildrenSchemaElements()
+    {
+        for (int i = 0; i < _subSchemas.Length; i++)
+        {
+            if (_subSchemas[i] is BodyJsonSchema bodyJsonSchema)
+            {
+                int localIdx = i;
+                BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _subSchemas[localIdx] = newSchema);
+            }
+        }
     }
 
     public static string ErrorMessage() => "All sub-schemas not validated instance";

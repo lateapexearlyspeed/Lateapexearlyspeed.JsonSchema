@@ -7,7 +7,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
-internal class BodyJsonSchema : JsonSchema
+internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 {
     private readonly ISchemaContainerValidationNode[] _schemaContainerValidators;
     private readonly IReadOnlyList<KeywordBase> _keywords;
@@ -19,7 +19,7 @@ internal class BodyJsonSchema : JsonSchema
     /// <remarks>
     /// Note: Types of nodes inside this tree are: <see cref="BodyJsonSchema"/>, <see cref="JsonSchemaResource"/>, <see cref="BooleanJsonSchema"/> and <see cref="JsonArrayPotentialSchemaContainerElement"/>
     /// </remarks>
-    private readonly IReadOnlyDictionary<string, ISchemaContainerElement>? _potentialSchemaContainerElements;
+    private readonly Dictionary<string, ISchemaContainerElement>? _potentialSchemaContainerElements;
 
     // {
     //     "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -86,7 +86,10 @@ internal class BodyJsonSchema : JsonSchema
         Anchor = anchor;
         DynamicAnchor = dynamicAnchor;
 
-        _potentialSchemaContainerElements = potentialSchemaContainerElements;
+        if (potentialSchemaContainerElements is not null)
+        {
+            _potentialSchemaContainerElements = new Dictionary<string, ISchemaContainerElement>(potentialSchemaContainerElements);
+        }
     }
 
     /// <summary>
@@ -288,5 +291,125 @@ internal class BodyJsonSchema : JsonSchema
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id)
     {
         return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, _potentialSchemaContainerElements, id, DefsKeyword);
+    }
+
+    /// <summary>
+    /// Remove all ids in <see cref="JsonSchemaResource"/> (replace <see cref="JsonSchemaResource"/> with <see cref="BodyJsonSchema"/>) from <see cref="_potentialSchemaContainerElements"/> trees of current node and all (both valid and invalid keywords) children nodes, recursively.
+    /// </summary>
+    public void RemoveIdFromAllInvalidKeywordPropertiesRecursively()
+    {
+        IEnumerable<ISchemaContainerElement> schemaElements = Enumerable.Empty<ISchemaContainerElement>();
+
+        foreach (KeywordBase keyword in _keywords)
+        {
+            if (keyword is ISchemaContainerElement schemaContainerElement)
+            {
+                schemaElements = schemaElements.Append(schemaContainerElement);
+            }
+        }
+
+        schemaElements = schemaElements.Concat(_schemaContainerValidators);
+        if (DefsKeyword is not null)
+        {
+            schemaElements = schemaElements.Append(DefsKeyword);
+        }
+
+        foreach (ISchemaContainerElement schemaElement in schemaElements)
+        {
+            RemoveIdFromAllInvalidKeywordPropertiesRecursivelyInternal(schemaElement);
+        }
+
+        RemoveIdFromAllChildrenElementsOfPotentialSchemaElementTree();
+    }
+
+    private static void RemoveIdFromAllInvalidKeywordPropertiesRecursivelyInternal(ISchemaContainerElement schemaElement)
+    {
+        if (schemaElement.IsSchemaType)
+        {
+            JsonSchema jsonSchema = schemaElement.GetSchema();
+
+            if (jsonSchema is BodyJsonSchema bodyJsonSchema)
+            {
+                bodyJsonSchema.RemoveIdFromAllInvalidKeywordPropertiesRecursively();
+            }
+
+            return;
+        }
+
+        foreach (ISchemaContainerElement schemaContainerElement in schemaElement.EnumerateElements())
+        {
+            RemoveIdFromAllInvalidKeywordPropertiesRecursivelyInternal(schemaContainerElement);
+        }
+    }
+
+    /// <summary>
+    /// Remove all ids in <see cref="JsonSchemaResource"/> (replace <see cref="JsonSchemaResource"/> with <see cref="BodyJsonSchema"/>) from <see cref="_potentialSchemaContainerElements"/> trees of current node recursively, but not including valid keywords trees on current node.
+    /// </summary>
+    private void RemoveIdFromAllChildrenElementsOfPotentialSchemaElementTree()
+    {
+        if (_potentialSchemaContainerElements is null)
+        {
+            return;
+        }
+
+        foreach ((string propertyName, ISchemaContainerElement schemaElement) in _potentialSchemaContainerElements)
+        {
+            if (schemaElement is IJsonSchemaResourceNodesCleanable jsonSchemaResourceNodesCleanable)
+            {
+                jsonSchemaResourceNodesCleanable.RemoveIdFromAllChildrenSchemaElements();
+
+                if (schemaElement is JsonSchemaResource jsonSchemaResource)
+                {
+                    BodyJsonSchema newSchema = jsonSchemaResource.TransformToBodyJsonSchema();
+                    _potentialSchemaContainerElements[propertyName] = newSchema;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Remove all id for all children nodes in <paramref name="rootNode"/> tree.
+    /// Also remove id of current <paramref name="rootNode"/> itself (which means it will be transformed to <see cref="BodyJsonSchema"/> if it currently is <see cref="JsonSchemaResource"/>)
+    /// </summary>
+    /// <param name="rootNode"></param>
+    /// <param name="saveNewSchema">If <paramref name="rootNode"/> is <see cref="JsonSchemaResource"/>, transform happens and <paramref name="saveNewSchema"/> is called.</param>
+    internal static void RemoveIdForBodyJsonSchemaTree(BodyJsonSchema rootNode, Action<BodyJsonSchema> saveNewSchema)
+    {
+        BodyJsonSchema bodyJsonSchema = rootNode;
+
+        if (rootNode is JsonSchemaResource jsonSchemaResource)
+        {
+            bodyJsonSchema = jsonSchemaResource.TransformToBodyJsonSchema();
+
+            saveNewSchema(bodyJsonSchema);
+        }
+
+        bodyJsonSchema.RemoveIdFromAllChildrenSchemaElements();
+    }
+
+    public void RemoveIdFromAllChildrenSchemaElements()
+    {
+        foreach (KeywordBase keyword in _keywords)
+        {
+            if (keyword is IJsonSchemaResourceNodesCleanable resourceIdCleanable)
+            {
+                resourceIdCleanable.RemoveIdFromAllChildrenSchemaElements();
+            }
+        }
+
+        foreach (ISchemaContainerValidationNode schemaContainerValidationNode in _schemaContainerValidators)
+        {
+            if (schemaContainerValidationNode is IJsonSchemaResourceNodesCleanable resourceIdCleanable)
+            {
+                resourceIdCleanable.RemoveIdFromAllChildrenSchemaElements();
+            }
+        }
+
+        if (DefsKeyword is not null)
+        {
+            DefsKeyword.RemoveIdFromAllChildrenSchemaElements();
+        }
+
+        RemoveIdFromAllChildrenElementsOfPotentialSchemaElementTree();
     }
 }

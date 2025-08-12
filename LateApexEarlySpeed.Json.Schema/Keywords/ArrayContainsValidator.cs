@@ -8,20 +8,23 @@ using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-internal class ArrayContainsValidator : ISchemaContainerValidationNode
+internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSchemaResourceNodesCleanable
 {
     public const string ContainsKeywordName = "contains";
     public const string MaxContainsKeywordName = "maxContains";
     public const string MinContainsKeywordName = "minContains";
+    
+    private JsonSchema _containsSchema;
 
-    public JsonSchema ContainsSchema { get; }
+    public JsonSchema ContainsSchema => _containsSchema;
+
     public uint? MinContains { get; }
     public uint? MaxContains { get; }
 
     public ArrayContainsValidator(JsonSchema containsSchema, uint? minContains, uint? maxContains)
     {
         containsSchema.Name = ContainsKeywordName;
-        ContainsSchema = containsSchema;
+        _containsSchema = containsSchema;
 
         MinContains = minContains;
         MaxContains = maxContains;
@@ -297,5 +300,13 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode
     public JsonSchema GetSchema()
     {
         throw new InvalidOperationException();
+    }
+
+    public void RemoveIdFromAllChildrenSchemaElements()
+    {
+        if (_containsSchema is BodyJsonSchema bodyJsonSchema)
+        {
+            BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _containsSchema = newSchema);
+        }
     }
 }

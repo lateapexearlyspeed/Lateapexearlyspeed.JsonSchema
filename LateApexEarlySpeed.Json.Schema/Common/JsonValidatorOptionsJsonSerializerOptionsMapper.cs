@@ -16,28 +16,17 @@ internal static class JsonValidatorOptionsJsonSerializerOptionsMapper
 
     private static readonly JsonSerializerOptions PropertyNameCaseInsensitiveSerializerOptions;
 
-    private static readonly JsonValidatorOptions PropertyNameCaseInsensitiveValidatorOptions;
-
     static JsonValidatorOptionsJsonSerializerOptionsMapper()
     {
         // Default MaxDepth value is 0 (which represents 64), so here uses 65 to represent default validator option and 66 to represent enabling PropertyNameCaseInsensitive validation. It is a workaround and not graceful, I know..
         DefaultSerializerOptions = new JsonSerializerOptions { MaxDepth = 65 };
         PropertyNameCaseInsensitiveSerializerOptions = new JsonSerializerOptions { MaxDepth = 66 };
-
-        PropertyNameCaseInsensitiveValidatorOptions = new JsonValidatorOptions { PropertyNameCaseInsensitive = true };
     }
 
-    public static JsonSerializerOptions ToJsonSerializerOptions(JsonValidatorOptions jsonValidatorOptions)
+    public static JsonSerializerOptions ToJsonSerializerOptions(bool propertyNameCaseInsensitive)
     {
-        return jsonValidatorOptions.Equals(JsonValidatorOptions.Default)
-            ? DefaultSerializerOptions
-            : PropertyNameCaseInsensitiveSerializerOptions;
+        return propertyNameCaseInsensitive ? PropertyNameCaseInsensitiveSerializerOptions : DefaultSerializerOptions;
     }
 
-    public static JsonValidatorOptions ToJsonValidatorOptions(JsonSerializerOptions jsonSerializerOptions)
-    {
-        return jsonSerializerOptions.MaxDepth == 65
-            ? JsonValidatorOptions.Default
-            : PropertyNameCaseInsensitiveValidatorOptions;
-    }
+    public static bool IsPropertyNameCaseInsensitive(JsonSerializerOptions jsonSerializerOptions) => jsonSerializerOptions.MaxDepth != 65;
 }

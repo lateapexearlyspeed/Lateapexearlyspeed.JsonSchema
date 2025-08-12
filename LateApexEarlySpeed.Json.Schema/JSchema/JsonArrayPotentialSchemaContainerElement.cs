@@ -5,19 +5,19 @@ using LateApexEarlySpeed.Json.Schema.JSchema.JsonConverters;
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
 [JsonConverter(typeof(JsonArrayPotentialSchemaContainerElementJsonConverter))]
-internal class JsonArrayPotentialSchemaContainerElement : ISchemaContainerElement
+internal class JsonArrayPotentialSchemaContainerElement : ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
 {
-    private readonly IReadOnlyList<ISchemaContainerElement> _potentialSchemaElements;
+    private readonly ISchemaContainerElement[] _potentialSchemaElements;
 
-    public JsonArrayPotentialSchemaContainerElement(IReadOnlyList<ISchemaContainerElement> potentialSchemaElements)
+    public JsonArrayPotentialSchemaContainerElement(IEnumerable<ISchemaContainerElement> potentialSchemaElements)
     {
-        _potentialSchemaElements = potentialSchemaElements;
+        _potentialSchemaElements = potentialSchemaElements.ToArray();
     }
 
     public ISchemaContainerElement? GetSubElement(string name)
     {
-        return uint.TryParse(name, out uint idx) && idx < _potentialSchemaElements.Count
-            ? _potentialSchemaElements[(int)idx] 
+        return uint.TryParse(name, out uint idx) && idx < _potentialSchemaElements.Length
+            ? _potentialSchemaElements[idx] 
             : null;
     }
 
@@ -28,10 +28,27 @@ internal class JsonArrayPotentialSchemaContainerElement : ISchemaContainerElemen
 
     public bool IsSchemaType => false;
 
-    public IReadOnlyList<ISchemaContainerElement> PotentialSchemaElements => _potentialSchemaElements;
+    public IEnumerable<ISchemaContainerElement> PotentialSchemaElements => _potentialSchemaElements;
 
     public JsonSchema GetSchema()
     {
         throw new InvalidOperationException();
+    }
+
+    public void RemoveIdFromAllChildrenSchemaElements()
+    {
+        for (int i = 0; i < _potentialSchemaElements.Length; i++)
+        {
+            if (_potentialSchemaElements[i] is IJsonSchemaResourceNodesCleanable jsonSchemaResourceNodesCleanable)
+            {
+                jsonSchemaResourceNodesCleanable.RemoveIdFromAllChildrenSchemaElements();
+
+                if (_potentialSchemaElements[i] is JsonSchemaResource jsonSchemaResource)
+                {
+                    BodyJsonSchema newSchema = jsonSchemaResource.TransformToBodyJsonSchema();
+                    _potentialSchemaElements[i] = newSchema;
+                }
+            }
+        }
     }
 }

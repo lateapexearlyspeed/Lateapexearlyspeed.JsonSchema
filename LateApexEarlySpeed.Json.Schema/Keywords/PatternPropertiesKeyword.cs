@@ -11,14 +11,16 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("patternProperties")]
 [JsonConverter(typeof(PatternPropertiesKeywordJsonConverter))]
-internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
+internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
 {
+    private readonly Dictionary<string, JsonSchema> _patternSchemas;
+
     public PatternPropertiesKeyword(Dictionary<string, JsonSchema> patternSchemas)
     {
-        PatternSchemas = new Dictionary<string, JsonSchema>(patternSchemas);
+        _patternSchemas = new Dictionary<string, JsonSchema>(patternSchemas);
     }
 
-    public IReadOnlyDictionary<string, JsonSchema> PatternSchemas { get; }
+    public IReadOnlyDictionary<string, JsonSchema> PatternSchemas => _patternSchemas;
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
@@ -100,5 +102,16 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement
     public bool ContainsMatchedPattern(string propertyName, TimeSpan matchTimeout)
     {
         return PatternSchemas.Any(regexAndSchema => RegexMatcher.IsMatch(regexAndSchema.Key, propertyName, matchTimeout));
+    }
+
+    public void RemoveIdFromAllChildrenSchemaElements()
+    {
+        foreach ((string pattern, JsonSchema schema) in _patternSchemas)
+        {
+            if (schema is BodyJsonSchema bodyJsonSchema)
+            {
+                BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _patternSchemas[pattern] = newSchema);
+            }
+        }
     }
 }

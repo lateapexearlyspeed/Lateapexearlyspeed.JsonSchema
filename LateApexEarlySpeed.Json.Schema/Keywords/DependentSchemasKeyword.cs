@@ -11,11 +11,13 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("dependentSchemas")]
 [JsonConverter(typeof(DependentSchemasKeywordJsonConverter))]
-internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement
+internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
 {
+    private readonly Dictionary<string, JsonSchema> _dependentSchemas;
+
     public DependentSchemasKeyword(IDictionary<string, JsonSchema> dependentSchemas, bool propertyNameIgnoreCase)
     {
-        DependentSchemas = new Dictionary<string, JsonSchema>(dependentSchemas, propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
+        _dependentSchemas = new Dictionary<string, JsonSchema>(dependentSchemas, propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
 
         foreach (var (propertyName, schema) in DependentSchemas)
         {
@@ -23,7 +25,7 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement
         }
     }
 
-    public IReadOnlyDictionary<string, JsonSchema> DependentSchemas { get; }
+    public IReadOnlyDictionary<string, JsonSchema> DependentSchemas => _dependentSchemas;
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
@@ -91,5 +93,16 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement
     public JsonSchema GetSchema()
     {
         throw new InvalidOperationException();
+    }
+
+    public void RemoveIdFromAllChildrenSchemaElements()
+    {
+        foreach ((string name, JsonSchema schema) in _dependentSchemas)
+        {
+            if (schema is BodyJsonSchema bodyJsonSchema)
+            {
+                BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _dependentSchemas[name] = newSchema);
+            }
+        }
     }
 }

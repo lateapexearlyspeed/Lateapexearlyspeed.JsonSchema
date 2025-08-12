@@ -10,6 +10,11 @@ public class JsonValidatorOptions
     /// </returns>
     public bool PropertyNameCaseInsensitive { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value that determines whether removing json schema resource id from unknown keywords. The default value is false.
+    /// </summary>
+    public bool IgnoreResourceIdInUnknownKeyword { set; get; }
+
     internal static JsonValidatorOptions Default { get; } = new();
 
     internal bool Equals(JsonValidatorOptions other)
@@ -19,6 +24,6 @@ public class JsonValidatorOptions
             return true;
         }
 
-        return PropertyNameCaseInsensitive == other.PropertyNameCaseInsensitive;
+        return PropertyNameCaseInsensitive == other.PropertyNameCaseInsensitive && IgnoreResourceIdInUnknownKeyword == other.IgnoreResourceIdInUnknownKeyword;
     }
 }

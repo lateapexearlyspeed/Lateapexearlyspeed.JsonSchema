@@ -103,4 +103,9 @@ internal class JsonSchemaResource : BodyJsonSchema
 
         return validationResult;
     }
+
+    public BodyJsonSchema TransformToBodyJsonSchema()
+    {
+        return new BodyJsonSchema(Keywords, SchemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, DefsKeyword, PotentialSchemaContainerElements);
+    }
 }
