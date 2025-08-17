@@ -12,9 +12,15 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("additionalProperties")]
 [JsonConverter(typeof(SingleSchemaJsonConverter<AdditionalPropertiesKeyword>))]
-internal class AdditionalPropertiesKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSchema
+internal class AdditionalPropertiesKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
 {
-    public JsonSchema Schema { get; init; } = null!;
+    private JsonSchema _schema = null!;
+
+    public JsonSchema Schema
+    {
+        get => _schema;
+        init => _schema = value;
+    }
 
     public PropertiesKeyword? PropertiesKeyword { get; set; }
 
@@ -83,12 +89,20 @@ internal class AdditionalPropertiesKeyword : KeywordBase, ISchemaContainerElemen
 
     public ISchemaContainerElement? GetSubElement(string name)
     {
-        return Schema.GetSubElement(name);
+        return _schema.GetSubElement(name);
     }
 
     public IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
-        yield return Schema;
+        yield return _schema;
+    }
+
+    public void RemoveIdFromAllChildrenSchemaElements()
+    {
+        if (_schema is BodyJsonSchema bodyJsonSchema)
+        {
+            BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _schema = newSchema);
+        }
     }
 
     public bool IsSchemaType => true;
@@ -96,6 +110,6 @@ internal class AdditionalPropertiesKeyword : KeywordBase, ISchemaContainerElemen
 
     public JsonSchema GetSchema()
     {
-        return Schema;
+        return _schema;
     }
 }

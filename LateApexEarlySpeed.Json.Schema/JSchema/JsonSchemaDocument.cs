@@ -8,12 +8,17 @@ internal static class JsonSchemaDocument
 {
     public static IJsonSchemaDocument CreateDocAndUpdateGlobalResourceRegistry(ReadOnlySpan<char> schema, SchemaResourceRegistry globalSchemaResourceRegistry, JsonValidatorOptions options)
     {
-        JsonSerializerOptions jsonSerializerOptions = JsonValidatorOptionsJsonSerializerOptionsMapper.ToJsonSerializerOptions(options);
+        JsonSerializerOptions jsonSerializerOptions = JsonValidatorOptionsJsonSerializerOptionsMapper.ToJsonSerializerOptions(options.PropertyNameCaseInsensitive);
 
         IJsonSchemaDocument doc = JsonSerializer.Deserialize<IJsonSchemaDocument>(schema, jsonSerializerOptions)!;
 
         if (doc is BodyJsonSchemaDocument bodyDoc)
         {
+            if (options.IgnoreResourceIdInUnknownKeyword)
+            {
+                bodyDoc.RemoveIdFromAllInvalidKeywordPropertiesRecursively();
+            }
+
             bodyDoc.MakeAllIdentifierAndReferenceBeFullUri();
             globalSchemaResourceRegistry.AddSchemaResourcesFromRegistry(bodyDoc.LocalSchemaResourceRegistry);
 

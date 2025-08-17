@@ -225,7 +225,7 @@ public class JsonSchemaBuilder
             keywordCollection.ArrayContainsValidator is null
                 ? Enumerable.Empty<ISchemaContainerValidationNode>()
                 : new ISchemaContainerValidationNode[] { keywordCollection.ArrayContainsValidator },
-            null, null, null, null, null);
+            null, null, null, null, null, null);
     }
 
     public JsonValidator BuildValidator()

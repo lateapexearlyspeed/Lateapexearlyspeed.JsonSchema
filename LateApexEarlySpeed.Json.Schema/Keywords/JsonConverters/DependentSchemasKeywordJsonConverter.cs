@@ -15,7 +15,7 @@ internal class DependentSchemasKeywordJsonConverter : JsonConverter<DependentSch
             throw ThrowHelper.CreateKeywordHasInvalidJsonValueKindJsonException<DependentSchemasKeyword>(JsonValueKind.Object);
         }
 
-        return new DependentSchemasKeyword(dependentSchemas, JsonValidatorOptionsJsonSerializerOptionsMapper.ToJsonValidatorOptions(options).PropertyNameCaseInsensitive);
+        return new DependentSchemasKeyword(dependentSchemas, JsonValidatorOptionsJsonSerializerOptionsMapper.IsPropertyNameCaseInsensitive(options));
     }
 
     public override void Write(Utf8JsonWriter writer, DependentSchemasKeyword value, JsonSerializerOptions options)

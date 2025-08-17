@@ -13,7 +13,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("prefixItems")]
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<PrefixItemsKeyword>))]
-internal class PrefixItemsKeyword : KeywordBase, ISchemaContainerElement, ISubSchemaCollection
+internal class PrefixItemsKeyword : KeywordBase, ISchemaContainerElement, ISubSchemaCollection, IJsonSchemaResourceNodesCleanable
 {
     private readonly JsonSchema[] _subSchemas = null!;
 
@@ -116,5 +116,17 @@ internal class PrefixItemsKeyword : KeywordBase, ISchemaContainerElement, ISubSc
     public JsonSchema GetSchema()
     {
         throw new InvalidOperationException();
+    }
+
+    public void RemoveIdFromAllChildrenSchemaElements()
+    {
+        for (int i = 0; i < _subSchemas.Length; i++)
+        {
+            if (_subSchemas[i] is BodyJsonSchema bodyJsonSchema)
+            {
+                int localIdx = i;
+                BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _subSchemas[localIdx] = newSchema);
+            }
+        }
     }
 }

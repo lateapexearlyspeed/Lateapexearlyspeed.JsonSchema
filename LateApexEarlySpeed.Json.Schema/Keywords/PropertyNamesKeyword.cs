@@ -12,9 +12,15 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("propertyNames")]
 [JsonConverter(typeof(SingleSchemaJsonConverter<PropertyNamesKeyword>))]
-internal class PropertyNamesKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSchema
+internal class PropertyNamesKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
 {
-    public JsonSchema Schema { get; init; } = null!;
+    private JsonSchema _schema = null!;
+
+    public JsonSchema Schema
+    {
+        get => _schema;
+        init => _schema = value;
+    }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
@@ -90,5 +96,13 @@ internal class PropertyNamesKeyword : KeywordBase, ISchemaContainerElement, ISin
     public JsonSchema GetSchema()
     {
         return Schema;
+    }
+
+    public void RemoveIdFromAllChildrenSchemaElements()
+    {
+        if (_schema is BodyJsonSchema bodyJsonSchema)
+        {
+            BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _schema = newSchema);
+        }
     }
 }

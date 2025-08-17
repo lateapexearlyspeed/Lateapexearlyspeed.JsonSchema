@@ -4,7 +4,6 @@ using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace LateApexEarlySpeed.Json.Schema;
 
@@ -13,20 +12,11 @@ namespace LateApexEarlySpeed.Json.Schema;
 /// </summary>
 public class JsonValidator
 {
-    private const string HttpClientName = "lateapexearlyspeed";
-    private static readonly IHttpClientFactory HttpClientFactory;
+    private static readonly HttpJsonDocumentClient HttpJsonDocumentClient = new();
 
     private readonly IJsonSchemaDocument _mainSchemaDoc;
     private readonly SchemaResourceRegistry _globalSchemaResourceRegistry = new();
     private readonly JsonValidatorOptions _jsonValidatorOptions;
-
-    static JsonValidator()
-    {
-        var services = new ServiceCollection();
-        services.AddHttpClient(HttpClientName);
-        ServiceProvider sp = services.BuildServiceProvider();
-        HttpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-    }
 
     /// <summary>
     /// Initializes a new instance of <see cref="JsonValidator"/> class for specified <paramref name="jsonSchema"/> and with specified <paramref name="options"/>
@@ -87,12 +77,7 @@ public class JsonValidator
     /// <returns></returns>
     public async Task AddHttpDocumentAsync(Uri remoteUri)
     {
-        HttpClient httpClient = HttpClientFactory.CreateClient(HttpClientName);
-        HttpResponseMessage response = await httpClient.GetAsync(remoteUri);
-        
-        response.EnsureSuccessStatusCode();
-
-        string jsonSchemaText = await response.Content.ReadAsStringAsync();
+        string jsonSchemaText = await HttpJsonDocumentClient.GetDocumentAsync(remoteUri);
         AddExternalDocument(jsonSchemaText);
     }
 
@@ -146,5 +131,15 @@ public class JsonValidator
     {
         get => RegexMatcher.GlobalRegexProvider.CacheSize;
         set => RegexMatcher.GlobalRegexProvider.CacheSize = value;
+    }
+
+    /// <summary>
+    /// Gets or sets an absolute expiration time for remote http json schema document cache, relative to cache creation time.
+    /// Default value is <see cref="LateApexEarlySpeed.Json.Schema.Common.HttpJsonDocumentClient.DefaultCacheExpirationHours"/>.
+    /// </summary>
+    public static TimeSpan HttpDocumentCacheAbsoluteExpiration
+    {
+        get => HttpJsonDocumentClient.CacheAbsoluteExpirationTime;
+        set => HttpJsonDocumentClient.CacheAbsoluteExpirationTime = value;
     }
 }
