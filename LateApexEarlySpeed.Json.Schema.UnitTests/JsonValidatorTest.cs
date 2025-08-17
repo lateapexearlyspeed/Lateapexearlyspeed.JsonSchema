@@ -486,6 +486,69 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             }
         }
 
+        /// <summary>
+        /// This test case is from issue: https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/issues/71
+        /// </summary>
+        [Fact]
+        public void Validate_ReferenceInUnknownKeyword()
+        {
+            string schema = """
+                {
+                  "$schema":"https://json-schema.org/draft/2020-12/schema",
+                  "title":"MyCrazyConfig",
+                  "type":"object",
+                  "properties":{
+                    "IsEnabled":{
+                      "type":"boolean"
+                    },
+                    "HelloWorld":{
+                      "type":"string"
+                    },
+                    "Blub":{
+                      "$ref":"#/definitions/MyCrazyEnum"
+                    }
+                  },
+                  "required":[
+                    "IsEnabled",
+                    "HelloWorld",
+                    "Blub"
+                  ],
+                  "additionalProperties":false,
+                  "definitions":{
+                    "MyCrazyEnum":{
+                      "type":"string",
+                      "enum":[
+                        "Hi",
+                        "Hey",
+                        "Ho"
+                      ]
+                    }
+                  }
+                }
+                """;
+
+            string instance = """
+                {
+                  "IsEnabled": true,
+                  "HelloWorld": "foo",
+                  "Blub": "hey"
+                }
+                """;
+
+            ValidationResult validationResult = new JsonValidator(schema).Validate(instance);
+
+            Assert.False(validationResult.IsValid);
+
+            ValidationError validationError = Assert.Single(validationResult.ValidationErrors);
+            Assert.Equal("enum", validationError.Keyword);
+            Assert.Equal(EnumKeyword.ErrorMessage("hey"), validationError.ErrorMessage);
+            Assert.Equal(ResultCode.NotFoundInAllowedList, validationError.ResultCode);
+            Assert.Equal(ImmutableJsonPointer.Create("/Blub"), validationError.InstanceLocation);
+            Assert.Equal(ImmutableJsonPointer.Create("/properties/Blub/$ref/enum"), validationError.RelativeKeywordLocation);
+            Assert.Equal(new Uri("http://lateapexearlyspeed/#/definitions/MyCrazyEnum"), validationError.SubSchemaRefFullUri);
+            Assert.Equal(new Uri("http://lateapexearlyspeed"), validationError.SchemaResourceBaseUri);
+        }
+
         private class TestCaseParameters
         {
             public bool IgnoreResourceIdFromUnknownKeyword { get; init; }
