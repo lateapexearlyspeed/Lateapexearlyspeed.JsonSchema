@@ -9,31 +9,60 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 {
     private readonly ImmutableJsonPointer _instanceLocation;
 
+    private readonly CacheHolder _cacheHolder;
+
     internal JsonElement InternalJsonElement { get; }
 
     public JsonInstanceElement(JsonElement jsonElement, ImmutableJsonPointer instanceLocation)
     {
         InternalJsonElement = jsonElement;
         _instanceLocation = instanceLocation;
+        _cacheHolder = new CacheHolder();
     }
 
     public IEnumerable<JsonInstanceProperty> EnumerateObject()
     {
+        return _cacheHolder.Properties ?? EnumerateObjectAndCacheResult();
+    }
+
+    private IEnumerable<JsonInstanceProperty> EnumerateObjectAndCacheResult()
+    {
+        var properties = new List<JsonInstanceProperty>();
+
         JsonElement.ObjectEnumerator objectEnumerator = InternalJsonElement.EnumerateObject();
         foreach (JsonProperty jsonProperty in objectEnumerator)
         {
-            yield return new JsonInstanceProperty(jsonProperty, _instanceLocation.Add(jsonProperty.Name));
+            var jsonInstanceProperty = new JsonInstanceProperty(jsonProperty, _instanceLocation);
+
+            yield return jsonInstanceProperty;
+
+            properties.Add(jsonInstanceProperty);
         }
+
+        _cacheHolder.Properties = properties;
     }
 
     public IEnumerable<JsonInstanceElement> EnumerateArray()
     {
+        return _cacheHolder.ArrayItems ?? EnumerateArrayAndCacheResult();
+    }
+
+    private IEnumerable<JsonInstanceElement> EnumerateArrayAndCacheResult()
+    {
+        var arrayItems = new List<JsonInstanceElement>();
+
         int idx = 0;
 
         foreach (JsonElement item in InternalJsonElement.EnumerateArray())
         {
-            yield return new JsonInstanceElement(item, _instanceLocation.Add(idx++));
+            var jsonInstanceElement = new JsonInstanceElement(item, _instanceLocation.Add(idx++));
+
+            yield return jsonInstanceElement;
+
+            arrayItems.Add(jsonInstanceElement);
         }
+
+        _cacheHolder.ArrayItems = arrayItems;
     }
 
     public ImmutableJsonPointer Location => _instanceLocation;
@@ -435,5 +464,11 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
     public override string ToString()
     {
         return InternalJsonElement.ToString();
+    }
+
+    private class CacheHolder
+    {
+        public List<JsonInstanceProperty>? Properties { get; set; }
+        public List<JsonInstanceElement>? ArrayItems { get; set; }
     }
 }
