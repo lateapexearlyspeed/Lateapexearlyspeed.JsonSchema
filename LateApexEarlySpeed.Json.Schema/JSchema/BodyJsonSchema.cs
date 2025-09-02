@@ -164,21 +164,34 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             _options = options;
         }
 
+        /// <remarks>
+        /// Previous implementation of this method was by using linq Concat() and linq Append() to chain all validation nodes then iterate each item to call its Validation() method.
+        /// Although it was more readable, the profiler showed linq Concat() taking high cpu time percentage during validation of <see cref="BodyJsonSchema"/> which is in frequent call path.
+        /// That is the reason to change to implement it by validating validation-node-collections one by one.
+        /// </remarks>
         public IEnumerable<ValidationResult> EnumerateValidationResults()
         {
-            IEnumerable<IValidationNode> validationNodes = _bodyJsonSchema._keywords.Concat<IValidationNode>(_bodyJsonSchema._schemaContainerValidators);
+            foreach (KeywordBase keyword in _bodyJsonSchema._keywords)
+            {
+                yield return ValidateAndSetFastReturnResult(keyword);
+            }
+
+            foreach (ISchemaContainerValidationNode schemaContainerValidationNode in _bodyJsonSchema._schemaContainerValidators)
+            {
+                yield return ValidateAndSetFastReturnResult(schemaContainerValidationNode);
+            }
 
             if (_bodyJsonSchema.SchemaReference is not null)
             {
-                validationNodes = validationNodes.Append(_bodyJsonSchema.SchemaReference);
+                yield return ValidateAndSetFastReturnResult(_bodyJsonSchema.SchemaReference);
             }
 
             if (_bodyJsonSchema.SchemaDynamicReference is not null)
             {
-                validationNodes = validationNodes.Append(_bodyJsonSchema.SchemaDynamicReference);
+                yield return ValidateAndSetFastReturnResult(_bodyJsonSchema.SchemaDynamicReference);
             }
 
-            foreach (IValidationNode validationNode in validationNodes)
+            ValidationResult ValidateAndSetFastReturnResult(IValidationNode validationNode)
             {
                 ValidationResult result = validationNode.Validate(_instance, _options);
                 if (!result.IsValid)
@@ -186,7 +199,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
                     _fastReturnResult = result;
                 }
 
-                yield return result;
+                return result;
             }
         }
 
