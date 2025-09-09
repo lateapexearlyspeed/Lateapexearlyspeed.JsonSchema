@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -27,13 +28,14 @@ internal class SchemaReferenceKeyword : KeywordBase
         set => FullUriRef = new Uri(value, _rawRefValue);
     }
 
-    public JsonSchema? GetReferencedSchema(JsonSchemaOptions options)
+    public bool TryGetReferencedSchema(JsonSchemaOptions options, [NotNullWhen(true)] out JsonSchema? referencedSchema, [NotNullWhen(true)] out JsonSchemaResource? referencedSchemaResource)
     {
-        JsonSchemaResource? schemaResource = GetReferencedSchemaResource(options);
+        referencedSchemaResource = GetReferencedSchemaResource(options);
 
-        if (schemaResource is null)
+        if (referencedSchemaResource is null)
         {
-            return null;
+            referencedSchema = null;
+            return false;
         }
 
         Debug.Assert(FullUriRef is not null);
@@ -41,24 +43,26 @@ internal class SchemaReferenceKeyword : KeywordBase
         string fragmentWithoutNumberSign = FullUriRef.UnescapedFragmentWithoutNumberSign();
         if (string.IsNullOrEmpty(fragmentWithoutNumberSign))
         {
-            return schemaResource;
+            referencedSchema = referencedSchemaResource;
+            return true;
         }
 
-        JsonSchema? schemaByJsonPointer = schemaResource.FindSubSchemaByJsonPointer(fragmentWithoutNumberSign);
-        if (schemaByJsonPointer is not null)
+        referencedSchema = referencedSchemaResource.FindSubSchemaByJsonPointer(fragmentWithoutNumberSign);
+        if (referencedSchema is not null)
         {
-            return schemaByJsonPointer;
+            return true;
         }
 
-        BodyJsonSchema? schemaByAnchor = schemaResource.FindSubSchemaByAnchor(fragmentWithoutNumberSign);
-        if (schemaByAnchor is not null)
+        referencedSchema = referencedSchemaResource.FindSubSchemaByAnchor(fragmentWithoutNumberSign);
+        if (referencedSchema is not null)
         {
-            return schemaByAnchor;
+            return true;
         }
 
         // 'ref' keyword also checks '$dynamicAnchor',
         // based on test case "A $ref to a $dynamicAnchor in the same schema resource behaves like a normal $ref to an $anchor"
-        return schemaResource.FindSubSchemaByDynamicAnchor(fragmentWithoutNumberSign);
+        referencedSchema = referencedSchemaResource.FindSubSchemaByDynamicAnchor(fragmentWithoutNumberSign);
+        return referencedSchema is not null;
     }
 
     public JsonSchemaResource? GetReferencedSchemaResource(JsonSchemaOptions options)
@@ -80,9 +84,7 @@ internal class SchemaReferenceKeyword : KeywordBase
     {
         Debug.Assert(FullUriRef is not null);
 
-        JsonSchema? referencedSchema = GetReferencedSchema(options);
-
-        if (referencedSchema is null)
+        if (!TryGetReferencedSchema(options, out JsonSchema? referencedSchema, out JsonSchemaResource? referencedSchemaResource))
         {
             throw new InvalidOperationException($"Cannot find schema for {Keyword}: {FullUriRef}");
         }
@@ -92,9 +94,6 @@ internal class SchemaReferenceKeyword : KeywordBase
             throw new InvalidOperationException($"Infinite recursion loop detected. Instance path: {instance.Location}");
         }
 
-        JsonSchemaResource? referencedSchemaResource = GetReferencedSchemaResource(options);
-        
-        Debug.Assert(referencedSchemaResource is not null);
         options.ValidationPathStack.PushSchemaResource(referencedSchemaResource);
         options.ValidationPathStack.PushReferencedSchema(referencedSchemaResource, FullUriRef);
 

@@ -78,13 +78,12 @@ internal class SchemaDynamicReferenceKeyword : KeywordBase
         BodyJsonSchema? innerMostSubSchema = staticReferencedSchemaResource.FindSubSchemaByDynamicAnchor(dynamicAnchor);
         if (innerMostSubSchema is null)
         {
-            // Fall back to apply static reference way
-            JsonSchema? staticReferencedSchema = _staticSchemaReferenceKeyword.GetReferencedSchema(options);
-            
             Debug.Assert(_staticSchemaReferenceKeyword.FullUriRef is not null);
-            return staticReferencedSchema is null
-                ? null
-                : (staticReferencedSchema, _staticSchemaReferenceKeyword.FullUriRef);
+
+            // Fall back to apply static reference way
+            return _staticSchemaReferenceKeyword.TryGetReferencedSchema(options, out JsonSchema? staticReferencedSchema, out _)
+                ? (staticReferencedSchema, _staticSchemaReferenceKeyword.FullUriRef)
+                : null;
         }
 
         foreach (JsonSchemaResource resource in options.ValidationPathStack.SchemaResourceStack.Reverse())
