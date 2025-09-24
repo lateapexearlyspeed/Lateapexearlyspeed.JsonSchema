@@ -8,6 +8,24 @@ namespace Json.Schema.Libraries.Benchmark
     {
         static void Main(string[] args)
         {
+            IJsonSchemaValidation[] jsonSchemaValidations = new IJsonSchemaValidation[]
+            {
+                new LateApexEarlySpeedValidation(),
+                new JsonSchemaDotNetValidation(),
+                new NJsonSchemaValidation()
+            };
+            
+            JsonSchemaValidationRunner jsonSchemaValidationRunner = new JsonSchemaValidationRunner(jsonSchemaValidations);
+            
+            Console.WriteLine("Start to run ...");
+            
+            while (true)
+            {
+                jsonSchemaValidationRunner.ReuseSchema_LateApexEarlySpeed(TestValidationResult.All);
+            }
+            
+
+
             // BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
             var summary = BenchmarkRunner.Run<BenchmarkTests>();
 
