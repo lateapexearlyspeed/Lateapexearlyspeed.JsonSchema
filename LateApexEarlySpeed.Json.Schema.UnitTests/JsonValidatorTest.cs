@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 using Xunit;
 using Xunit.Abstractions;
@@ -482,6 +483,175 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                     }
                     """,
                     false, "/a", "/properties/A/required"
+                };
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(TestDataForConstValidationOnOrderlessArrayComparison))]
+        public void Validate_Const_OrderlessArrayComparison(string jsonSchema, string jsonInstance, bool expectedIsValid, string? expectedErrorMessage, string? expectedInstanceLocation, string? expectedKeywordLocation)
+        {
+            ValidationResult validationResult = new JsonValidator(jsonSchema).Validate(jsonInstance, new JsonSchemaOptions { JsonArrayEqualityComparer = JsonCollectionEqualityComparer.Equivalence });
+
+            Assert.Equal(expectedIsValid, validationResult.IsValid);
+
+            ValidationError? error = validationResult.ValidationErrors.SingleOrDefault();
+
+            Assert.Equal(expectedIsValid ? null : KeywordBase.GetKeywordName<ConstKeyword>(), error?.Keyword);
+            Assert.Equal(expectedErrorMessage, error?.ErrorMessage);
+            Assert.Equal(expectedInstanceLocation, error?.InstanceLocation.ToString());
+            Assert.Equal(expectedKeywordLocation, error?.RelativeKeywordLocation?.ToString());
+        }
+
+        public static IEnumerable<object?[]> TestDataForConstValidationOnOrderlessArrayComparison
+        {
+            get
+            {
+                const string schema = """
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "a": {
+                                            "const": [1, {"p": 2}, ["a", "b", "c"]]
+                                          }
+                                        }
+                                      }
+                                      """;
+
+                yield return new object?[]
+                {
+                    schema,
+                    """
+                    {
+                      "a": [1, {"p": 2}, ["a", "b", "c"]]
+                    }
+                    """,
+                    true, null, null, null
+                };
+
+                yield return new object?[]
+                {
+                    schema,
+                    """
+                    {
+                      "a": [["b", "c", "a"], {"p": 2}, 1]
+                    }
+                    """,
+                    true, null, null, null
+                };
+
+                yield return new object?[]
+                {
+                    schema,
+                    """
+                    {
+                      "a": [1, {"p": 2}, ["a", "b", "c", "d"]]
+                    }
+                    """,
+                    false, "Array length not same, one is 3 but another is 4", "/a/2", "/properties/a/const"
+                };
+
+                yield return new object?[]
+                {
+                    schema,
+                    """
+                    {
+                      "a": [1, {"p": 2}, ["a", "b", "d"]]
+                    }
+                    """,
+                    false, JsonInstanceElement.StringNotSameMessageTemplate("c", "d"), "/a/2/2", "/properties/a/const"
+                };
+
+                yield return new object?[]
+                {
+                    schema,
+                    """
+                    {
+                      "a": [1, {"p": 2}, ["b", "c", "d"]]
+                    }
+                    """,
+                    false, JsonInstanceElement.StringNotSameMessageTemplate("a", "d"), "/a/2/2", "/properties/a/const"
+                };
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(TestDataForUniqueItemsValidationOnOrderlessArrayComparison))]
+        public void Validate_UniqueItems_OrderlessArrayComparison(string jsonSchema, string jsonInstance, bool expectedIsValid)
+        {
+            ValidationResult validationResult = new JsonValidator(jsonSchema).Validate(jsonInstance, new JsonSchemaOptions { JsonArrayEqualityComparer = JsonCollectionEqualityComparer.Equivalence });
+
+            Assert.Equal(expectedIsValid, validationResult.IsValid);
+        }
+
+        public static IEnumerable<object?[]> TestDataForUniqueItemsValidationOnOrderlessArrayComparison
+        {
+            get
+            {
+                const string schema = """
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "a": {
+                                            "uniqueItems": true
+                                          }
+                                        }
+                                      }
+                                      """;
+
+                yield return new object?[]
+                {
+                    schema,
+                    """
+                    {
+                      "a": [1, {"p": 2}, ["a", "b", "c"]]
+                    }
+                    """,
+                    true
+                };
+
+                yield return new object?[]
+                {
+                    schema,
+                    """
+                    {
+                      "a": [["a", "b", "c"], ["a", "b", "c", "d"]]
+                    }
+                    """,
+                    true
+                };
+
+                yield return new object?[]
+                {
+                    schema,
+                    """
+                    {
+                      "a": [["a", "b", "c"], ["a", "a", "a"]]
+                    }
+                    """,
+                    true
+                };
+
+                yield return new object?[]
+                {
+                    schema,
+                    """
+                    {
+                      "a": [["a", "b", "c"], ["b", "c", "d"]]
+                    }
+                    """,
+                    true
+                };
+
+                yield return new object?[]
+                {
+                    schema,
+                    """
+                    {
+                      "a": [["a", "b", "c"], ["b", "c", "a"]]
+                    }
+                    """,
+                    false
                 };
             }
         }
