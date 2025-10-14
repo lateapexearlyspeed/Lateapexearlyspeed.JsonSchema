@@ -237,7 +237,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
         return true;
     }
 
-    public EquivalentResult Equivalent(JsonInstanceElement other)
+    public EquivalentResult Equivalent(JsonInstanceElement other, JsonCollectionEqualityComparer jsonCollectionEqualityComparer)
     {
         if (ValueKind != other.ValueKind)
         {
@@ -264,10 +264,10 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
                 return NumberEquivalent(other);
 
             case JsonValueKind.Array:
-                return SequenceEquivalent(other);
+                return SequenceEquivalent(other, jsonCollectionEqualityComparer);
 
             case JsonValueKind.Object:
-                return ObjectEquivalent(other);
+                return ObjectEquivalent(other, jsonCollectionEqualityComparer);
 
             default:
                 Debug.Fail("Should not go to this default block, because all JsonValueKinds should already be handled.");
@@ -356,7 +356,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
         return $"String content not same, one is '{thisValue}', but another is '{otherValue}'";
     }
 
-    private EquivalentResult ObjectEquivalent(JsonInstanceElement other)
+    private EquivalentResult ObjectEquivalent(JsonInstanceElement other, JsonCollectionEqualityComparer jsonCollectionEqualityComparer)
     {
         Debug.Assert(ValueKind == JsonValueKind.Object);
         Debug.Assert(other.ValueKind == JsonValueKind.Object);
@@ -376,7 +376,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
                 return EquivalentResult.Fail($"Properties not match, one has property:{thisProperty.Name} but another not", _instanceLocation, other._instanceLocation);
             }
 
-            EquivalentResult equivalentResult = thisProperty.Value.Equivalent(otherPropertyValue);
+            EquivalentResult equivalentResult = thisProperty.Value.Equivalent(otherPropertyValue, jsonCollectionEqualityComparer);
             if (!equivalentResult.Result)
             {
                 return equivalentResult;
@@ -386,54 +386,26 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
         return EquivalentResult.Success();
     }
 
-    private EquivalentResult SequenceEquivalent(JsonInstanceElement other)
+    private EquivalentResult SequenceEquivalent(JsonInstanceElement other, JsonCollectionEqualityComparer jsonCollectionEqualityComparer)
     {
-        Debug.Assert(ValueKind == JsonValueKind.Array);
-        Debug.Assert(other.ValueKind == JsonValueKind.Array);
-
-        int thisCount = EnumerateArray().Count();
-        int otherCount = other.EnumerateArray().Count();
-
-        if (thisCount != otherCount)
-        {
-            return EquivalentResult.Fail($"Array length not same, one is {thisCount} but another is {otherCount}", _instanceLocation, other._instanceLocation);
-        }
-
-        using (IEnumerator<JsonInstanceElement> thisEnumerator = EnumerateArray().GetEnumerator())
-        using (IEnumerator<JsonInstanceElement> otherEnumerator = other.EnumerateArray().GetEnumerator())
-        {
-            while (thisEnumerator.MoveNext())
-            {
-                bool otherMoveNext = otherEnumerator.MoveNext();
-                Debug.Assert(otherMoveNext);
-
-                EquivalentResult elementEquivalentResult = thisEnumerator.Current.Equivalent(otherEnumerator.Current);
-
-                if (!elementEquivalentResult.Result)
-                {
-                    return elementEquivalentResult;
-                }
-            }
-        }
-
-        return EquivalentResult.Success();
+        return jsonCollectionEqualityComparer.Equals(this, other);
     }
 
     public bool Equals(JsonInstanceElement other)
     {
-        return Equivalent(other).Result;
+        return Equivalent(other, JsonCollectionEqualityComparer.Equality).Result;
     }
 
     public override bool Equals(object? obj)
     {
         return obj is JsonInstanceElement other && Equals(other);
     }
-
+    
     public static bool operator ==(JsonInstanceElement left, JsonInstanceElement right)
     {
         return left.Equals(right);
     }
-
+    
     public static bool operator !=(JsonInstanceElement left, JsonInstanceElement right)
     {
         return !left.Equals(right);

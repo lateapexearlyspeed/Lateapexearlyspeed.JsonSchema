@@ -31,7 +31,7 @@ internal class UniqueItemsKeyword : KeywordBase
 
             for (int j = i + 1; j < items.Length; j++)
             {
-                if (items[j] == curItem)
+                if (items[j].Equivalent(curItem, options.JsonArrayEqualityComparer).Result)
                 {
                     return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.DuplicatedArrayItems, ErrorMessage(curItem.ToString(), i, j), options.ValidationPathStack, Name, instance.Location));
                 }

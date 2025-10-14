@@ -1,7 +1,4 @@
 ﻿using System.Collections;
-using System.Diagnostics;
-using System.Text.Json;
-using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
@@ -29,6 +26,10 @@ public class JsonSchemaOptions
     /// </summary>
     public OutputFormat OutputFormat { get; set; }
 
+    /// <summary>
+    /// Gets or sets the <see cref="JsonCollectionEqualityComparer"/> implementation to use when compare JSON arrays.
+    /// Default value is <see cref="JsonCollectionEqualityComparer.Equality"/>.
+    /// </summary>
     public JsonCollectionEqualityComparer JsonArrayEqualityComparer { get; set; } = JsonCollectionEqualityComparer.Equality;
 
     /// <summary>
@@ -55,49 +56,6 @@ public class JsonSchemaOptions
     }
 }
 
-internal class OrderedJsonCollectionComparer : JsonCollectionEqualityComparer
-{
-    protected internal override EquivalentResult Equals(JsonInstanceElement jsonArray1, JsonInstanceElement jsonArray2)
-    {
-        Debug.Assert(jsonArray1.ValueKind == JsonValueKind.Array);
-        Debug.Assert(jsonArray2.ValueKind == JsonValueKind.Array);
-
-        int arrayLength1 = jsonArray1.EnumerateArray().Count();
-        int arrayLength2 = jsonArray2.EnumerateArray().Count();
-
-        if (arrayLength1 != arrayLength2)
-        {
-            return EquivalentResult.Fail($"Array length not same, one is {arrayLength1} but another is {arrayLength2}", jsonArray1.Location, jsonArray2.Location);
-        }
-
-        using (IEnumerator<JsonInstanceElement> enumerator1 = jsonArray1.EnumerateArray().GetEnumerator())
-        using (IEnumerator<JsonInstanceElement> enumerator2 = jsonArray2.EnumerateArray().GetEnumerator())
-        {
-            while (enumerator1.MoveNext())
-            {
-                bool hasElement = enumerator2.MoveNext();
-                Debug.Assert(hasElement);
-
-                EquivalentResult equivalentResult = enumerator1.Current.Equivalent(enumerator2.Current);
-
-                if (!equivalentResult.Result)
-                {
-                    return equivalentResult;
-                }
-            }
-        }
-
-        return EquivalentResult.Success();
-    }
-}
-
-public abstract class JsonCollectionEqualityComparer
-{
-    public static JsonCollectionEqualityComparer Equality { get; } = new OrderedJsonCollectionComparer();
-
-    protected internal abstract EquivalentResult Equals(JsonInstanceElement jsonArray1, JsonInstanceElement jsonArray2);
-}
-
 /// <summary>
 /// Type to indicate the format of validation output
 /// </summary>
@@ -105,7 +63,7 @@ public enum OutputFormat
 {
     /// <summary>
     /// Indicates that only first failed validation node found out will be returned.
-    /// This will enable fast-fail pattern (eg. one of the cases is when one failed validation keyword is found, it may skip follow-up keywords validation inside same json schema)
+    /// This will enable fast-fail pattern (e.g. one of the cases is when one failed validation keyword is found, it may skip follow-up keywords validation inside same json schema)
     /// </summary>
     FailFast,
 
