@@ -42,13 +42,16 @@ namespace LateApexEarlySpeed.Xunit.V3.Assertion.Json
         /// </summary>
         /// <param name="expectedJson">Expected json structure</param>
         /// <param name="actualJson">Actual json data</param>
+        /// <param name="options">Options to control the verification behavior</param>
         /// <exception cref="JsonAssertException">If assertion fails, will throw and report error reason and failed json location</exception>
-        public static void Equivalent(string expectedJson, string actualJson)
+        public static void Equivalent(string expectedJson, string actualJson, JsonAssertionOptions? options = null)
         {
+            options ??= new JsonAssertionOptions();
+
             var jsonSchemaBuilder = new JsonSchemaBuilder();
             jsonSchemaBuilder.Equivalent(expectedJson);
             JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
-            ValidationResult validationResult = jsonValidator.Validate(actualJson);
+            ValidationResult validationResult = jsonValidator.Validate(actualJson, new JsonSchemaOptions { JsonArrayEqualityComparer = options.JsonArrayEqualityComparer });
 
             if (!validationResult.IsValid)
             {
@@ -70,6 +73,18 @@ namespace LateApexEarlySpeed.Xunit.V3.Assertion.Json
                     .AppendLine();
             }
         }
+    }
+
+    /// <summary>
+    /// Provides options to be used with <see cref="JsonAssertion"/>.
+    /// </summary>
+    public class JsonAssertionOptions
+    {
+        /// <summary>
+        /// Gets or sets the <see cref="JsonCollectionEqualityComparer"/> implementation to use when compare JSON arrays.
+        /// Default value is <see cref="JsonCollectionEqualityComparer.Equality"/>.
+        /// </summary>
+        public JsonCollectionEqualityComparer JsonArrayEqualityComparer { get; set; } = JsonCollectionEqualityComparer.Equality;
     }
 
     public class JsonAssertException : XunitException
