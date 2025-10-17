@@ -1,3 +1,4 @@
+using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Xunit.Assertion.Json;
 
 namespace LateApexEarlySpeed.Assertion.Json.UnitTests
@@ -100,6 +101,44 @@ namespace LateApexEarlySpeed.Assertion.Json.UnitTests
             });
 
             Assert.Equal("JsonAssertion.Equivalent() Failure: Number not same, one is '2' but another is '3', location (in json pointer format): \"/b\"" + Environment.NewLine, jsonAssertException.Message);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestDataForJsonArrayEqualityComparerOption))]
+        public void Equivalent_AssertArrayWithJsonArrayEqualityComparerOption(string actualJson, JsonCollectionEqualityComparer? jsonCollectionEqualityComparer, bool expectedAssertResult)
+        {
+            if (expectedAssertResult)
+            {
+                RunAssertion();
+            }
+            else
+            {
+                Assert.Throws<JsonAssertException>(RunAssertion);
+            }
+
+            void RunAssertion()
+            {
+                const string expectedJson = "[1, 2]";
+                JsonAssertion.Equivalent(expectedJson, actualJson, jsonCollectionEqualityComparer is null ? null : new JsonAssertionOptions { JsonArrayEqualityComparer = jsonCollectionEqualityComparer });
+            }
+        }
+
+        public static IEnumerable<object?[]> TestDataForJsonArrayEqualityComparerOption
+        {
+            get
+            {
+                yield return new object?[] { "[1, 2]", null, true };
+                yield return new object?[] { "[1, 2]", JsonCollectionEqualityComparer.Equality, true };
+                yield return new object?[] { "[1, 2]", JsonCollectionEqualityComparer.Equivalence, true };
+
+                yield return new object?[] { "[2, 1]", null, false };
+                yield return new object?[] { "[2, 1]", JsonCollectionEqualityComparer.Equality, false };
+                yield return new object?[] { "[2, 1]", JsonCollectionEqualityComparer.Equivalence, true };
+
+                yield return new object?[] { "[1, 2, 3]", null, false };
+                yield return new object?[] { "[1, 2, 3]", JsonCollectionEqualityComparer.Equality, false };
+                yield return new object?[] { "[1, 2, 3]", JsonCollectionEqualityComparer.Equivalence, false };
+            }
         }
     }
 }
