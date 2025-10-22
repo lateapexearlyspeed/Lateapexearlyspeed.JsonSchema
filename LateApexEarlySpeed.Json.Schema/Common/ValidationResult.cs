@@ -204,7 +204,7 @@ public class ValidationError
 
         if (!string.IsNullOrEmpty(Keyword))
         {
-            sb.AppendFormat("keyword: {0},", Keyword);
+            sb.AppendFormat("keyword: {0}", Keyword);
         }
 
         return sb.ToString();
