@@ -1,4 +1,6 @@
-﻿namespace LateApexEarlySpeed.Json.Schema.Common;
+﻿using System.Text;
+
+namespace LateApexEarlySpeed.Json.Schema.Common;
 
 /// <summary>
 /// Type <see cref="ValidationResult"/> is designed as immutable object,
@@ -181,6 +183,32 @@ public class ValidationError
     /// Gets value to indicate failure type
     /// </summary>
     public ResultCode ResultCode { get; init; }
+
+    /// <summary>
+    /// Creates and returns a string representation of the current <see cref="ValidationError"/>.
+    /// </summary>
+    /// <returns>A string representation of the current <see cref="ValidationError"/></returns>
+    public override string ToString()
+    {
+        var sb = new StringBuilder(ErrorMessage);
+        sb.AppendLine();
+
+        sb.AppendFormat("Instance location (in json pointer format): {0}", InstanceLocation);
+        sb.AppendLine();
+
+        if (RelativeKeywordLocation is not null)
+        {
+            sb.AppendFormat("relative keyword location (in json pointer format): {0}", RelativeKeywordLocation);
+            sb.AppendLine();
+        }
+
+        if (!string.IsNullOrEmpty(Keyword))
+        {
+            sb.AppendFormat("keyword: {0},", Keyword);
+        }
+
+        return sb.ToString();
+    }
 }
 
 /// <summary>
