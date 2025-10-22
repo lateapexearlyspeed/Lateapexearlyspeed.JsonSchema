@@ -19,10 +19,26 @@ internal static class JsonSchemaDocument
                 bodyDoc.RemoveIdFromAllInvalidKeywordPropertiesRecursively();
             }
 
-            bodyDoc.MakeAllIdentifierAndReferenceBeFullUri();
-            globalSchemaResourceRegistry.AddSchemaResourcesFromRegistry(bodyDoc.LocalSchemaResourceRegistry);
+            UpdateDocWithGlobalResourceRegistry(bodyDoc, globalSchemaResourceRegistry);
+        }
 
-            bodyDoc.GlobalSchemaResourceRegistry = globalSchemaResourceRegistry;
+        return doc;
+    }
+
+    public static IJsonSchemaDocument CreateDocAndUpdateGlobalResourceRegistry(Stream utf8Schema, SchemaResourceRegistry globalSchemaResourceRegistry, JsonValidatorOptions options)
+    {
+        JsonSerializerOptions jsonSerializerOptions = JsonValidatorOptionsJsonSerializerOptionsMapper.ToJsonSerializerOptions(options.PropertyNameCaseInsensitive);
+
+        IJsonSchemaDocument doc = JsonSerializer.Deserialize<IJsonSchemaDocument>(utf8Schema, jsonSerializerOptions)!;
+
+        if (doc is BodyJsonSchemaDocument bodyDoc)
+        {
+            if (options.IgnoreResourceIdInUnknownKeyword)
+            {
+                bodyDoc.RemoveIdFromAllInvalidKeywordPropertiesRecursively();
+            }
+
+            UpdateDocWithGlobalResourceRegistry(bodyDoc, globalSchemaResourceRegistry);
         }
 
         return doc;

@@ -39,6 +39,19 @@ public class JsonValidator
         _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, _globalSchemaResourceRegistry, _jsonValidatorOptions);
     }
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="JsonValidator"/> class for specified <paramref name="utf8JsonSchema"/> and with specified <paramref name="options"/>
+    /// </summary>
+    /// <param name="utf8JsonSchema">A json schema this <see cref="JsonValidator"/> represents</param>
+    /// <param name="options">Options to control validation behavior</param>
+    /// <remarks>This method will not dispose <paramref name="utf8JsonSchema"/> parameter </remarks>
+    public JsonValidator(Stream utf8JsonSchema, JsonValidatorOptions? options = null)
+    {
+        _jsonValidatorOptions = InitializeJsonValidatorOptions(options);
+
+        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(utf8JsonSchema, _globalSchemaResourceRegistry, _jsonValidatorOptions);
+    }
+
     internal JsonValidator(BodyJsonSchemaDocument mainSchemaDoc, JsonValidatorOptions? options = null)
     {
         _jsonValidatorOptions = InitializeJsonValidatorOptions(options);
@@ -71,6 +84,15 @@ public class JsonValidator
     }
 
     /// <summary>
+    /// Add external json schema document
+    /// </summary>
+    /// <param name="externalUtf8JsonSchema">The content of external json schema document</param>
+    public void AddExternalDocument(Stream externalUtf8JsonSchema)
+    {
+        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalUtf8JsonSchema, _globalSchemaResourceRegistry, _jsonValidatorOptions);
+    }
+
+    /// <summary>
     /// Add external json schema document which needs to be accessed by sending HTTP request
     /// </summary>
     /// <param name="remoteUri">The <see cref="Uri"/> of document the HTTP request is sent to access</param>
@@ -89,8 +111,26 @@ public class JsonValidator
     /// <returns><see cref="ValidationResult"/> to represent validation result</returns>
     public ValidationResult Validate(string jsonInstance, JsonSchemaOptions? options = null)
     {
-        // ReSharper disable once ConvertToUsingDeclaration
+#pragma warning disable IDE0063
         using (JsonDocument instance = JsonDocument.Parse(jsonInstance))
+#pragma warning restore IDE0063
+        {
+            return Validate(instance, options);
+        }
+    }
+
+    /// <summary>
+    /// Validate specified <paramref name="utf8JsonInstance"/>
+    /// </summary>
+    /// <param name="utf8JsonInstance">JSON instance to be validated</param>
+    /// <param name="options">Options to control the validation behavior</param>
+    /// <returns><see cref="ValidationResult"/> to represent validation result</returns>
+    /// <remarks>This method will not dispose <paramref name="utf8JsonInstance"/> parameter </remarks>
+    public ValidationResult Validate(Stream utf8JsonInstance, JsonSchemaOptions? options = null)
+    {
+#pragma warning disable IDE0063
+        using (JsonDocument instance = JsonDocument.Parse(utf8JsonInstance))
+#pragma warning restore IDE0063
         {
             return Validate(instance, options);
         }

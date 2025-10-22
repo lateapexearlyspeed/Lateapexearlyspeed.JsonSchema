@@ -32,7 +32,7 @@ internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
 
     public void MakeAllIdentifierAndReferenceBeFullUri()
     {
-        // here input of 'parentResourceBaseUri' is a arbitrary uri because first schema is schema document which already has real absolute uri
+        // here input of 'parentResourceBaseUri' is an arbitrary uri because first schema is schema document which already has real absolute uri
         MakeAllIdentifierAndReferenceBeFullUri(this, DefaultDocumentBaseUri);
     }
 

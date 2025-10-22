@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
@@ -121,6 +122,39 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             }
 
             Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ValidateFormat = false, OutputFormat = outputFormat }).IsValid);
+        }
+
+        [Theory]
+        [MemberData(nameof(JsonSchemaTestSuiteForDraft2020))]
+        public async Task ValidateByStreamSchema_InputFromJsonSchemaTestSuite(string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        {
+            _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
+            _testOutputHelper.WriteLine($"Test description: {testDescription}");
+
+            await using (var utf8JsonSchema = new MemoryStream(Encoding.UTF8.GetBytes(schema)))
+            {
+                var jsonValidator = new JsonValidator(utf8JsonSchema, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
+                foreach (string content in _externalSchemaDocuments)
+                {
+                    await using (var externalUtf8JsonSchema = new MemoryStream(Encoding.UTF8.GetBytes(content)))
+                    {
+                        jsonValidator.AddExternalDocument(externalUtf8JsonSchema);
+                    }
+                }
+
+                if (TestCasesDependOnRemoteHttpDocuments.Contains(testCaseDescription))
+                {
+                    foreach (Uri remoteUri in _httpBasedDocumentUris)
+                    {
+                        await jsonValidator.AddHttpDocumentAsync(remoteUri);
+                    }
+                }
+
+                await using (var utf8JsonInstance = new MemoryStream(Encoding.UTF8.GetBytes(instance)))
+                {
+                    Assert.Equal(expectedValidationResult, jsonValidator.Validate(utf8JsonInstance, new JsonSchemaOptions{ValidateFormat = false, OutputFormat = outputFormat }).IsValid);
+                }
+            }
         }
 
         [Theory]
