@@ -145,9 +145,20 @@ public class JsonValidator
     /// <remarks>This method will not dispose <paramref name="jsonInstance"/> parameter </remarks>
     public ValidationResult Validate(JsonDocument jsonInstance, JsonSchemaOptions? options = null)
     {
+        return Validate(jsonInstance.RootElement, options);
+    }
+
+    /// <summary>
+    /// Validate specified <paramref name="jsonInstance"/>
+    /// </summary>
+    /// <param name="jsonInstance">JSON instance to be validated</param>
+    /// <param name="options">Options to control the validation behavior</param>
+    /// <returns><see cref="ValidationResult"/> to represent validation result</returns>
+    public ValidationResult Validate(JsonElement jsonInstance, JsonSchemaOptions? options = null)
+    {
         options = new JsonSchemaOptions(options, _globalSchemaResourceRegistry);
 
-        return _mainSchemaDoc.DoValidation(jsonInstance.RootInstanceElement(), options);
+        return _mainSchemaDoc.DoValidation(new JsonInstanceElement(jsonInstance, ImmutableJsonPointer.Empty), options);
     }
 
     /// <summary>
