@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using LateApexEarlySpeed.Json.Schema;
 using LateApexEarlySpeed.Json.Schema.Common;
@@ -64,6 +65,8 @@ namespace LateApexEarlySpeed.Xunit.Assertion.Json
 
         private static void AppendValidationErrorsInfo(StringBuilder sb, IEnumerable<ValidationError> validationErrors)
         {
+            validationErrors = validationErrors.Where(err => err.ResultCode != ResultCode.FailedBodyJsonSchema);
+            
             foreach (ValidationError keywordError in validationErrors)
             {
                 sb.AppendFormat("{0}, location (in json pointer format): \"{1}\"", keywordError.ErrorMessage, keywordError.InstanceLocation)
