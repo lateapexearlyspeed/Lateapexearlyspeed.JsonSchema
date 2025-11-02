@@ -208,19 +208,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             return (validationResult = _fastReturnResult) is not null;
         }
 
-        public ResultTuple Result
-        {
-            get
-            {
-                if (_fastReturnResult is null)
-                {
-                    return ResultTuple.Valid();
-                }
-
-                ValidationError curError = new ValidationError(ResultCode.FailedBodyJsonSchema, ValidationError.ErrorMessageForFailedInSubSchema, _options.ValidationPathStack, null, _instance.Location);
-                return ResultTuple.Invalid(curError);
-            }
-        }
+        public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
     public override ISchemaContainerElement? GetSubElement(string name)

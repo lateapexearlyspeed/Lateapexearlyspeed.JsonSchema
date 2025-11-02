@@ -124,8 +124,6 @@ internal class ImmutableValidationErrorCollection
 /// </summary>
 public class ValidationError
 {
-    public static string ErrorMessageForFailedInSubSchema => "Failed in sub-schema";
-
     internal ValidationError(ResultCode failedCode, string errorMessage, ValidationPathStack? validationPathStack, string? keyword, ImmutableJsonPointer instanceLocation)
         : this(failedCode,
             keyword,
@@ -239,6 +237,5 @@ public enum ResultCode
     NotBeforeSpecifiedTimePoint,
     NotAfterSpecifiedTimePoint,
     FailedForCustomValidation,
-    FailedToDeserialize,
-    FailedBodyJsonSchema
+    FailedToDeserialize
 }

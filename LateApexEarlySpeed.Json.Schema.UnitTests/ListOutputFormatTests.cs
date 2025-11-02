@@ -33,35 +33,11 @@ public class ListOutputFormatTests
         Assert.Collection(validationResult.ValidationErrors,
             error =>
             {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/p1"), error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/additionalProperties"), error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
                 Assert.Equal(ImmutableJsonPointer.Create("/p1"), error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
                 Assert.Equal(ImmutableJsonPointer.Create("/additionalProperties/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
-            },
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/p2"), error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/additionalProperties"), error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
             },
             error =>
             {
@@ -102,35 +78,11 @@ public class ListOutputFormatTests
         Assert.Collection(validationResult.ValidationErrors,
             error =>
             {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/allOf/0"), error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
                 Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
                 Assert.Equal(ImmutableJsonPointer.Create("/allOf/0/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
-            },
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/allOf/1"), error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
             },
             error =>
             {
@@ -171,27 +123,11 @@ public class ListOutputFormatTests
         Assert.Collection(validationResult.ValidationErrors,
             error =>
             {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/anyOf/1"), error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
                 Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
                 Assert.Equal(ImmutableJsonPointer.Create("/anyOf/1/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
-            },
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/anyOf/2"), error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
             },
             error =>
             {
@@ -226,27 +162,11 @@ public class ListOutputFormatTests
         Assert.Collection(validationResult.ValidationErrors,
             error =>
             {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
                 Assert.Equal(ArrayContainsValidator.GetFailedMaxContainsErrorMessage(instance, 2), error.ErrorMessage);
                 Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("maxContains", error.Keyword);
                 Assert.Equal(ImmutableJsonPointer.Create("/maxContains"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.ValidatedArrayItemsCountOutOfRange, error.ResultCode);
-            },
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/3"), error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/contains"), error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
             },
             error =>
             {
@@ -280,14 +200,6 @@ public class ListOutputFormatTests
         Assert.Collection(validationResult.ValidationErrors,
             error =>
             {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/if"), error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
                 Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
@@ -318,22 +230,6 @@ public class ListOutputFormatTests
 
         Assert.False(validationResult.IsValid);
         Assert.Collection(validationResult.ValidationErrors,
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/then"), error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.Integer, JsonValueKind.String), error.ErrorMessage);
@@ -370,14 +266,6 @@ public class ListOutputFormatTests
 
         Assert.False(validationResult.IsValid);
         Assert.Collection(validationResult.ValidationErrors,
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
             error =>
             {
                 Assert.Equal(DependentRequiredKeyword.ErrorMessage("p1", "d2"), error.ErrorMessage);
@@ -424,14 +312,6 @@ public class ListOutputFormatTests
         Assert.Collection(validationResult.ValidationErrors,
             error =>
             {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
                 Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Null(error.Keyword);
@@ -470,35 +350,11 @@ public class ListOutputFormatTests
         Assert.Collection(validationResult.ValidationErrors,
             error =>
             {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/0"), error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/items"), error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
                 Assert.Equal(ImmutableJsonPointer.Create("/0"), error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
                 Assert.Equal(ImmutableJsonPointer.Create("/items/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
-            },
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/1"), error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/items"), error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
             },
             error =>
             {
@@ -534,27 +390,11 @@ public class ListOutputFormatTests
         Assert.Collection(validationResult.ValidationErrors,
             error =>
             {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
                 Assert.Equal("More than one schema validate instance", error.ErrorMessage);
                 Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("oneOf", error.Keyword);
                 Assert.Equal(ImmutableJsonPointer.Create("/oneOf"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.MoreThanOnePassedSchemaFound, error.ResultCode);
-            },
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/oneOf/0"), error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
             },
             error =>
             {
@@ -592,14 +432,6 @@ public class ListOutputFormatTests
         Assert.Collection(validationResult.ValidationErrors,
             error =>
             {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
                 Assert.Equal(ImmutableJsonPointer.Create("/p1"), error.InstanceLocation);
                 Assert.Null(error.Keyword);
@@ -632,14 +464,6 @@ public class ListOutputFormatTests
 
         Assert.False(validationResult.IsValid);
         Assert.Collection(validationResult.ValidationErrors,
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
             error =>
             {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
@@ -684,14 +508,6 @@ public class ListOutputFormatTests
         Assert.Collection(validationResult.ValidationErrors,
             error =>
             {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
                 Assert.Equal(ImmutableJsonPointer.Create("/p1"), error.InstanceLocation);
                 Assert.Null(error.Keyword);
@@ -731,14 +547,6 @@ public class ListOutputFormatTests
         Assert.Collection(validationResult.ValidationErrors,
             error =>
             {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
                 Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Null(error.Keyword);
@@ -771,14 +579,6 @@ public class ListOutputFormatTests
 
         Assert.False(validationResult.IsValid);
         Assert.Collection(validationResult.ValidationErrors,
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
             error =>
             {
                 Assert.Equal(RequiredKeyword.ErrorMessage("p1"), error.ErrorMessage);
@@ -817,14 +617,6 @@ public class ListOutputFormatTests
         Assert.Collection(validationResult.ValidationErrors,
             error =>
             {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/not"), error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
-            error =>
-            {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
                 Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
@@ -851,14 +643,6 @@ public class ListOutputFormatTests
 
         Assert.False(validationResult.IsValid);
         Assert.Collection(validationResult.ValidationErrors,
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
             error =>
             {
                 Assert.Equal(NotKeyword.ErrorMessage(instance), error.ErrorMessage);
@@ -894,14 +678,6 @@ public class ListOutputFormatTests
 
         Assert.False(validationResult.IsValid);
         Assert.Collection(validationResult.ValidationErrors,
-            error =>
-            {
-                Assert.Equal(ValidationError.ErrorMessageForFailedInSubSchema, error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
-                Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.RelativeKeywordLocation);
-                Assert.Equal(ResultCode.FailedBodyJsonSchema, error.ResultCode);
-            },
             error =>
             {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
