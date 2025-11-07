@@ -169,7 +169,7 @@ internal class ReferencedSchemaLocationStack : IEnumerable<(JsonSchemaResource r
 
 internal class RelativeKeywordLocationStack
 {
-    private readonly Stack<string> _locationStack = new();
+    private readonly FifoEnumerableStack _locationStack = new();
 
     public void Push(string name)
     {
@@ -183,6 +183,39 @@ internal class RelativeKeywordLocationStack
 
     public ImmutableJsonPointer ToJsonPointer()
     {
-        return new ImmutableJsonPointer(_locationStack.Reverse());
+        return new ImmutableJsonPointer(_locationStack);
+    }
+
+    /// <summary>
+    /// This class is designed to provide FIFO enumeration behavior for stack, so that the bottom item is enumerated first.
+    /// </summary>
+    /// <remarks>
+    /// Previously <see cref="RelativeKeywordLocationStack"/> used <see cref="Stack{T}"/> typed field <see cref="_locationStack"/>,
+    /// its default enumerator provides LIFO behavior, so <see cref="ToJsonPointer"/> had to call <see cref="Enumerable.Reverse"/> for JSON pointer generation.
+    /// This linq method caused nonnegligible array allocation internally thus large cpu time when use <see cref="OutputFormat.List"/> mode with multiple-branch schema structure (e.g. with lots of 'anyOf' and '$ref')
+    /// </remarks>
+    private class FifoEnumerableStack : IEnumerable<string>
+    {
+        private readonly List<string> _stack = new();
+
+        public void Push(string item)
+        {
+            _stack.Add(item);
+        }
+
+        public void Pop()
+        {
+            _stack.RemoveAt(_stack.Count - 1);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IEnumerator<string> GetEnumerator()
+        {
+            return _stack.GetEnumerator();
+        }
     }
 }
