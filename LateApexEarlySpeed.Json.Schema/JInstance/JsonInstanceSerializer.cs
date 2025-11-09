@@ -7,13 +7,13 @@ internal class JsonInstanceSerializer
 {
     public static JsonInstanceElement SerializeToElement(object value)
     {
-        return new JsonInstanceElement(JsonSerializer.SerializeToElement(value), ImmutableJsonPointer.Empty);
+        return new JsonInstanceElement(JsonSerializer.SerializeToElement(value), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     public static JsonInstanceElement Deserialize(string json)
     {
         JsonElement jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
 
-        return new JsonInstanceElement(jsonElement, ImmutableJsonPointer.Empty);
+        return new JsonInstanceElement(jsonElement, LinkedListBasedImmutableJsonPointer.Empty);
     }
 }

@@ -9,31 +9,31 @@ namespace LateApexEarlySpeed.Json.Schema.Common;
 /// An immutable type
 /// <remarks> Refer to: https://datatracker.ietf.org/doc/html/rfc6901 </remarks>
 /// </summary>
-public class ImmutableJsonPointer : IEnumerable<string>
+public class LinkedListBasedImmutableJsonPointer : IEnumerable<string>
 {
     private const string TokenPrefixCharString = "/";
 
     private static char TokenPrefixChar => TokenPrefixCharString[0];
     
-    public static ImmutableJsonPointer Empty { get; } = new(Enumerable.Empty<string>());
+    public static LinkedListBasedImmutableJsonPointer Empty { get; } = new(Enumerable.Empty<string>());
 
     /// <summary>
     /// Unescaped reference tokens
     /// </summary>
     private readonly SingleLinkedList<string> _referenceTokens;
 
-    internal ImmutableJsonPointer(IEnumerable<string> unescapedTokenCollection) 
+    internal LinkedListBasedImmutableJsonPointer(IEnumerable<string> unescapedTokenCollection) 
         : this(new SingleLinkedList<string>(unescapedTokenCollection))
     {
     }
 
-    private ImmutableJsonPointer(SingleLinkedList<string> referenceTokens)
+    private LinkedListBasedImmutableJsonPointer(SingleLinkedList<string> referenceTokens)
     {
         _referenceTokens = referenceTokens;
     }
 
     /// <returns>If <paramref name="escapedJsonPointerString"/> is an invalid json pointer format, return null.</returns>
-    public static ImmutableJsonPointer? Create(string escapedJsonPointerString)
+    public static LinkedListBasedImmutableJsonPointer? Create(string escapedJsonPointerString)
     {
         // Invalid json pointer format, return null
         if (!string.IsNullOrEmpty(escapedJsonPointerString) && escapedJsonPointerString[0] != TokenPrefixChar)
@@ -69,7 +69,7 @@ public class ImmutableJsonPointer : IEnumerable<string>
             curIdx = nextPrefixIdx;
         }
 
-        return new ImmutableJsonPointer(referenceTokens);
+        return new LinkedListBasedImmutableJsonPointer(referenceTokens);
     }
 
     /// <returns>
@@ -168,22 +168,22 @@ public class ImmutableJsonPointer : IEnumerable<string>
     }
 
     /// <summary>
-    /// This method will not modify current instance, it is a immutable operation
+    /// This method will not modify current instance, it is an immutable operation
     /// </summary>
     /// <remarks>Based on benchmark, this method is hot path, so we create <see cref="SingleLinkedList{T}"/> type which can share common path nodes for several <see cref="SingleLinkedList{T}"/> instances inside same path</remarks>
-    /// <returns>Newly created <see cref="ImmutableJsonPointer"/> instance.</returns>
-    public ImmutableJsonPointer Add(string unescapedReferenceToken)
+    /// <returns>Newly created <see cref="LinkedListBasedImmutableJsonPointer"/> instance.</returns>
+    public LinkedListBasedImmutableJsonPointer Add(string unescapedReferenceToken)
     {
-        return new ImmutableJsonPointer(_referenceTokens.CreateByAppend(unescapedReferenceToken));
+        return new LinkedListBasedImmutableJsonPointer(_referenceTokens.CreateByAppend(unescapedReferenceToken));
     }
 
     /// <summary>
-    /// This method will not modify current instance, it is a immutable operation
+    /// This method will not modify current instance, it is an immutable operation
     /// </summary>
-    /// <returns>Newly created <see cref="ImmutableJsonPointer"/> instance.</returns>
-    public ImmutableJsonPointer Add(int arrayItemIdx)
+    /// <returns>Newly created <see cref="LinkedListBasedImmutableJsonPointer"/> instance.</returns>
+    public LinkedListBasedImmutableJsonPointer Add(int arrayItemIdx)
     {
-        return new ImmutableJsonPointer(_referenceTokens.CreateByAppend(arrayItemIdx.ToString()));
+        return new LinkedListBasedImmutableJsonPointer(_referenceTokens.CreateByAppend(arrayItemIdx.ToString()));
     }
 
     public override bool Equals(object? obj)
@@ -191,10 +191,10 @@ public class ImmutableJsonPointer : IEnumerable<string>
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != this.GetType()) return false;
-        return Equals((ImmutableJsonPointer)obj);
+        return Equals((LinkedListBasedImmutableJsonPointer)obj);
     }
 
-    protected bool Equals(ImmutableJsonPointer other)
+    protected bool Equals(LinkedListBasedImmutableJsonPointer other)
     {
         return _referenceTokens.SequenceEqual(other._referenceTokens);
     }
@@ -223,12 +223,12 @@ public class ImmutableJsonPointer : IEnumerable<string>
         }
     }
 
-    public static bool operator ==(ImmutableJsonPointer? left, ImmutableJsonPointer? right)
+    public static bool operator ==(LinkedListBasedImmutableJsonPointer? left, LinkedListBasedImmutableJsonPointer? right)
     {
         return Equals(left, right);
     }
 
-    public static bool operator !=(ImmutableJsonPointer? left, ImmutableJsonPointer? right)
+    public static bool operator !=(LinkedListBasedImmutableJsonPointer? left, LinkedListBasedImmutableJsonPointer? right)
     {
         return !Equals(left, right);
     }

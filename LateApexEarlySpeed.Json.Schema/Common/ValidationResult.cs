@@ -124,7 +124,7 @@ internal class ImmutableValidationErrorCollection
 /// </summary>
 public class ValidationError
 {
-    internal ValidationError(ResultCode failedCode, string errorMessage, ValidationPathStack? validationPathStack, string? keyword, ImmutableJsonPointer instanceLocation)
+    internal ValidationError(ResultCode failedCode, string errorMessage, ValidationPathStack? validationPathStack, string? keyword, LinkedListBasedImmutableJsonPointer instanceLocation)
         : this(failedCode,
             keyword,
             errorMessage,
@@ -135,7 +135,7 @@ public class ValidationError
         )
     { }
 
-    internal ValidationError(ResultCode resultCode, string? keyword, string errorMessage, ImmutableJsonPointer instanceLocation, ImmutableJsonPointer? relativeKeywordLocation, Uri? schemaResourceBaseUri, Uri? subSchemaRefFullUri)
+    internal ValidationError(ResultCode resultCode, string? keyword, string errorMessage, LinkedListBasedImmutableJsonPointer instanceLocation, LinkedListBasedImmutableJsonPointer? relativeKeywordLocation, Uri? schemaResourceBaseUri, Uri? subSchemaRefFullUri)
     {
         ResultCode = resultCode;
         Keyword = keyword;
@@ -149,12 +149,12 @@ public class ValidationError
     /// <summary>
     /// Gets value to indicate json instance's location
     /// </summary>
-    public ImmutableJsonPointer InstanceLocation { get; init; }
+    public LinkedListBasedImmutableJsonPointer InstanceLocation { get; init; }
 
     /// <summary>
     /// Gets value to indicate relative location of keyword
     /// </summary>
-    public ImmutableJsonPointer? RelativeKeywordLocation { get; init; }
+    public LinkedListBasedImmutableJsonPointer? RelativeKeywordLocation { get; init; }
 
     /// <summary>
     /// Gets value to indicate base uri of current json schema resource

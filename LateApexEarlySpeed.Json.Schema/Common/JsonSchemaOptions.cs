@@ -181,9 +181,9 @@ internal class RelativeKeywordLocationStack
         _locationStack.Pop();
     }
 
-    public ImmutableJsonPointer ToJsonPointer()
+    public LinkedListBasedImmutableJsonPointer ToJsonPointer()
     {
-        return new ImmutableJsonPointer(_locationStack);
+        return new LinkedListBasedImmutableJsonPointer(_locationStack);
     }
 
     /// <summary>

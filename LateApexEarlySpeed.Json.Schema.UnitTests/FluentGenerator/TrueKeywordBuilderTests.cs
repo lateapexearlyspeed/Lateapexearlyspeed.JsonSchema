@@ -17,10 +17,10 @@ public class TrueKeywordBuilderTests
         AssertValidationResult(validationResult,true);
 
         validationResult = jsonValidator.Validate("false");
-        AssertValidationResult(validationResult, false, "Json kind not same, one is True, but another is False", ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, "Json kind not same, one is True, but another is False", LinkedListBasedImmutableJsonPointer.Empty);
     }
 
-    private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, ImmutableJsonPointer? expectedInstanceLocation = null)
+    private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, LinkedListBasedImmutableJsonPointer? expectedInstanceLocation = null)
     {
         Assert.Equal(expectedValidStatus, actualValidationResult.IsValid);
 

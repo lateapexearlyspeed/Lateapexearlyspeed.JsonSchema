@@ -24,13 +24,13 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("1");
-        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Number), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Number), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("{}");
-        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Object), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Object), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("null");
-        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Null), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Null), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("\"abc\"");
         AssertValidationResult(validationResult, true);
@@ -49,7 +49,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"def\"");
-        AssertValidationResult(validationResult, false, "def is bad one", ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, "def is bad one", LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"def\"");
-        AssertValidationResult(validationResult, false, MaxLengthKeyword.ErrorMessage(3, 2), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaxLengthKeyword.ErrorMessage(3, 2), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"a\"");
-        AssertValidationResult(validationResult, false, MinLengthKeyword.ErrorMessage(1, 2), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinLengthKeyword.ErrorMessage(1, 2), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"a\"");
-        AssertValidationResult(validationResult, false, PatternKeyword.ErrorMessage(".a.", "a"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, PatternKeyword.ErrorMessage(".a.", "a"), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"a\"");
-        AssertValidationResult(validationResult, false, PatternKeyword.ErrorMessage(".a.", "a"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, PatternKeyword.ErrorMessage(".a.", "a"), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -133,7 +133,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"abC111\"");
-        AssertValidationResult(validationResult, false, StringKeywordBuilder.StartsWithErrorMessage("abC111", "abc"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, StringKeywordBuilder.StartsWithErrorMessage("abC111", "abc"), LinkedListBasedImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonString().HasCustomValidation(_ => true, _ => string.Empty).StartsWith("abc", StringComparison.OrdinalIgnoreCase);
@@ -147,7 +147,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"def111\"");
-        AssertValidationResult(validationResult, false, StringKeywordBuilder.StartsWithErrorMessage("def111", "abc"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, StringKeywordBuilder.StartsWithErrorMessage("def111", "abc"), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -162,7 +162,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"111abC\"");
-        AssertValidationResult(validationResult, false, StringKeywordBuilder.EndsWithErrorMessage("111abC", "abc"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, StringKeywordBuilder.EndsWithErrorMessage("111abC", "abc"), LinkedListBasedImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonString().HasCustomValidation(_ => true, _ => string.Empty).EndsWith("abc", StringComparison.OrdinalIgnoreCase);
@@ -176,7 +176,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"111def\"");
-        AssertValidationResult(validationResult, false, StringKeywordBuilder.EndsWithErrorMessage("111def", "abc"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, StringKeywordBuilder.EndsWithErrorMessage("111def", "abc"), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -191,7 +191,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"1a2\"");
-        AssertValidationResult(validationResult, false, NotKeyword.ErrorMessage("1a2"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, NotKeyword.ErrorMessage("1a2"), LinkedListBasedImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonString().NotMatch(".a.").NotMatch(".b.");
@@ -202,10 +202,10 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"1a2\"");
-        AssertValidationResult(validationResult, false, NotKeyword.ErrorMessage("1a2"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, NotKeyword.ErrorMessage("1a2"), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("\"1b2\"");
-        AssertValidationResult(validationResult, false, NotKeyword.ErrorMessage("1b2"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, NotKeyword.ErrorMessage("1b2"), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -224,7 +224,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"abc\"");
-        AssertValidationResult(validationResult, false, EnumKeyword.ErrorMessage("abc"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, EnumKeyword.ErrorMessage("abc"), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -239,7 +239,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"def\"");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("abc", "def"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("abc", "def"), LinkedListBasedImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonString().Equal(string.Empty);
@@ -249,7 +249,7 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"def\"");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("", "def"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("", "def"), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -263,13 +263,13 @@ public class StringKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"def\"");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("abc", "def"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("abc", "def"), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("null");
-        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Null), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Null), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
-    private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, ImmutableJsonPointer? expectedInstanceLocation = null)
+    private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, LinkedListBasedImmutableJsonPointer? expectedInstanceLocation = null)
     {
         Assert.Equal(expectedValidStatus, actualValidationResult.IsValid);
 
