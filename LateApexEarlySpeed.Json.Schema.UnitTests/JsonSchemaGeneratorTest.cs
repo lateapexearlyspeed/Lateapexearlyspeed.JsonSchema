@@ -1347,7 +1347,7 @@ public class JsonSchemaGeneratorTest
     private static string GetInvalidTokenErrorMessage(string actualType, params InstanceType[] expectedTypes) 
         => $"Expect type(s): '{string.Join('|', expectedTypes)}' but actual is '{actualType}'";
 
-    private static ValidationResult CreateSingleErrorResult(ResultCode resultCode, string? keyword, string errorMessage, LinkedListBasedImmutableJsonPointer instanceLocation, LinkedListBasedImmutableJsonPointer? relativeKeywordLocation, Uri? schemaResourceBaseUri, Uri? subSchemaRefFullUri)
+    private static ValidationResult CreateSingleErrorResult(ResultCode resultCode, string? keyword, string errorMessage, ImmutableJsonPointer instanceLocation, ImmutableJsonPointer? relativeKeywordLocation, Uri? schemaResourceBaseUri, Uri? subSchemaRefFullUri)
     {
         return ValidationResult.SingleErrorFailedResult(new ValidationError(resultCode, keyword, errorMessage, instanceLocation, relativeKeywordLocation, schemaResourceBaseUri, subSchemaRefFullUri));
     }

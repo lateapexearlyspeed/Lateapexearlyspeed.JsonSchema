@@ -181,9 +181,9 @@ internal class RelativeKeywordLocationStack
         _locationStack.Pop();
     }
 
-    public LinkedListBasedImmutableJsonPointer ToJsonPointer()
+    public ArrayBasedImmutableJsonPointer ToJsonPointer()
     {
-        return new LinkedListBasedImmutableJsonPointer(_locationStack);
+        return new ArrayBasedImmutableJsonPointer(_locationStack);
     }
 
     /// <summary>
@@ -194,7 +194,7 @@ internal class RelativeKeywordLocationStack
     /// its default enumerator provides LIFO behavior, so <see cref="ToJsonPointer"/> had to call <see cref="Enumerable.Reverse"/> for JSON pointer generation.
     /// This linq method caused nonnegligible array allocation internally thus large cpu time when use <see cref="OutputFormat.List"/> mode with multiple-branch schema structure (e.g. with lots of 'anyOf' and '$ref')
     /// </remarks>
-    private class FifoEnumerableStack : IEnumerable<string>
+    private class FifoEnumerableStack : IReadOnlyCollection<string>
     {
         private readonly List<string> _stack = new();
 
@@ -217,5 +217,7 @@ internal class RelativeKeywordLocationStack
         {
             return _stack.GetEnumerator();
         }
+
+        public int Count => _stack.Count;
     }
 }

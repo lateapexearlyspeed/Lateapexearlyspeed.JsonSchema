@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
 
@@ -9,23 +8,14 @@ namespace LateApexEarlySpeed.Json.Schema.Common;
 /// An immutable type
 /// <remarks> Refer to: https://datatracker.ietf.org/doc/html/rfc6901 </remarks>
 /// </summary>
-public class LinkedListBasedImmutableJsonPointer : IEnumerable<string>
+public class LinkedListBasedImmutableJsonPointer : ImmutableJsonPointer
 {
-    private const string TokenPrefixCharString = "/";
-
-    private static char TokenPrefixChar => TokenPrefixCharString[0];
-    
-    public static LinkedListBasedImmutableJsonPointer Empty { get; } = new(Enumerable.Empty<string>());
+    public static LinkedListBasedImmutableJsonPointer Empty { get; } = new(new SingleLinkedList<string>());
 
     /// <summary>
     /// Unescaped reference tokens
     /// </summary>
     private readonly SingleLinkedList<string> _referenceTokens;
-
-    internal LinkedListBasedImmutableJsonPointer(IEnumerable<string> unescapedTokenCollection) 
-        : this(new SingleLinkedList<string>(unescapedTokenCollection))
-    {
-    }
 
     private LinkedListBasedImmutableJsonPointer(SingleLinkedList<string> referenceTokens)
     {
@@ -111,14 +101,11 @@ public class LinkedListBasedImmutableJsonPointer : IEnumerable<string>
         return new Enumerator(_referenceTokens.GetEnumerator());
     }
 
-    IEnumerator<string> IEnumerable<string>.GetEnumerator()
+    protected override IEnumerator<string> GetEnumeratorInternal()
     {
+        // ReSharper disable NotDisposedResourceIsReturned
         return GetEnumerator();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
+        // ReSharper restore NotDisposedResourceIsReturned
     }
 
     public readonly struct Enumerator : IEnumerator<string>
@@ -150,23 +137,6 @@ public class LinkedListBasedImmutableJsonPointer : IEnumerable<string>
         }
     }
 
-    public override string ToString()
-    {
-        var sb = new StringBuilder();
-
-        foreach (string referenceToken in _referenceTokens)
-        {
-            sb.Append(TokenPrefixChar).Append(EscapeReferenceToken(referenceToken));
-        }
-
-        return sb.ToString();
-    }
-
-    private static string EscapeReferenceToken(string referenceToken)
-    {
-        return referenceToken.Replace("~", "~0").Replace(TokenPrefixCharString, "~1");
-    }
-
     /// <summary>
     /// This method will not modify current instance, it is an immutable operation
     /// </summary>
@@ -186,55 +156,10 @@ public class LinkedListBasedImmutableJsonPointer : IEnumerable<string>
         return new LinkedListBasedImmutableJsonPointer(_referenceTokens.CreateByAppend(arrayItemIdx.ToString()));
     }
 
-    public override bool Equals(object? obj)
-    {
-        if (ReferenceEquals(null, obj)) return false;
-        if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != this.GetType()) return false;
-        return Equals((LinkedListBasedImmutableJsonPointer)obj);
-    }
-
-    protected bool Equals(LinkedListBasedImmutableJsonPointer other)
-    {
-        return _referenceTokens.SequenceEqual(other._referenceTokens);
-    }
-
-    public override int GetHashCode()
-    {
-        if (_referenceTokens.Count >= 7)
-        {
-            return HashCode.Combine(_referenceTokens.Count, _referenceTokens[0], _referenceTokens[1], _referenceTokens[2], _referenceTokens[3], _referenceTokens[4], _referenceTokens[5], _referenceTokens[6]);
-        }
-
-        if (_referenceTokens.Count >= 3)
-        {
-            return HashCode.Combine(_referenceTokens.Count, _referenceTokens[0], _referenceTokens[1], _referenceTokens[2]);
-        }
-
-        switch (_referenceTokens.Count)
-        {
-            case 2:
-                return HashCode.Combine(_referenceTokens.Count, _referenceTokens[0], _referenceTokens[1]);
-            case 1:
-                return HashCode.Combine(_referenceTokens.Count, _referenceTokens[0]);
-            default:
-                Debug.Assert(_referenceTokens.Count == 0);
-                return HashCode.Combine(_referenceTokens.Count);
-        }
-    }
-
-    public static bool operator ==(LinkedListBasedImmutableJsonPointer? left, LinkedListBasedImmutableJsonPointer? right)
-    {
-        return Equals(left, right);
-    }
-
-    public static bool operator !=(LinkedListBasedImmutableJsonPointer? left, LinkedListBasedImmutableJsonPointer? right)
-    {
-        return !Equals(left, right);
-    }
+    protected override IReadOnlyList<string> ReferenceTokens => _referenceTokens;
 }
 
-internal class SingleLinkedList<T> : IEnumerable<T>
+internal class SingleLinkedList<T> : IReadOnlyList<T>
 {
     private SingleLinkedNode<T>? _head;
 
