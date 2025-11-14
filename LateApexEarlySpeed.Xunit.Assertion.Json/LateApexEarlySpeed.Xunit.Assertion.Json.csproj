@@ -37,7 +37,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LateApexEarlySpeed.Json.Schema" Version="2.1.2" />
+    <PackageReference Include="LateApexEarlySpeed.Json.Schema" Version="2.1.4" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="xunit.assert" Version="2.4.2" />
