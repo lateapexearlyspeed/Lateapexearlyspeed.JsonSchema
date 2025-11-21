@@ -5,7 +5,7 @@ namespace LateApexEarlySpeed.Json.Schema.JInstance;
 
 public readonly struct JsonInstanceProperty
 {
-    internal JsonInstanceProperty(JsonProperty jsonProperty, ImmutableJsonPointer parentLocation)
+    internal JsonInstanceProperty(JsonProperty jsonProperty, LinkedListBasedImmutableJsonPointer parentLocation)
     {
         Name = jsonProperty.Name;
         Value = new JsonInstanceElement(jsonProperty.Value, parentLocation.Add(Name));

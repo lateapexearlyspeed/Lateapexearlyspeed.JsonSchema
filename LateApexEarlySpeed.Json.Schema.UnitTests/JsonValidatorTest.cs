@@ -323,8 +323,8 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             Assert.Equal("Expect type(s): 'Integer' but actual is 'String'", error.ErrorMessage);
             Assert.Equal("type", error.Keyword);
-            Assert.Equal(ImmutableJsonPointer.Create("/propArray/4"), error.InstanceLocation);
-            Assert.Equal(ImmutableJsonPointer.Create("/properties/propArray/items/type"), error.RelativeKeywordLocation);
+            Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/propArray/4"), error.InstanceLocation);
+            Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/properties/propArray/items/type"), error.RelativeKeywordLocation);
             Assert.Equal(new Uri("http://main"), error.SchemaResourceBaseUri);
             Assert.Equal(new Uri("http://main"), error.SubSchemaRefFullUri);
         }
@@ -747,8 +747,8 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             Assert.Equal("enum", validationError.Keyword);
             Assert.Equal(EnumKeyword.ErrorMessage("hey"), validationError.ErrorMessage);
             Assert.Equal(ResultCode.NotFoundInAllowedList, validationError.ResultCode);
-            Assert.Equal(ImmutableJsonPointer.Create("/Blub"), validationError.InstanceLocation);
-            Assert.Equal(ImmutableJsonPointer.Create("/properties/Blub/$ref/enum"), validationError.RelativeKeywordLocation);
+            Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/Blub"), validationError.InstanceLocation);
+            Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/properties/Blub/$ref/enum"), validationError.RelativeKeywordLocation);
             Assert.Equal(new Uri("http://lateapexearlyspeed/#/definitions/MyCrazyEnum"), validationError.SubSchemaRefFullUri);
             Assert.Equal(new Uri("http://lateapexearlyspeed"), validationError.SchemaResourceBaseUri);
         }

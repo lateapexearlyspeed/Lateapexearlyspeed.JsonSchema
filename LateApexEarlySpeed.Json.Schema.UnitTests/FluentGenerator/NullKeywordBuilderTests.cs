@@ -19,7 +19,7 @@ public class NullKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"null\"");
-        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.String, InstanceType.Null), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.String, InstanceType.Null), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -40,10 +40,10 @@ public class NullKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("null");
-        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Null, InstanceType.Object, InstanceType.Array, InstanceType.Boolean, InstanceType.Number, InstanceType.String), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Null, InstanceType.Object, InstanceType.Array, InstanceType.Boolean, InstanceType.Number, InstanceType.String), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
-    private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, ImmutableJsonPointer? expectedInstanceLocation = null)
+    private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, LinkedListBasedImmutableJsonPointer? expectedInstanceLocation = null)
     {
         Assert.Equal(expectedValidStatus, actualValidationResult.IsValid);
 

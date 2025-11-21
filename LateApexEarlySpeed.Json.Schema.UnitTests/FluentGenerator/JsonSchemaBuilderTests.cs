@@ -37,10 +37,10 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests.FluentGenerator
                   "b": null
                 }
                 """);
-            AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("a", "b"), ImmutableJsonPointer.Create("/c/2"));
+            AssertValidationResult(validationResult, false, JsonInstanceElement.StringNotSameMessageTemplate("a", "b"), LinkedListBasedImmutableJsonPointer.Create("/c/2"));
         }
 
-        private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, ImmutableJsonPointer? expectedInstanceLocation = null)
+        private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, LinkedListBasedImmutableJsonPointer? expectedInstanceLocation = null)
         {
             Assert.Equal(expectedValidStatus, actualValidationResult.IsValid);
 

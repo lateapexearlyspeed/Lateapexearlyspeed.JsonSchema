@@ -7,6 +7,6 @@ internal class JsonPointerFormatValidator : FormatValidator
 {
     public override bool Validate(string content)
     {
-        return ImmutableJsonPointer.Create(content) is not null;
+        return LinkedListBasedImmutableJsonPointer.Create(content) is not null;
     }
 }

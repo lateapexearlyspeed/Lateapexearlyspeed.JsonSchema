@@ -21,10 +21,10 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("\"1\"");
-        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.String), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.String), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("[1]");
-        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Array), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Array), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -39,14 +39,14 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("2");
-        AssertValidationResult(validationResult, false, "bad msg: 2", ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, "bad msg: 2", LinkedListBasedImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonNumber().HasCustomValidation((long value) => value == 1, value => $"bad msg: {value}");
         jsonValidator = jsonSchemaBuilder.BuildValidator();
 
         validationResult = jsonValidator.Validate("1.5");
-        AssertValidationResult(validationResult, false, NumberCustomValidationKeyword<long>.ErrorMessageForTypeConvert("1.5"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, NumberCustomValidationKeyword<long>.ErrorMessageForTypeConvert("1.5"), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -61,14 +61,14 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("2");
-        AssertValidationResult(validationResult, false, "bad msg: 2", ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, "bad msg: 2", LinkedListBasedImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonNumber().HasCustomValidation((ulong value) => value == 1, value => $"bad msg: {value}");
         jsonValidator = jsonSchemaBuilder.BuildValidator();
 
         validationResult = jsonValidator.Validate("1.5");
-        AssertValidationResult(validationResult, false, NumberCustomValidationKeyword<ulong>.ErrorMessageForTypeConvert("1.5"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, NumberCustomValidationKeyword<ulong>.ErrorMessageForTypeConvert("1.5"), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("2");
-        AssertValidationResult(validationResult, false, "bad msg: 2", ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, "bad msg: 2", LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -112,16 +112,16 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("1");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(1, 1.0001), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(1, 1.0001), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("0.005");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(0.005, 1.0001), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(0.005, 1.0001), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-123");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(-123, 1.0001), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(-123, 1.0001), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MinValue}");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(long.MinValue, 1.0001), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(long.MinValue, 1.0001), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -150,22 +150,22 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("1.00000001");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(1.00000001m, 1.00000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(1.00000001m, 1.00000001m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("1.00000000999999");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(1.00000000999999m, 1.00000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(1.00000000999999m, 1.00000001m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("1");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(1, 1.00000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(1, 1.00000001m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("0.005");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(0.005, 1.00000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(0.005, 1.00000001m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-123");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(-123, 1.00000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(-123, 1.00000001m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MinValue}");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(long.MinValue, 1.00000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(long.MinValue, 1.00000001m), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -200,19 +200,19 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("-100");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(-100, -100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(-100, -100), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-100.0001");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(-100.0001, -100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(-100.0001, -100), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-123");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(-123, -100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(-123, -100), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MinValue}");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(long.MinValue, -100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(long.MinValue, -100), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{double.MinValue}");
-        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(double.MinValue, -100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMinimumKeyword.ErrorMessage(double.MinValue, -100), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -244,19 +244,19 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(ulong.MaxValue, 100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(ulong.MaxValue, 100), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MaxValue}");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(long.MaxValue, 100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(long.MaxValue, 100), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{double.MaxValue}");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(double.MaxValue, 100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(double.MaxValue, 100), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("100");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(100, 100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(100, 100), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("100.00001");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(100.00001, 100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(100.00001, 100), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -288,19 +288,19 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(ulong.MaxValue, 100.005), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(ulong.MaxValue, 100.005), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MaxValue}");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(long.MaxValue, 100.005), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(long.MaxValue, 100.005), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{double.MaxValue}");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(double.MaxValue, 100.005), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(double.MaxValue, 100.005), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("101");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(101, 100.005), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(101, 100.005), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("100.005001");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(100.005001, 100.005), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(100.005001, 100.005), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -335,22 +335,22 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(ulong.MaxValue, 100.0000000005m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(ulong.MaxValue, 100.0000000005m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MaxValue}");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(long.MaxValue, 100.0000000005m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(long.MaxValue, 100.0000000005m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{double.MaxValue}");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(double.MaxValue, 100.0000000005m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(double.MaxValue, 100.0000000005m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("101");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(101, 100.0000000005m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(101, 100.0000000005m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("100.0000000005");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(100.0000000005m, 100.0000000005m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(100.0000000005m, 100.0000000005m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("100.00000000050000001");
-        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(100.00000000050000001m, 100.0000000005m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ExclusiveMaximumKeyword.ErrorMessage(100.00000000050000001m, 100.0000000005m), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -385,19 +385,19 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
-        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(ulong.MaxValue, 100.005), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(ulong.MaxValue, 100.005), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MaxValue}");
-        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(long.MaxValue, 100.005), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(long.MaxValue, 100.005), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{double.MaxValue}");
-        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(double.MaxValue, 100.005), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(double.MaxValue, 100.005), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("101");
-        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(101, 100.005), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(101, 100.005), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("100.005001");
-        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(100.005001, 100.005), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(100.005001, 100.005), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -435,19 +435,19 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
-        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(ulong.MaxValue, 100.00000005m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(ulong.MaxValue, 100.00000005m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MaxValue}");
-        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(long.MaxValue, 100.00000005m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(long.MaxValue, 100.00000005m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{double.MaxValue}");
-        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(double.MaxValue, 100.00000005m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(double.MaxValue, 100.00000005m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("101");
-        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(101, 100.00000005m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(101, 100.00000005m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("100.00000005000000001");
-        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(100.00000005000000001m, 100.00000005m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(100.00000005000000001m, 100.00000005m), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -482,16 +482,16 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
-        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(ulong.MaxValue, 100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(ulong.MaxValue, 100), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MaxValue}");
-        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(long.MaxValue, 100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(long.MaxValue, 100), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{double.MaxValue}");
-        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(double.MaxValue, 100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(double.MaxValue, 100), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("100.00001");
-        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(100.00001, 100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaximumKeyword.ErrorMessage(100.00001, 100), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -529,22 +529,22 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("1");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(1, 1.0001), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(1, 1.0001), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("0.005");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(0.005, 1.0001), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(0.005, 1.0001), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-123");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(-123, 1.0001), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(-123, 1.0001), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MinValue}");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(long.MinValue, 1.0001), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(long.MinValue, 1.0001), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{ulong.MinValue}");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(ulong.MinValue, 1.0001), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(ulong.MinValue, 1.0001), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{double.MinValue}");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(double.MinValue, 1.0001), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(double.MinValue, 1.0001), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -585,28 +585,28 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("1");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(1, 1.0000000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(1, 1.0000000001m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("0.005");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(0.005, 1.0000000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(0.005, 1.0000000001m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-123");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(-123, 1.0000000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(-123, 1.0000000001m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MinValue}");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(long.MinValue, 1.0000000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(long.MinValue, 1.0000000001m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{ulong.MinValue}");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(ulong.MinValue, 1.0000000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(ulong.MinValue, 1.0000000001m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{double.MinValue}");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(double.MinValue, 1.0000000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(double.MinValue, 1.0000000001m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{decimal.MinValue}");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(decimal.MinValue, 1.0000000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(decimal.MinValue, 1.0000000001m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("1.000000000099999999999999999");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(1.000000000099999999999999999m, 1.0000000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(1.000000000099999999999999999m, 1.0000000001m), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -644,16 +644,16 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("-100.0001");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(-100.0001, -100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(-100.0001, -100), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-123");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(-123, -100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(-123, -100), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MinValue}");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(long.MinValue, -100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(long.MinValue, -100), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{double.MinValue}");
-        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(double.MinValue, -100), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinimumKeyword.ErrorMessage(double.MinValue, -100), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -674,7 +674,7 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("3.50001");
-        AssertValidationResult(validationResult, false, EnumKeyword.ErrorMessage("3.50001"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, EnumKeyword.ErrorMessage("3.50001"), LinkedListBasedImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonNumber().HasCustomValidation((double _) => true, value => $"bad msg: {value}")
@@ -682,7 +682,7 @@ public class NumberKeywordBuilderTests
         jsonValidator = jsonSchemaBuilder.BuildValidator();
 
         validationResult = jsonValidator.Validate("1");
-        AssertValidationResult(validationResult, false, EnumKeyword.ErrorMessage("1"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, EnumKeyword.ErrorMessage("1"), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -703,7 +703,7 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("3.00001");
-        AssertValidationResult(validationResult, false, EnumKeyword.ErrorMessage("3.00001"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, EnumKeyword.ErrorMessage("3.00001"), LinkedListBasedImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonNumber().HasCustomValidation((double _) => true, value => $"bad msg: {value}")
@@ -711,7 +711,7 @@ public class NumberKeywordBuilderTests
         jsonValidator = jsonSchemaBuilder.BuildValidator();
 
         validationResult = jsonValidator.Validate("1");
-        AssertValidationResult(validationResult, false, EnumKeyword.ErrorMessage("1"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, EnumKeyword.ErrorMessage("1"), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -732,10 +732,10 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("2.5");
-        AssertValidationResult(validationResult, false, ULongMultipleOfChecker.ErrorMessage(2.5, 2), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ULongMultipleOfChecker.ErrorMessage(2.5, 2), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-2.5");
-        AssertValidationResult(validationResult, false, ULongMultipleOfChecker.ErrorMessage(-2.5, 2), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ULongMultipleOfChecker.ErrorMessage(-2.5, 2), LinkedListBasedImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonNumber().HasCustomValidation((double _) => true, value => $"bad msg: {value}")
@@ -752,7 +752,7 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("2.499");
-        AssertValidationResult(validationResult, false, DoubleMultipleOfChecker.ErrorMessage(2.499, 1.25), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, DoubleMultipleOfChecker.ErrorMessage(2.499, 1.25), LinkedListBasedImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonNumber().HasCustomValidation((double _) => true, value => $"bad msg: {value}")
@@ -769,7 +769,7 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("2.499");
-        AssertValidationResult(validationResult, false, DecimalMultipleOfChecker.ErrorMessage(2.499m, 1.25m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, DecimalMultipleOfChecker.ErrorMessage(2.499m, 1.25m), LinkedListBasedImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.IsJsonNumber().MultipleOf(0.001m);
@@ -797,7 +797,7 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("8355604201340.7201");
-        AssertValidationResult(validationResult, false, DecimalMultipleOfChecker.ErrorMessage(8355604201340.7201m, 0.001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, DecimalMultipleOfChecker.ErrorMessage(8355604201340.7201m, 0.001m), LinkedListBasedImmutableJsonPointer.Empty);
 
         Assert.Throws<ArgumentOutOfRangeException>("multipleOf", () => new JsonSchemaBuilder().IsJsonNumber().MultipleOf(0));
         Assert.Throws<ArgumentOutOfRangeException>("multipleOf", () => new JsonSchemaBuilder().IsJsonNumber().MultipleOf(-1.0));
@@ -815,22 +815,22 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
         
         validationResult = jsonValidator.Validate("1.05001E32");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, 1.05001E32), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, 1.05001E32), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("1.04999E32");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, 1.04999E32), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, 1.04999E32), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-10");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, -10), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, -10), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MinValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, (double)long.MinValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, (double)long.MinValue), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{double.MaxValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, double.MaxValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, double.MaxValue), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, (double)ulong.MaxValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.05E32, (double)ulong.MaxValue), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -844,22 +844,22 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("1.000000000004999");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, 1.000000000004999m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, 1.000000000004999m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("1.0000000000050000000001");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, 1.0000000000050000000001m), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, 1.0000000000050000000001m), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-10");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, -10), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, -10), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MinValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, long.MinValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, long.MinValue), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{decimal.MaxValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, decimal.MaxValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, decimal.MaxValue), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{ulong.MaxValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, ulong.MaxValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1.000000000005m, ulong.MaxValue), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -873,19 +873,19 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("-123.001");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(-123, -123.001), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(-123, -123.001), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-10");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(-123, -10), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(-123, -10), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MinValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(-123, long.MinValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(-123, long.MinValue), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{double.MinValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(-123, double.MinValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(-123, double.MinValue), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MaxValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(-123, long.MaxValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(-123, long.MaxValue), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -899,22 +899,22 @@ public class NumberKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate($"{ulong.MaxValue - 0.0001}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(ulong.MaxValue, $"{ulong.MaxValue - 0.0001}"), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(ulong.MaxValue, $"{ulong.MaxValue - 0.0001}"), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("-123.5");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(ulong.MaxValue, -123.5), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(ulong.MaxValue, -123.5), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MinValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(ulong.MaxValue, long.MinValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(ulong.MaxValue, long.MinValue), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{double.MinValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(ulong.MaxValue, double.MinValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(ulong.MaxValue, double.MinValue), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate($"{long.MaxValue}");
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(ulong.MaxValue, long.MaxValue), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(ulong.MaxValue, long.MaxValue), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
-    private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, ImmutableJsonPointer? expectedInstanceLocation = null)
+    private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, LinkedListBasedImmutableJsonPointer? expectedInstanceLocation = null)
     {
         Assert.Equal(expectedValidStatus, actualValidationResult.IsValid);
 

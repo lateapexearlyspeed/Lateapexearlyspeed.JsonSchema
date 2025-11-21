@@ -34,17 +34,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/p1"), error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/p1"), error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/additionalProperties/type"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/additionalProperties/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/p2"), error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/p2"), error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/additionalProperties/type"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/additionalProperties/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             }
             );
@@ -79,17 +79,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/allOf/0/type"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/allOf/0/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/allOf/1/type"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/allOf/1/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             }
         );
@@ -124,17 +124,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/anyOf/1/type"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/anyOf/1/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/anyOf/2/type"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/anyOf/2/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             }
         );
@@ -163,17 +163,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(ArrayContainsValidator.GetFailedMaxContainsErrorMessage(instance, 2), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("maxContains", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/maxContains"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/maxContains"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.ValidatedArrayItemsCountOutOfRange, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/3"), error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/3"), error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/contains/type"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/contains/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             }
         );
@@ -201,9 +201,9 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/if/type"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/if/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             }
         );
@@ -233,9 +233,9 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.Integer, JsonValueKind.String), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/then/type"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/then/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             }
         );
@@ -269,17 +269,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(DependentRequiredKeyword.ErrorMessage("p1", "d2"), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("dependentRequired", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/dependentRequired"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/dependentRequired"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.NotFoundRequiredDependentProperty, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(DependentRequiredKeyword.ErrorMessage("p2", "d4"), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("dependentRequired", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/dependentRequired"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/dependentRequired"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.NotFoundRequiredDependentProperty, error.ResultCode);
             }
         );
@@ -313,17 +313,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/dependentSchemas/p2"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/dependentSchemas/p2"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/dependentSchemas/p3"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/dependentSchemas/p3"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
             }
         );
@@ -351,17 +351,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/0"), error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/0"), error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/items/type"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/items/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/1"), error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/1"), error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/items/type"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/items/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             }
         );
@@ -391,17 +391,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal("More than one schema validate instance", error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("oneOf", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/oneOf"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/oneOf"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.MoreThanOnePassedSchemaFound, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/oneOf/0/type"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/oneOf/0/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             }
         );
@@ -433,17 +433,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/p1"), error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/p1"), error.InstanceLocation);
                 Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/patternProperties/p1"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/patternProperties/p1"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/p2"), error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/p2"), error.InstanceLocation);
                 Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/patternProperties/p2"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/patternProperties/p2"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
             }
         );
@@ -467,17 +467,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/0"), error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/0"), error.InstanceLocation);
                 Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/prefixItems/0"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/prefixItems/0"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/1"), error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/1"), error.InstanceLocation);
                 Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/prefixItems/1"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/prefixItems/1"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
             }
         );
@@ -509,17 +509,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/p1"), error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/p1"), error.InstanceLocation);
                 Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/properties/p1"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/properties/p1"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/p2"), error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/p2"), error.InstanceLocation);
                 Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/properties/p2"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/properties/p2"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
             }
         );
@@ -548,17 +548,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/propertyNames"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/propertyNames"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/propertyNames"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/propertyNames"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
             }
         );
@@ -582,17 +582,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(RequiredKeyword.ErrorMessage("p1"), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("required", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/required"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/required"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.NotFoundRequiredProperty, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(RequiredKeyword.ErrorMessage("p2"), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("required", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/required"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/required"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.NotFoundRequiredProperty, error.ResultCode);
             }
         );
@@ -618,9 +618,9 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/not/type"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/not/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             }
         );
@@ -646,17 +646,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(NotKeyword.ErrorMessage(instance), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("not", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/not"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/not"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.SubSchemaPassedUnexpected, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/not/anyOf/1"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/not/anyOf/1"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
             }
         );
@@ -681,17 +681,17 @@ public class ListOutputFormatTests
             error =>
             {
                 Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Create("/0"), error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/0"), error.InstanceLocation);
                 Assert.Null(error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/items"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/items"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
             },
             error =>
             {
                 Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Array), error.ErrorMessage);
-                Assert.Equal(ImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
                 Assert.Equal("type", error.Keyword);
-                Assert.Equal(ImmutableJsonPointer.Create("/type"), error.RelativeKeywordLocation);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/type"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             }
         );

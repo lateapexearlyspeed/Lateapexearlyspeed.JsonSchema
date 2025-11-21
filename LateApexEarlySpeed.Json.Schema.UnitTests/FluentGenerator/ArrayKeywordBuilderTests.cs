@@ -23,10 +23,10 @@ public class ArrayKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("{}");
-        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Object), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Object), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("null");
-        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Null), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, GetInvalidTokenErrorMessage(InstanceType.Null), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -45,17 +45,17 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [1.5, null, "abc", {"A":2, "B":{}}, [1, {}]]
             """);
-        AssertValidationResult(validationResult, false, "Array length not same, one is 6 but another is 5", ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, "Array length not same, one is 6 but another is 5", LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("""
             [-1, 1.5, null, "abc", {"A":1111111111111, "B":{}}, [1, {}]]
             """);
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(2, 1111111111111), ImmutableJsonPointer.Create("/4/A"));
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(2, 1111111111111), LinkedListBasedImmutableJsonPointer.Create("/4/A"));
 
         validationResult = jsonValidator.Validate("""
             [-1, 1.5, null, "abc", {"A":2, "B":{}}, [1111111111, {}]]
             """);
-        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1, 1111111111), ImmutableJsonPointer.Create("/5/0"));
+        AssertValidationResult(validationResult, false, JsonInstanceElement.NumberNotSameMessageTemplate(1, 1111111111), LinkedListBasedImmutableJsonPointer.Create("/5/0"));
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [1, 2, 3, 4]
             """);
-        AssertValidationResult(validationResult, false, "Array length not same, one is 3 but another is 4", ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, "Array length not same, one is 3 but another is 4", LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [{"A":""}, {"A":"aaaaaa"}]
             """);
-        AssertValidationResult(validationResult, false, MaxLengthKeyword.ErrorMessage(6, 5), ImmutableJsonPointer.Create("/1/A"));
+        AssertValidationResult(validationResult, false, MaxLengthKeyword.ErrorMessage(6, 5), LinkedListBasedImmutableJsonPointer.Create("/1/A"));
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [{"A":""}, {"A":"aaaaaa"}]
             """);
-        AssertValidationResult(validationResult, false, MaxLengthKeyword.ErrorMessage(6, 5), ImmutableJsonPointer.Create("/1/A"));
+        AssertValidationResult(validationResult, false, MaxLengthKeyword.ErrorMessage(6, 5), LinkedListBasedImmutableJsonPointer.Create("/1/A"));
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [{"A":"aaaaa"}, {"A":"x"}]
             """);
-        AssertValidationResult(validationResult, false, MaxLengthKeyword.ErrorMessage(1, 0), ImmutableJsonPointer.Create("/1/A"));
+        AssertValidationResult(validationResult, false, MaxLengthKeyword.ErrorMessage(1, 0), LinkedListBasedImmutableJsonPointer.Create("/1/A"));
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [1, 2]
             """);
-        AssertValidationResult(validationResult, false, MinItemsKeyword.ErrorMessage(2, 3), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinItemsKeyword.ErrorMessage(2, 3), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [1, 2, 3, 4]
             """);
-        AssertValidationResult(validationResult, false, MaxItemsKeyword.ErrorMessage(4, 3), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaxItemsKeyword.ErrorMessage(4, 3), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -185,7 +185,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [1, 2]
             """);
-        AssertValidationResult(validationResult, false, MinItemsKeyword.ErrorMessage(2, 3), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinItemsKeyword.ErrorMessage(2, 3), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -203,12 +203,12 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [1, 2, 2]
             """);
-        AssertValidationResult(validationResult, false, UniqueItemsKeyword.ErrorMessage("2", 1, 2), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, UniqueItemsKeyword.ErrorMessage("2", 1, 2), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("""
             [{"A": 1, "B": 2}, {"B": 2, "A": 1}]
             """);
-        AssertValidationResult(validationResult, false, UniqueItemsKeyword.ErrorMessage("""{"A": 1, "B": 2}""", 0, 1), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, UniqueItemsKeyword.ErrorMessage("""{"A": 1, "B": 2}""", 0, 1), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -227,7 +227,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [{"A":0}]
             """);
-        AssertValidationResult(validationResult, false,  "bad msg, length: 1", ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false,  "bad msg, length: 1", LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     private class TestClass
@@ -251,7 +251,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [1, 2]
             """);
-        AssertValidationResult(validationResult, false, "bad msg, length: 2", ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, "bad msg, length: 2", LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -270,7 +270,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [{"A": 2}, 5]
             """);
-        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedContainsErrorMessage("""[{"A": 2}, 5]"""), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedContainsErrorMessage("""[{"A": 2}, 5]"""), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -289,7 +289,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [{"A": 2}, 5]
             """);
-        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedContainsErrorMessage("""[{"A": 2}, 5]"""), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedContainsErrorMessage("""[{"A": 2}, 5]"""), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -308,7 +308,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [5, {"A": 1}]
             """);
-        AssertValidationResult(validationResult, false, NotContainsKeyword.ErrorMessage("""{"A": 1}"""), ImmutableJsonPointer.Create("/1"));
+        AssertValidationResult(validationResult, false, NotContainsKeyword.ErrorMessage("""{"A": 1}"""), LinkedListBasedImmutableJsonPointer.Create("/1"));
     }
 
     [Fact]
@@ -327,12 +327,12 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [{"A": 1}, 2]
             """);
-        AssertValidationResult(validationResult, false, MaxItemsKeyword.ErrorMessage(2, 1), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaxItemsKeyword.ErrorMessage(2, 1), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("""
             []
             """);
-        AssertValidationResult(validationResult, false, MinItemsKeyword.ErrorMessage(0, 1), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinItemsKeyword.ErrorMessage(0, 1), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -351,12 +351,12 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [{"A": 2}, 5]
             """);
-        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedMinContainsErrorMessage("""[{"A": 2}, 5]""", 1), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedMinContainsErrorMessage("""[{"A": 2}, 5]""", 1), LinkedListBasedImmutableJsonPointer.Empty);
 
         validationResult = jsonValidator.Validate("""
             [{"A": 1}, 5, {"A": 1}]
             """);
-        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedMaxContainsErrorMessage("""[{"A": 1}, 5, {"A": 1}]""", 1), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedMaxContainsErrorMessage("""[{"A": 1}, 5, {"A": 1}]""", 1), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -375,7 +375,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [{"B":2, "C":1}]
             """);
-        AssertValidationResult(validationResult, false,  "Properties not match, one has property:A but another not", ImmutableJsonPointer.Create("/0"));
+        AssertValidationResult(validationResult, false,  "Properties not match, one has property:A but another not", LinkedListBasedImmutableJsonPointer.Create("/0"));
     }
 
     [Fact]
@@ -393,7 +393,7 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             [1]
             """);
-        AssertValidationResult(validationResult, false, MaxItemsKeyword.ErrorMessage(1, 0), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MaxItemsKeyword.ErrorMessage(1, 0), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     [Fact]
@@ -416,10 +416,10 @@ public class ArrayKeywordBuilderTests
         validationResult = jsonValidator.Validate("""
             []
             """);
-        AssertValidationResult(validationResult, false, MinItemsKeyword.ErrorMessage(0, 1), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, MinItemsKeyword.ErrorMessage(0, 1), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
-    private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, ImmutableJsonPointer? expectedInstanceLocation = null)
+    private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, LinkedListBasedImmutableJsonPointer? expectedInstanceLocation = null)
     {
         Assert.Equal(expectedValidStatus, actualValidationResult.IsValid);
         Assert.Equal(expectedErrorMessage, actualValidationResult.ValidationErrors.SingleOrDefault()?.ErrorMessage);

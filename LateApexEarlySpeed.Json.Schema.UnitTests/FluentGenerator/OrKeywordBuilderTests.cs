@@ -24,7 +24,7 @@ public class OrKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("""[{}, 1]""");
-        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedContainsErrorMessage("""[{}, 1]"""), ImmutableJsonPointer.Empty);
+        AssertValidationResult(validationResult, false, ArrayContainsValidator.GetFailedContainsErrorMessage("""[{}, 1]"""), LinkedListBasedImmutableJsonPointer.Empty);
 
         jsonSchemaBuilder = new JsonSchemaBuilder();
         jsonSchemaBuilder.ObjectHasProperty("A", b => b.Or(
@@ -40,10 +40,10 @@ public class OrKeywordBuilderTests
         AssertValidationResult(validationResult, true);
 
         validationResult = jsonValidator.Validate("""{"A": 1}""");
-        AssertValidationResult(validationResult, false, AnyOfKeyword.ErrorMessage(), ImmutableJsonPointer.Create("/A"));
+        AssertValidationResult(validationResult, false, AnyOfKeyword.ErrorMessage(), LinkedListBasedImmutableJsonPointer.Create("/A"));
     }
 
-    private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, ImmutableJsonPointer? expectedInstanceLocation = null)
+    private static void AssertValidationResult(ValidationResult actualValidationResult, bool expectedValidStatus, string? expectedErrorMessage = null, LinkedListBasedImmutableJsonPointer? expectedInstanceLocation = null)
     {
         Assert.Equal(expectedValidStatus, actualValidationResult.IsValid);
 

@@ -32,8 +32,8 @@ public class ValidationErrorTests
         {
             const string errorMessage = "error message";
             const string keyword = "keyword-value";
-            var instanceLocation = ImmutableJsonPointer.Create("/abc")!;
-            var keywordLocation = ImmutableJsonPointer.Create("/type");
+            var instanceLocation = LinkedListBasedImmutableJsonPointer.Create("/abc")!;
+            var keywordLocation = LinkedListBasedImmutableJsonPointer.Create("/type");
 
             const string expectedInstanceLocation = "Instance location (in json pointer format): /abc";
             const string expectedKeyword = "keyword: keyword-value";

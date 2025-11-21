@@ -7,13 +7,13 @@ namespace LateApexEarlySpeed.Json.Schema.JInstance;
 
 public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 {
-    private readonly ImmutableJsonPointer _instanceLocation;
+    private readonly LinkedListBasedImmutableJsonPointer _instanceLocation;
 
     private readonly CacheHolder _cacheHolder;
 
     internal JsonElement InternalJsonElement { get; }
 
-    public JsonInstanceElement(JsonElement jsonElement, ImmutableJsonPointer instanceLocation)
+    public JsonInstanceElement(JsonElement jsonElement, LinkedListBasedImmutableJsonPointer instanceLocation)
     {
         InternalJsonElement = jsonElement;
         _instanceLocation = instanceLocation;
@@ -65,7 +65,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
         _cacheHolder.ArrayItems = arrayItems;
     }
 
-    public ImmutableJsonPointer Location => _instanceLocation;
+    public LinkedListBasedImmutableJsonPointer Location => _instanceLocation;
 
     public JsonValueKind ValueKind => InternalJsonElement.ValueKind;
 
@@ -418,7 +418,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 
     public static JsonInstanceElement ParseValue(ref Utf8JsonReader reader)
     {
-        return new JsonInstanceElement(JsonElement.ParseValue(ref reader), ImmutableJsonPointer.Empty);
+        return new JsonInstanceElement(JsonElement.ParseValue(ref reader), LinkedListBasedImmutableJsonPointer.Empty);
     }
 
     /// <summary>

@@ -158,7 +158,7 @@ public class JsonValidator
     {
         options = new JsonSchemaOptions(options, _globalSchemaResourceRegistry);
 
-        return _mainSchemaDoc.DoValidation(new JsonInstanceElement(jsonInstance, ImmutableJsonPointer.Empty), options);
+        return _mainSchemaDoc.DoValidation(new JsonInstanceElement(jsonInstance, LinkedListBasedImmutableJsonPointer.Empty), options);
     }
 
     /// <summary>

@@ -274,7 +274,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
         }
     }
 
-    private static ValidationError CreateValidationErrorWithLocation(ResultCode resultCode, string errorMessage, string locationName, ValidationPathStack validationPathStack, ImmutableJsonPointer instanceLocation)
+    private static ValidationError CreateValidationErrorWithLocation(ResultCode resultCode, string errorMessage, string locationName, ValidationPathStack validationPathStack, LinkedListBasedImmutableJsonPointer instanceLocation)
     {
         validationPathStack.PushRelativeLocation(locationName);
         var validationError = new ValidationError(resultCode, errorMessage, validationPathStack, locationName, instanceLocation);

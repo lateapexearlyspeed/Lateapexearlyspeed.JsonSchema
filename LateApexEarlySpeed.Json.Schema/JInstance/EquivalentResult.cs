@@ -6,14 +6,14 @@ public class EquivalentResult
 {
     public bool Result { get; private init; }
     public string? DetailedMessage { get; private init; }
-    public ImmutableJsonPointer? ThisLocation { get; private init; }
-    public ImmutableJsonPointer? OtherLocation { get; private init; }
+    public LinkedListBasedImmutableJsonPointer? ThisLocation { get; private init; }
+    public LinkedListBasedImmutableJsonPointer? OtherLocation { get; private init; }
 
     private EquivalentResult()
     {
     }
 
-    public static EquivalentResult Fail(string detailedMessage, ImmutableJsonPointer thisLocation, ImmutableJsonPointer otherLocation)
+    public static EquivalentResult Fail(string detailedMessage, LinkedListBasedImmutableJsonPointer thisLocation, LinkedListBasedImmutableJsonPointer otherLocation)
     {
         return new EquivalentResult
         {

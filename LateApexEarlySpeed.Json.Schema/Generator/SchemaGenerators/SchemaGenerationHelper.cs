@@ -35,7 +35,7 @@ internal static class SchemaGenerationHelper
 
     private static Uri CreateRefUri(Type type, Uri baseUri)
     {
-        var relativeRefUri = new Uri("#" + new ImmutableJsonPointer(
+        var relativeRefUri = new Uri("#" + new ArrayBasedImmutableJsonPointer(
             new[] { DefsKeyword.Keyword, TypeSchemaDefinitions.GetDefName(type) }), UriKind.Relative);
 
         return new Uri(baseUri, relativeRefUri);
