@@ -181,6 +181,7 @@ internal class RelativeKeywordLocationStack
         _locationStack.Pop();
     }
 
+    /// <remarks>This method uses <see cref="ArrayBasedImmutableJsonPointer"/> to represent json pointer, rather than <see cref="LinkedListBasedImmutableJsonPointer"/> which will allocate a large number of linked list nodes (when output large number of failed result nodes, will cause nonnegligible more memory size than one long array)</remarks>
     public ArrayBasedImmutableJsonPointer ToJsonPointer()
     {
         return new ArrayBasedImmutableJsonPointer(_locationStack);
@@ -192,7 +193,8 @@ internal class RelativeKeywordLocationStack
     /// <remarks>
     /// Previously <see cref="RelativeKeywordLocationStack"/> used <see cref="Stack{T}"/> typed field <see cref="_locationStack"/>,
     /// its default enumerator provides LIFO behavior, so <see cref="ToJsonPointer"/> had to call <see cref="Enumerable.Reverse"/> for JSON pointer generation.
-    /// This linq method caused nonnegligible array allocation internally thus large cpu time when use <see cref="OutputFormat.List"/> mode with multiple-branch schema structure (e.g. with lots of 'anyOf' and '$ref')
+    /// This linq method caused nonnegligible array allocation internally thus large cpu time when use <see cref="OutputFormat.List"/> mode with multiple-branch schema structure (e.g. with lots of 'anyOf' and '$ref').
+    /// See related schema example: https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/blob/d9e418fa0aa50b2fa5cdc588e785a5821ccd44a9/Json.Schema.Libraries.Benchmark/TestData/schema-json-everything-issues-766.json
     /// </remarks>
     private class FifoEnumerableStack : IReadOnlyCollection<string>
     {
