@@ -1,0 +1,981 @@
+{
+  "title": "",
+  "allOf": [
+    {
+      "type": "object",
+      "properties": {
+        "expressions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/generic-expression-def"
+          }
+        }
+      },
+      "required": [
+      ]
+    }
+  ],
+  "$defs": {
+    "generic-expression-def": {
+      "type": "object",
+      "allOf": [
+        {
+          "properties": {
+            "expression": {
+              "description": "The actual expression to be interpreted",
+              "$ref": "#/$defs/expression-code-ast"
+            },
+            "engine": {
+              "type": "string",
+              "enum": [
+                "CodeAst"
+              ]
+            }
+          },
+          "required": [
+            "expression",
+            "engine"
+          ]
+        }
+      ]
+    },
+    "expression-code-ast": {
+      "$ref": "#/$defs/expression-code-ast-root"
+    },
+    "expression-code-ast-types": {
+      "type": "string",
+      "enum": [
+        "Number",
+        "Boolean",
+        "String",
+        "DateTime",
+        "Object",
+        "Array"
+      ]
+    },
+    "expression-code-ast-root": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/expression-code-ast-literal-of-number"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-plus"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-01"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-02"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-03"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-04"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-05"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-06"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-07"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-08"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-09"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-10"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-11"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-12"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-13"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-14"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-15"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-16"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-17"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-18"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-19"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-20"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-21"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-22"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-23"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-24"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-25"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-26"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-27"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-28"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-29"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-30"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-31"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-32"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-33"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-34"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-35"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-36"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-37"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-38"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-39"
+        },
+        {
+          "$ref": "#/$defs/expression-code-ast-40"
+        }
+      ]
+    },
+    "expression-code-ast-literal-of-number": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "LiteralOfNumber"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "value"
+      ]
+    },
+    "expression-code-ast-01": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "01"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-02": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "02"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-03": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "03"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-04": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "04"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-05": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "05"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-06": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "06"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-07": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "07"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-08": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "08"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-09": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "09"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-10": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "10"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-11": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "11"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-12": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "12"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-13": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "13"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-14": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "14"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-15": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "15"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-16": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "16"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-17": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "17"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-18": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "18"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-19": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "19"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-20": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "20"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-21": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "21"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-22": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "22"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-23": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "23"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-24": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "24"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-25": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "25"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-26": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "26"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-27": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "27"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-28": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "28"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-29": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "29"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-30": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "30"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-31": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "31"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-32": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "32"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-33": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "33"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-34": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "34"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-35": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "35"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-36": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "36"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-37": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "37"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-38": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "38"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-39": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "39"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-40": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "40"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    },
+    "expression-code-ast-plus": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "Plus"
+        },
+        "left": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        },
+        "right": {
+          "$ref": "#/$defs/expression-code-ast-root"
+        }
+      },
+      "required": [
+        "type",
+        "left",
+        "right"
+      ]
+    }
+  }
+}

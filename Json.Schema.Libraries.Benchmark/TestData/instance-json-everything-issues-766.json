@@ -1,0 +1,39 @@
+{
+  "expressions": [
+    {
+      "engine": "CodeAst",
+      "expression": {
+        "type": "Plus",
+        "left": {
+          "type": "Plus",
+          "left": {
+            "type": "LiteralOfNumber",
+            "value": 100.000000
+          },
+          "right": {
+            "type": "LiteralOfNumber",
+            "value": 100.000000
+          }
+        },
+        "right": {
+          "type": "Plus",
+          "left": {
+            "type": "LiteralOfNumber",
+            "value": 100.000000
+          },
+          "right": {
+            "type": "Plus",
+            "left": {
+              "type": "LiteralOfNumber",
+              "value": 100.000000
+            },
+            "right": {
+              "type": "LiteralOfNumber",
+              "value": 100.000000
+            }
+          }
+        }
+      }
+    }
+  ]
+}
