@@ -6,7 +6,7 @@ using LateApexEarlySpeed.Json.Schema.JSchema.JsonConverters;
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
 [JsonConverter(typeof(JsonSchemaJsonConverter<JsonSchema>))]
-internal abstract class JsonSchema : NamedValidationNode, ISchemaContainerElement
+public abstract class JsonSchema : NamedValidationNode, ISchemaContainerElement
 {
     public bool IsSchemaType => true;
 

@@ -155,7 +155,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             {
                 dynamicAnchor = reader.GetString();
             }
-            else if (ValidationKeywordRegistry.ContainsIgnoredKeyword(keywordName))
+            else if (ValidationKeywordRegistry.IsIgnoredKeyword(keywordName))
             {
                 reader.Skip();
             }

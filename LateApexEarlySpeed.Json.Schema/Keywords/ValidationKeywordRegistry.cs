@@ -71,7 +71,7 @@ public static class ValidationKeywordRegistry
         return KeywordsDictionary.GetValueOrDefault(keywordName);
     }
 
-    public static bool ContainsIgnoredKeyword(string keywordName)
+    internal static bool IsIgnoredKeyword(string keywordName)
     {
         return IgnoredKeywordNames.Contains(keywordName);
     }

@@ -124,7 +124,7 @@ internal class ImmutableValidationErrorCollection
 /// </summary>
 public class ValidationError
 {
-    internal ValidationError(ResultCode failedCode, string errorMessage, ValidationPathStack? validationPathStack, string? keyword, ImmutableJsonPointer instanceLocation)
+    public ValidationError(ResultCode failedCode, string errorMessage, ValidationPathStack? validationPathStack, string? keyword, ImmutableJsonPointer instanceLocation)
         : this(failedCode,
             keyword,
             errorMessage,

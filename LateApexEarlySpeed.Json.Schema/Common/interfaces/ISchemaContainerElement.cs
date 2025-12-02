@@ -2,7 +2,7 @@
 
 namespace LateApexEarlySpeed.Json.Schema.Common.interfaces;
 
-internal interface ISchemaContainerElement
+public interface ISchemaContainerElement
 {
     /// <summary>
     /// Find sub container element by name
