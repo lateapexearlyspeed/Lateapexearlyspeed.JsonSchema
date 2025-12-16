@@ -18,7 +18,7 @@ public class BenchmarkTestClass
     {
         _schemaText = File.ReadAllText("schema.json");
 
-        _jsonSchemaDotnet = JsonSchema.FromText(_schemaText);
+        _jsonSchemaDotnet = JsonSchema.FromText(_schemaText, new BuildOptions { SchemaRegistry = new SchemaRegistry() });
         _jsonValidator = new JsonValidator(_schemaText);
 
         _instanceText = File.ReadAllText("instance.json");
@@ -41,7 +41,7 @@ public class BenchmarkTestClass
     {
         using (var instance = JsonDocument.Parse(_instanceText))
         {
-            return JsonSchema.FromText(_schemaText).Evaluate(instance);
+            return JsonSchema.FromText(_schemaText, new BuildOptions{SchemaRegistry = new SchemaRegistry()}).Evaluate(instance.RootElement);
         }
     }
 
@@ -56,7 +56,7 @@ public class BenchmarkTestClass
     {
         using (var instance = JsonDocument.Parse(_instanceText))
         {
-            return _jsonSchemaDotnet.Evaluate(instance);
+            return _jsonSchemaDotnet.Evaluate(instance.RootElement);
         }
     }
 
