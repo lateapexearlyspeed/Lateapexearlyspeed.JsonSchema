@@ -21,7 +21,7 @@ internal class DependentRequiredKeyword : KeywordBase
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        return ValidationResultsComposer.Compose(new Validator(DependentProperties, Name, instance, options), options.OutputFormat);
     }
 
     public static string ErrorMessage(string dependentProperty, string requiredProp)
@@ -29,17 +29,19 @@ internal class DependentRequiredKeyword : KeywordBase
         return $"Instance contains property: '{dependentProperty}' but not contains dependent property: '{requiredProp}'";
     }
 
-    private class Validator : IValidator
+    internal class Validator : IValidator
     {
-        private readonly DependentRequiredKeyword _dependentRequiredKeyword;
+        private readonly IReadOnlyDictionary<string, string[]> _dependentProperties;
+        private readonly string _keywordName;
         private readonly JsonInstanceElement _instance;
         private readonly JsonSchemaOptions _options;
 
         private ValidationResult? _fastReturnResult;
 
-        public Validator(DependentRequiredKeyword dependentRequiredKeyword, JsonInstanceElement instance, JsonSchemaOptions options)
+        public Validator(IReadOnlyDictionary<string, string[]> dependentProperties, string keywordName, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            _dependentRequiredKeyword = dependentRequiredKeyword;
+            _dependentProperties = dependentProperties;
+            _keywordName = keywordName;
             _instance = instance;
             _options = options;
         }
@@ -48,7 +50,7 @@ internal class DependentRequiredKeyword : KeywordBase
         {
             var instancePropertyNames = new HashSet<string>(_instance.EnumerateObject().Select(p => p.Name));
 
-            foreach (KeyValuePair<string, string[]> dependentProperty in _dependentRequiredKeyword.DependentProperties)
+            foreach (KeyValuePair<string, string[]> dependentProperty in _dependentProperties)
             {
                 if (instancePropertyNames.Contains(dependentProperty.Key))
                 {
@@ -60,7 +62,7 @@ internal class DependentRequiredKeyword : KeywordBase
                                 ResultCode.NotFoundRequiredDependentProperty,
                                 ErrorMessage(dependentProperty.Key, requiredProp),
                                 _options.ValidationPathStack,
-                                _dependentRequiredKeyword.Name,
+                                _keywordName,
                                 _instance.Location));
 
                             yield return _fastReturnResult;

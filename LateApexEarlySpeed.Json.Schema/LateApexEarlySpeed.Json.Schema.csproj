@@ -57,4 +57,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Keywords\Draft7\" />
+  </ItemGroup>
+
 </Project>

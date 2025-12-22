@@ -34,19 +34,20 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement, I
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        return ValidationResultsComposer.Compose(new Validator(_dependentSchemas, instance, options), options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    internal class Validator : IValidator
     {
-        private readonly DependentSchemasKeyword _dependentSchemasKeyword;
+        private readonly IReadOnlyDictionary<string, JsonSchema> _dependentSchemas;
         private readonly JsonInstanceElement _instance;
         private readonly JsonSchemaOptions _options;
+        
         private ValidationResult? _fastReturnResult;
 
-        public Validator(DependentSchemasKeyword dependentSchemasKeyword, JsonInstanceElement instance, JsonSchemaOptions options)
+        public Validator(IReadOnlyDictionary<string, JsonSchema> dependentSchemas, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            _dependentSchemasKeyword = dependentSchemasKeyword;
+            _dependentSchemas = dependentSchemas;
             _instance = instance;
             _options = options;
         }
@@ -55,7 +56,7 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement, I
         {
             foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
             {
-                if (_dependentSchemasKeyword.DependentSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? subSchema))
+                if (_dependentSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? subSchema))
                 {
                     ValidationResult result = subSchema.Validate(_instance, _options);
                     if (!result.IsValid)
@@ -70,9 +71,7 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement, I
 
         public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
         {
-            validationResult = _fastReturnResult;
-
-            return _fastReturnResult is not null;
+            return (validationResult = _fastReturnResult) is not null;
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);

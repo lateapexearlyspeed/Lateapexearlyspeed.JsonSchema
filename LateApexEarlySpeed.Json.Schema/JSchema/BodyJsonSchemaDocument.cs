@@ -18,8 +18,8 @@ internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
 
     public SchemaResourceRegistry? GlobalSchemaResourceRegistry { get; set; }
 
-    internal BodyJsonSchemaDocument(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements = null, Uri? id = null, DefsKeyword? defsKeyword = null)
-        : base(GetBaseUri(id), keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeyword, potentialSchemaContainerElements)
+    internal BodyJsonSchemaDocument(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements = null, Uri? id = null, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords = null)
+        : base(GetBaseUri(id), keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeywords, potentialSchemaContainerElements)
     {
     }
 

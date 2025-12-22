@@ -54,7 +54,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
         SchemaReferenceKeyword? schemaReference = null;
         SchemaDynamicReferenceKeyword? schemaDynamicReference = null;
-        DefsKeyword? defsKeyword = null;
+        List<(string name, DefsKeyword keyword)>? defsKeywords = null;
         Uri? id = null;
         string? anchor = null;
         string? dynamicAnchor = null;
@@ -139,9 +139,19 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             {
                 schemaDynamicReference = JsonSerializer.Deserialize<SchemaDynamicReferenceKeyword>(ref reader, options);
             }
-            else if (keywordName == DefsKeyword.Keyword)
+            else if (keywordName == DefsKeyword.Keyword || keywordName == DefsKeyword.KeywordDraft7)
             {
-                defsKeyword = JsonSerializer.Deserialize<DefsKeyword>(ref reader, options)!;
+                defsKeywords ??= new List<(string name, DefsKeyword keyword)>(2);
+
+                if (defsKeywords.Any(defs => defs.name == keywordName))
+                {
+                    reader.Skip();
+                }
+                else
+                {
+                    DefsKeyword defsKeyword = JsonSerializer.Deserialize<DefsKeyword>(ref reader, options)!;
+                    defsKeywords.Add((keywordName, defsKeyword));                    
+                }
             }
             else if (keywordName == IdKeyword.Keyword)
             {
@@ -199,7 +209,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         JsonSchema schema;
         if (typeToConvert == typeof(IJsonSchemaDocument))
         {
-            schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, potentialSchemaContainerElements, id, defsKeyword);
+            schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, potentialSchemaContainerElements, id, defsKeywords);
         }
         else if (id is not null)
         {
@@ -211,11 +221,11 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 schemaDynamicReference,
                 anchor,
                 dynamicAnchor,
-                defsKeyword, potentialSchemaContainerElements);
+                defsKeywords, potentialSchemaContainerElements);
         }
         else
         {
-            schema = new BodyJsonSchema(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeyword, potentialSchemaContainerElements);
+            schema = new BodyJsonSchema(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeywords, potentialSchemaContainerElements);
         }
 
         return (T)(object)schema;
@@ -269,10 +279,13 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
 
             // defs part:
-            if (schema.DefsKeyword is not null)
+            if (schema.DefsKeywords is not null)
             {
-                writer.WritePropertyName(DefsKeyword.Keyword);
-                JsonSerializer.Serialize(writer, schema.DefsKeyword, options);
+                foreach ((string name, DefsKeyword defsKeyword) in schema.DefsKeywords)
+                {
+                    writer.WritePropertyName(name);
+                    JsonSerializer.Serialize(writer, defsKeyword, options);                    
+                }
             }
 
             // Reference & DynamicReference part:
