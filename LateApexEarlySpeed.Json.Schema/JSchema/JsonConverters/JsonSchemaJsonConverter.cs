@@ -1,10 +1,12 @@
-﻿using System.Diagnostics;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords;
+using LateApexEarlySpeed.Json.Schema.Keywords.Draft7;
+using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema.JsonConverters;
 
@@ -37,12 +39,19 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
         var validationKeywords = new List<KeywordBase>();
 
+        var deserializerContext = new JsonSchemaDeserializerContext(options);
+
+        SchemaKeyword? schemaKeyword = null;
+
         PropertiesKeyword? propertiesKeyword = null;
         PatternPropertiesKeyword? patternPropertiesKeyword = null;
         AdditionalPropertiesKeyword? additionalPropertiesKeyword = null;
 
         PrefixItemsKeyword? prefixItemsKeyword = null;
         ItemsKeyword? itemsKeyword = null;
+
+        AdditionalItemsKeyword? additionalItemsKeyword = null;
+        ItemsWithMultiSchemasKeyword? itemsWithMultiSchemasKeyword = null;
 
         JsonSchema? predictSchema = null;
         JsonSchema? positiveSchema = null;
@@ -56,7 +65,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         SchemaDynamicReferenceKeyword? schemaDynamicReference = null;
         List<(string name, DefsKeyword keyword)>? defsKeywords = null;
         Uri? id = null;
-        string? anchor = null;
+        IPlainNameIdentifierKeyword? plainNameIdentifier = null;
         string? dynamicAnchor = null;
 
         Dictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements = null;
@@ -65,7 +74,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         {
             string keywordName = reader.GetString()!;
 
-            Type? keywordType = ValidationKeywordRegistry.GetKeyword(keywordName);
+            Type? keywordType = ValidationKeywordRegistry.GetKeyword(keywordName, deserializerContext.Dialect);
             reader.Read();
 
             if (keywordType is not null)
@@ -88,13 +97,21 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 {
                     additionalPropertiesKeyword = additionalProperties;
                 }
+                else if (keyword is ItemsKeyword items)
+                {
+                    itemsKeyword = items;
+                }
                 else if (keyword is PrefixItemsKeyword prefixItems)
                 {
                     prefixItemsKeyword = prefixItems;
                 }
-                else if (keyword is ItemsKeyword items)
+                else if (keyword is AdditionalItemsKeyword additionalItems)
                 {
-                    itemsKeyword = items;
+                    additionalItemsKeyword = additionalItems;
+                }
+                else if (keyword is ItemsWithMultiSchemasKeyword itemsWithMultiSchemas)
+                {
+                    itemsWithMultiSchemasKeyword = itemsWithMultiSchemas;
                 }
             }
             else if (keywordName == ConditionalValidator.IfKeywordName)
@@ -155,11 +172,26 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
             else if (keywordName == IdKeyword.Keyword)
             {
-                id = new Uri(reader.GetString()!, UriKind.RelativeOrAbsolute);
+                string idValue = reader.GetString()!;
+                if (idValue.StartsWith('#'))
+                {
+                    plainNameIdentifier = new PlainNameFragmentIdKeyword(idValue.Substring(1));
+                }
+                else
+                {
+                    id = new Uri(idValue, UriKind.RelativeOrAbsolute);    
+                }
+            }
+            else if (keywordName == SchemaKeyword.Keyword)
+            {
+                schemaKeyword = SchemaKeyword.Create(new Uri(reader.GetString()!));
+                deserializerContext.Dialect = schemaKeyword.Dialect;
+
+                options = deserializerContext.ToJsonSerializerOptions();
             }
             else if (keywordName == AnchorKeyword.Keyword)
             {
-                anchor = reader.GetString();
+                plainNameIdentifier = new AnchorKeyword(reader.GetString()!);
             }
             else if (keywordName == DynamicAnchorKeyword.Keyword)
             {
@@ -177,55 +209,81 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             reader.Read();
         }
 
-        // Set dependent keywords
-        if (additionalPropertiesKeyword is not null)
-        {
-            additionalPropertiesKeyword.PropertiesKeyword = propertiesKeyword;
-            additionalPropertiesKeyword.PatternPropertiesKeyword = patternPropertiesKeyword;
-        }
-
-        if (itemsKeyword is not null)
-        {
-            itemsKeyword.PrefixItemsKeyword = prefixItemsKeyword;
-        }
-
         var schemaContainerValidators = new List<ISchemaContainerValidationNode>(2);
-        if (containsSchema is not null)
-        {
-            schemaContainerValidators.Add(new ArrayContainsValidator(containsSchema, minContains, maxContains));
-        }
 
-        if (predictSchema is not null || positiveSchema is not null || negativeSchema is not null)
+        // Based on spec, in Draft 7, when a schema contains a $ref property, any other properties in that schema will not be treated as JSON Schema keywords and will be ignored.
+        // Here when there is $ref property, we still keep existing $schema property for Json Schema Document.
+        if (deserializerContext.Dialect == DialectKind.Draft7 && schemaReference is not null)
         {
-            schemaContainerValidators.Add(new ConditionalValidator(predictSchema, positiveSchema, negativeSchema));
+            validationKeywords.Clear();
+            schemaDynamicReference = null;
+            plainNameIdentifier = null;
+            dynamicAnchor = null;
+            defsKeywords = null;
+            id = null;
+            potentialSchemaContainerElements = null;
         }
+        else
+        {
+            // Set dependent keywords
+            if (additionalPropertiesKeyword is not null)
+            {
+                additionalPropertiesKeyword.PropertiesKeyword = propertiesKeyword;
+                additionalPropertiesKeyword.PatternPropertiesKeyword = patternPropertiesKeyword;
+            }
 
-        // Although BodyJsonSchema supports merging duplicated keywords, but it is done by changing json schema tree structure. (That is:
-        // when there is duplicated keywords, schema structure will be changed)
-        // In json schema deserialization case, it is possible that original schema contains "json path" reference, so here we cannot 
-        // dare to change original json schema structure at risk of missing reference.
-        ThrowIfKeywordsHaveDuplication(validationKeywords);
+            if (itemsKeyword is not null)
+            {
+                itemsKeyword.PrefixItemsKeyword = prefixItemsKeyword;
+            }
+
+            if (additionalItemsKeyword is not null)
+            {
+                additionalItemsKeyword.ItemsWithMultiSchemasKeyword = itemsWithMultiSchemasKeyword;
+            }
+
+            if (containsSchema is not null)
+            {
+                schemaContainerValidators.Add(new ArrayContainsValidator(containsSchema, minContains, maxContains));
+            }
+
+            if (predictSchema is not null || positiveSchema is not null || negativeSchema is not null)
+            {
+                schemaContainerValidators.Add(new ConditionalValidator(predictSchema, positiveSchema, negativeSchema));
+            }
+
+            // Although BodyJsonSchema supports merging duplicated keywords, but it is done by changing json schema tree structure. (That is:
+            // when there is duplicated keywords, schema structure will be changed)
+            // In json schema deserialization case, it is possible that original schema contains "json path" reference, so here we cannot 
+            // dare to change original json schema structure at risk of missing reference.
+            ThrowIfKeywordsHaveDuplication(validationKeywords);    
+        }
 
         JsonSchema schema;
         if (typeToConvert == typeof(IJsonSchemaDocument))
         {
-            schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, potentialSchemaContainerElements, id, defsKeywords);
+            schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, plainNameIdentifier, dynamicAnchor, potentialSchemaContainerElements, schemaKeyword, id, defsKeywords);
         }
         else if (id is not null)
         {
             schema = new JsonSchemaResource(
+                schemaKeyword,
                 id,
                 validationKeywords,
                 schemaContainerValidators,
                 schemaReference,
                 schemaDynamicReference,
-                anchor,
+                plainNameIdentifier,
                 dynamicAnchor,
                 defsKeywords, potentialSchemaContainerElements);
         }
+        else if (schemaKeyword is not null)
+        {
+            throw ThrowHelper.CreateJsonSchemaContainsSchemaKeywordJsonException();
+        }
         else
         {
-            schema = new BodyJsonSchema(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeywords, potentialSchemaContainerElements);
+            schema = new BodyJsonSchema(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, plainNameIdentifier, dynamicAnchor, defsKeywords, potentialSchemaContainerElements);
         }
 
         return (T)(object)schema;
@@ -260,6 +318,11 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             if (value is JsonSchemaResource schemaResource)
             {
                 Debug.Assert(value.GetType() == typeof(JsonSchemaResource) || value.GetType() == typeof(BodyJsonSchemaDocument));
+
+                if (schemaResource.SchemaKeyword is not null)
+                {
+                    writer.WriteString(SchemaKeyword.Keyword, schemaResource.SchemaKeyword.DraftIdentifier.ToString());
+                }
 
                 writer.WriteString(IdKeyword.Keyword, schemaResource.BaseUri!.ToString());
                 schema = schemaResource;
@@ -301,13 +364,14 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 JsonSerializer.Serialize(writer, schema.SchemaDynamicReference, options);
             }
 
-            // Anchor & DynamicAnchor part:
-            if (schema.Anchor is not null)
+            // Plain named identifier part ($id or anchor):
+            if (schema.PlainNameIdentifierKeyword is not null)
             {
-                writer.WritePropertyName(AnchorKeyword.Keyword);
-                writer.WriteStringValue(schema.Anchor);
+                writer.WritePropertyName(schema.PlainNameIdentifierKeyword.KeywordName);
+                writer.WriteStringValue(schema.PlainNameIdentifierKeyword.SerializedValue);
             }
 
+            // DynamicAnchor part:
             if (schema.DynamicAnchor is not null)
             {
                 writer.WritePropertyName(DynamicAnchorKeyword.Keyword);

@@ -2,6 +2,7 @@
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords;
+using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
@@ -12,11 +13,14 @@ internal class JsonSchemaResource : BodyJsonSchema
     /// </summary>
     private readonly Uri _id;
 
-    public JsonSchemaResource(Uri id, IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
-        : base(keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeywords, potentialSchemaContainerElements)
+    public JsonSchemaResource(SchemaKeyword? schemaKeyword, Uri id, IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
+        : base(keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, plainNameIdentifierKeyword, dynamicAnchor, defsKeywords, potentialSchemaContainerElements)
     {
+        SchemaKeyword = schemaKeyword;
         _id = id;
     }
+
+    public SchemaKeyword? SchemaKeyword { get; }
 
     // Base uri of current schema resource, must be absolute uri
     public Uri? BaseUri { get; private set; }
@@ -58,9 +62,9 @@ internal class JsonSchemaResource : BodyJsonSchema
         return currentElement.IsSchemaType ? currentElement.GetSchema() : null;
     }
 
-    public BodyJsonSchema? FindSubSchemaByAnchor(string anchorName)
+    public BodyJsonSchema? FindSubSchemaByPlainNameIdentifier(string plainNameIdentifier)
     {
-        return FindBodySubSchemaByFilter(this, bodySchema => bodySchema.Anchor == anchorName);
+        return FindBodySubSchemaByFilter(this, bodySchema => bodySchema.PlainNameIdentifierKeyword is not null && bodySchema.PlainNameIdentifierKeyword.Identifier == plainNameIdentifier);
     }
 
     public BodyJsonSchema? FindSubSchemaByDynamicAnchor(string anchorName)
@@ -106,6 +110,13 @@ internal class JsonSchemaResource : BodyJsonSchema
 
     public BodyJsonSchema TransformToBodyJsonSchema()
     {
-        return new BodyJsonSchema(Keywords, SchemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, DefsKeywords, PotentialSchemaContainerElements);
+        var bodyJsonSchema = new BodyJsonSchema(Keywords, SchemaContainerValidators, SchemaReference, SchemaDynamicReference, PlainNameIdentifierKeyword, DynamicAnchor, DefsKeywords, PotentialSchemaContainerElements);
+
+        if (Name is not null)
+        {
+            bodyJsonSchema.Name = Name;
+        }
+
+        return bodyJsonSchema;
     }
 }

@@ -1,163 +1,41 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
+using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using LateApexEarlySpeed.Json.Schema.Common.interfaces;
+using System.Text.Json.Serialization;
+using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
+using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters.Draft7;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.Draft7;
 
-internal class DependenciesKeyword : KeywordBase
-{
-    private readonly IReadOnlyDictionary<string, JsonSchema>? _dependenciesSchema;
-    private readonly IReadOnlyDictionary<string, string[]>? _dependenciesProperty;
-
-    public DependenciesKeyword(IReadOnlyDictionary<string, JsonSchema>? dependenciesSchema, IReadOnlyDictionary<string, string[]>? dependenciesProperty)
-    {
-        _dependenciesSchema = dependenciesSchema;
-        _dependenciesProperty = dependenciesProperty;
-    }
-
-    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
-    {
-        if (instance.ValueKind != JsonValueKind.Object)
-        {
-            return ValidationResult.ValidResult;
-        }
-
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
-    }
-
-    private class Validator : IValidator
-    {
-        private readonly List<IValidator> _subValidators = new(2);
-
-        public Validator(DependenciesKeyword keyword, JsonInstanceElement instance, JsonSchemaOptions options)
-        {
-            if (keyword._dependenciesSchema is not null)
-            {
-                _subValidators.Add(new DependentSchemasKeyword.Validator(keyword._dependenciesSchema, instance, options));
-            }
-            
-            if (keyword._dependenciesProperty is not null)
-            {
-                _subValidators.Add(new DependentRequiredKeyword.Validator(keyword._dependenciesProperty, keyword.Name, instance, options));
-            }
-        }
-
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            foreach (IValidator subValidator in _subValidators)
-            {
-                foreach (ValidationResult validationResult in subValidator.EnumerateValidationResults())
-                {
-                    yield return validationResult;
-                }
-            }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            foreach (IValidator subValidator in _subValidators)
-            {
-                if (subValidator.CanFinishFast(out validationResult))
-                {
-                    return true;
-                }
-            }
-
-            validationResult = null;
-            return false;
-        }
-
-        public ResultTuple Result => _subValidators.Any(validator => !validator.Result.IsValid) ? ResultTuple.Invalid(null) : ResultTuple.Valid();
-    }
-}
-
-internal class AdditionalItemsKeyword : KeywordBase
-{
-    private readonly JsonSchema _schema;
-    private readonly ItemsWithMultiSchemasKeyword _itemsWithMultiSchemasKeyword;
-
-    public AdditionalItemsKeyword(JsonSchema schema, ItemsWithMultiSchemasKeyword itemsWithMultiSchemasKeyword)
-    {
-        _schema = schema;
-        _itemsWithMultiSchemasKeyword = itemsWithMultiSchemasKeyword;
-    }
-
-    protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
-    {
-        if (instance.ValueKind != JsonValueKind.Array)
-        {
-            return ValidationResult.ValidResult;
-        }
-
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
-    }
-
-    private class Validator : IValidator
-    {
-        private readonly AdditionalItemsKeyword _keyword;
-        private readonly JsonInstanceElement _instance;
-        private readonly JsonSchemaOptions _options;
-        
-        private ValidationResult? _fastReturnResult;
-
-        public Validator(AdditionalItemsKeyword keyword, JsonInstanceElement instance, JsonSchemaOptions options)
-        {
-            _keyword = keyword;
-            _instance = instance;
-            _options = options;
-        }
-
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            int prefixSchemasCount = _keyword._itemsWithMultiSchemasKeyword.Schemas.Count;
-
-            int idx = 0;
-
-            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
-            {
-                if (idx < prefixSchemasCount)
-                {
-                    idx++;
-                    continue;
-                }
-
-                ValidationResult validationResult = _keyword._schema.Validate(instanceItem, _options);
-
-                if (!validationResult.IsValid)
-                {
-                    _fastReturnResult = validationResult;
-                }
-
-                yield return validationResult;
-            }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            return (validationResult = _fastReturnResult) is not null;
-        }
-
-        public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
-    }
-}
-
+[Keyword("items")]
+[Dialect(DialectKind.Draft7, DialectKind.Draft201909)]
+[JsonConverter(typeof(ItemsDraft7KeywordJsonConverter))]
 internal abstract class ItemsDraft7Keyword : KeywordBase
 {
 }
 
-internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword
+[JsonConverter(typeof(SubSchemaCollectionJsonConverter<ItemsWithMultiSchemasKeyword>))]
+internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword, ISchemaContainerElement, ISubSchemaCollection, IJsonSchemaResourceNodesCleanable
 {
-    private readonly JsonSchema[] _schemas;
+    private readonly JsonSchema[] _schemas = null!;
 
-    public ItemsWithMultiSchemasKeyword(JsonSchema[] schemas)
+    public IReadOnlyList<JsonSchema> SubSchemas
     {
-        _schemas = schemas;
-    }
+        get => _schemas;
 
-    public IReadOnlyCollection<JsonSchema> Schemas => _schemas;
+        init
+        {
+            _schemas = value.ToArray();
+            for (int i = 0; i < _schemas.Length; i++)
+            {
+                _schemas[i].Name = i.ToString();
+            }
+        }
+    }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
@@ -213,15 +91,45 @@ internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
+
+    public ISchemaContainerElement? GetSubElement(string name)
+    {
+        return ((ISubSchemaCollection)this).GetSubElement(name);
+    }
+
+    public IEnumerable<ISchemaContainerElement> EnumerateElements()
+    {
+        return ((ISubSchemaCollection)this).EnumerateElements();
+    }
+
+    public bool IsSchemaType => false;
+    public JsonSchema GetSchema()
+    {
+        throw new InvalidOperationException();
+    }
+
+    public void RemoveIdFromAllChildrenSchemaElements()
+    {
+        for (int i = 0; i < _schemas.Length; i++)
+        {
+            if (_schemas[i] is BodyJsonSchema bodyJsonSchema)
+            {
+                int localIdx = i;
+                BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _schemas[localIdx] = newSchema);
+            }
+        }
+    }
 }
 
-internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword
+[JsonConverter(typeof(SingleSchemaJsonConverter<ItemsWithOneSchemaKeyword>))]
+internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
 {
-    private readonly JsonSchema _schema;
+    private JsonSchema _schema = null!;
 
-    public ItemsWithOneSchemaKeyword(JsonSchema schema)
+    public JsonSchema Schema
     {
-        _schema = schema;
+        get => _schema;
+        init => _schema = value;
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
@@ -231,7 +139,7 @@ internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(_schema, instance, options), options.OutputFormat);
+        return ValidationResultsComposer.Compose(new Validator(Schema, instance, options), options.OutputFormat);
     }
 
     private class Validator : IValidator
@@ -270,6 +178,30 @@ internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
+    }
+
+    public ISchemaContainerElement? GetSubElement(string name)
+    {
+        return Schema.GetSubElement(name);
+    }
+
+    public IEnumerable<ISchemaContainerElement> EnumerateElements()
+    {
+        yield return Schema;
+    }
+
+    public bool IsSchemaType => true;
+    public JsonSchema GetSchema()
+    {
+        return Schema;
+    }
+
+    public void RemoveIdFromAllChildrenSchemaElements()
+    {
+        if (_schema is BodyJsonSchema bodyJsonSchema)
+        {
+            BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _schema = newSchema);
+        }
     }
 }
 

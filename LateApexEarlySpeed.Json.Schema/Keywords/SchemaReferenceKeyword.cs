@@ -53,7 +53,7 @@ internal class SchemaReferenceKeyword : KeywordBase
             return true;
         }
 
-        referencedSchema = referencedSchemaResource.FindSubSchemaByAnchor(fragmentWithoutNumberSign);
+        referencedSchema = referencedSchemaResource.FindSubSchemaByPlainNameIdentifier(fragmentWithoutNumberSign);
         if (referencedSchema is not null)
         {
             return true;

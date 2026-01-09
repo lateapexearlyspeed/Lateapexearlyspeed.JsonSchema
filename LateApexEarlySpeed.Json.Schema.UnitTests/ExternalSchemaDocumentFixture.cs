@@ -8,7 +8,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests;
 public class JsonValidatorTestFixture
 {
     private readonly HashSet<string> _ignoredRemoteFiles = new HashSet<string> { "locationIndependentIdentifierPre2019.json", "locationIndependentIdentifierDraft4.json" };
-    private readonly HashSet<string> _ignoredRemoteFolders = new HashSet<string> { "draft6", "draft7" };
+    private readonly HashSet<string> _ignoredRemoteFolders = new HashSet<string> { "draft6" };
 
     public JsonValidatorTestFixture()
     {

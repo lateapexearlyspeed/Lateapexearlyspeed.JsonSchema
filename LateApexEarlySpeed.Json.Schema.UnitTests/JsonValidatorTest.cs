@@ -51,37 +51,37 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         }
 
         [Theory]
-        [MemberData(nameof(JsonSchemaTestSuiteForDraft2020))]
-        public async Task ValidateByStringSchema_InputFromJsonSchemaTestSuite(string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        [MemberData(nameof(JsonSchemaTestSuiteForDraft2019))]
+        public async Task ValidateByStringSchema_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
             _testOutputHelper.WriteLine($"Test description: {testDescription}");
 
-            JsonValidator jsonValidator = await CreateJsonValidatorWithExternalDocumentSupportAsync(schema, testCaseDescription, ignoreResourceIdFromUnknownKeyword);
+            JsonValidator jsonValidator = await CreateJsonValidatorWithExternalDocumentSupportAsync(dialect, schema, testCaseDescription, ignoreResourceIdFromUnknownKeyword);
 
             Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ValidateFormat = false, OutputFormat = outputFormat}).IsValid);
         }
 
         [Theory]
         [MemberData(nameof(JsonSchemaTestSuiteForDraft2020))]
-        public async Task GetStandardJsonSchemaText_InputFromJsonSchemaTestSuite(string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        public async Task GetStandardJsonSchemaText_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
             _testOutputHelper.WriteLine($"Test description: {testDescription}");
 
             // Prepare original jsonValidator
-            JsonValidator jsonValidator = await CreateJsonValidatorWithExternalDocumentSupportAsync(schema, testCaseDescription, ignoreResourceIdFromUnknownKeyword);
+            JsonValidator jsonValidator = await CreateJsonValidatorWithExternalDocumentSupportAsync(dialect, schema, testCaseDescription, ignoreResourceIdFromUnknownKeyword);
 
             // Generate json schema text from jsonValidator
             string generatedSchemaText = jsonValidator.GetStandardJsonSchemaText();
 
             // Generate jsonValidator from previous generated json schema text
-            jsonValidator = await CreateJsonValidatorWithExternalDocumentSupportAsync(generatedSchemaText, testCaseDescription, ignoreResourceIdFromUnknownKeyword);
+            jsonValidator = await CreateJsonValidatorWithExternalDocumentSupportAsync(dialect, generatedSchemaText, testCaseDescription, ignoreResourceIdFromUnknownKeyword);
 
             Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions { ValidateFormat = false, OutputFormat = outputFormat}).IsValid);
         }
 
-        private async Task<JsonValidator> CreateJsonValidatorWithExternalDocumentSupportAsync(string schema, string testCaseDescription, bool ignoreResourceIdInUnknownKeyword)
+        private async Task<JsonValidator> CreateJsonValidatorWithExternalDocumentSupportAsync(DialectKind dialect, string schema, string testCaseDescription, bool ignoreResourceIdInUnknownKeyword)
         {
             var jsonValidator = new JsonValidator(schema, new JsonValidatorOptions{IgnoreResourceIdInUnknownKeyword = ignoreResourceIdInUnknownKeyword });
             foreach (string externalDocumentContent in _externalSchemaDocuments)
@@ -102,12 +102,12 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
         [Theory]
         [MemberData(nameof(JsonSchemaTestSuiteForDraft2020))]
-        public async Task ValidateBySpanSchema_InputFromJsonSchemaTestSuite(string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        public async Task ValidateBySpanSchema_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
             _testOutputHelper.WriteLine($"Test description: {testDescription}");
 
-            var jsonValidator = new JsonValidator(schema.AsSpan(), new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
+            var jsonValidator = new JsonValidator(schema.AsSpan(), new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
             foreach (string content in _externalSchemaDocuments)
             {
                 jsonValidator.AddExternalDocument(content.AsSpan());
@@ -126,14 +126,14 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
         [Theory]
         [MemberData(nameof(JsonSchemaTestSuiteForDraft2020))]
-        public async Task ValidateByStreamSchema_InputFromJsonSchemaTestSuite(string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        public async Task ValidateByStreamSchema_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
             _testOutputHelper.WriteLine($"Test description: {testDescription}");
 
             await using (var utf8JsonSchema = new MemoryStream(Encoding.UTF8.GetBytes(schema)))
             {
-                var jsonValidator = new JsonValidator(utf8JsonSchema, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
+                var jsonValidator = new JsonValidator(utf8JsonSchema, new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
                 foreach (string content in _externalSchemaDocuments)
                 {
                     await using (var externalUtf8JsonSchema = new MemoryStream(Encoding.UTF8.GetBytes(content)))
@@ -159,24 +159,24 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
         [Theory]
         [MemberData(nameof(JsonSchemaTestCasesForFormatKeyword))]
-        public void ValidateByStringSchema_ValidateFormatKeyword(string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        public void ValidateByStringSchema_ValidateFormatKeyword(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
             _testOutputHelper.WriteLine($"Test description: {testDescription}");
 
-            var jsonValidator = new JsonValidator(schema, new JsonValidatorOptions{IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword});
+            var jsonValidator = new JsonValidator(schema, new JsonValidatorOptions{DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword});
 
             Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ OutputFormat = outputFormat }).IsValid);
         }
 
         [Theory]
         [MemberData(nameof(JsonSchemaTestCasesForCustomFormat))]
-        public void Validate_CustomFormatKeyword(string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        public void Validate_CustomFormatKeyword(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             // 'custom_format' should have been registered during 'JsonValidatorTestFixture'
             Assert.NotNull(FormatRegistry.GetFormatType("custom_format"));
 
-            var jsonValidator = new JsonValidator(schema, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
+            var jsonValidator = new JsonValidator(schema, new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
             Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ OutputFormat = outputFormat }).IsValid);
         }
 
@@ -261,7 +261,21 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                 IEnumerable<TestCase> testCasesWithoutIgnoreResourceIdInUnknownKeyword = testCases.Where(t => !TestCasesForIgnoreResourceIdInUnknownKeyword.Contains(t.Description));
                 IEnumerable<TestCaseParameters> testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword = testCasesWithoutIgnoreResourceIdInUnknownKeyword.Select(t => new TestCaseParameters{IgnoreResourceIdFromUnknownKeyword = false, TestCase = t});
 
-                return GenerateJsonSchemaTestDataParameters(testCaseParameters.Concat(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword));
+                return GenerateJsonSchemaTestDataParameters(DialectKind.Draft202012, testCaseParameters.Concat(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword));
+                // return GenerateJsonSchemaTestDataParameters(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword);
+            }
+        }
+
+        public static IEnumerable<object[]> JsonSchemaTestSuiteForDraft2019
+        {
+            get
+            {
+                TestCase[] testCases = TestSuiteReader.ReadTestCasesFromJsonSchemaTestSuite("draft2019-09", Array.Empty<string>(), Array.Empty<string>());
+                IEnumerable<TestCaseParameters> testCaseParameters = testCases.Select(t => new TestCaseParameters{IgnoreResourceIdFromUnknownKeyword = true, TestCase = t});
+
+                IEnumerable<TestCaseParameters> testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword = testCases.Select(t => new TestCaseParameters{IgnoreResourceIdFromUnknownKeyword = false, TestCase = t});
+
+                return GenerateJsonSchemaTestDataParameters(DialectKind.Draft201909, testCaseParameters.Concat(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword));
                 // return GenerateJsonSchemaTestDataParameters(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword);
             }
         }
@@ -271,7 +285,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             get
             {
                 IEnumerable<TestCase> testCases = TestSuiteReader.ReadTestCases(Path.Combine("TestData", "format.json"), Array.Empty<string>());
-                return GenerateJsonSchemaTestDataParameters(testCases.Select(t => new TestCaseParameters { IgnoreResourceIdFromUnknownKeyword = false, TestCase = t }));
+                return GenerateJsonSchemaTestDataParameters(DialectKind.Draft202012, testCases.Select(t => new TestCaseParameters { IgnoreResourceIdFromUnknownKeyword = false, TestCase = t }));
             }
         }
 
@@ -280,11 +294,11 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             get
             {
                 IEnumerable<TestCase> testCases = TestSuiteReader.ReadTestCases(Path.Combine("TestData", "custom_format.json"), Array.Empty<string>());
-                return GenerateJsonSchemaTestDataParameters(testCases.Select(t => new TestCaseParameters { IgnoreResourceIdFromUnknownKeyword = false, TestCase = t }));
+                return GenerateJsonSchemaTestDataParameters(DialectKind.Draft202012, testCases.Select(t => new TestCaseParameters { IgnoreResourceIdFromUnknownKeyword = false, TestCase = t }));
             }
         }
 
-        private static IEnumerable<object[]> GenerateJsonSchemaTestDataParameters(IEnumerable<TestCaseParameters> testCaseParameters)
+        private static IEnumerable<object[]> GenerateJsonSchemaTestDataParameters(DialectKind dialect, IEnumerable<TestCaseParameters> testCaseParameters)
         {
             foreach (TestCaseParameters testCaseParameter in testCaseParameters)
             {
@@ -294,6 +308,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                     {
                         yield return new object[]
                         {
+                            dialect,
                             JsonSerializer.Serialize(testCaseParameter.TestCase.JsonSchema),
                             JsonSerializer.Serialize(test.Instance),
                             outputFormat,

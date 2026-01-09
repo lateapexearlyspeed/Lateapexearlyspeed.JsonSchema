@@ -21,7 +21,7 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement, IJsonSc
     {
         _propertiesSchemas = new Dictionary<string, JsonSchema>(propertiesSchemas, propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
 
-        foreach (var (propName, schema) in PropertiesSchemas)
+        foreach (var (propName, schema) in _propertiesSchemas)
         {
             schema.Name = propName;
         }
