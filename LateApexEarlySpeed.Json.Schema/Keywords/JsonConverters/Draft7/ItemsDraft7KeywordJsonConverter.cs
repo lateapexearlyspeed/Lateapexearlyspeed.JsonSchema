@@ -8,9 +8,9 @@ internal class ItemsDraft7KeywordJsonConverter : JsonConverter<ItemsDraft7Keywor
 {
     public override ItemsDraft7Keyword? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        return reader.TokenType == JsonTokenType.StartObject 
-            ? JsonSerializer.Deserialize<ItemsWithOneSchemaKeyword>(ref reader, options) 
-            : JsonSerializer.Deserialize<ItemsWithMultiSchemasKeyword>(ref reader, options);
+        return reader.TokenType == JsonTokenType.StartArray 
+            ? JsonSerializer.Deserialize<ItemsWithMultiSchemasKeyword>(ref reader, options) 
+            : JsonSerializer.Deserialize<ItemsWithOneSchemaKeyword>(ref reader, options);
     }
 
     /// <summary>

@@ -270,7 +270,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         {
             get
             {
-                TestCase[] testCases = TestSuiteReader.ReadTestCasesFromJsonSchemaTestSuite("draft2019-09", Array.Empty<string>(), Array.Empty<string>());
+                TestCase[] testCases = TestSuiteReader.ReadTestCasesFromJsonSchemaTestSuite("draft2019-09", UnsupportedTestFiles, UnsupportedTestCases);
                 IEnumerable<TestCaseParameters> testCaseParameters = testCases.Select(t => new TestCaseParameters{IgnoreResourceIdFromUnknownKeyword = true, TestCase = t});
 
                 IEnumerable<TestCaseParameters> testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword = testCases.Select(t => new TestCaseParameters{IgnoreResourceIdFromUnknownKeyword = false, TestCase = t});

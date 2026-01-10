@@ -54,7 +54,7 @@ internal ref struct JsonSchemaDeserializerContext
         Debug.Assert(maxDepthIdx >= 0 && maxDepthIdx < ValidationKeywordRegistry.SupportedDialectsCount * 2);
 
         PropertyNameCaseInsensitive = (maxDepthIdx & 0x1) == 0x1; // maxDepthIdx % 2 == 1;
-        Dialect = (DialectKind)(maxDepthIdx >> 2); // maxDepthIdx / 2
+        Dialect = (DialectKind)(maxDepthIdx >> 1); // maxDepthIdx / 2
     }
 
     public readonly JsonSerializerOptions ToJsonSerializerOptions()

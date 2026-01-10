@@ -26,18 +26,18 @@ internal class DependenciesKeywordJsonConverter : JsonConverter<DependenciesKeyw
 
             reader.Read();
 
-            if (reader.TokenType == JsonTokenType.StartObject)
+            if (reader.TokenType == JsonTokenType.StartArray)
             {
-                dependenciesSchema ??= new();
-                dependenciesSchema[propertyName] = JsonSerializer.Deserialize<JsonSchema>(ref reader, options)!;
-            }
-            else
-            {
-                string[] properties = JsonSerializer.Deserialize<string[]>(ref reader, options) 
+                string[] properties = JsonSerializer.Deserialize<string[]>(ref reader, options)
                                       ?? throw ThrowHelper.CreateKeywordHasInvalidJsonValueKindJsonException<DependenciesKeyword>(JsonValueKind.Array);
 
                 dependenciesProperty ??= new();
                 dependenciesProperty[propertyName] = properties;
+            }
+            else
+            {
+                dependenciesSchema ??= new();
+                dependenciesSchema[propertyName] = JsonSerializer.Deserialize<JsonSchema>(ref reader, options)!;
             }
 
             reader.Read();
