@@ -61,17 +61,19 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
     public SchemaReferenceKeyword? SchemaReference { get; }
 
     public SchemaDynamicReferenceKeyword? SchemaDynamicReference { get; }
+    
+    public SchemaRecursiveReferenceKeyword? SchemaRecursiveReference { get; }
 
     public IPlainNameIdentifierKeyword? PlainNameIdentifierKeyword { get; }
 
     public string? DynamicAnchor { get; }
 
-    public BodyJsonSchema(IEnumerable<KeywordBase> keywords) : this(keywords, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null, null)
+    public BodyJsonSchema(IEnumerable<KeywordBase> keywords) : this(keywords, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null, null, null)
     {
 
     }
 
-    public BodyJsonSchema(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
+    public BodyJsonSchema(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, SchemaRecursiveReferenceKeyword? schemaRecursiveReference, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
     {
         _keywords = MergeKeywords(keywords.ToArray());
 
@@ -83,6 +85,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
         SchemaReference = schemaReference;
         SchemaDynamicReference = schemaDynamicReference;
+        SchemaRecursiveReference = schemaRecursiveReference;
 
         if (defsKeywords is not null)
         {
@@ -197,6 +200,11 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
                 yield return ValidateAndSetFastReturnResult(_bodyJsonSchema.SchemaDynamicReference);
             }
 
+            if (_bodyJsonSchema.SchemaRecursiveReference is not null)
+            {
+                yield return ValidateAndSetFastReturnResult(_bodyJsonSchema.SchemaRecursiveReference);
+            }
+
             ValidationResult ValidateAndSetFastReturnResult(IValidationNode validationNode)
             {
                 ValidationResult result = validationNode.Validate(_instance, _options);
@@ -290,6 +298,11 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             {
                 SchemaDynamicReference.ParentResourceBaseUri = value;
             }
+
+            if (SchemaRecursiveReference is not null)
+            {
+                SchemaRecursiveReference.ParentResourceBaseUri = value;
+            }
         }
     }
 
@@ -298,12 +311,12 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id, DefsKeyword defsKeyword)
     {
-        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, PlainNameIdentifierKeyword, DynamicAnchor, _potentialSchemaContainerElements, null, id, new[] { (DefsKeyword.Keyword, defsKeyword) });
+        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, SchemaRecursiveReference, PlainNameIdentifierKeyword, DynamicAnchor, false, _potentialSchemaContainerElements, null, id, new[] { (DefsKeyword.Keyword, defsKeyword) });
     }
 
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id)
     {
-        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, PlainNameIdentifierKeyword, DynamicAnchor, _potentialSchemaContainerElements, null, id, _defsKeywords);
+        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, SchemaRecursiveReference, PlainNameIdentifierKeyword, DynamicAnchor, false, _potentialSchemaContainerElements, null, id, _defsKeywords);
     }
 
     /// <summary>

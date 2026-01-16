@@ -19,8 +19,8 @@ internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
 
     public SchemaResourceRegistry? GlobalSchemaResourceRegistry { get; set; }
 
-    internal BodyJsonSchemaDocument(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements = null, SchemaKeyword? schemaKeyword = null, Uri? id = null, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords = null)
-        : base(schemaKeyword, GetBaseUri(id), keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, plainNameIdentifierKeyword, dynamicAnchor, defsKeywords, potentialSchemaContainerElements)
+    internal BodyJsonSchemaDocument(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, SchemaRecursiveReferenceKeyword? schemaRecursiveReference, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, bool recursiveAnchor, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements = null, SchemaKeyword? schemaKeyword = null, Uri? id = null, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords = null)
+        : base(schemaKeyword, GetBaseUri(id), keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, schemaRecursiveReference, plainNameIdentifierKeyword, dynamicAnchor, recursiveAnchor, defsKeywords, potentialSchemaContainerElements)
     {
     }
 

@@ -40,7 +40,7 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
             return new BodyJsonSchema(keywords);
         }
 
-        return new JsonSchemaResource(null, new Uri(typeToConvert.Type.FullName!, UriKind.Relative), keywords, new List<ISchemaContainerValidationNode>(0), null, null, null, null, null, null);
+        return new JsonSchemaResource(null, new Uri(typeToConvert.Type.FullName!, UriKind.Relative), keywords, new List<ISchemaContainerValidationNode>(0), null, null, null, null, null, false, null, null);
     }
 
     private static PropertiesKeyword CreatePropertiesKeyword(IEnumerable<IMemberInfo> memberInfos, JsonSchemaGeneratorOptions options)
