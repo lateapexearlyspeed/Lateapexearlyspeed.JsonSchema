@@ -34,9 +34,10 @@ internal class JsonSchemaResource : BodyJsonSchema
         {
             BaseUri = new Uri(value, _id);
 
-            if (!string.IsNullOrEmpty(BaseUri.Fragment))
+            string fragment = BaseUri.Fragment;
+            if ((!string.IsNullOrEmpty(fragment)) && fragment != "#")
             {
-                throw new BadSchemaException("Id of json schema resource should not contain fragment.");
+                throw new BadSchemaException("Id of json schema resource should not contain non-empty fragment.");
             }
 
             base.ParentResourceBaseUri = BaseUri;

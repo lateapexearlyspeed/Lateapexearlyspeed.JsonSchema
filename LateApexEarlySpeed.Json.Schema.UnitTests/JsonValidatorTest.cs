@@ -51,7 +51,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         }
 
         [Theory]
-        [MemberData(nameof(JsonSchemaTestSuiteForDraft2019))]
+        [MemberData(nameof(JsonSchemaTestSuiteForDraft7))]
         public async Task ValidateByStringSchema_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
@@ -83,10 +83,10 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
         private async Task<JsonValidator> CreateJsonValidatorWithExternalDocumentSupportAsync(DialectKind dialect, string schema, string testCaseDescription, bool ignoreResourceIdInUnknownKeyword)
         {
-            var jsonValidator = new JsonValidator(schema, new JsonValidatorOptions{IgnoreResourceIdInUnknownKeyword = ignoreResourceIdInUnknownKeyword });
+            var jsonValidator = new JsonValidator(schema, new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdInUnknownKeyword });
             foreach (string externalDocumentContent in _externalSchemaDocuments)
             {
-                jsonValidator.AddExternalDocument(externalDocumentContent);
+                jsonValidator.AddExternalDocument(externalDocumentContent, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdInUnknownKeyword });
             }
 
             if (TestCasesDependOnRemoteHttpDocuments.Contains(testCaseDescription))
@@ -110,7 +110,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             var jsonValidator = new JsonValidator(schema.AsSpan(), new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
             foreach (string content in _externalSchemaDocuments)
             {
-                jsonValidator.AddExternalDocument(content.AsSpan());
+                jsonValidator.AddExternalDocument(content.AsSpan(), new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
             }
 
             if (TestCasesDependOnRemoteHttpDocuments.Contains(testCaseDescription))
@@ -138,7 +138,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                 {
                     await using (var externalUtf8JsonSchema = new MemoryStream(Encoding.UTF8.GetBytes(content)))
                     {
-                        jsonValidator.AddExternalDocument(externalUtf8JsonSchema);
+                        jsonValidator.AddExternalDocument(externalUtf8JsonSchema, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
                     }
                 }
 
@@ -277,6 +277,21 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                 IEnumerable<TestCaseParameters> testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword = tesCasesWithoutIgnoreResourceIdInUnknownKeyword.Select(t => new TestCaseParameters{IgnoreResourceIdFromUnknownKeyword = false, TestCase = t});
 
                 return GenerateJsonSchemaTestDataParameters(DialectKind.Draft201909, testCaseParameters.Concat(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword));
+                // return GenerateJsonSchemaTestDataParameters(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword);
+            }
+        }
+
+        public static IEnumerable<object[]> JsonSchemaTestSuiteForDraft7
+        {
+            get
+            {
+                TestCase[] testCases = TestSuiteReader.ReadTestCasesFromJsonSchemaTestSuite("draft7", UnsupportedTestFiles, UnsupportedTestCases);
+                IEnumerable<TestCaseParameters> testCaseParameters = testCases.Select(t => new TestCaseParameters{IgnoreResourceIdFromUnknownKeyword = true, TestCase = t});
+
+                IEnumerable<TestCase> tesCasesWithoutIgnoreResourceIdInUnknownKeyword = testCases.Where(t => !TestCasesForIgnoreResourceIdInUnknownKeyword.Contains(t.Description));
+                IEnumerable<TestCaseParameters> testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword = tesCasesWithoutIgnoreResourceIdInUnknownKeyword.Select(t => new TestCaseParameters{IgnoreResourceIdFromUnknownKeyword = false, TestCase = t});
+
+                return GenerateJsonSchemaTestDataParameters(DialectKind.Draft7, testCaseParameters.Concat(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword));
                 // return GenerateJsonSchemaTestDataParameters(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword);
             }
         }

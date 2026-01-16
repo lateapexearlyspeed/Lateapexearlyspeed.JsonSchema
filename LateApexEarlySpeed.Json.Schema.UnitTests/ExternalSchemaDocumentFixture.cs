@@ -7,7 +7,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests;
 
 public class JsonValidatorTestFixture
 {
-    private readonly HashSet<string> _ignoredRemoteFiles = new HashSet<string> { "locationIndependentIdentifierPre2019.json", "locationIndependentIdentifierDraft4.json" };
+    private readonly HashSet<string> _ignoredRemoteFiles = new HashSet<string> { "locationIndependentIdentifierDraft4.json" };
     private readonly HashSet<string> _ignoredRemoteFolders = new HashSet<string> { "draft6" };
 
     public JsonValidatorTestFixture()
@@ -44,6 +44,9 @@ public class JsonValidatorTestFixture
         new Uri("https://json-schema.org/draft/2019-09/meta/meta-data"),
         new Uri("https://json-schema.org/draft/2019-09/meta/format"),
         new Uri("https://json-schema.org/draft/2019-09/meta/content"),
+
+        // draft7
+        new Uri("http://json-schema.org/draft-07/schema")
     };
 
     private IEnumerable<string> PrepareRefRemoteDocuments()

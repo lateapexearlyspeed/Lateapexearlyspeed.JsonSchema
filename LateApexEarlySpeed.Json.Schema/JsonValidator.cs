@@ -68,39 +68,54 @@ public class JsonValidator
             : options;
     }
 
-    /// <summary>
-    /// Add external json schema document
-    /// </summary>
-    /// <param name="externalJsonSchema">The content of external json schema document</param>
-    public void AddExternalDocument(string externalJsonSchema) => AddExternalDocument(externalJsonSchema.AsSpan());
+    [Pure]
+    private JsonValidatorOptions CreateOverriddenJsonValidatorOptions(JsonValidatorOptions? options)
+    {
+        if (options is null)
+        {
+            return _jsonValidatorOptions;
+        }
+
+        return options.Equals(JsonValidatorOptions.Default) ? JsonValidatorOptions.Default : options;
+    }
 
     /// <summary>
     /// Add external json schema document
     /// </summary>
     /// <param name="externalJsonSchema">The content of external json schema document</param>
-    public void AddExternalDocument(ReadOnlySpan<char> externalJsonSchema)
+    /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
+    public void AddExternalDocument(string externalJsonSchema, JsonValidatorOptions? options = null) => AddExternalDocument(externalJsonSchema.AsSpan(), options);
+
+    /// <summary>
+    /// Add external json schema document
+    /// </summary>
+    /// <param name="externalJsonSchema">The content of external json schema document</param>
+    /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
+    public void AddExternalDocument(ReadOnlySpan<char> externalJsonSchema, JsonValidatorOptions? options = null)
     {
-        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalJsonSchema, _globalSchemaResourceRegistry, _jsonValidatorOptions);
+        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalJsonSchema, _globalSchemaResourceRegistry, CreateOverriddenJsonValidatorOptions(options));
     }
 
     /// <summary>
     /// Add external json schema document
     /// </summary>
     /// <param name="externalUtf8JsonSchema">The content of external json schema document</param>
-    public void AddExternalDocument(Stream externalUtf8JsonSchema)
+    /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
+    public void AddExternalDocument(Stream externalUtf8JsonSchema, JsonValidatorOptions? options = null)
     {
-        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalUtf8JsonSchema, _globalSchemaResourceRegistry, _jsonValidatorOptions);
+        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalUtf8JsonSchema, _globalSchemaResourceRegistry, CreateOverriddenJsonValidatorOptions(options));
     }
 
     /// <summary>
     /// Add external json schema document which needs to be accessed by sending HTTP request
     /// </summary>
     /// <param name="remoteUri">The <see cref="Uri"/> of document the HTTP request is sent to access</param>
+    /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
     /// <returns></returns>
-    public async Task AddHttpDocumentAsync(Uri remoteUri)
+    public async Task AddHttpDocumentAsync(Uri remoteUri, JsonValidatorOptions? options = null)
     {
         string jsonSchemaText = await HttpJsonDocumentClient.GetDocumentAsync(remoteUri);
-        AddExternalDocument(jsonSchemaText);
+        AddExternalDocument(jsonSchemaText, options);
     }
 
     /// <summary>
