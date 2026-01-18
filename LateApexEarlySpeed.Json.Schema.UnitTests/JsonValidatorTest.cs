@@ -51,7 +51,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         }
 
         [Theory]
-        [MemberData(nameof(JsonSchemaTestSuiteForDraft7))]
+        [MemberData(nameof(JsonSchemaTestSuite))]
         public async Task ValidateByStringSchema_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
@@ -63,7 +63,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         }
 
         [Theory]
-        [MemberData(nameof(JsonSchemaTestSuiteForDraft2020))]
+        [MemberData(nameof(JsonSchemaTestSuite))]
         public async Task GetStandardJsonSchemaText_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
@@ -101,7 +101,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         }
 
         [Theory]
-        [MemberData(nameof(JsonSchemaTestSuiteForDraft2020))]
+        [MemberData(nameof(JsonSchemaTestSuite))]
         public async Task ValidateBySpanSchema_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
@@ -125,7 +125,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         }
 
         [Theory]
-        [MemberData(nameof(JsonSchemaTestSuiteForDraft2020))]
+        [MemberData(nameof(JsonSchemaTestSuite))]
         public async Task ValidateByStreamSchema_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
@@ -251,7 +251,10 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             Assert.True(jsonValidator.Validate(jsonInstance).IsValid);
         }
 
-        public static IEnumerable<object[]> JsonSchemaTestSuiteForDraft2020
+        public static IEnumerable<object[]> JsonSchemaTestSuite 
+            => JsonSchemaTestSuiteForDraft2020.Concat(JsonSchemaTestSuiteForDraft2019).Concat(JsonSchemaTestSuiteForDraft7);
+
+        private static IEnumerable<object[]> JsonSchemaTestSuiteForDraft2020
         {
             get
             {
@@ -266,7 +269,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             }
         }
 
-        public static IEnumerable<object[]> JsonSchemaTestSuiteForDraft2019
+        private static IEnumerable<object[]> JsonSchemaTestSuiteForDraft2019
         {
             get
             {
@@ -281,7 +284,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             }
         }
 
-        public static IEnumerable<object[]> JsonSchemaTestSuiteForDraft7
+        private static IEnumerable<object[]> JsonSchemaTestSuiteForDraft7
         {
             get
             {
