@@ -728,7 +728,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         /// This test case is from issue: https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/issues/71
         /// </summary>
         [Fact]
-        public void Validate_ReferenceInUnknownKeyword()
+        public void Validate_ReferenceInDefinitionKeyword()
         {
             string schema = """
                 {
@@ -784,6 +784,69 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/Blub"), validationError.InstanceLocation);
             Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/properties/Blub/$ref/enum"), validationError.RelativeKeywordLocation);
             Assert.Equal(new Uri("http://lateapexearlyspeed/#/definitions/MyCrazyEnum"), validationError.SubSchemaRefFullUri);
+            Assert.Equal(new Uri("http://lateapexearlyspeed"), validationError.SchemaResourceBaseUri);
+        }
+
+        /// <summary>
+        /// This test case is from issue: https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/issues/71
+        /// </summary>
+        [Fact]
+        public void Validate_ReferenceInUnknownKeyword()
+        {
+            string schema = """
+                {
+                  "$schema":"https://json-schema.org/draft/2020-12/schema",
+                  "title":"MyCrazyConfig",
+                  "type":"object",
+                  "properties":{
+                    "IsEnabled":{
+                      "type":"boolean"
+                    },
+                    "HelloWorld":{
+                      "type":"string"
+                    },
+                    "Blub":{
+                      "$ref":"#/unknown/MyCrazyEnum"
+                    }
+                  },
+                  "required":[
+                    "IsEnabled",
+                    "HelloWorld",
+                    "Blub"
+                  ],
+                  "additionalProperties":false,
+                  "unknown":{
+                    "MyCrazyEnum":{
+                      "type":"string",
+                      "enum":[
+                        "Hi",
+                        "Hey",
+                        "Ho"
+                      ]
+                    }
+                  }
+                }
+                """;
+
+            string instance = """
+                {
+                  "IsEnabled": true,
+                  "HelloWorld": "foo",
+                  "Blub": "hey"
+                }
+                """;
+
+            ValidationResult validationResult = new JsonValidator(schema).Validate(instance);
+
+            Assert.False(validationResult.IsValid);
+
+            ValidationError validationError = Assert.Single(validationResult.ValidationErrors);
+            Assert.Equal("enum", validationError.Keyword);
+            Assert.Equal(EnumKeyword.ErrorMessage("hey"), validationError.ErrorMessage);
+            Assert.Equal(ResultCode.NotFoundInAllowedList, validationError.ResultCode);
+            Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/Blub"), validationError.InstanceLocation);
+            Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/properties/Blub/$ref/enum"), validationError.RelativeKeywordLocation);
+            Assert.Equal(new Uri("http://lateapexearlyspeed/#/unknown/MyCrazyEnum"), validationError.SubSchemaRefFullUri);
             Assert.Equal(new Uri("http://lateapexearlyspeed"), validationError.SchemaResourceBaseUri);
         }
 

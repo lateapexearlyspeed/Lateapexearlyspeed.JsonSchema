@@ -330,6 +330,112 @@ public class ListOutputFormatTests
     }
 
     [Fact]
+    public void DependenciesKeywordTest()
+    {
+        string schema = """
+                        {
+                          "dependencies": {
+                              "p1": ["d1", "d2"],
+                              "p2": ["d3", "d4"],
+                              "p3": false,
+                              "p4": false
+                          }
+                        }
+                        """;
+
+        string instance = """
+                          {
+                            "p1": 1,
+                            "p2": 1,
+                            "d1": 1,
+                            "d3": 1,
+                            "p3": 1,
+                            "p4": 1
+                          }
+                          """;
+
+        ValidationResult validationResult = Validate(schema, instance);
+
+        Assert.False(validationResult.IsValid);
+        Assert.Collection(validationResult.ValidationErrors,
+            error =>
+            {
+                Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Null(error.Keyword);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/dependencies/p3"), error.RelativeKeywordLocation);
+                Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
+            },
+            error =>
+            {
+                Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Null(error.Keyword);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/dependencies/p4"), error.RelativeKeywordLocation);
+                Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
+            },
+            error =>
+            {
+                Assert.Equal(DependentRequiredKeyword.ErrorMessage("p1", "d2"), error.ErrorMessage);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal("dependencies", error.Keyword);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/dependencies"), error.RelativeKeywordLocation);
+                Assert.Equal(ResultCode.NotFoundRequiredDependentProperty, error.ResultCode);
+            },
+            error =>
+            {
+                Assert.Equal(DependentRequiredKeyword.ErrorMessage("p2", "d4"), error.ErrorMessage);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Empty, error.InstanceLocation);
+                Assert.Equal("dependencies", error.Keyword);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/dependencies"), error.RelativeKeywordLocation);
+                Assert.Equal(ResultCode.NotFoundRequiredDependentProperty, error.ResultCode);
+            }
+        );
+    }
+
+    [Fact]
+    public void AdditionalItemsKeywordTest()
+    {
+        string schema = """
+                        {
+                          "$schema": "http://json-schema.org/draft-07/schema#",
+                          "items": [ {
+                            "type": "string"
+                          } ],
+                          "additionalItems": {
+                            "type": "string"
+                          }
+                        }
+                        """;
+
+        string instance = """
+                          [ "a", 1, 2 ]
+                          """;
+
+        ValidationResult validationResult = Validate(schema, instance);
+
+        Assert.False(validationResult.IsValid);
+        Assert.Collection(validationResult.ValidationErrors,
+            error =>
+            {
+                Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/1"), error.InstanceLocation);
+                Assert.Equal("type", error.Keyword);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/additionalItems/type"), error.RelativeKeywordLocation);
+                Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
+            },
+            error =>
+            {
+                Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/2"), error.InstanceLocation);
+                Assert.Equal("type", error.Keyword);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/additionalItems/type"), error.RelativeKeywordLocation);
+                Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
+            }
+        );
+    }
+
+    [Fact]
     public void ItemsKeywordTest()
     {
         string schema = """
@@ -343,6 +449,45 @@ public class ListOutputFormatTests
         string instance = """
             [ 1, 2, "a" ]
             """;
+
+        ValidationResult validationResult = Validate(schema, instance);
+
+        Assert.False(validationResult.IsValid);
+        Assert.Collection(validationResult.ValidationErrors,
+            error =>
+            {
+                Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/0"), error.InstanceLocation);
+                Assert.Equal("type", error.Keyword);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/items/type"), error.RelativeKeywordLocation);
+                Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
+            },
+            error =>
+            {
+                Assert.Equal(GetTypeErrorMessage(InstanceType.String, JsonValueKind.Number), error.ErrorMessage);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/1"), error.InstanceLocation);
+                Assert.Equal("type", error.Keyword);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/items/type"), error.RelativeKeywordLocation);
+                Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
+            }
+        );
+    }
+
+    [Fact]
+    public void ItemsWithOneSchemaKeywordTest()
+    {
+        string schema = """
+                        {
+                          "$schema": "http://json-schema.org/draft-07/schema#",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                        """;
+
+        string instance = """
+                          [ 1, 2, "a" ]
+                          """;
 
         ValidationResult validationResult = Validate(schema, instance);
 
@@ -478,6 +623,41 @@ public class ListOutputFormatTests
                 Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/1"), error.InstanceLocation);
                 Assert.Null(error.Keyword);
                 Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/prefixItems/1"), error.RelativeKeywordLocation);
+                Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
+            }
+        );
+    }
+
+    [Fact]
+    public void ItemsWithMultiSchemasKeywordTest()
+    {
+        string schema = """
+                        {
+                          "$schema": "http://json-schema.org/draft-07/schema#",
+                          "items": [false, false]
+                        }
+                        """;
+
+        string instance = "[1, 1, 1]";
+
+        ValidationResult validationResult = Validate(schema, instance);
+
+        Assert.False(validationResult.IsValid);
+        Assert.Collection(validationResult.ValidationErrors,
+            error =>
+            {
+                Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/0"), error.InstanceLocation);
+                Assert.Null(error.Keyword);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/items/0"), error.RelativeKeywordLocation);
+                Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
+            },
+            error =>
+            {
+                Assert.Equal(BooleanJsonSchema.ErrorMessage(), error.ErrorMessage);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/1"), error.InstanceLocation);
+                Assert.Null(error.Keyword);
+                Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/items/1"), error.RelativeKeywordLocation);
                 Assert.Equal(ResultCode.AlwaysFailedJsonSchema, error.ResultCode);
             }
         );
