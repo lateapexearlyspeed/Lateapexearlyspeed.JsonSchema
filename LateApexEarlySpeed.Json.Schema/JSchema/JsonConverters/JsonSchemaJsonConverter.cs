@@ -62,8 +62,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         uint? minContains = null;
 
         SchemaReferenceKeyword? schemaReference = null;
-        SchemaDynamicReferenceKeyword? schemaDynamicReference = null;
-        SchemaRecursiveReferenceKeyword? schemaRecursiveReference = null;
+        List<IReferenceKeyword>? referenceKeywords = null;
         List<(string name, DefsKeyword keyword)>? defsKeywords = null;
         Uri? id = null;
         IPlainNameIdentifierKeyword? plainNameIdentifier = null;
@@ -152,16 +151,21 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
             else if (keywordName == SchemaReferenceKeyword.Keyword)
             {
-                schemaReference = JsonSerializer.Deserialize<SchemaReferenceKeyword>(ref reader, options);
+                schemaReference = JsonSerializer.Deserialize<SchemaReferenceKeyword>(ref reader, options)!;
+                referenceKeywords ??= new List<IReferenceKeyword>(1);
+                referenceKeywords.Add(schemaReference);
             }
             else if (keywordName == SchemaDynamicReferenceKeyword.Keyword)
             {
-                schemaDynamicReference = JsonSerializer.Deserialize<SchemaDynamicReferenceKeyword>(ref reader, options);
+                SchemaDynamicReferenceKeyword schemaDynamicReference = JsonSerializer.Deserialize<SchemaDynamicReferenceKeyword>(ref reader, options)!;
+                referenceKeywords ??= new List<IReferenceKeyword>(1);
+                referenceKeywords.Add(schemaDynamicReference);
             }
             else if (keywordName == SchemaRecursiveReferenceKeyword.Keyword)
             {
-                reader.Skip();
-                schemaRecursiveReference = new SchemaRecursiveReferenceKeyword();
+                SchemaRecursiveReferenceKeyword schemaRecursiveReference = JsonSerializer.Deserialize<SchemaRecursiveReferenceKeyword>(ref reader, options)!;
+                referenceKeywords ??= new List<IReferenceKeyword>(1);
+                referenceKeywords.Add(schemaRecursiveReference);
             }
             else if (keywordName == DefsKeyword.Keyword || keywordName == DefsKeyword.KeywordDraft7)
             {
@@ -227,8 +231,11 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         if (deserializerContext.Dialect == DialectKind.Draft7 && schemaReference is not null)
         {
             validationKeywords.Clear();
-            schemaDynamicReference = null;
-            schemaRecursiveReference = null;
+
+            Debug.Assert(referenceKeywords is not null);
+            referenceKeywords.Clear();
+            referenceKeywords.Add(schemaReference);
+
             plainNameIdentifier = null;
             dynamicAnchor = null;
             recursiveAnchor = false;
@@ -275,7 +282,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         JsonSchema schema;
         if (typeToConvert == typeof(IJsonSchemaDocument))
         {
-            schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, schemaRecursiveReference, plainNameIdentifier, dynamicAnchor, recursiveAnchor, potentialSchemaContainerElements, schemaKeyword, id, defsKeywords);
+            schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, recursiveAnchor, potentialSchemaContainerElements, schemaKeyword, id, defsKeywords);
         }
         else if (id is not null)
         {
@@ -284,9 +291,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 id,
                 validationKeywords,
                 schemaContainerValidators,
-                schemaReference,
-                schemaDynamicReference,
-                schemaRecursiveReference,
+                referenceKeywords,
                 plainNameIdentifier,
                 dynamicAnchor,
                 recursiveAnchor,
@@ -298,7 +303,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         }
         else
         {
-            schema = new BodyJsonSchema(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, schemaRecursiveReference, plainNameIdentifier, dynamicAnchor, defsKeywords, potentialSchemaContainerElements);
+            schema = new BodyJsonSchema(validationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, defsKeywords, potentialSchemaContainerElements);
         }
 
         return (T)(object)schema;
@@ -374,22 +379,13 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
 
             // Reference & DynamicReference & RecursiveReference part:
-            if (schema.SchemaReference is not null)
+            if (schema.ReferenceKeywords is not null)
             {
-                writer.WritePropertyName(SchemaReferenceKeyword.Keyword);
-                JsonSerializer.Serialize(writer, schema.SchemaReference, options);
-            }
-
-            if (schema.SchemaDynamicReference is not null)
-            {
-                writer.WritePropertyName(SchemaDynamicReferenceKeyword.Keyword);
-                JsonSerializer.Serialize(writer, schema.SchemaDynamicReference, options);
-            }
-
-            if (schema.SchemaRecursiveReference is not null)
-            {
-                writer.WritePropertyName(SchemaRecursiveReferenceKeyword.Keyword);
-                writer.WriteStringValue(SchemaRecursiveReferenceKeyword.Value);
+                foreach (IReferenceKeyword referenceKeyword in schema.ReferenceKeywords)
+                {
+                    writer.WritePropertyName(referenceKeyword.Name);
+                    JsonSerializer.Serialize(writer, referenceKeyword, referenceKeyword.GetType(), options);
+                }
             }
 
             // Plain named identifier part ($id or anchor):

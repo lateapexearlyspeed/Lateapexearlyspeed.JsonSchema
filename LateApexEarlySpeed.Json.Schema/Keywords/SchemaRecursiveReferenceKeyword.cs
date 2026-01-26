@@ -1,12 +1,16 @@
-﻿using System.Diagnostics;
-using LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
+using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
+using System.Diagnostics;
+using System.Text.Json.Serialization;
+using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword(Keyword)]
-internal class SchemaRecursiveReferenceKeyword : KeywordBase
+[JsonConverter(typeof(SchemaRecursiveReferenceKeywordJsonConverter))]
+internal class SchemaRecursiveReferenceKeyword : KeywordBase, IReferenceKeyword
 {
     public const string Keyword = "$recursiveRef";
 

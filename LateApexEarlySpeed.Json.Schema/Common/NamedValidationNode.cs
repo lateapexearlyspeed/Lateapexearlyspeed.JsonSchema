@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
 
-public abstract class NamedValidationNode : INamedNode, IValidationNode
+public abstract class NamedValidationNode : IValidationNode
 {
     [DisallowNull]
     public virtual string? Name { get; set; }

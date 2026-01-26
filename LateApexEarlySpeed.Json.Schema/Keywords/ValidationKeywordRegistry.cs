@@ -204,6 +204,10 @@ public static class ValidationKeywordRegistry
     }
 }
 
+/// <summary>
+/// Do not change the order and underlying number of the enum members unless you know what you should change correspondingly!
+/// Important dialect related calculations depend on it.
+/// </summary>
 public enum DialectKind
 {
     Draft202012,

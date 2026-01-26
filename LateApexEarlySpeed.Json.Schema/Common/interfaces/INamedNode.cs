@@ -1,9 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿namespace LateApexEarlySpeed.Json.Schema.Common.interfaces;
 
-namespace LateApexEarlySpeed.Json.Schema.Common.interfaces;
-
-internal interface INamedNode
+public interface INamedNode
 {
-    [DisallowNull]
-    string? Name { get; set; }
+    string Name { get; }
 }

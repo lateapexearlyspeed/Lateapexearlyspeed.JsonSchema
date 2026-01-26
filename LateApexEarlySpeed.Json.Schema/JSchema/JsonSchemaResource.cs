@@ -13,8 +13,8 @@ internal class JsonSchemaResource : BodyJsonSchema
     /// </summary>
     private readonly Uri _id;
 
-    public JsonSchemaResource(SchemaKeyword? schemaKeyword, Uri id, IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, SchemaRecursiveReferenceKeyword? schemaRecursiveReference, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, bool recursiveAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
-        : base(keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, schemaRecursiveReference, plainNameIdentifierKeyword, dynamicAnchor, defsKeywords, potentialSchemaContainerElements)
+    public JsonSchemaResource(SchemaKeyword? schemaKeyword, Uri id, IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, bool recursiveAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
+        : base(keywords, schemaContainerValidators, referenceKeywords, plainNameIdentifierKeyword, dynamicAnchor, defsKeywords, potentialSchemaContainerElements)
     {
         SchemaKeyword = schemaKeyword;
         _id = id;
@@ -116,7 +116,7 @@ internal class JsonSchemaResource : BodyJsonSchema
 
     public BodyJsonSchema TransformToBodyJsonSchema()
     {
-        var bodyJsonSchema = new BodyJsonSchema(Keywords, SchemaContainerValidators, SchemaReference, SchemaDynamicReference, SchemaRecursiveReference, PlainNameIdentifierKeyword, DynamicAnchor, DefsKeywords, PotentialSchemaContainerElements);
+        var bodyJsonSchema = new BodyJsonSchema(Keywords, SchemaContainerValidators, ReferenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, DefsKeywords, PotentialSchemaContainerElements);
 
         if (Name is not null)
         {
