@@ -10,7 +10,7 @@ namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
 internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 {
-    private readonly ISchemaContainerValidationNode[] _schemaContainerValidators;
+    private readonly ISchemaContainerValidationNode[]? _schemaContainerValidators;
     private readonly IReadOnlyList<KeywordBase> _keywords;
     private readonly IReferenceKeyword[]? _referenceKeywords;
 
@@ -55,7 +55,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public IReadOnlyList<(string name, DefsKeyword keyword)>? DefsKeywords => _defsKeywords;
 
-    public IReadOnlyList<ISchemaContainerValidationNode> SchemaContainerValidators => _schemaContainerValidators;
+    public IReadOnlyList<ISchemaContainerValidationNode>? SchemaContainerValidators => _schemaContainerValidators;
 
     public IReadOnlyList<KeywordBase> Keywords => _keywords;
 
@@ -70,15 +70,18 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     }
 
-    public BodyJsonSchema(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
+    public BodyJsonSchema(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
     {
         _keywords = MergeKeywords(keywords.ToArray());
 
-        Debug.Assert(schemaContainerValidators.All(
+        if (schemaContainerValidators is not null)
+        {
+            Debug.Assert(schemaContainerValidators.All(
                 validator
                     => validator.GetType() == typeof(ConditionalValidator)
-                    || validator.GetType() == typeof(ArrayContainsValidator)));
-        _schemaContainerValidators = schemaContainerValidators.ToArray();
+                       || validator.GetType() == typeof(ArrayContainsValidator)));
+            _schemaContainerValidators = schemaContainerValidators.ToArray();
+        }
 
         if (referenceKeywords is not null)
         {
@@ -183,9 +186,12 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
                 yield return ValidateAndSetFastReturnResult(keyword);
             }
 
-            foreach (ISchemaContainerValidationNode schemaContainerValidationNode in _bodyJsonSchema._schemaContainerValidators)
+            if (_bodyJsonSchema._schemaContainerValidators is not null)
             {
-                yield return ValidateAndSetFastReturnResult(schemaContainerValidationNode);
+                foreach (ISchemaContainerValidationNode schemaContainerValidationNode in _bodyJsonSchema._schemaContainerValidators)
+                {
+                    yield return ValidateAndSetFastReturnResult(schemaContainerValidationNode);
+                }
             }
 
             if (_bodyJsonSchema._referenceKeywords is not null)
@@ -226,12 +232,15 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             }
         }
 
-        foreach (ISchemaContainerValidationNode schemaContainer in _schemaContainerValidators)
+        if (_schemaContainerValidators is not null)
         {
-            ISchemaContainerElement? schemaContainerElement = schemaContainer.GetSubElement(name);
-            if (schemaContainerElement is not null)
+            foreach (ISchemaContainerValidationNode schemaContainer in _schemaContainerValidators)
             {
-                return schemaContainerElement;
+                ISchemaContainerElement? schemaContainerElement = schemaContainer.GetSubElement(name);
+                if (schemaContainerElement is not null)
+                {
+                    return schemaContainerElement;
+                }
             }
         }
 
@@ -259,7 +268,13 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             }
         }
 
-        IEnumerable<ISchemaContainerElement> schemaContainers = _schemaContainerValidators;
+        IEnumerable<ISchemaContainerElement> schemaContainers = Enumerable.Empty<ISchemaContainerElement>();
+
+        if (_schemaContainerValidators is not null)
+        {
+            schemaContainers = schemaContainers.Concat(_schemaContainerValidators);
+        }
+
         if (_defsKeywords is not null)
         {
             schemaContainers = schemaContainers.Concat(_defsKeywords.Select(def => def.keyword));
@@ -318,7 +333,11 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             }
         }
 
-        schemaElements = schemaElements.Concat(_schemaContainerValidators);
+        if (_schemaContainerValidators is not null)
+        {
+            schemaElements = schemaElements.Concat(_schemaContainerValidators);
+        }
+
         if (_defsKeywords is not null)
         {
             schemaElements = schemaElements.Concat(_defsKeywords.Select(def => def.keyword));
@@ -407,11 +426,14 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             }
         }
 
-        foreach (ISchemaContainerValidationNode schemaContainerValidationNode in _schemaContainerValidators)
+        if (_schemaContainerValidators is not null)
         {
-            if (schemaContainerValidationNode is IJsonSchemaResourceNodesCleanable resourceIdCleanable)
+            foreach (ISchemaContainerValidationNode schemaContainerValidationNode in _schemaContainerValidators)
             {
-                resourceIdCleanable.RemoveIdFromAllChildrenSchemaElements();
+                if (schemaContainerValidationNode is IJsonSchemaResourceNodesCleanable resourceIdCleanable)
+                {
+                    resourceIdCleanable.RemoveIdFromAllChildrenSchemaElements();
+                }
             }
         }
 

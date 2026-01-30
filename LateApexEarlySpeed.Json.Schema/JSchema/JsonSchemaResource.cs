@@ -13,7 +13,7 @@ internal class JsonSchemaResource : BodyJsonSchema
     /// </summary>
     private readonly Uri _id;
 
-    public JsonSchemaResource(SchemaKeyword? schemaKeyword, Uri id, IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, bool recursiveAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
+    public JsonSchemaResource(SchemaKeyword? schemaKeyword, Uri id, IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, bool recursiveAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
         : base(keywords, schemaContainerValidators, referenceKeywords, plainNameIdentifierKeyword, dynamicAnchor, defsKeywords, potentialSchemaContainerElements)
     {
         SchemaKeyword = schemaKeyword;

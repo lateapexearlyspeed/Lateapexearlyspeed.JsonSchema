@@ -57,7 +57,7 @@ nuget packages:
 
 ## Lateapexearlyspeed.Json.Schema
 
-This is a high performance Json schema .Net implementation library based on [Json schema](https://json-schema.org/) - draft 2020.12 (latest one by 2023.12). The json validation functionalities have passed [official json schema test-suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) for draft 2020.12 (except cases about limitation listed below)
+This is a high performance Json schema .Net implementation library based on [Json schema](https://json-schema.org/), support draft7, draft2019 and draft2020 (most commonly used, stable, LTS and latest versions). The json validation functionalities have passed [official json schema test-suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) for draft7, draft2019 and draft2020 (except cases about limitation listed below)
 
 This library also supports fluent validation and validator generation from your class code.
 
@@ -84,7 +84,7 @@ External json schema document reference support, please check [wiki](https://git
 
 Custom keyword support, please check [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Custom-keyword-support)
 
-More schema validation options like case-insensitive property names matching, Regex cache, output format and so on, please check [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/More-validation-options)
+More schema validation options like case-insensitive property names matching, dialect (schema version) selection, Regex cache, output format and so on, please check [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/More-validation-options)
 
 ### Fluent schema builder
 

@@ -224,7 +224,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             reader.Read();
         }
 
-        var schemaContainerValidators = new List<ISchemaContainerValidationNode>(2);
+        List<ISchemaContainerValidationNode>? schemaContainerValidators = null;
 
         // Based on spec, in Draft 7, when a schema contains a $ref property, any other properties in that schema will not be treated as JSON Schema keywords and will be ignored.
         // Here when there is $ref property, we still keep existing $schema property for Json Schema Document.
@@ -264,11 +264,13 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
             if (containsSchema is not null)
             {
+                schemaContainerValidators ??= new List<ISchemaContainerValidationNode>(1);
                 schemaContainerValidators.Add(new ArrayContainsValidator(containsSchema, minContains, maxContains));
             }
 
             if (predictSchema is not null || positiveSchema is not null || negativeSchema is not null)
             {
+                schemaContainerValidators ??= new List<ISchemaContainerValidationNode>(1);
                 schemaContainerValidators.Add(new ConditionalValidator(predictSchema, positiveSchema, negativeSchema));
             }
 
@@ -403,18 +405,21 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
 
             // ArrayContainsValidator & ConditionalValidator part:
-            foreach (ISchemaContainerValidationNode schemaContainerValidator in schema.SchemaContainerValidators)
+            if (schema.SchemaContainerValidators is not null)
             {
-                Debug.Assert(schemaContainerValidator is ArrayContainsValidator || schemaContainerValidator is ConditionalValidator);
+                foreach (ISchemaContainerValidationNode schemaContainerValidator in schema.SchemaContainerValidators)
+                {
+                    Debug.Assert(schemaContainerValidator is ArrayContainsValidator || schemaContainerValidator is ConditionalValidator);
 
-                if (schemaContainerValidator is ArrayContainsValidator arrayContainsValidator)
-                {
-                    WriteArrayContainsValidator(writer, arrayContainsValidator, options);
-                }
-                else
-                {
-                    Debug.Assert(schemaContainerValidator is ConditionalValidator);
-                    WriteConditionalValidator(writer, (ConditionalValidator)schemaContainerValidator, options);
+                    if (schemaContainerValidator is ArrayContainsValidator arrayContainsValidator)
+                    {
+                        WriteArrayContainsValidator(writer, arrayContainsValidator, options);
+                    }
+                    else
+                    {
+                        Debug.Assert(schemaContainerValidator is ConditionalValidator);
+                        WriteConditionalValidator(writer, (ConditionalValidator)schemaContainerValidator, options);
+                    }
                 }
             }
 
