@@ -4,7 +4,12 @@ namespace LateApexEarlySpeed.Json.Schema.Common;
 
 internal class SchemaResourceRegistry
 {
-    private readonly List<JsonSchemaResource> _schemaResources = new();
+    private readonly List<JsonSchemaResource> _schemaResources;
+
+    public SchemaResourceRegistry(int capacity)
+    {
+        _schemaResources = new List<JsonSchemaResource>(capacity);
+    }
 
     public JsonSchemaResource? GetSchemaResource(Uri baseUri)
     {

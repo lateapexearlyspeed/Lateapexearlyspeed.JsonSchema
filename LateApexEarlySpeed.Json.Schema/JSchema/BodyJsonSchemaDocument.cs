@@ -15,7 +15,7 @@ internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
     /// <summary>
     /// All schema resources inside current document (including current document itself)
     /// </summary>
-    public SchemaResourceRegistry LocalSchemaResourceRegistry { get; } = new();
+    public SchemaResourceRegistry LocalSchemaResourceRegistry { get; } = new(1);
 
     public SchemaResourceRegistry? GlobalSchemaResourceRegistry { get; set; }
 

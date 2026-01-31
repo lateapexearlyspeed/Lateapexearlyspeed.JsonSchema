@@ -15,7 +15,7 @@ public class JsonValidator
     private static readonly HttpJsonDocumentClient HttpJsonDocumentClient = new();
 
     private readonly IJsonSchemaDocument _mainSchemaDoc;
-    private readonly SchemaResourceRegistry _globalSchemaResourceRegistry = new();
+    private readonly SchemaResourceRegistry _globalSchemaResourceRegistry = new(1);
     private readonly JsonValidatorOptions _jsonValidatorOptions;
 
     /// <summary>
