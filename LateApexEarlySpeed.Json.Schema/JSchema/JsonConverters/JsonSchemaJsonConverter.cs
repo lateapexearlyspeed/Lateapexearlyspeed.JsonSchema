@@ -70,10 +70,27 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         bool recursiveAnchor = false;
 
         Dictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements = null;
+        
+        // The longest keyword across all JSON Schema drafts is 'unevaluatedProperties' - 21 characters
+        const int keywordNameCharBufferSizeOnStack = 21;
+
+        Span<char> keywordNameBuffer = stackalloc char[keywordNameCharBufferSizeOnStack];
 
         while (reader.TokenType != JsonTokenType.EndObject)
         {
-            string keywordName = reader.GetString()!;
+            var byteCount = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
+
+            if (keywordNameBuffer.Length < byteCount)
+            {
+                Debug.WriteLine($"Resize {nameof(keywordNameBuffer)} from {keywordNameBuffer.Length} to {byteCount}, allocate it to char array in gc heap.");
+                keywordNameBuffer = new char[byteCount];
+            }
+        
+            int actualLength = reader.CopyString(keywordNameBuffer);
+
+            // int actualLength = CopyKeywordName(ref reader, ref keywordNameBuffer);
+
+            ReadOnlySpan<char> keywordName = keywordNameBuffer.Slice(0, actualLength);
 
             Type? keywordType = ValidationKeywordRegistry.GetKeyword(keywordName, deserializerContext.Dialect);
             reader.Read();
@@ -115,23 +132,23 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                     itemsWithMultiSchemasKeyword = itemsWithMultiSchemas;
                 }
             }
-            else if (keywordName == ConditionalValidator.IfKeywordName)
+            else if (keywordName.Equals(ConditionalValidator.IfKeywordName, StringComparison.Ordinal))
             {
                 predictSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options);
             }
-            else if (keywordName == ConditionalValidator.ThenKeywordName)
+            else if (keywordName.Equals(ConditionalValidator.ThenKeywordName, StringComparison.Ordinal))
             {
                 positiveSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options);
             }
-            else if (keywordName == ConditionalValidator.ElseKeywordName)
+            else if (keywordName.Equals(ConditionalValidator.ElseKeywordName, StringComparison.Ordinal))
             {
                 negativeSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options);
             }
-            else if (keywordName == ArrayContainsValidator.ContainsKeywordName)
+            else if (keywordName.Equals(ArrayContainsValidator.ContainsKeywordName, StringComparison.Ordinal))
             {
                 containsSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options);
             }
-            else if (keywordName == ArrayContainsValidator.MaxContainsKeywordName)
+            else if (keywordName.Equals(ArrayContainsValidator.MaxContainsKeywordName, StringComparison.Ordinal))
             {
                 if (!reader.TryGetUInt32ForJsonSchema(out uint tmp))
                 {
@@ -140,7 +157,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
                 maxContains = tmp;
             }
-            else if (keywordName == ArrayContainsValidator.MinContainsKeywordName)
+            else if (keywordName.Equals(ArrayContainsValidator.MinContainsKeywordName, StringComparison.Ordinal))
             {
                 if (!reader.TryGetUInt32ForJsonSchema(out uint tmp))
                 {
@@ -149,39 +166,41 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
                 minContains = tmp;
             }
-            else if (keywordName == SchemaReferenceKeyword.Keyword)
+            else if (keywordName.Equals(SchemaReferenceKeyword.Keyword, StringComparison.Ordinal))
             {
                 schemaReference = JsonSerializer.Deserialize<SchemaReferenceKeyword>(ref reader, options)!;
                 referenceKeywords ??= new List<IReferenceKeyword>(1);
                 referenceKeywords.Add(schemaReference);
             }
-            else if (keywordName == SchemaDynamicReferenceKeyword.Keyword)
+            else if (keywordName.Equals(SchemaDynamicReferenceKeyword.Keyword, StringComparison.Ordinal))
             {
                 SchemaDynamicReferenceKeyword schemaDynamicReference = JsonSerializer.Deserialize<SchemaDynamicReferenceKeyword>(ref reader, options)!;
                 referenceKeywords ??= new List<IReferenceKeyword>(1);
                 referenceKeywords.Add(schemaDynamicReference);
             }
-            else if (keywordName == SchemaRecursiveReferenceKeyword.Keyword)
+            else if (keywordName.Equals(SchemaRecursiveReferenceKeyword.Keyword, StringComparison.Ordinal))
             {
                 SchemaRecursiveReferenceKeyword schemaRecursiveReference = JsonSerializer.Deserialize<SchemaRecursiveReferenceKeyword>(ref reader, options)!;
                 referenceKeywords ??= new List<IReferenceKeyword>(1);
                 referenceKeywords.Add(schemaRecursiveReference);
             }
-            else if (keywordName == DefsKeyword.Keyword || keywordName == DefsKeyword.KeywordDraft7)
+            else if (keywordName.Equals(DefsKeyword.Keyword, StringComparison.Ordinal) || keywordName.Equals(DefsKeyword.KeywordDraft7, StringComparison.Ordinal))
             {
-                defsKeywords ??= new List<(string name, DefsKeyword keyword)>(2);
+                string defKeywordName = keywordName.Equals(DefsKeyword.Keyword, StringComparison.Ordinal) ? DefsKeyword.Keyword : DefsKeyword.KeywordDraft7;
 
-                if (defsKeywords.Any(defs => defs.name == keywordName))
+                defsKeywords ??= new List<(string name, DefsKeyword keyword)>(1);
+
+                if (defsKeywords.Any(defs => defs.name == defKeywordName))
                 {
                     reader.Skip();
                 }
                 else
                 {
                     DefsKeyword defsKeyword = JsonSerializer.Deserialize<DefsKeyword>(ref reader, options)!;
-                    defsKeywords.Add((keywordName, defsKeyword));                    
+                    defsKeywords.Add((defKeywordName, defsKeyword));                    
                 }
             }
-            else if (keywordName == IdKeyword.Keyword)
+            else if (keywordName.Equals(IdKeyword.Keyword, StringComparison.Ordinal))
             {
                 string idValue = reader.GetString()!;
                 if (idValue.StartsWith('#'))
@@ -193,22 +212,22 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                     id = new Uri(idValue, UriKind.RelativeOrAbsolute);    
                 }
             }
-            else if (keywordName == SchemaKeyword.Keyword)
+            else if (keywordName.Equals(SchemaKeyword.Keyword, StringComparison.Ordinal))
             {
                 schemaKeyword = SchemaKeyword.Create(new Uri(reader.GetString()!));
                 deserializerContext.Dialect = schemaKeyword.Dialect;
 
                 options = deserializerContext.ToJsonSerializerOptions();
             }
-            else if (keywordName == AnchorKeyword.Keyword)
+            else if (keywordName.Equals(AnchorKeyword.Keyword, StringComparison.Ordinal))
             {
                 plainNameIdentifier = new AnchorKeyword(reader.GetString()!);
             }
-            else if (keywordName == DynamicAnchorKeyword.Keyword)
+            else if (keywordName.Equals(DynamicAnchorKeyword.Keyword, StringComparison.Ordinal))
             {
                 dynamicAnchor = reader.GetString();
             }
-            else if (keywordName == RecursiveAnchorKeyword.Keyword)
+            else if (keywordName.Equals(RecursiveAnchorKeyword.Keyword, StringComparison.Ordinal))
             {
                 recursiveAnchor = reader.GetBoolean();
             }
@@ -218,7 +237,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
             else if (PotentialSchemaContainerElement.TryDeserialize(ref reader, out ISchemaContainerElement? potentialSchemaContainerElement, options))
             {
-                (potentialSchemaContainerElements ??= new Dictionary<string, ISchemaContainerElement>()).Add(keywordName, potentialSchemaContainerElement);
+                (potentialSchemaContainerElements ??= new Dictionary<string, ISchemaContainerElement>()).Add(keywordName.ToString(), potentialSchemaContainerElement);
             }
 
             reader.Read();
@@ -309,6 +328,18 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         }
 
         return (T)(object)schema;
+    }
+
+    private static int CopyKeywordName(ref Utf8JsonReader reader, ref Span<char> keywordNameBuffer)
+    {
+        var byteCount = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
+
+        if (keywordNameBuffer.Length < byteCount)
+        {
+            keywordNameBuffer = new char[byteCount];
+        }
+        
+        return reader.CopyString(keywordNameBuffer);
     }
 
     private static void ThrowIfKeywordsHaveDuplication(ICollection<KeywordBase> keywords)
