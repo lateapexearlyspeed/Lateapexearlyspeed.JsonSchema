@@ -6,9 +6,14 @@ internal class SchemaKeyword
 {
     public const string Keyword = "$schema";
 
-    private static readonly Uri Draft202012Identifier = new("https://json-schema.org/draft/2020-12/schema");
-    private static readonly Uri Draft201909Identifier = new("https://json-schema.org/draft/2019-09/schema");
-    private static readonly Uri Draft7Identifier = new("http://json-schema.org/draft-07/schema#");
+    private const string Draft202012IdentifierString = "https://json-schema.org/draft/2020-12/schema";
+    private const string Draft201909IdentifierString = "https://json-schema.org/draft/2019-09/schema";
+    private const string Draft7IdentifierString      = "http://json-schema.org/draft-07/schema#";
+    private const string Draft7IdentifierString2     = "http://json-schema.org/draft-07/schema";
+
+    private static readonly Uri Draft202012Identifier = new(Draft202012IdentifierString);
+    private static readonly Uri Draft201909Identifier = new(Draft201909IdentifierString);
+    private static readonly Uri Draft7Identifier = new(Draft7IdentifierString);
 
     private static readonly SchemaKeyword Draft202012Keyword = new(DialectKind.Draft202012);
     private static readonly SchemaKeyword Draft201909Keyword = new(DialectKind.Draft201909);
@@ -19,14 +24,38 @@ internal class SchemaKeyword
         Dialect = dialect;
     }
 
-    public static SchemaKeyword Create(Uri schemaUri)
+    public static SchemaKeyword Create(ReadOnlySpan<char> schemaUri)
     {
-        if (schemaUri == Draft7Identifier)
+        // fast path
+        if (schemaUri.Equals(Draft7IdentifierString, StringComparison.Ordinal))
         {
             return Draft7Keyword;
         }
 
-        if (schemaUri == Draft201909Identifier)
+        if (schemaUri.Equals(Draft202012IdentifierString, StringComparison.Ordinal))
+        {
+            return Draft202012Keyword;
+        }
+
+        if (schemaUri.Equals(Draft201909IdentifierString, StringComparison.Ordinal))
+        {
+            return Draft201909Keyword;
+        }
+
+        if (schemaUri.Equals(Draft7IdentifierString2, StringComparison.Ordinal))
+        {
+            return Draft7Keyword;
+        }
+
+        // slow path
+        var currentSchemaUri = new Uri(schemaUri.ToString());
+
+        if (currentSchemaUri == Draft7Identifier)
+        {
+            return Draft7Keyword;
+        }
+
+        if (currentSchemaUri == Draft201909Identifier)
         {
             return Draft201909Keyword;
         }

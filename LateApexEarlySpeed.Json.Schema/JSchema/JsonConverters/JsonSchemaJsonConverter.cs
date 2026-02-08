@@ -12,6 +12,16 @@ namespace LateApexEarlySpeed.Json.Schema.JSchema.JsonConverters;
 
 internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 {
+    /// <summary>
+    /// The longest keyword across all JSON Schema drafts is 'unevaluatedProperties' - 21 characters
+    /// </summary>
+    private const int KeywordNameCharBufferSizeOnStack = 21;
+
+    /// <summary>
+    /// The longest schema identifier is <see cref="SchemaKeyword.Draft202012IdentifierString"/> - 44 characters
+    /// </summary>
+    private const int MaxSchemaIdentifierCharBufferSizeOnStack = 50;
+
     public override bool CanConvert(Type typeToConvert)
     {
         bool canConvert = typeToConvert == typeof(IJsonSchemaDocument) || typeToConvert == typeof(JsonSchema);
@@ -71,26 +81,25 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
         Dictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements = null;
         
-        // The longest keyword across all JSON Schema drafts is 'unevaluatedProperties' - 21 characters
-        const int keywordNameCharBufferSizeOnStack = 21;
+        Span<char> keywordNameBuffer = stackalloc char[KeywordNameCharBufferSizeOnStack];
 
-        Span<char> keywordNameBuffer = stackalloc char[keywordNameCharBufferSizeOnStack];
+        Span<char> schemaIdentifierBuffer = stackalloc char[MaxSchemaIdentifierCharBufferSizeOnStack];
 
         while (reader.TokenType != JsonTokenType.EndObject)
         {
             var byteCount = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
 
-            if (keywordNameBuffer.Length < byteCount)
+            if (byteCount > keywordNameBuffer.Length)
             {
                 Debug.WriteLine($"Resize {nameof(keywordNameBuffer)} from {keywordNameBuffer.Length} to {byteCount}, allocate it to char array in gc heap.");
                 keywordNameBuffer = new char[byteCount];
             }
         
-            int actualLength = reader.CopyString(keywordNameBuffer);
+            int keywordNameLength = reader.CopyString(keywordNameBuffer);
 
             // int actualLength = CopyKeywordName(ref reader, ref keywordNameBuffer);
 
-            ReadOnlySpan<char> keywordName = keywordNameBuffer.Slice(0, actualLength);
+            ReadOnlySpan<char> keywordName = keywordNameBuffer.Slice(0, keywordNameLength);
 
             Type? keywordType = ValidationKeywordRegistry.GetKeyword(keywordName, deserializerContext.Dialect);
             reader.Read();
@@ -214,9 +223,21 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
             else if (keywordName.Equals(SchemaKeyword.Keyword, StringComparison.Ordinal))
             {
-                schemaKeyword = SchemaKeyword.Create(new Uri(reader.GetString()!));
-                deserializerContext.Dialect = schemaKeyword.Dialect;
+                long bytes = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
 
+                if (bytes > schemaIdentifierBuffer.Length)
+                {
+                    Debug.WriteLine($"Resize {nameof(schemaIdentifierBuffer)} from {schemaIdentifierBuffer.Length} to {bytes}, allocate it to char array in gc heap.");
+                    schemaIdentifierBuffer = new char[bytes];
+                }
+
+                int schemaIdentifierLength = reader.CopyString(schemaIdentifierBuffer);
+
+                ReadOnlySpan<char> schemaIdentifier = schemaIdentifierBuffer.Slice(0, schemaIdentifierLength);
+
+                schemaKeyword = SchemaKeyword.Create(schemaIdentifier);
+                deserializerContext.Dialect = schemaKeyword.Dialect;
+                
                 options = deserializerContext.ToJsonSerializerOptions();
             }
             else if (keywordName.Equals(AnchorKeyword.Keyword, StringComparison.Ordinal))
@@ -332,11 +353,11 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
     private static int CopyKeywordName(ref Utf8JsonReader reader, ref Span<char> keywordNameBuffer)
     {
-        var byteCount = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
+        long bytes = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
 
-        if (keywordNameBuffer.Length < byteCount)
+        if (keywordNameBuffer.Length < bytes)
         {
-            keywordNameBuffer = new char[byteCount];
+            keywordNameBuffer = new char[bytes];
         }
         
         return reader.CopyString(keywordNameBuffer);
