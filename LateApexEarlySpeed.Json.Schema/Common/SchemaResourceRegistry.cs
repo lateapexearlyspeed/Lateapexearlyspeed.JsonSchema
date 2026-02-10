@@ -4,18 +4,34 @@ namespace LateApexEarlySpeed.Json.Schema.Common;
 
 internal class SchemaResourceRegistry
 {
-    private readonly List<JsonSchemaResource> _schemaResources = new();
+    private readonly List<JsonSchemaResource> _schemaResources;
+
+    public SchemaResourceRegistry(int capacity)
+    {
+        _schemaResources = new List<JsonSchemaResource>(capacity);
+    }
 
     public JsonSchemaResource? GetSchemaResource(Uri baseUri)
     {
-        return _schemaResources.Find(resource => resource.BaseUri == baseUri);
+        foreach (JsonSchemaResource schemaResource in _schemaResources)
+        {
+            if (schemaResource.BaseUri == baseUri)
+            {
+                return schemaResource;
+            }
+        }
+
+        return null;
     }
 
     public void AddSchemaResource(JsonSchemaResource schemaResource)
     {
-        if (_schemaResources.Find(resource => resource.BaseUri == schemaResource.BaseUri) is not null)
+        foreach (JsonSchemaResource resource in _schemaResources)
         {
-            throw new ArgumentException($"a schema resource with same base uri: {schemaResource.BaseUri} already exists.", nameof(schemaResource));
+            if (resource.BaseUri == schemaResource.BaseUri)
+            {
+                throw new ArgumentException($"a schema resource with same base uri: {schemaResource.BaseUri} already exists.", nameof(schemaResource));
+            }
         }
 
         _schemaResources.Add(schemaResource);
@@ -23,13 +39,17 @@ internal class SchemaResourceRegistry
 
     public void AddSchemaResourcesFromRegistry(SchemaResourceRegistry otherSchemaResourceRegistry)
     {
-        JsonSchemaResource? duplicatedResource = otherSchemaResourceRegistry._schemaResources.Find(otherResource => _schemaResources.Find(thisResource => thisResource.BaseUri == otherResource.BaseUri) is not null);
-
-        if (duplicatedResource is not null)
+        foreach (JsonSchemaResource otherResource in otherSchemaResourceRegistry._schemaResources)
         {
-            throw new ArgumentException($"a schema resource with same base uri: {duplicatedResource.BaseUri} already exists.", nameof(otherSchemaResourceRegistry));
+            foreach (JsonSchemaResource resource in _schemaResources)
+            {
+                if (resource.BaseUri == otherResource.BaseUri)
+                {
+                    throw new ArgumentException($"a schema resource with same base uri: {otherResource.BaseUri} already exists.", nameof(otherSchemaResourceRegistry));
+                }
+            }
         }
-        
+
         _schemaResources.AddRange(otherSchemaResourceRegistry._schemaResources);
     }
 }

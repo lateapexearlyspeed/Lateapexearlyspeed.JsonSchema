@@ -1,15 +1,16 @@
-﻿using System.Diagnostics;
-using System.Text.Json.Serialization;
-using LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
+using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
+using System.Diagnostics;
+using System.Text.Json.Serialization;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword(Keyword)]
 [JsonConverter(typeof(SchemaDynamicReferenceKeywordJsonConverter))]
-internal class SchemaDynamicReferenceKeyword : KeywordBase
+internal class SchemaDynamicReferenceKeyword : KeywordBase, IReferenceKeyword
 {
     public const string Keyword = "$dynamicRef";
 

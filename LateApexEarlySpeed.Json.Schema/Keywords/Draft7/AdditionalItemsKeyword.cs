@@ -1,19 +1,20 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
-using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
-namespace LateApexEarlySpeed.Json.Schema.Keywords;
+namespace LateApexEarlySpeed.Json.Schema.Keywords.Draft7;
 
-[Keyword("items")]
-[Dialect(DialectKind.Draft202012)]
-[JsonConverter(typeof(SingleSchemaJsonConverter<ItemsKeyword>))]
-internal class ItemsKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
+[Keyword("additionalItems")]
+[Dialect(DialectKind.Draft7, DialectKind.Draft201909)]
+[JsonConverter(typeof(SingleSchemaJsonConverter<AdditionalItemsKeyword>))]
+internal class AdditionalItemsKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
 {
     private JsonSchema _schema = null!;
 
@@ -23,11 +24,11 @@ internal class ItemsKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSc
         init => _schema = value;
     }
 
-    public PrefixItemsKeyword? PrefixItemsKeyword { get; set; }
+    public ItemsWithMultiSchemasKeyword? ItemsWithMultiSchemasKeyword { private get; set; }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        if (instance.ValueKind != JsonValueKind.Array)
+        if (ItemsWithMultiSchemasKeyword is null || instance.ValueKind != JsonValueKind.Array)
         {
             return ValidationResult.ValidResult;
         }
@@ -37,31 +38,36 @@ internal class ItemsKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSc
 
     private class Validator : IValidator
     {
-        private readonly ItemsKeyword _itemsKeyword;
+        private readonly AdditionalItemsKeyword _keyword;
         private readonly JsonInstanceElement _instance;
         private readonly JsonSchemaOptions _options;
-     
+        
         private ValidationResult? _fastReturnResult;
 
-        public Validator(ItemsKeyword itemsKeyword, JsonInstanceElement instance, JsonSchemaOptions options)
+        public Validator(AdditionalItemsKeyword keyword, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            _itemsKeyword = itemsKeyword;
+            _keyword = keyword;
             _instance = instance;
             _options = options;
         }
 
         public IEnumerable<ValidationResult> EnumerateValidationResults()
         {
+            Debug.Assert(_keyword.ItemsWithMultiSchemasKeyword is not null);
+            int prefixSchemasCount = _keyword.ItemsWithMultiSchemasKeyword.SubSchemas.Count;
+
             int idx = 0;
+
             foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
             {
-                if (_itemsKeyword.PrefixItemsKeyword is not null && idx < _itemsKeyword.PrefixItemsKeyword.SubSchemas.Count)
+                if (idx < prefixSchemasCount)
                 {
                     idx++;
                     continue;
                 }
 
-                ValidationResult validationResult = _itemsKeyword.Schema.Validate(instanceItem, _options);
+                ValidationResult validationResult = _keyword._schema.Validate(instanceItem, _options);
+
                 if (!validationResult.IsValid)
                 {
                     _fastReturnResult = validationResult;
@@ -79,23 +85,16 @@ internal class ItemsKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSc
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
-    public ISchemaContainerElement? GetSubElement(string name)
-    {
-        return Schema.GetSubElement(name);
-    }
+    public ISchemaContainerElement? GetSubElement(string name) => _schema.GetSubElement(name);
 
     public IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
-        yield return Schema;
+        yield return _schema;
     }
 
     public bool IsSchemaType => true;
-
-    public JsonSchema GetSchema()
-    {
-        return Schema;
-    }
-
+    public JsonSchema GetSchema() => _schema;
+    
     public void RemoveIdFromAllChildrenSchemaElements()
     {
         if (_schema is BodyJsonSchema bodyJsonSchema)

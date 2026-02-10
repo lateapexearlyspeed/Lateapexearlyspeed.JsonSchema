@@ -12,6 +12,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("prefixItems")]
+[Dialect(DialectKind.Draft202012)]
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<PrefixItemsKeyword>))]
 internal class PrefixItemsKeyword : KeywordBase, ISchemaContainerElement, ISubSchemaCollection, IJsonSchemaResourceNodesCleanable
 {

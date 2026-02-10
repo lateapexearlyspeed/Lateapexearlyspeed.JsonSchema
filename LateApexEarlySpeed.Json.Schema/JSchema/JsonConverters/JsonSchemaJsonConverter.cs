@@ -1,15 +1,27 @@
-﻿using System.Diagnostics;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords;
+using LateApexEarlySpeed.Json.Schema.Keywords.Draft7;
+using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema.JsonConverters;
 
 internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 {
+    /// <summary>
+    /// The longest keyword across all JSON Schema drafts is 'unevaluatedProperties' - 21 characters
+    /// </summary>
+    private const int KeywordNameCharBufferSizeOnStack = 21;
+
+    /// <summary>
+    /// The longest schema identifier is <see cref="SchemaKeyword.Draft202012IdentifierString"/> - 44 characters
+    /// </summary>
+    private const int MaxSchemaIdentifierCharBufferSizeOnStack = 50;
+
     public override bool CanConvert(Type typeToConvert)
     {
         bool canConvert = typeToConvert == typeof(IJsonSchemaDocument) || typeToConvert == typeof(JsonSchema);
@@ -37,12 +49,19 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
         var validationKeywords = new List<KeywordBase>();
 
+        var deserializerContext = new JsonSchemaDeserializerContext(options);
+
+        SchemaKeyword? schemaKeyword = null;
+
         PropertiesKeyword? propertiesKeyword = null;
         PatternPropertiesKeyword? patternPropertiesKeyword = null;
         AdditionalPropertiesKeyword? additionalPropertiesKeyword = null;
 
         PrefixItemsKeyword? prefixItemsKeyword = null;
         ItemsKeyword? itemsKeyword = null;
+
+        AdditionalItemsKeyword? additionalItemsKeyword = null;
+        ItemsWithMultiSchemasKeyword? itemsWithMultiSchemasKeyword = null;
 
         JsonSchema? predictSchema = null;
         JsonSchema? positiveSchema = null;
@@ -53,19 +72,34 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         uint? minContains = null;
 
         SchemaReferenceKeyword? schemaReference = null;
-        SchemaDynamicReferenceKeyword? schemaDynamicReference = null;
-        DefsKeyword? defsKeyword = null;
+        List<IReferenceKeyword>? referenceKeywords = null;
+        List<(string name, DefsKeyword keyword)>? defsKeywords = null;
         Uri? id = null;
-        string? anchor = null;
+        IPlainNameIdentifierKeyword? plainNameIdentifier = null;
         string? dynamicAnchor = null;
+        bool recursiveAnchor = false;
 
         Dictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements = null;
+        
+        Span<char> keywordNameBuffer = stackalloc char[KeywordNameCharBufferSizeOnStack];
 
         while (reader.TokenType != JsonTokenType.EndObject)
         {
-            string keywordName = reader.GetString()!;
+            var byteCount = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
 
-            Type? keywordType = ValidationKeywordRegistry.GetKeyword(keywordName);
+            if (byteCount > keywordNameBuffer.Length)
+            {
+                Debug.WriteLine($"Resize {nameof(keywordNameBuffer)} from {keywordNameBuffer.Length} to {byteCount}, allocate it to char array in gc heap.");
+                keywordNameBuffer = new char[byteCount];
+            }
+        
+            int keywordNameLength = reader.CopyString(keywordNameBuffer);
+
+            // int actualLength = CopyKeywordName(ref reader, ref keywordNameBuffer);
+
+            ReadOnlySpan<char> keywordName = keywordNameBuffer.Slice(0, keywordNameLength);
+
+            Type? keywordType = ValidationKeywordRegistry.GetKeyword(keywordName, deserializerContext.Dialect);
             reader.Read();
 
             if (keywordType is not null)
@@ -88,32 +122,40 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 {
                     additionalPropertiesKeyword = additionalProperties;
                 }
-                else if (keyword is PrefixItemsKeyword prefixItems)
-                {
-                    prefixItemsKeyword = prefixItems;
-                }
                 else if (keyword is ItemsKeyword items)
                 {
                     itemsKeyword = items;
                 }
+                else if (keyword is PrefixItemsKeyword prefixItems)
+                {
+                    prefixItemsKeyword = prefixItems;
+                }
+                else if (keyword is AdditionalItemsKeyword additionalItems)
+                {
+                    additionalItemsKeyword = additionalItems;
+                }
+                else if (keyword is ItemsWithMultiSchemasKeyword itemsWithMultiSchemas)
+                {
+                    itemsWithMultiSchemasKeyword = itemsWithMultiSchemas;
+                }
             }
-            else if (keywordName == ConditionalValidator.IfKeywordName)
+            else if (keywordName.Equals(ConditionalValidator.IfKeywordName, StringComparison.Ordinal))
             {
                 predictSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options);
             }
-            else if (keywordName == ConditionalValidator.ThenKeywordName)
+            else if (keywordName.Equals(ConditionalValidator.ThenKeywordName, StringComparison.Ordinal))
             {
                 positiveSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options);
             }
-            else if (keywordName == ConditionalValidator.ElseKeywordName)
+            else if (keywordName.Equals(ConditionalValidator.ElseKeywordName, StringComparison.Ordinal))
             {
                 negativeSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options);
             }
-            else if (keywordName == ArrayContainsValidator.ContainsKeywordName)
+            else if (keywordName.Equals(ArrayContainsValidator.ContainsKeywordName, StringComparison.Ordinal))
             {
                 containsSchema = JsonSerializer.Deserialize<JsonSchema>(ref reader, options);
             }
-            else if (keywordName == ArrayContainsValidator.MaxContainsKeywordName)
+            else if (keywordName.Equals(ArrayContainsValidator.MaxContainsKeywordName, StringComparison.Ordinal))
             {
                 if (!reader.TryGetUInt32ForJsonSchema(out uint tmp))
                 {
@@ -122,7 +164,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
                 maxContains = tmp;
             }
-            else if (keywordName == ArrayContainsValidator.MinContainsKeywordName)
+            else if (keywordName.Equals(ArrayContainsValidator.MinContainsKeywordName, StringComparison.Ordinal))
             {
                 if (!reader.TryGetUInt32ForJsonSchema(out uint tmp))
                 {
@@ -131,29 +173,70 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
                 minContains = tmp;
             }
-            else if (keywordName == SchemaReferenceKeyword.Keyword)
+            else if (keywordName.Equals(SchemaReferenceKeyword.Keyword, StringComparison.Ordinal))
             {
-                schemaReference = JsonSerializer.Deserialize<SchemaReferenceKeyword>(ref reader, options);
+                schemaReference = JsonSerializer.Deserialize<SchemaReferenceKeyword>(ref reader, options)!;
+                referenceKeywords ??= new List<IReferenceKeyword>(1);
+                referenceKeywords.Add(schemaReference);
             }
-            else if (keywordName == SchemaDynamicReferenceKeyword.Keyword)
+            else if (keywordName.Equals(SchemaDynamicReferenceKeyword.Keyword, StringComparison.Ordinal))
             {
-                schemaDynamicReference = JsonSerializer.Deserialize<SchemaDynamicReferenceKeyword>(ref reader, options);
+                SchemaDynamicReferenceKeyword schemaDynamicReference = JsonSerializer.Deserialize<SchemaDynamicReferenceKeyword>(ref reader, options)!;
+                referenceKeywords ??= new List<IReferenceKeyword>(1);
+                referenceKeywords.Add(schemaDynamicReference);
             }
-            else if (keywordName == DefsKeyword.Keyword)
+            else if (keywordName.Equals(SchemaRecursiveReferenceKeyword.Keyword, StringComparison.Ordinal))
             {
-                defsKeyword = JsonSerializer.Deserialize<DefsKeyword>(ref reader, options)!;
+                SchemaRecursiveReferenceKeyword schemaRecursiveReference = JsonSerializer.Deserialize<SchemaRecursiveReferenceKeyword>(ref reader, options)!;
+                referenceKeywords ??= new List<IReferenceKeyword>(1);
+                referenceKeywords.Add(schemaRecursiveReference);
             }
-            else if (keywordName == IdKeyword.Keyword)
+            else if (keywordName.Equals(DefsKeyword.Keyword, StringComparison.Ordinal) || keywordName.Equals(DefsKeyword.KeywordDraft7, StringComparison.Ordinal))
             {
-                id = new Uri(reader.GetString()!, UriKind.RelativeOrAbsolute);
+                string defKeywordName = keywordName.Equals(DefsKeyword.Keyword, StringComparison.Ordinal) ? DefsKeyword.Keyword : DefsKeyword.KeywordDraft7;
+
+                defsKeywords ??= new List<(string name, DefsKeyword keyword)>(1);
+
+                if (defsKeywords.Any(defs => defs.name == defKeywordName))
+                {
+                    reader.Skip();
+                }
+                else
+                {
+                    DefsKeyword defsKeyword = JsonSerializer.Deserialize<DefsKeyword>(ref reader, options)!;
+                    defsKeywords.Add((defKeywordName, defsKeyword));                    
+                }
             }
-            else if (keywordName == AnchorKeyword.Keyword)
+            else if (keywordName.Equals(IdKeyword.Keyword, StringComparison.Ordinal))
             {
-                anchor = reader.GetString();
+                string idValue = reader.GetString()!;
+                if (idValue.StartsWith('#'))
+                {
+                    plainNameIdentifier = new PlainNameFragmentIdKeyword(idValue.Substring(1));
+                }
+                else
+                {
+                    id = new Uri(idValue, UriKind.RelativeOrAbsolute);    
+                }
             }
-            else if (keywordName == DynamicAnchorKeyword.Keyword)
+            else if (keywordName.Equals(SchemaKeyword.Keyword, StringComparison.Ordinal))
+            {
+                schemaKeyword = GetSchemaKeyword(ref reader);
+
+                deserializerContext.Dialect = schemaKeyword.Dialect;
+                options = deserializerContext.ToJsonSerializerOptions();
+            }
+            else if (keywordName.Equals(AnchorKeyword.Keyword, StringComparison.Ordinal))
+            {
+                plainNameIdentifier = new AnchorKeyword(reader.GetString()!);
+            }
+            else if (keywordName.Equals(DynamicAnchorKeyword.Keyword, StringComparison.Ordinal))
             {
                 dynamicAnchor = reader.GetString();
+            }
+            else if (keywordName.Equals(RecursiveAnchorKeyword.Keyword, StringComparison.Ordinal))
+            {
+                recursiveAnchor = reader.GetBoolean();
             }
             else if (ValidationKeywordRegistry.IsIgnoredKeyword(keywordName))
             {
@@ -161,64 +244,132 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
             else if (PotentialSchemaContainerElement.TryDeserialize(ref reader, out ISchemaContainerElement? potentialSchemaContainerElement, options))
             {
-                (potentialSchemaContainerElements ??= new Dictionary<string, ISchemaContainerElement>()).Add(keywordName, potentialSchemaContainerElement);
+                (potentialSchemaContainerElements ??= new Dictionary<string, ISchemaContainerElement>()).Add(keywordName.ToString(), potentialSchemaContainerElement);
             }
 
             reader.Read();
         }
 
-        // Set dependent keywords
-        if (additionalPropertiesKeyword is not null)
-        {
-            additionalPropertiesKeyword.PropertiesKeyword = propertiesKeyword;
-            additionalPropertiesKeyword.PatternPropertiesKeyword = patternPropertiesKeyword;
-        }
+        List<ISchemaContainerValidationNode>? schemaContainerValidators = null;
 
-        if (itemsKeyword is not null)
+        // Based on spec, in Draft 7, when a schema contains a $ref property, any other properties in that schema will not be treated as JSON Schema keywords and will be ignored.
+        // Here when there is $ref property, we still keep existing $schema property for Json Schema Document.
+        if (deserializerContext.Dialect == DialectKind.Draft7 && schemaReference is not null)
         {
-            itemsKeyword.PrefixItemsKeyword = prefixItemsKeyword;
-        }
+            validationKeywords.Clear();
 
-        var schemaContainerValidators = new List<ISchemaContainerValidationNode>(2);
-        if (containsSchema is not null)
+            Debug.Assert(referenceKeywords is not null);
+            referenceKeywords.Clear();
+            referenceKeywords.Add(schemaReference);
+
+            plainNameIdentifier = null;
+            dynamicAnchor = null;
+            recursiveAnchor = false;
+            defsKeywords = null;
+            id = null;
+            potentialSchemaContainerElements = null;
+        }
+        else
         {
-            schemaContainerValidators.Add(new ArrayContainsValidator(containsSchema, minContains, maxContains));
-        }
+            // Set dependent keywords
+            if (additionalPropertiesKeyword is not null)
+            {
+                additionalPropertiesKeyword.PropertiesKeyword = propertiesKeyword;
+                additionalPropertiesKeyword.PatternPropertiesKeyword = patternPropertiesKeyword;
+            }
 
-        if (predictSchema is not null || positiveSchema is not null || negativeSchema is not null)
-        {
-            schemaContainerValidators.Add(new ConditionalValidator(predictSchema, positiveSchema, negativeSchema));
-        }
+            if (itemsKeyword is not null)
+            {
+                itemsKeyword.PrefixItemsKeyword = prefixItemsKeyword;
+            }
 
-        // Although BodyJsonSchema supports merging duplicated keywords, but it is done by changing json schema tree structure. (That is:
-        // when there is duplicated keywords, schema structure will be changed)
-        // In json schema deserialization case, it is possible that original schema contains "json path" reference, so here we cannot 
-        // dare to change original json schema structure at risk of missing reference.
-        ThrowIfKeywordsHaveDuplication(validationKeywords);
+            if (additionalItemsKeyword is not null)
+            {
+                additionalItemsKeyword.ItemsWithMultiSchemasKeyword = itemsWithMultiSchemasKeyword;
+            }
+
+            if (containsSchema is not null)
+            {
+                schemaContainerValidators ??= new List<ISchemaContainerValidationNode>(1);
+                schemaContainerValidators.Add(new ArrayContainsValidator(containsSchema, minContains, maxContains));
+            }
+
+            if (predictSchema is not null || positiveSchema is not null || negativeSchema is not null)
+            {
+                schemaContainerValidators ??= new List<ISchemaContainerValidationNode>(1);
+                schemaContainerValidators.Add(new ConditionalValidator(predictSchema, positiveSchema, negativeSchema));
+            }
+
+            // Although BodyJsonSchema supports merging duplicated keywords, but it is done by changing json schema tree structure. (That is:
+            // when there is duplicated keywords, schema structure will be changed)
+            // In json schema deserialization case, it is possible that original schema contains "json path" reference, so here we cannot 
+            // dare to change original json schema structure at risk of missing reference.
+            ThrowIfKeywordsHaveDuplication(validationKeywords);    
+        }
 
         JsonSchema schema;
         if (typeToConvert == typeof(IJsonSchemaDocument))
         {
-            schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, potentialSchemaContainerElements, id, defsKeyword);
+            schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, recursiveAnchor, potentialSchemaContainerElements, schemaKeyword, id, defsKeywords);
         }
         else if (id is not null)
         {
             schema = new JsonSchemaResource(
+                schemaKeyword,
                 id,
                 validationKeywords,
                 schemaContainerValidators,
-                schemaReference,
-                schemaDynamicReference,
-                anchor,
+                referenceKeywords,
+                plainNameIdentifier,
                 dynamicAnchor,
-                defsKeyword, potentialSchemaContainerElements);
+                recursiveAnchor,
+                defsKeywords, potentialSchemaContainerElements);
+        }
+        else if (schemaKeyword is not null)
+        {
+            throw ThrowHelper.CreateJsonSchemaContainsSchemaKeywordJsonException();
         }
         else
         {
-            schema = new BodyJsonSchema(validationKeywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeyword, potentialSchemaContainerElements);
+            schema = new BodyJsonSchema(validationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, defsKeywords, potentialSchemaContainerElements);
         }
 
         return (T)(object)schema;
+    }
+
+    private static SchemaKeyword GetSchemaKeyword(ref Utf8JsonReader reader)
+    { 
+        long bytes = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
+
+        scoped Span<char> schemaIdentifierBuffer;
+
+        if (bytes > MaxSchemaIdentifierCharBufferSizeOnStack)
+        {
+            Debug.WriteLine($"Allocate {nameof(schemaIdentifierBuffer)} to char array with length {bytes} in gc heap.");
+            schemaIdentifierBuffer = new char[bytes];
+        }
+        else
+        {
+            schemaIdentifierBuffer = stackalloc char[(int)bytes];
+        }
+
+        int schemaIdentifierLength = reader.CopyString(schemaIdentifierBuffer);
+
+        ReadOnlySpan<char> schemaIdentifier = schemaIdentifierBuffer.Slice(0, schemaIdentifierLength);
+
+        return SchemaKeyword.Create(schemaIdentifier);
+    }
+
+    private static int CopyKeywordName(ref Utf8JsonReader reader, ref Span<char> keywordNameBuffer)
+    {
+        long bytes = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
+
+        if (keywordNameBuffer.Length < bytes)
+        {
+            keywordNameBuffer = new char[bytes];
+        }
+        
+        return reader.CopyString(keywordNameBuffer);
     }
 
     private static void ThrowIfKeywordsHaveDuplication(ICollection<KeywordBase> keywords)
@@ -251,7 +402,19 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             {
                 Debug.Assert(value.GetType() == typeof(JsonSchemaResource) || value.GetType() == typeof(BodyJsonSchemaDocument));
 
+                if (schemaResource.SchemaKeyword is not null)
+                {
+                    writer.WriteString(SchemaKeyword.Keyword, schemaResource.SchemaKeyword.DraftIdentifier.ToString());
+                }
+
                 writer.WriteString(IdKeyword.Keyword, schemaResource.BaseUri!.ToString());
+
+                // RecursiveAnchor part:
+                if (schemaResource.RecursiveAnchor)
+                {
+                    writer.WriteBoolean(RecursiveAnchorKeyword.Keyword, RecursiveAnchorKeyword.EnabledValue);
+                }
+
                 schema = schemaResource;
             }
             else
@@ -269,32 +432,33 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
 
             // defs part:
-            if (schema.DefsKeyword is not null)
+            if (schema.DefsKeywords is not null)
             {
-                writer.WritePropertyName(DefsKeyword.Keyword);
-                JsonSerializer.Serialize(writer, schema.DefsKeyword, options);
+                foreach ((string name, DefsKeyword defsKeyword) in schema.DefsKeywords)
+                {
+                    writer.WritePropertyName(name);
+                    JsonSerializer.Serialize(writer, defsKeyword, options);                    
+                }
             }
 
-            // Reference & DynamicReference part:
-            if (schema.SchemaReference is not null)
+            // Reference & DynamicReference & RecursiveReference part:
+            if (schema.ReferenceKeywords is not null)
             {
-                writer.WritePropertyName(SchemaReferenceKeyword.Keyword);
-                JsonSerializer.Serialize(writer, schema.SchemaReference, options);
+                foreach (IReferenceKeyword referenceKeyword in schema.ReferenceKeywords)
+                {
+                    writer.WritePropertyName(referenceKeyword.Name);
+                    JsonSerializer.Serialize(writer, referenceKeyword, referenceKeyword.GetType(), options);
+                }
             }
 
-            if (schema.SchemaDynamicReference is not null)
+            // Plain named identifier part ($id or anchor):
+            if (schema.PlainNameIdentifierKeyword is not null)
             {
-                writer.WritePropertyName(SchemaDynamicReferenceKeyword.Keyword);
-                JsonSerializer.Serialize(writer, schema.SchemaDynamicReference, options);
+                writer.WritePropertyName(schema.PlainNameIdentifierKeyword.KeywordName);
+                writer.WriteStringValue(schema.PlainNameIdentifierKeyword.SerializedValue);
             }
 
-            // Anchor & DynamicAnchor part:
-            if (schema.Anchor is not null)
-            {
-                writer.WritePropertyName(AnchorKeyword.Keyword);
-                writer.WriteStringValue(schema.Anchor);
-            }
-
+            // DynamicAnchor part:
             if (schema.DynamicAnchor is not null)
             {
                 writer.WritePropertyName(DynamicAnchorKeyword.Keyword);
@@ -302,18 +466,21 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
 
             // ArrayContainsValidator & ConditionalValidator part:
-            foreach (ISchemaContainerValidationNode schemaContainerValidator in schema.SchemaContainerValidators)
+            if (schema.SchemaContainerValidators is not null)
             {
-                Debug.Assert(schemaContainerValidator is ArrayContainsValidator || schemaContainerValidator is ConditionalValidator);
+                foreach (ISchemaContainerValidationNode schemaContainerValidator in schema.SchemaContainerValidators)
+                {
+                    Debug.Assert(schemaContainerValidator is ArrayContainsValidator || schemaContainerValidator is ConditionalValidator);
 
-                if (schemaContainerValidator is ArrayContainsValidator arrayContainsValidator)
-                {
-                    WriteArrayContainsValidator(writer, arrayContainsValidator, options);
-                }
-                else
-                {
-                    Debug.Assert(schemaContainerValidator is ConditionalValidator);
-                    WriteConditionalValidator(writer, (ConditionalValidator)schemaContainerValidator, options);
+                    if (schemaContainerValidator is ArrayContainsValidator arrayContainsValidator)
+                    {
+                        WriteArrayContainsValidator(writer, arrayContainsValidator, options);
+                    }
+                    else
+                    {
+                        Debug.Assert(schemaContainerValidator is ConditionalValidator);
+                        WriteConditionalValidator(writer, (ConditionalValidator)schemaContainerValidator, options);
+                    }
                 }
             }
 

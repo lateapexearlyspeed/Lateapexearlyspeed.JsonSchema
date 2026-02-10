@@ -10,7 +10,7 @@ internal interface IValidator
     /// <remarks>
     /// NOTE for implementations: there are some cases in which <see cref="ResultTuple.CurError"/> of <see cref="Result"/> Must NOT null.
     /// Check <see cref="ValidationResultsComposer"/> code to understand.
-    /// </remarks>>
+    /// </remarks>
     ResultTuple Result { get; }
 }
 

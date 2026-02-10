@@ -49,6 +49,39 @@ public abstract class KeywordBase : NamedValidationNode
         return GetKeywordName(typeof(TKeyword));
     }
 
+    internal static DialectKind[] GetKeywordDialects(Type keywordType)
+    {
+        Debug.Assert(typeof(KeywordBase).IsAssignableFrom(keywordType));
+
+        DialectAttribute? dialectAttribute = keywordType.GetCustomAttribute<DialectAttribute>();
+
+        if (dialectAttribute is null || dialectAttribute.Dialects.Length == 0)
+        {
+            Array sourceEnumValues = typeof(DialectKind).GetEnumValues();
+            DialectKind[] allDialects = new DialectKind[sourceEnumValues.Length];
+            Array.Copy(sourceEnumValues, allDialects, sourceEnumValues.Length);
+
+            return allDialects;
+        }
+
+        DialectKind[] dialects = dialectAttribute.Dialects;
+
+        for (int i = 0; i < dialects.Length - 1; i++)
+        {
+            DialectKind cur = dialects[i];
+
+            for (int j = i + 1; j < dialects.Length; j++)
+            {
+                if (cur == dialects[j])
+                {
+                    throw new BadKeywordException($"Duplicated dialect '{cur}' found on type '{keywordType}'");
+                }
+            }
+        }
+
+        return dialects;
+    }
+
     // static KeywordBase()
     // {
     //     Attribute? attr = typeof(TKeyword).GetCustomAttribute(typeof(KeywordAttribute));

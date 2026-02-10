@@ -4,13 +4,15 @@ using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords;
+using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
 internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 {
-    private readonly ISchemaContainerValidationNode[] _schemaContainerValidators;
+    private readonly ISchemaContainerValidationNode[]? _schemaContainerValidators;
     private readonly IReadOnlyList<KeywordBase> _keywords;
+    private readonly IReferenceKeyword[]? _referenceKeywords;
 
     /// <summary>
     /// <see cref="_potentialSchemaContainerElements"/> is used to represent all properties nodes which don't belong to any valid keywords.
@@ -49,41 +51,49 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
     /// which is ONLY used to enumerate its inner subschema or sub schema resource (with $id)
     /// without functionality of 'find by defs-ref' because pure json schema is not a schema resource (no $id)
     /// </summary>
-    public DefsKeyword? DefsKeyword { get; }
+    private readonly (string name, DefsKeyword keyword)[]? _defsKeywords;
 
-    public IReadOnlyList<ISchemaContainerValidationNode> SchemaContainerValidators => _schemaContainerValidators;
+    public IReadOnlyList<(string name, DefsKeyword keyword)>? DefsKeywords => _defsKeywords;
+
+    public IReadOnlyList<ISchemaContainerValidationNode>? SchemaContainerValidators => _schemaContainerValidators;
 
     public IReadOnlyList<KeywordBase> Keywords => _keywords;
 
-    public SchemaReferenceKeyword? SchemaReference { get; }
+    public IReadOnlyList<IReferenceKeyword>? ReferenceKeywords => _referenceKeywords;
 
-    public SchemaDynamicReferenceKeyword? SchemaDynamicReference { get; }
-
-    public string? Anchor { get; }
+    public IPlainNameIdentifierKeyword? PlainNameIdentifierKeyword { get; }
 
     public string? DynamicAnchor { get; }
 
-    public BodyJsonSchema(IEnumerable<KeywordBase> keywords) : this(keywords, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null, null)
+    public BodyJsonSchema(IEnumerable<KeywordBase> keywords) : this(keywords, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null)
     {
 
     }
 
-    public BodyJsonSchema(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor, DefsKeyword? defsKeyword, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
+    public BodyJsonSchema(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
     {
         _keywords = MergeKeywords(keywords.ToArray());
 
-        Debug.Assert(schemaContainerValidators.All(
+        if (schemaContainerValidators is not null)
+        {
+            Debug.Assert(schemaContainerValidators.All(
                 validator
                     => validator.GetType() == typeof(ConditionalValidator)
-                    || validator.GetType() == typeof(ArrayContainsValidator)));
-        _schemaContainerValidators = schemaContainerValidators.ToArray();
+                       || validator.GetType() == typeof(ArrayContainsValidator)));
+            _schemaContainerValidators = schemaContainerValidators.ToArray();
+        }
 
-        SchemaReference = schemaReference;
-        SchemaDynamicReference = schemaDynamicReference;
-        
-        DefsKeyword = defsKeyword;
+        if (referenceKeywords is not null)
+        {
+            _referenceKeywords = referenceKeywords.ToArray();
+        }
 
-        Anchor = anchor;
+        if (defsKeywords is not null)
+        {
+            _defsKeywords = defsKeywords.ToArray();
+        }
+
+        PlainNameIdentifierKeyword = plainNameIdentifierKeyword;
         DynamicAnchor = dynamicAnchor;
 
         if (potentialSchemaContainerElements is not null)
@@ -176,19 +186,20 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
                 yield return ValidateAndSetFastReturnResult(keyword);
             }
 
-            foreach (ISchemaContainerValidationNode schemaContainerValidationNode in _bodyJsonSchema._schemaContainerValidators)
+            if (_bodyJsonSchema._schemaContainerValidators is not null)
             {
-                yield return ValidateAndSetFastReturnResult(schemaContainerValidationNode);
+                foreach (ISchemaContainerValidationNode schemaContainerValidationNode in _bodyJsonSchema._schemaContainerValidators)
+                {
+                    yield return ValidateAndSetFastReturnResult(schemaContainerValidationNode);
+                }
             }
 
-            if (_bodyJsonSchema.SchemaReference is not null)
+            if (_bodyJsonSchema._referenceKeywords is not null)
             {
-                yield return ValidateAndSetFastReturnResult(_bodyJsonSchema.SchemaReference);
-            }
-
-            if (_bodyJsonSchema.SchemaDynamicReference is not null)
-            {
-                yield return ValidateAndSetFastReturnResult(_bodyJsonSchema.SchemaDynamicReference);
+                foreach (IReferenceKeyword referenceKeyword in _bodyJsonSchema._referenceKeywords)
+                {
+                    yield return ValidateAndSetFastReturnResult(referenceKeyword);
+                }
             }
 
             ValidationResult ValidateAndSetFastReturnResult(IValidationNode validationNode)
@@ -221,18 +232,27 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             }
         }
 
-        foreach (ISchemaContainerValidationNode schemaContainer in _schemaContainerValidators)
+        if (_schemaContainerValidators is not null)
         {
-            ISchemaContainerElement? schemaContainerElement = schemaContainer.GetSubElement(name);
-            if (schemaContainerElement is not null)
+            foreach (ISchemaContainerValidationNode schemaContainer in _schemaContainerValidators)
             {
-                return schemaContainerElement;
+                ISchemaContainerElement? schemaContainerElement = schemaContainer.GetSubElement(name);
+                if (schemaContainerElement is not null)
+                {
+                    return schemaContainerElement;
+                }
             }
         }
 
-        if (name == DefsKeyword.Keyword)
+        if (_defsKeywords is not null)
         {
-            return DefsKeyword;
+            foreach ((string name, DefsKeyword keyword) defsKeyword in _defsKeywords)
+            {
+                if (defsKeyword.name == name)
+                {
+                    return defsKeyword.keyword;
+                }
+            }
         }
 
         return _potentialSchemaContainerElements?.GetValueOrDefault(name);
@@ -248,10 +268,16 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             }
         }
 
-        IEnumerable<ISchemaContainerElement> schemaContainers = _schemaContainerValidators;
-        if (DefsKeyword is not null)
+        IEnumerable<ISchemaContainerElement> schemaContainers = Enumerable.Empty<ISchemaContainerElement>();
+
+        if (_schemaContainerValidators is not null)
         {
-            schemaContainers = schemaContainers.Append(DefsKeyword);
+            schemaContainers = schemaContainers.Concat(_schemaContainerValidators);
+        }
+
+        if (_defsKeywords is not null)
+        {
+            schemaContainers = schemaContainers.Concat(_defsKeywords.Select(def => def.keyword));
         }
 
         if (_potentialSchemaContainerElements is not null)
@@ -269,14 +295,12 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
     {
         set
         {
-            if (SchemaReference is not null)
+            if (_referenceKeywords is not null)
             {
-                SchemaReference.ParentResourceBaseUri = value;
-            }
-
-            if (SchemaDynamicReference is not null)
-            {
-                SchemaDynamicReference.ParentResourceBaseUri = value;
+                foreach (IReferenceKeyword referenceKeyword in _referenceKeywords)
+                {
+                    referenceKeyword.ParentResourceBaseUri = value;
+                }
             }
         }
     }
@@ -286,12 +310,12 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id, DefsKeyword defsKeyword)
     {
-        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, _potentialSchemaContainerElements, id, defsKeyword);
+        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, _referenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, false, _potentialSchemaContainerElements, null, id, new[] { (DefsKeyword.Keyword, defsKeyword) });
     }
 
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id)
     {
-        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, SchemaReference, SchemaDynamicReference, Anchor, DynamicAnchor, _potentialSchemaContainerElements, id, DefsKeyword);
+        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, _referenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, false, _potentialSchemaContainerElements, null, id, _defsKeywords);
     }
 
     /// <summary>
@@ -309,10 +333,14 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             }
         }
 
-        schemaElements = schemaElements.Concat(_schemaContainerValidators);
-        if (DefsKeyword is not null)
+        if (_schemaContainerValidators is not null)
         {
-            schemaElements = schemaElements.Append(DefsKeyword);
+            schemaElements = schemaElements.Concat(_schemaContainerValidators);
+        }
+
+        if (_defsKeywords is not null)
+        {
+            schemaElements = schemaElements.Concat(_defsKeywords.Select(def => def.keyword));
         }
 
         foreach (ISchemaContainerElement schemaElement in schemaElements)
@@ -398,17 +426,23 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             }
         }
 
-        foreach (ISchemaContainerValidationNode schemaContainerValidationNode in _schemaContainerValidators)
+        if (_schemaContainerValidators is not null)
         {
-            if (schemaContainerValidationNode is IJsonSchemaResourceNodesCleanable resourceIdCleanable)
+            foreach (ISchemaContainerValidationNode schemaContainerValidationNode in _schemaContainerValidators)
             {
-                resourceIdCleanable.RemoveIdFromAllChildrenSchemaElements();
+                if (schemaContainerValidationNode is IJsonSchemaResourceNodesCleanable resourceIdCleanable)
+                {
+                    resourceIdCleanable.RemoveIdFromAllChildrenSchemaElements();
+                }
             }
         }
 
-        if (DefsKeyword is not null)
+        if (_defsKeywords is not null)
         {
-            DefsKeyword.RemoveIdFromAllChildrenSchemaElements();
+            foreach ((string name, DefsKeyword keyword) defsKeyword in _defsKeywords)
+            {
+                defsKeyword.keyword.RemoveIdFromAllChildrenSchemaElements();
+            }
         }
 
         RemoveIdFromAllChildrenElementsOfPotentialSchemaElementTree();

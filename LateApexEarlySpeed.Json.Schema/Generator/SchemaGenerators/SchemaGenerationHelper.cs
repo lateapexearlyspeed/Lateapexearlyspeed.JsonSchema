@@ -30,7 +30,7 @@ internal static class SchemaGenerationHelper
 
     public static BodyJsonSchema GenerateSchemaReference(Type type, IEnumerable<KeywordBase> keywordsFromProperty, Uri baseUri)
     {
-        return new BodyJsonSchema(keywordsFromProperty, Enumerable.Empty<ISchemaContainerValidationNode>(), new SchemaReferenceKeyword(CreateRefUri(type, baseUri)), null, null, null, null, null);
+        return new BodyJsonSchema(keywordsFromProperty, Enumerable.Empty<ISchemaContainerValidationNode>(), new [] { new SchemaReferenceKeyword(CreateRefUri(type, baseUri)) }, null, null, null, null);
     }
 
     private static Uri CreateRefUri(Type type, Uri baseUri)

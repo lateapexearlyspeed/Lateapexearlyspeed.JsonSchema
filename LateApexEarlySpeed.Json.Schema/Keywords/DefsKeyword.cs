@@ -14,6 +14,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 internal class DefsKeyword : ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
 {
     public const string Keyword = "$defs";
+    public const string KeywordDraft7 = "definitions";
 
     private readonly Dictionary<string, JsonSchema> _definitions;
 

@@ -1,9 +1,10 @@
-﻿using System.Diagnostics;
-using LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords;
+using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
+using System.Diagnostics;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
@@ -14,12 +15,12 @@ internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
     /// <summary>
     /// All schema resources inside current document (including current document itself)
     /// </summary>
-    public SchemaResourceRegistry LocalSchemaResourceRegistry { get; } = new();
+    public SchemaResourceRegistry LocalSchemaResourceRegistry { get; } = new(1);
 
     public SchemaResourceRegistry? GlobalSchemaResourceRegistry { get; set; }
 
-    internal BodyJsonSchemaDocument(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode> schemaContainerValidators, SchemaReferenceKeyword? schemaReference, SchemaDynamicReferenceKeyword? schemaDynamicReference, string? anchor, string? dynamicAnchor, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements = null, Uri? id = null, DefsKeyword? defsKeyword = null)
-        : base(GetBaseUri(id), keywords, schemaContainerValidators, schemaReference, schemaDynamicReference, anchor, dynamicAnchor, defsKeyword, potentialSchemaContainerElements)
+    internal BodyJsonSchemaDocument(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, bool recursiveAnchor, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements = null, SchemaKeyword? schemaKeyword = null, Uri? id = null, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords = null)
+        : base(schemaKeyword, GetBaseUri(id), keywords, schemaContainerValidators, referenceKeywords, plainNameIdentifierKeyword, dynamicAnchor, recursiveAnchor, defsKeywords, potentialSchemaContainerElements)
     {
     }
 
