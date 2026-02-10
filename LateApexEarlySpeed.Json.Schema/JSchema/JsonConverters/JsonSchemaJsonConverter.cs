@@ -83,8 +83,6 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         
         Span<char> keywordNameBuffer = stackalloc char[KeywordNameCharBufferSizeOnStack];
 
-        Span<char> schemaIdentifierBuffer = stackalloc char[MaxSchemaIdentifierCharBufferSizeOnStack];
-
         while (reader.TokenType != JsonTokenType.EndObject)
         {
             var byteCount = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
@@ -223,21 +221,9 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
             else if (keywordName.Equals(SchemaKeyword.Keyword, StringComparison.Ordinal))
             {
-                long bytes = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
+                schemaKeyword = GetSchemaKeyword(ref reader);
 
-                if (bytes > schemaIdentifierBuffer.Length)
-                {
-                    Debug.WriteLine($"Resize {nameof(schemaIdentifierBuffer)} from {schemaIdentifierBuffer.Length} to {bytes}, allocate it to char array in gc heap.");
-                    schemaIdentifierBuffer = new char[bytes];
-                }
-
-                int schemaIdentifierLength = reader.CopyString(schemaIdentifierBuffer);
-
-                ReadOnlySpan<char> schemaIdentifier = schemaIdentifierBuffer.Slice(0, schemaIdentifierLength);
-
-                schemaKeyword = SchemaKeyword.Create(schemaIdentifier);
                 deserializerContext.Dialect = schemaKeyword.Dialect;
-                
                 options = deserializerContext.ToJsonSerializerOptions();
             }
             else if (keywordName.Equals(AnchorKeyword.Keyword, StringComparison.Ordinal))
@@ -349,6 +335,29 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         }
 
         return (T)(object)schema;
+    }
+
+    private static SchemaKeyword GetSchemaKeyword(ref Utf8JsonReader reader)
+    { 
+        long bytes = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
+
+        scoped Span<char> schemaIdentifierBuffer;
+
+        if (bytes > MaxSchemaIdentifierCharBufferSizeOnStack)
+        {
+            Debug.WriteLine($"Allocate {nameof(schemaIdentifierBuffer)} to char array with length {bytes} in gc heap.");
+            schemaIdentifierBuffer = new char[bytes];
+        }
+        else
+        {
+            schemaIdentifierBuffer = stackalloc char[(int)bytes];
+        }
+
+        int schemaIdentifierLength = reader.CopyString(schemaIdentifierBuffer);
+
+        ReadOnlySpan<char> schemaIdentifier = schemaIdentifierBuffer.Slice(0, schemaIdentifierLength);
+
+        return SchemaKeyword.Create(schemaIdentifier);
     }
 
     private static int CopyKeywordName(ref Utf8JsonReader reader, ref Span<char> keywordNameBuffer)
