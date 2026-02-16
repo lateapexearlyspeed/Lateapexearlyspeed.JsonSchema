@@ -43,7 +43,7 @@ internal class DependenciesKeywordJsonConverter : JsonConverter<DependenciesKeyw
             reader.Read();
         }
 
-        return new DependenciesKeyword(dependenciesSchema, dependenciesProperty);
+        return new DependenciesKeyword(dependenciesSchema, dependenciesProperty, new JsonSchemaDeserializerContext(options).PropertyNameCaseInsensitive);
     }
 
     public override void Write(Utf8JsonWriter writer, DependenciesKeyword value, JsonSerializerOptions options)

@@ -517,6 +517,54 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                     {
                       "properties": {
                         "A": {
+                               "dependencies": { 
+                                 "B": { "maxProperties": 1 } 
+                        }
+                      }
+                      }
+                    }
+                    """,
+                    """ 
+                    {
+                      "a": {
+                        "c": 0,
+                        "d": 1
+                      }
+                    }
+                    """,
+                    true, null, null
+                };
+
+                yield return new object?[]
+                {
+                    """
+                    {
+                      "properties": {
+                        "A": {
+                               "dependencies": { 
+                                 "B": { "maxProperties": 1 } 
+                        }
+                      }
+                      }
+                    }
+                    """,
+                    """ 
+                    {
+                      "a": {
+                        "b": 0,
+                        "c": 1
+                      }
+                    }
+                    """,
+                    false, "/a", "/properties/A/dependencies/B/maxProperties"
+                };
+
+                yield return new object?[]
+                {
+                    """
+                    {
+                      "properties": {
+                        "A": {
                                "required": [ "B" ]
                         }
                       }

@@ -14,21 +14,24 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords.Draft7;
 internal class DependenciesKeyword : KeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
 {
     private readonly Dictionary<string, JsonSchema>? _dependenciesSchema;
-    private readonly IReadOnlyDictionary<string, string[]>? _dependenciesProperty;
+    private readonly Dictionary<string, string[]>? _dependenciesProperty;
 
-    public DependenciesKeyword(IDictionary<string, JsonSchema>? dependenciesSchema, IReadOnlyDictionary<string, string[]>? dependenciesProperty)
+    public DependenciesKeyword(IDictionary<string, JsonSchema>? dependenciesSchema, IDictionary<string, string[]>? dependenciesProperty, bool propertyNameIgnoreCase)
     {
         if (dependenciesSchema is not null)
         {
-            _dependenciesSchema = new Dictionary<string, JsonSchema>(dependenciesSchema);
+            _dependenciesSchema = new Dictionary<string, JsonSchema>(dependenciesSchema, propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
 
             foreach ((string propertyName, JsonSchema schema) in _dependenciesSchema)
             {
                 schema.Name = propertyName;
             }
         }
-        
-        _dependenciesProperty = dependenciesProperty;
+
+        if (dependenciesProperty is not null)
+        {
+            _dependenciesProperty = new Dictionary<string, string[]>(dependenciesProperty);
+        }
     }
 
     public IReadOnlyDictionary<string, JsonSchema>? DependenciesSchema => _dependenciesSchema;
