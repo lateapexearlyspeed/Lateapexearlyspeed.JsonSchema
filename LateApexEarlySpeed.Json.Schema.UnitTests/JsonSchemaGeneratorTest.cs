@@ -1746,6 +1746,20 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<EmailAttributeTestClass>(
             """
 {
+  "Email": "A text containing a hello@world.com email address."
+} 
+""", CreateSingleErrorResult(
+                ResultCode.InvalidFormat,
+                "format",
+                FormatKeyword.ErrorMessage("email"),
+                LinkedListBasedImmutableJsonPointer.Create("/Email")!,
+                LinkedListBasedImmutableJsonPointer.Create("/properties/Email/format")!,
+                GetSchemaResourceBaseUri<EmailAttributeTestClass>(),
+                GetSchemaResourceBaseUri<EmailAttributeTestClass>()));
+
+        yield return TestSample.Create<EmailAttributeTestClass>(
+            """
+{
   "Email": "@world.com"
 } 
 """, CreateSingleErrorResult(
