@@ -55,6 +55,11 @@
         "description": "valid email string",
         "data": "hello.abc-de@email.com",
         "valid": true
+      },
+      {
+        "description": "invalid email string - A text containing a hello@world.com email address",
+        "data": "A text containing a hello@world.com email address",
+        "valid": false
       }
     ]
   },
