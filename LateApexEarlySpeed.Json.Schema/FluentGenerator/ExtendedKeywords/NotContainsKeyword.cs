@@ -40,6 +40,6 @@ internal class NotContainsKeyword : KeywordBase
 
     internal static string ErrorMessage(string instanceData)
     {
-        return $"Expect array not contain validated element but found, instance: {instanceData}";
+        return $"Expected array to not contain validated element but found, instance: {instanceData}";
     }
 }

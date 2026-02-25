@@ -88,6 +88,6 @@ internal class RequiredKeyword : KeywordBase
 
     public static string ErrorMessage(string missedPropertyName)
     {
-        return $"Instance not contain required property '{missedPropertyName}'";
+        return $"Instance does not contain required property '{missedPropertyName}'";
     }
 }
