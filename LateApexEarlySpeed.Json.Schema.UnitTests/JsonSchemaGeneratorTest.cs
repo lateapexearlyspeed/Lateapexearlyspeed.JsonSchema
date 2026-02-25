@@ -1746,6 +1746,13 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<EmailAttributeTestClass>(
             """
 {
+  "Email": "HELLO@WORLD.COM"
+}
+""", ValidationResult.ValidResult);
+
+        yield return TestSample.Create<EmailAttributeTestClass>(
+            """
+{
   "Email": "A text containing a hello@world.com email address."
 } 
 """, CreateSingleErrorResult(

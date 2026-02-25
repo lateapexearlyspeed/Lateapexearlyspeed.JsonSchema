@@ -60,6 +60,11 @@
         "description": "invalid email string - A text containing a hello@world.com email address",
         "data": "A text containing a hello@world.com email address",
         "valid": false
+      },
+      {
+        "description": "caps are allowed in email string",
+        "data": "HELLO.ABC-DE@EMAIL.COM",
+        "valid": true
       }
     ]
   },
