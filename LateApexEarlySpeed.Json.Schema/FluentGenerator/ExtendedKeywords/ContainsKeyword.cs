@@ -41,6 +41,6 @@ internal class ContainsKeyword : KeywordBase
 
     internal static string ErrorMessage(string instanceJson)
     {
-        return $"Array not contain any element met validation, array instance: {instanceJson}";
+        return $"Array does not contain any element that meets validation, array instance: {instanceJson}";
     }
 }
