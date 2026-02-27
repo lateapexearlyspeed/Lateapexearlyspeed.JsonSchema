@@ -355,7 +355,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             ValidationError error = validationResult.ValidationErrors.Single();
 
             Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
-            Assert.Equal("Expect type(s): 'Integer' but actual is 'String'", error.ErrorMessage);
+            Assert.Equal("Expected type(s): 'Integer' but actual is 'String'", error.ErrorMessage);
             Assert.Equal("type", error.Keyword);
             Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/propArray/4"), error.InstanceLocation);
             Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/properties/propArray/items/type"), error.RelativeKeywordLocation);

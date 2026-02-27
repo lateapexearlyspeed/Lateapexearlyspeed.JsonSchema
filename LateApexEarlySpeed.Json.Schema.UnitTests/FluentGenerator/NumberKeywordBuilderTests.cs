@@ -925,5 +925,5 @@ public class NumberKeywordBuilderTests
     }
 
     private static string GetInvalidTokenErrorMessage(InstanceType actualType)
-        => $"Expect type(s): '{InstanceType.Number}' but actual is '{actualType}'";
+        => $"Expected type(s): '{InstanceType.Number}' but actual is '{actualType}'";
 }

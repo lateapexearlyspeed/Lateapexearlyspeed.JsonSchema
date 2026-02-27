@@ -43,6 +43,6 @@ internal class UniqueItemsKeyword : KeywordBase
 
     public static string ErrorMessage(string instanceJson, int idx1, int idx2)
     {
-        return $"There are duplicated array items, index: {idx1} and {idx2}, data: {instanceJson}";
+        return $"Duplicate array items found at indices {idx1} and {idx2}, data: {instanceJson}";
     }
 }

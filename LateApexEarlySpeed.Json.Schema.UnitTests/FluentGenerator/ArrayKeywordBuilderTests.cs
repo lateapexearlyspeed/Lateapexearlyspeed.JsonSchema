@@ -427,5 +427,5 @@ public class ArrayKeywordBuilderTests
     }
 
     private static string GetInvalidTokenErrorMessage(InstanceType actualType)
-        => $"Expect type(s): '{InstanceType.Array}' but actual is '{actualType}'";
+        => $"Expected type(s): '{InstanceType.Array}' but actual is '{actualType}'";
 }

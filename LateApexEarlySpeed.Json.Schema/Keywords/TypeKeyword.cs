@@ -44,7 +44,7 @@ internal class TypeKeyword : KeywordBase
 
     private string GetErrorMessage(JsonValueKind actualKind)
     {
-        return $"Expect type(s): '{string.Join('|', InstanceTypes.Select(EnumHelper<InstanceType>.GetCachedStringName))}' but actual is '{EnumHelper<JsonValueKind>.GetCachedStringName(actualKind)}'";
+        return $"Expected type(s): '{string.Join('|', InstanceTypes.Select(EnumHelper<InstanceType>.GetCachedStringName))}' but actual is '{EnumHelper<JsonValueKind>.GetCachedStringName(actualKind)}'";
     }
 
     private bool IsValidAgainstType(JsonInstanceElement instance, InstanceType expectedInstanceType)

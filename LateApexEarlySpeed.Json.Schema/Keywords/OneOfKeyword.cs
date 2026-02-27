@@ -90,7 +90,7 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
             {
                 if (_validatedSchemaCount == 0)
                 {
-                    var error = new ValidationError(ResultCode.AllSubSchemaFailed, "All schemas not validated instance", _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
+                    var error = new ValidationError(ResultCode.AllSubSchemaFailed, "Instance failed validation against all schemas", _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
 
                     return ResultTuple.Invalid(error);
                 }

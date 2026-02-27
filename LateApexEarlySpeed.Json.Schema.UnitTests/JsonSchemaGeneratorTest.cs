@@ -1345,7 +1345,7 @@ public class JsonSchemaGeneratorTest
         => new(BodyJsonSchemaDocument.DefaultDocumentBaseUri, "[Main]-" + type.FullName);
 
     private static string GetInvalidTokenErrorMessage(string actualType, params InstanceType[] expectedTypes) 
-        => $"Expect type(s): '{string.Join('|', expectedTypes)}' but actual is '{actualType}'";
+        => $"Expected type(s): '{string.Join('|', expectedTypes)}' but actual is '{actualType}'";
 
     private static ValidationResult CreateSingleErrorResult(ResultCode resultCode, string? keyword, string errorMessage, ImmutableJsonPointer instanceLocation, ImmutableJsonPointer? relativeKeywordLocation, Uri? schemaResourceBaseUri, Uri? subSchemaRefFullUri)
     {

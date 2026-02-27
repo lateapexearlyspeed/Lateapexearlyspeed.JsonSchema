@@ -12,7 +12,7 @@ public class ValidationErrorTests
 
         ValidationError validationError = validationResult.ValidationErrors.First();
 
-        Assert.Equal("Expect type(s): 'String' but actual is 'Number'" + Environment.NewLine 
+        Assert.Equal("Expected type(s): 'String' but actual is 'Number'" + Environment.NewLine 
                      + "Instance location (in json pointer format): " + Environment.NewLine
                      + "relative keyword location (in json pointer format): /type" + Environment.NewLine
                      + "keyword: type", 

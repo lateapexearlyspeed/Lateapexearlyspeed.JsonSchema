@@ -879,7 +879,7 @@ public class ListOutputFormatTests
 
     private static string GetTypeErrorMessage(InstanceType expectedInstanceType, JsonValueKind actualKind)
     {
-        return $"Expect type(s): '{expectedInstanceType}' but actual is '{actualKind}'";
+        return $"Expected type(s): '{expectedInstanceType}' but actual is '{actualKind}'";
     }
 
     private static ValidationResult Validate(string schema, string instance)

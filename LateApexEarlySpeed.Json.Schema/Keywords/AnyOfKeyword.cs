@@ -131,5 +131,5 @@ internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
         }
     }
 
-    public static string ErrorMessage() => "All sub-schemas not validated instance";
+    public static string ErrorMessage() => "Instance failed validation against all sub-schemas";
 }

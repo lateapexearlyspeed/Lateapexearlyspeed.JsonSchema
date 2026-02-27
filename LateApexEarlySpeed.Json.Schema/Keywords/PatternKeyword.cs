@@ -32,6 +32,6 @@ internal class PatternKeyword : KeywordBase
 
     public static string ErrorMessage(string pattern, string instanceText)
     {
-        return $"Regex: '{pattern}' cannot find match in instance: '{instanceText}'";
+        return $"Pattern '{pattern}' does not match instance '{instanceText}'";
     }
 }

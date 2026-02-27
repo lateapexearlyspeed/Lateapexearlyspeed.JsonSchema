@@ -114,7 +114,7 @@ internal class DecimalMultipleOfChecker : IMultipleOfChecker
 
     public static string ErrorMessage(object instanceValue, decimal multipleOf)
     {
-        return $"Instance: '{instanceValue}' is not multiple of '{multipleOf}'";
+        return $"Instance '{instanceValue}' is not a multiple of '{multipleOf}'";
     }
 }
 
@@ -165,7 +165,7 @@ internal class ULongMultipleOfChecker : IMultipleOfChecker
 
     public static string ErrorMessage(object instanceValue, ulong multipleOf)
     {
-        return $"Instance: '{instanceValue}' is not multiple of '{multipleOf}'";
+        return $"Instance '{instanceValue}' is not a multiple of '{multipleOf}'";
     }
 }
 
@@ -207,7 +207,7 @@ internal class DoubleMultipleOfChecker : IMultipleOfChecker
 
     public static string ErrorMessage(double instanceValue, double multipleOf)
     {
-        return $"Instance: '{instanceValue}' is not multiple of '{multipleOf}'";
+        return $"Instance '{instanceValue}' is not a multiple of '{multipleOf}'";
     }
 }
 

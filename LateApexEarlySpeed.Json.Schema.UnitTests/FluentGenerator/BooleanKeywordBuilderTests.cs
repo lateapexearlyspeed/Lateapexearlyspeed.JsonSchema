@@ -42,5 +42,5 @@ public class BooleanKeywordBuilderTests
     }
 
     private static string GetInvalidTokenErrorMessage(InstanceType actualType)
-        => $"Expect type(s): '{InstanceType.Boolean}' but actual is '{actualType}'";
+        => $"Expected type(s): '{InstanceType.Boolean}' but actual is '{actualType}'";
 }

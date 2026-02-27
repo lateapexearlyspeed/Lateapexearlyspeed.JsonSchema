@@ -208,13 +208,13 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
     }
 
     internal static string GetFailedMaxContainsErrorMessage(string instanceJson, uint maxContains)
-        => $"Validated array items count is greater than specified '{maxContains}', array instance: {instanceJson}";
+        => $"Validated array item count exceeds maximum '{maxContains}', array instance: {instanceJson}";
 
     internal static string GetFailedMinContainsErrorMessage(string instanceJson, uint minContains)
-        => $"Validated array items count is less than specified '{minContains}', array instance: {instanceJson}";
+        => $"Validated array item count is less than minimum '{minContains}', array instance: {instanceJson}";
 
     internal static string GetFailedContainsErrorMessage(string instanceJson)
-        => $"Not found any validated array items, array instance: {instanceJson}";
+        => $"No validated array items found, array instance: {instanceJson}";
 
     private ValidationResult ValidateWithoutMinContainsAndMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
     {

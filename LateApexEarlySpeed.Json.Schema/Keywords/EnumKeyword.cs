@@ -27,6 +27,6 @@ internal class EnumKeyword : KeywordBase
 
     internal static string ErrorMessage(string instanceJsonText)
     {
-        return $"Instance: {instanceJsonText} not found in allowed list";
+        return $"Instance '{instanceJsonText}' is not found in allowed values";
     }
 }

@@ -78,7 +78,7 @@ internal class PropertyNamesKeyword : KeywordBase, ISchemaContainerElement, ISin
 
     public static string ErrorMessage(string propertyName)
     {
-        return $"Found invalid property name: {propertyName}";
+        return $"Invalid property name: '{propertyName}'";
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

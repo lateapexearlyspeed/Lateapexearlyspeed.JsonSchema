@@ -26,7 +26,7 @@ internal class DependentRequiredKeyword : KeywordBase
 
     public static string ErrorMessage(string dependentProperty, string requiredProp)
     {
-        return $"Instance contains property: '{dependentProperty}' but not contains dependent property: '{requiredProp}'";
+        return $"Instance contains property '{dependentProperty}' but does not contain dependent property '{requiredProp}'";
     }
 
     internal class Validator : IValidator

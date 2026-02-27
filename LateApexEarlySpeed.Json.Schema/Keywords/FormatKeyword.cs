@@ -34,6 +34,6 @@ public class FormatKeyword : KeywordBase
 
     public static string ErrorMessage(string format)
     {
-        return $"Invalid string value for format:'{format}'";
+        return $"Invalid string value for format: '{format}'";
     }
 }

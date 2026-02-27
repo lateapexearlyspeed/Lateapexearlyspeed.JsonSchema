@@ -280,7 +280,7 @@ public class StringKeywordBuilderTests
     }
 
     private static string GetInvalidTokenErrorMessage(InstanceType actualType)
-        => $"Expect type(s): '{InstanceType.String}' but actual is '{actualType}'";
+        => $"Expected type(s): '{InstanceType.String}' but actual is '{actualType}'";
 }
 
 

@@ -54,5 +54,5 @@ public class NullKeywordBuilderTests
     }
 
     private static string GetInvalidTokenErrorMessage(InstanceType actualType, params InstanceType[] expectedTypes)
-        => $"Expect type(s): '{string.Join('|', expectedTypes)}' but actual is '{actualType}'";
+        => $"Expected type(s): '{string.Join('|', expectedTypes)}' but actual is '{actualType}'";
 }

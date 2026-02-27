@@ -162,5 +162,5 @@ public class ObjectKeywordBuilderTests
     }
 
     private static string GetInvalidTokenErrorMessage(InstanceType actualType, InstanceType expectedType = InstanceType.Object)
-        => $"Expect type(s): '{expectedType}' but actual is '{actualType}'";
+        => $"Expected type(s): '{expectedType}' but actual is '{actualType}'";
 }
