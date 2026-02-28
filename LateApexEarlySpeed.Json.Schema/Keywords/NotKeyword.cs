@@ -49,7 +49,7 @@ internal class NotKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSche
 
     public static string ErrorMessage(string instanceText)
     {
-        return $"Instance validated against sub-schema when it should not have";
+        return $"Instance '{instanceText}' validated against sub-schema when it should not have";
     }
 
     public ISchemaContainerElement? GetSubElement(string name)
