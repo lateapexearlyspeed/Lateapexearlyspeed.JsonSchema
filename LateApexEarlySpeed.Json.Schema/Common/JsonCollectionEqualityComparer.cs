@@ -35,7 +35,7 @@ internal class OrderedJsonCollectionComparer : JsonCollectionEqualityComparer
 
         if (arrayLength1 != arrayLength2)
         {
-            return EquivalentResult.Fail($"Array length not same, one is {arrayLength1} but another is {arrayLength2}", jsonArray1.Location, jsonArray2.Location);
+            return EquivalentResult.Fail(() => $"Array length not same, one is {arrayLength1} but another is {arrayLength2}", jsonArray1.Location, jsonArray2.Location);
         }
 
         using (IEnumerator<JsonInstanceElement> enumerator1 = jsonArray1.EnumerateArray().GetEnumerator())
@@ -73,7 +73,7 @@ internal class OrderlessJsonCollectionComparer : JsonCollectionEqualityComparer
 
         if (arrayLength1 != arrayLength2)
         {
-            return EquivalentResult.Fail($"Array length not same, one is {arrayLength1} but another is {arrayLength2}", jsonArray1.Location, jsonArray2.Location);
+            return EquivalentResult.Fail(() => $"Array length not same, one is {arrayLength1} but another is {arrayLength2}", jsonArray1.Location, jsonArray2.Location);
         }
 
         int startIdx = 0;

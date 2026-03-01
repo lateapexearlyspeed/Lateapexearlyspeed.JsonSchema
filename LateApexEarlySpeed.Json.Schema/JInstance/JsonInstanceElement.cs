@@ -241,7 +241,8 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
     {
         if (ValueKind != other.ValueKind)
         {
-            return EquivalentResult.Fail($"Json kind not same, one is {ValueKind}, but another is {other.ValueKind}", _instanceLocation, other._instanceLocation);
+            JsonValueKind curValueKind = ValueKind;
+            return EquivalentResult.Fail(() => $"Json kind not same, one is {curValueKind}, but another is {other.ValueKind}", _instanceLocation, other._instanceLocation);
         }
 
         switch (ValueKind)
@@ -258,7 +259,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 
                 return curString == otherString
                     ? EquivalentResult.Success()
-                    : EquivalentResult.Fail(StringNotSameMessageTemplate(curString, otherString), _instanceLocation, other._instanceLocation);
+                    : EquivalentResult.Fail(() => StringNotSameMessageTemplate(curString, otherString), _instanceLocation, other._instanceLocation);
 
             case JsonValueKind.Number:
                 return NumberEquivalent(other);
@@ -284,14 +285,14 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
             {
                 return thisLongValue == otherLongValue
                     ? EquivalentResult.Success()
-                    : EquivalentResult.Fail(NumberNotSameMessageTemplate(thisLongValue, otherLongValue), _instanceLocation, other._instanceLocation);
+                    : EquivalentResult.Fail(() => NumberNotSameMessageTemplate(thisLongValue, otherLongValue), _instanceLocation, other._instanceLocation);
             }
 
             other.GetNumericValue(out double? doubleValue, out long? longValue, out ulong? ulongValue);
 
             Debug.Assert(!longValue.HasValue);
 
-            return EquivalentResult.Fail(NumberNotSameMessageTemplate(thisLongValue, doubleValue.HasValue ? doubleValue.Value.ToString(CultureInfo.InvariantCulture) : ulongValue.GetValueOrDefault().ToString()), _instanceLocation, other._instanceLocation);
+            return EquivalentResult.Fail(() => NumberNotSameMessageTemplate(thisLongValue, doubleValue.HasValue ? doubleValue.Value.ToString(CultureInfo.InvariantCulture) : ulongValue.GetValueOrDefault().ToString()), _instanceLocation, other._instanceLocation);
         }
 
         if (InternalJsonElement.TryGetUInt64(out ulong thisULongValue))
@@ -301,14 +302,14 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
             {
                 return thisULongValue == otherULongValue
                     ? EquivalentResult.Success()
-                    : EquivalentResult.Fail(NumberNotSameMessageTemplate(thisULongValue, otherULongValue), _instanceLocation, other._instanceLocation);
+                    : EquivalentResult.Fail(() => NumberNotSameMessageTemplate(thisULongValue, otherULongValue), _instanceLocation, other._instanceLocation);
             }
 
             other.GetNumericValue(out double? doubleValue, out long? longValue, out ulong? ulongValue);
 
             Debug.Assert(!ulongValue.HasValue);
 
-            return EquivalentResult.Fail(NumberNotSameMessageTemplate(thisULongValue, doubleValue.HasValue ? doubleValue.Value.ToString(CultureInfo.InvariantCulture) : longValue.GetValueOrDefault()), _instanceLocation, other._instanceLocation);
+            return EquivalentResult.Fail(() => NumberNotSameMessageTemplate(thisULongValue, doubleValue.HasValue ? doubleValue.Value.ToString(CultureInfo.InvariantCulture) : longValue.GetValueOrDefault()), _instanceLocation, other._instanceLocation);
         }
 
         if (InternalJsonElement.TryGetDecimal(out decimal thisDecimalValue))
@@ -321,12 +322,12 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 
                 return Math.Abs(thisDecimalValue - otherDecimalValue) <= actualTolerance
                     ? EquivalentResult.Success()
-                    : EquivalentResult.Fail(NumberNotSameMessageTemplate(thisDecimalValue, otherDecimalValue), _instanceLocation, other._instanceLocation);
+                    : EquivalentResult.Fail(() => NumberNotSameMessageTemplate(thisDecimalValue, otherDecimalValue), _instanceLocation, other._instanceLocation);
             }
 
             double otherDoubleValue = other.GetDouble();
 
-            return EquivalentResult.Fail(NumberNotSameMessageTemplate(thisDecimalValue, otherDoubleValue), _instanceLocation, other._instanceLocation);
+            return EquivalentResult.Fail(() => NumberNotSameMessageTemplate(thisDecimalValue, otherDoubleValue), _instanceLocation, other._instanceLocation);
         }
 
         if (InternalJsonElement.TryGetDouble(out double thisDoubleValue))
@@ -339,7 +340,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 
             return Math.Abs(thisDoubleValue - otherDoubleValue) <= actualTolerance
                 ? EquivalentResult.Success()
-                : EquivalentResult.Fail(NumberNotSameMessageTemplate(thisDoubleValue, otherDoubleValue), _instanceLocation, other._instanceLocation);
+                : EquivalentResult.Fail(() => NumberNotSameMessageTemplate(thisDoubleValue, otherDoubleValue), _instanceLocation, other._instanceLocation);
         }
 
         Debug.Fail("Should not go here, have considered all numeric types. Missed any other types ?");
@@ -366,14 +367,14 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
         int thisPropertyCount = EnumerateObject().Count();
         if (thisPropertyCount != otherProperties.Count)
         {
-            return EquivalentResult.Fail($"Property count not same, one is {thisPropertyCount} but another is {otherProperties.Count}", _instanceLocation, other._instanceLocation);
+            return EquivalentResult.Fail(() => $"Property count not same, one is {thisPropertyCount} but another is {otherProperties.Count}", _instanceLocation, other._instanceLocation);
         }
 
         foreach (JsonInstanceProperty thisProperty in EnumerateObject())
         {
             if (!otherProperties.TryGetValue(thisProperty.Name, out JsonInstanceElement otherPropertyValue))
             {
-                return EquivalentResult.Fail($"Properties not match, one has property:{thisProperty.Name} but another not", _instanceLocation, other._instanceLocation);
+                return EquivalentResult.Fail(() => $"Properties not match, one has property:{thisProperty.Name} but another not", _instanceLocation, other._instanceLocation);
             }
 
             EquivalentResult equivalentResult = thisProperty.Value.Equivalent(otherPropertyValue, jsonCollectionEqualityComparer);

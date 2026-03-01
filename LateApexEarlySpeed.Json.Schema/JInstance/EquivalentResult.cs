@@ -4,21 +4,23 @@ namespace LateApexEarlySpeed.Json.Schema.JInstance;
 
 public class EquivalentResult
 {
+    private readonly Func<string>? _detailedMessageFactory;
+
     public bool Result { get; private init; }
-    public string? DetailedMessage { get; private init; }
+    public string? DetailedMessage => _detailedMessageFactory?.Invoke();
     public LinkedListBasedImmutableJsonPointer? ThisLocation { get; private init; }
     public LinkedListBasedImmutableJsonPointer? OtherLocation { get; private init; }
 
-    private EquivalentResult()
+    private EquivalentResult(Func<string>? detailedMessageFactory = null)
     {
+        _detailedMessageFactory = detailedMessageFactory;
     }
 
-    public static EquivalentResult Fail(string detailedMessage, LinkedListBasedImmutableJsonPointer thisLocation, LinkedListBasedImmutableJsonPointer otherLocation)
+    public static EquivalentResult Fail(Func<string> detailedMessageFactory, LinkedListBasedImmutableJsonPointer thisLocation, LinkedListBasedImmutableJsonPointer otherLocation)
     {
-        return new EquivalentResult
+        return new EquivalentResult(detailedMessageFactory)
         {
             Result = false,
-            DetailedMessage = detailedMessage,
             ThisLocation = thisLocation,
             OtherLocation = otherLocation
         };
