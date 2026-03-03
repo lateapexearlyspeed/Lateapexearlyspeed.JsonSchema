@@ -354,7 +354,6 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
             ValidationError error = validationResult.ValidationErrors.Single();
 
-            Assert.Equal(ResultCode.InvalidTokenKind, error.ResultCode);
             Assert.Equal("Expected type(s): 'Integer' but actual is 'String'", error.ErrorMessage);
             Assert.Equal("type", error.Keyword);
             Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/propArray/4"), error.InstanceLocation);
@@ -828,7 +827,6 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             ValidationError validationError = Assert.Single(validationResult.ValidationErrors);
             Assert.Equal("enum", validationError.Keyword);
             Assert.Equal(EnumKeyword.ErrorMessage("hey"), validationError.ErrorMessage);
-            Assert.Equal(ResultCode.NotFoundInAllowedList, validationError.ResultCode);
             Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/Blub"), validationError.InstanceLocation);
             Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/properties/Blub/$ref/enum"), validationError.RelativeKeywordLocation);
             Assert.Equal(new Uri("http://lateapexearlyspeed/#/definitions/MyCrazyEnum"), validationError.SubSchemaRefFullUri);
@@ -891,7 +889,6 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             ValidationError validationError = Assert.Single(validationResult.ValidationErrors);
             Assert.Equal("enum", validationError.Keyword);
             Assert.Equal(EnumKeyword.ErrorMessage("hey"), validationError.ErrorMessage);
-            Assert.Equal(ResultCode.NotFoundInAllowedList, validationError.ResultCode);
             Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/Blub"), validationError.InstanceLocation);
             Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/properties/Blub/$ref/enum"), validationError.RelativeKeywordLocation);
             Assert.Equal(new Uri("http://lateapexearlyspeed/#/unknown/MyCrazyEnum"), validationError.SubSchemaRefFullUri);

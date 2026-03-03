@@ -92,7 +92,7 @@ internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
             {
                 if (_fastReturnResult is null)
                 {
-                    var curError = new ValidationError(ResultCode.AllSubSchemaFailed, ErrorMessage(), _options.ValidationPathStack, _anyOfKeyword.Name, _instance.Location);
+                    var curError = new ValidationError(ErrorMessage(), _options.ValidationPathStack, _anyOfKeyword.Name, _instance.Location);
 
                     return ResultTuple.Invalid(curError);
                 }

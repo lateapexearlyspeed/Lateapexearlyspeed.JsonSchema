@@ -124,8 +124,8 @@ internal class ImmutableValidationErrorCollection
 /// </summary>
 public class ValidationError
 {
-    public ValidationError(ResultCode failedCode, string errorMessage, ValidationPathStack? validationPathStack, string? keyword, ImmutableJsonPointer instanceLocation)
-        : this(failedCode,
+    public ValidationError(string errorMessage, ValidationPathStack? validationPathStack, string? keyword, ImmutableJsonPointer instanceLocation)
+        : this(
             keyword,
             errorMessage,
             instanceLocation,
@@ -135,9 +135,8 @@ public class ValidationError
         )
     { }
 
-    internal ValidationError(ResultCode resultCode, string? keyword, string errorMessage, ImmutableJsonPointer instanceLocation, ImmutableJsonPointer? relativeKeywordLocation, Uri? schemaResourceBaseUri, Uri? subSchemaRefFullUri)
+    internal ValidationError(string? keyword, string errorMessage, ImmutableJsonPointer instanceLocation, ImmutableJsonPointer? relativeKeywordLocation, Uri? schemaResourceBaseUri, Uri? subSchemaRefFullUri)
     {
-        ResultCode = resultCode;
         Keyword = keyword;
         ErrorMessage = errorMessage;
         InstanceLocation = instanceLocation;
@@ -178,11 +177,6 @@ public class ValidationError
     public string ErrorMessage { get; init; }
 
     /// <summary>
-    /// Gets value to indicate failure type
-    /// </summary>
-    public ResultCode ResultCode { get; init; }
-
-    /// <summary>
     /// Creates and returns a string representation of the current <see cref="ValidationError"/>.
     /// </summary>
     /// <returns>A string representation of the current <see cref="ValidationError"/></returns>
@@ -207,35 +201,4 @@ public class ValidationError
 
         return sb.ToString();
     }
-}
-
-/// <summary>
-/// Type to indicate failure types
-/// </summary>
-public enum ResultCode
-{
-    FailedToMultiple,
-    InvalidTokenKind,
-    MoreThanOnePassedSchemaFound,
-    AllSubSchemaFailed,
-    SubSchemaPassedUnexpected,
-    NotFoundRequiredDependentProperty,
-    AlwaysFailedJsonSchema,
-    RegexNotMatch,
-    NumberOutOfRange,
-    NotFoundRequiredProperty,
-    PropertiesOutOfRange,
-    NotFoundAnyValidatedArrayItem,
-    ValidatedArrayItemsCountOutOfRange,
-    ArrayLengthOutOfRange,
-    StringLengthOutOfRange,
-    InvalidPropertyName,
-    DuplicatedArrayItems,
-    NotFoundInAllowedList,
-    UnexpectedValue,
-    InvalidFormat,
-    NotBeforeSpecifiedTimePoint,
-    NotAfterSpecifiedTimePoint,
-    FailedForCustomValidation,
-    FailedToDeserialize
 }

@@ -26,7 +26,7 @@ internal class NotKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSche
 
         if (validationResult.IsValid)
         {
-            var curError = new ValidationError(ResultCode.SubSchemaPassedUnexpected, ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location);
+            var curError = new ValidationError(ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location);
 
             if (options.OutputFormat == OutputFormat.FailFast)
             {

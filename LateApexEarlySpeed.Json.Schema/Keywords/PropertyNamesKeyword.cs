@@ -54,7 +54,7 @@ internal class PropertyNamesKeyword : KeywordBase, ISchemaContainerElement, ISin
                 ValidationResult validationResult = _propertyNamesKeyword.Schema.Validate(new JsonInstanceElement(JsonSerializer.SerializeToElement(jsonProperty.Name), LinkedListBasedImmutableJsonPointer.Empty), _options);
                 if (!validationResult.IsValid)
                 {
-                    _fastReturnError = new ValidationError(ResultCode.InvalidPropertyName, ErrorMessage(jsonProperty.Name), _options.ValidationPathStack, _propertyNamesKeyword.Name, _instance.Location);
+                    _fastReturnError = new ValidationError(ErrorMessage(jsonProperty.Name), _options.ValidationPathStack, _propertyNamesKeyword.Name, _instance.Location);
                 }
 
                 yield return validationResult;

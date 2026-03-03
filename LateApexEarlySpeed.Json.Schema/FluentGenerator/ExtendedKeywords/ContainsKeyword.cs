@@ -35,7 +35,7 @@ internal class ContainsKeyword : KeywordBase
             }
         }
 
-        return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.NotFoundAnyValidatedArrayItem, ErrorMessage(instance.ToString()), options.ValidationPathStack,
+        return ValidationResult.SingleErrorFailedResult(new ValidationError(ErrorMessage(instance.ToString()), options.ValidationPathStack,
             Name, instance.Location));
     }
 

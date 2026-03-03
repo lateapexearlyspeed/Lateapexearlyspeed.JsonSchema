@@ -74,7 +74,7 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
         {
             if (_validatedSchemaCount > 1)
             {
-                var error = new ValidationError(ResultCode.MoreThanOnePassedSchemaFound, "More than one schema validate instance", _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
+                var error = new ValidationError("More than one schema validate instance", _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
                 validationResult = ValidationResult.SingleErrorFailedResult(error);
                 
                 return true;
@@ -90,14 +90,14 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
             {
                 if (_validatedSchemaCount == 0)
                 {
-                    var error = new ValidationError(ResultCode.AllSubSchemaFailed, "Instance failed validation against all schemas", _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
+                    var error = new ValidationError("Instance failed validation against all schemas", _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
 
                     return ResultTuple.Invalid(error);
                 }
 
                 if (_validatedSchemaCount > 1)
                 {
-                    var error = new ValidationError(ResultCode.MoreThanOnePassedSchemaFound, "More than one schema validate instance", _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
+                    var error = new ValidationError("More than one schema validate instance", _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
 
                     return ResultTuple.Invalid(error);
                 }

@@ -21,7 +21,6 @@ public class Tests
         Assert.False(result.IsValid);
         ValidationError validationError = result.ValidationErrors.Single();
         Assert.Equal("format", validationError.Keyword);
-        Assert.Equal(ResultCode.InvalidFormat, validationError.ResultCode);
         Assert.Equal("Invalid string value for format: 'email'", validationError.ErrorMessage);
     }
 }

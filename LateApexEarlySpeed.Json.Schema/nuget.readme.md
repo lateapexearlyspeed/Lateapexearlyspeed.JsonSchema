@@ -168,7 +168,6 @@ if (validationResult.IsValid)
 else
 {
     Console.WriteLine($"Failed keyword: {validationResult.Keyword}");
-    Console.WriteLine($"ResultCode: {validationResult.ResultCode}");
     Console.WriteLine($"Error message: {validationResult.ErrorMessage}");
     Console.WriteLine($"Failed instance location: {validationResult.InstanceLocation}");
     Console.WriteLine($"Failed relative keyword location: {validationResult.RelativeKeywordLocation}");
@@ -181,8 +180,6 @@ else
 When validation failed, you can check detailed error information by:
 
 - **IsValid**: As summary indicator for passed validation or failed validation.
-
-- **ResultCode**: The specific error type when validation failed.
 
 - **ErrorMessage**: the specific wording for human readable message
 
@@ -269,7 +266,7 @@ internal class CustomKeyword : KeywordBase
 
         return instance.GetString() == _customValue
             ? ValidationResult.ValidResult
-            : ValidationResult.CreateFailedResult(ResultCode.UnexpectedValue, "It is not my expected value.", options.ValidationPathStack, Name, instance.Location);
+            : ValidationResult.SingleErrorFailedResult(new ValidationError("It is not my expected value.", options.ValidationPathStack, Name, instance.Location));
     }
 }
 ```
