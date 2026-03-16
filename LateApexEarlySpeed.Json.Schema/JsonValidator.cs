@@ -119,6 +119,16 @@ public class JsonValidator
     }
 
     /// <summary>
+    /// Add external json schema document
+    /// </summary>
+    /// <param name="externalJsonSchema">The content of external json schema document</param>
+    /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
+    public void AddExternalDocument(JsonElement externalJsonSchema, JsonValidatorOptions? options = null)
+    {
+        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalJsonSchema, _globalSchemaResourceRegistry, CreateOverriddenJsonValidatorOptions(options));
+    }
+
+    /// <summary>
     /// Add external json schema document which needs to be accessed by sending HTTP request
     /// </summary>
     /// <param name="remoteUri">The <see cref="Uri"/> of document the HTTP request is sent to access</param>

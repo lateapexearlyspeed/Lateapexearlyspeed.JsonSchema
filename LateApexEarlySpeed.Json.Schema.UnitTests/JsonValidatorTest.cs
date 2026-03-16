@@ -169,7 +169,8 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                 var jsonValidator = new JsonValidator(jsonSchema.RootElement, new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
                 foreach (string content in _externalSchemaDocuments)
                 {
-                    jsonValidator.AddExternalDocument(content.AsSpan(), new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
+                    using JsonDocument externalJsonSchema = JsonDocument.Parse(content);
+                    jsonValidator.AddExternalDocument(externalJsonSchema.RootElement, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
                 }
 
                 if (TestCasesDependOnRemoteHttpDocuments.Contains(testCaseDescription))
