@@ -40,6 +40,18 @@ public class JsonValidator
     }
 
     /// <summary>
+    /// Initializes a new instance of <see cref="JsonValidator"/> class for specified <paramref name="jsonSchema"/> and with specified <paramref name="options"/>
+    /// </summary>
+    /// <param name="jsonSchema">A json schema this <see cref="JsonValidator"/> represents</param>
+    /// <param name="options">Options to control validation behavior</param>
+    public JsonValidator(JsonElement jsonSchema, JsonValidatorOptions? options = null)
+    {
+        _jsonValidatorOptions = InitializeJsonValidatorOptions(options);
+
+        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, _globalSchemaResourceRegistry, _jsonValidatorOptions);
+    }
+
+    /// <summary>
     /// Initializes a new instance of <see cref="JsonValidator"/> class for specified <paramref name="utf8JsonSchema"/> and with specified <paramref name="options"/>
     /// </summary>
     /// <param name="utf8JsonSchema">A json schema this <see cref="JsonValidator"/> represents</param>

@@ -44,6 +44,25 @@ internal static class JsonSchemaDocument
         return doc;
     }
 
+    public static IJsonSchemaDocument CreateDocAndUpdateGlobalResourceRegistry(JsonElement schema, SchemaResourceRegistry globalSchemaResourceRegistry, JsonValidatorOptions options)
+    {
+        JsonSerializerOptions jsonSerializerOptions = new JsonSchemaDeserializerContext(options.PropertyNameCaseInsensitive, options.DefaultDialect).ToJsonSerializerOptions();
+
+        IJsonSchemaDocument doc = JsonSerializer.Deserialize<IJsonSchemaDocument>(schema, jsonSerializerOptions)!;
+
+        if (doc is BodyJsonSchemaDocument bodyDoc)
+        {
+            if (options.IgnoreResourceIdInUnknownKeyword)
+            {
+                bodyDoc.RemoveIdFromAllInvalidKeywordPropertiesRecursively();
+            }
+
+            UpdateDocWithGlobalResourceRegistry(bodyDoc, globalSchemaResourceRegistry);
+        }
+
+        return doc;
+    }
+
     public static void UpdateDocWithGlobalResourceRegistry(BodyJsonSchemaDocument schemaDoc, SchemaResourceRegistry globalSchemaResourceRegistry)
     {
         schemaDoc.MakeAllIdentifierAndReferenceBeFullUri();
