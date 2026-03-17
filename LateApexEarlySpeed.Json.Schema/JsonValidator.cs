@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.Contracts;
+using System.Diagnostics.Contracts;
 using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -33,6 +33,18 @@ public class JsonValidator
     /// <param name="jsonSchema">A json schema this <see cref="JsonValidator"/> represents</param>
     /// <param name="options">Options to control validation behavior</param>
     public JsonValidator(ReadOnlySpan<char> jsonSchema, JsonValidatorOptions? options = null)
+    {
+        _jsonValidatorOptions = InitializeJsonValidatorOptions(options);
+
+        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, _globalSchemaResourceRegistry, _jsonValidatorOptions);
+    }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="JsonValidator"/> class for specified <paramref name="jsonSchema"/> and with specified <paramref name="options"/>
+    /// </summary>
+    /// <param name="jsonSchema">A json schema this <see cref="JsonValidator"/> represents</param>
+    /// <param name="options">Options to control validation behavior</param>
+    public JsonValidator(JsonElement jsonSchema, JsonValidatorOptions? options = null)
     {
         _jsonValidatorOptions = InitializeJsonValidatorOptions(options);
 
@@ -104,6 +116,16 @@ public class JsonValidator
     public void AddExternalDocument(Stream externalUtf8JsonSchema, JsonValidatorOptions? options = null)
     {
         JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalUtf8JsonSchema, _globalSchemaResourceRegistry, CreateOverriddenJsonValidatorOptions(options));
+    }
+
+    /// <summary>
+    /// Add external json schema document
+    /// </summary>
+    /// <param name="externalJsonSchema">The content of external json schema document</param>
+    /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
+    public void AddExternalDocument(JsonElement externalJsonSchema, JsonValidatorOptions? options = null)
+    {
+        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalJsonSchema, _globalSchemaResourceRegistry, CreateOverriddenJsonValidatorOptions(options));
     }
 
     /// <summary>

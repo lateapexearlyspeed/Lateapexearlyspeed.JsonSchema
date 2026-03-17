@@ -158,6 +158,34 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         }
 
         [Theory]
+        [MemberData(nameof(JsonSchemaTestSuite))]
+        public async Task ValidateByJsonElementSchema_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        {
+            _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
+            _testOutputHelper.WriteLine($"Test description: {testDescription}");
+
+            using (JsonDocument jsonSchema = JsonDocument.Parse(schema))
+            {
+                var jsonValidator = new JsonValidator(jsonSchema.RootElement, new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
+                foreach (string content in _externalSchemaDocuments)
+                {
+                    using JsonDocument externalJsonSchema = JsonDocument.Parse(content);
+                    jsonValidator.AddExternalDocument(externalJsonSchema.RootElement, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
+                }
+
+                if (TestCasesDependOnRemoteHttpDocuments.Contains(testCaseDescription))
+                {
+                    foreach (Uri remoteUri in _httpBasedDocumentUris)
+                    {
+                        await jsonValidator.AddHttpDocumentAsync(remoteUri);
+                    }
+                }
+
+                Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions { ValidateFormat = false, OutputFormat = outputFormat }).IsValid);
+            }
+        }
+
+        [Theory]
         [MemberData(nameof(JsonSchemaTestCasesForFormatKeyword))]
         public void ValidateByStringSchema_ValidateFormatKeyword(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
@@ -392,6 +420,21 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         public void Validate_PropertyNameIgnoreCase(string jsonSchema, string jsonInstance, bool expectedIsValid, string? expectedInstanceLocation, string? expectedKeywordLocation)
         {
             ValidationResult validationResult = new JsonValidator(jsonSchema, new JsonValidatorOptions{PropertyNameCaseInsensitive = true}).Validate(jsonInstance);
+
+            Assert.Equal(expectedIsValid, validationResult.IsValid);
+
+            ValidationError? error = validationResult.ValidationErrors.SingleOrDefault();
+
+            Assert.Equal(expectedInstanceLocation, error?.InstanceLocation.ToString());
+            Assert.Equal(expectedKeywordLocation, error?.RelativeKeywordLocation?.ToString());
+        }
+
+        [Theory]
+        [MemberData(nameof(TestDataForPropertyNameIgnoreCase))]
+        public void Validate_PropertyNameIgnoreCase_JsonElementSchema(string jsonSchema, string jsonInstance, bool expectedIsValid, string? expectedInstanceLocation, string? expectedKeywordLocation)
+        {
+            using JsonDocument jsonSchemaDocument = JsonDocument.Parse(jsonSchema);
+            ValidationResult validationResult = new JsonValidator(jsonSchemaDocument.RootElement, new JsonValidatorOptions { PropertyNameCaseInsensitive = true }).Validate(jsonInstance);
 
             Assert.Equal(expectedIsValid, validationResult.IsValid);
 
