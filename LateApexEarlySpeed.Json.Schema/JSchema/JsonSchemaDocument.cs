@@ -48,7 +48,7 @@ internal static class JsonSchemaDocument
     {
         JsonSerializerOptions jsonSerializerOptions = new JsonSchemaDeserializerContext(options.PropertyNameCaseInsensitive, options.DefaultDialect).ToJsonSerializerOptions();
 
-        IJsonSchemaDocument doc = JsonSerializer.Deserialize<IJsonSchemaDocument>(schema, jsonSerializerOptions)!;
+        IJsonSchemaDocument doc = schema.Deserialize<IJsonSchemaDocument>(jsonSerializerOptions)!;
 
         if (doc is BodyJsonSchemaDocument bodyDoc)
         {

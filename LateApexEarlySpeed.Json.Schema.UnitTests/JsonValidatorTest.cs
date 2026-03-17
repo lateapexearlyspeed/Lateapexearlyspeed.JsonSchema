@@ -169,8 +169,10 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                 var jsonValidator = new JsonValidator(jsonSchema.RootElement, new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
                 foreach (string content in _externalSchemaDocuments)
                 {
-                    using JsonDocument externalJsonSchema = JsonDocument.Parse(content);
-                    jsonValidator.AddExternalDocument(externalJsonSchema.RootElement, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
+                    using (JsonDocument externalJsonSchema = JsonDocument.Parse(content))
+                    {
+                        jsonValidator.AddExternalDocument(externalJsonSchema.RootElement, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
+                    }
                 }
 
                 if (TestCasesDependOnRemoteHttpDocuments.Contains(testCaseDescription))
@@ -433,15 +435,17 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         [MemberData(nameof(TestDataForPropertyNameIgnoreCase))]
         public void Validate_PropertyNameIgnoreCase_JsonElementSchema(string jsonSchema, string jsonInstance, bool expectedIsValid, string? expectedInstanceLocation, string? expectedKeywordLocation)
         {
-            using JsonDocument jsonSchemaDocument = JsonDocument.Parse(jsonSchema);
-            ValidationResult validationResult = new JsonValidator(jsonSchemaDocument.RootElement, new JsonValidatorOptions { PropertyNameCaseInsensitive = true }).Validate(jsonInstance);
+            using (JsonDocument jsonSchemaDocument = JsonDocument.Parse(jsonSchema))
+            {
+                ValidationResult validationResult = new JsonValidator(jsonSchemaDocument.RootElement, new JsonValidatorOptions { PropertyNameCaseInsensitive = true }).Validate(jsonInstance);
 
-            Assert.Equal(expectedIsValid, validationResult.IsValid);
+                Assert.Equal(expectedIsValid, validationResult.IsValid);
 
-            ValidationError? error = validationResult.ValidationErrors.SingleOrDefault();
+                ValidationError? error = validationResult.ValidationErrors.SingleOrDefault();
 
-            Assert.Equal(expectedInstanceLocation, error?.InstanceLocation.ToString());
-            Assert.Equal(expectedKeywordLocation, error?.RelativeKeywordLocation?.ToString());
+                Assert.Equal(expectedInstanceLocation, error?.InstanceLocation.ToString());
+                Assert.Equal(expectedKeywordLocation, error?.RelativeKeywordLocation?.ToString());
+            }
         }
 
         public static IEnumerable<object?[]> TestDataForPropertyNameIgnoreCase
