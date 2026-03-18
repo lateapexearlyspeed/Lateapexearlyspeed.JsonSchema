@@ -1,4 +1,4 @@
-<p align="center">
+<p align="center"> 
     <img height="60" src="https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/blob/master/LateApexEarlySpeed.Json.Schema/nuget.icon.jpg?raw=true">
 </p>
 <h1 align="center">Lateapexearlyspeed.Json.Schema</h1>
