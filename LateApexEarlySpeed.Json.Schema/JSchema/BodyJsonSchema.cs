@@ -181,8 +181,10 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
         /// </remarks>
         public IEnumerable<ValidationResult> EnumerateValidationResults()
         {
-            foreach (KeywordBase keyword in _bodyJsonSchema._keywords)
+            // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
+            for (int i = 0; i < _bodyJsonSchema._keywords.Count; i++)
             {
+                KeywordBase keyword = _bodyJsonSchema._keywords[i];
                 yield return ValidateAndSetFastReturnResult(keyword);
             }
 
@@ -224,8 +226,10 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public override ISchemaContainerElement? GetSubElement(string name)
     {
-        foreach (KeywordBase keyword in _keywords)
+        // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
+        for (var i = 0; i < _keywords.Count; i++)
         {
+            KeywordBase keyword = _keywords[i];
             if (keyword.Name == name && keyword is ISchemaContainerElement schemaContainerElement)
             {
                 return schemaContainerElement;
@@ -260,8 +264,10 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public override IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
-        foreach (KeywordBase validationKeyword in _keywords)
+        // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
+        for (var i = 0; i < _keywords.Count; i++)
         {
+            KeywordBase validationKeyword = _keywords[i];
             if (validationKeyword is ISchemaContainerElement element)
             {
                 yield return element;

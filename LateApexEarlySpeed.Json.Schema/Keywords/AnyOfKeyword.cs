@@ -67,7 +67,7 @@ internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
 
         public IEnumerable<ValidationResult> EnumerateValidationResults()
         {
-            foreach (JsonSchema subSchema in _anyOfKeyword.SubSchemas)
+            foreach (JsonSchema subSchema in _anyOfKeyword._subSchemas)
             {
                 ValidationResult result = subSchema.Validate(_instance, _options);
                 if (result.IsValid)
