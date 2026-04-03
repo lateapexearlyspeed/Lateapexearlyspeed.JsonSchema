@@ -68,10 +68,36 @@ internal class SchemaReferenceKeyword : KeywordBase, IReferenceKeyword
 
     public JsonSchemaResource? GetReferencedSchemaResource(JsonSchemaOptions options)
     {
+        JsonValidator? jsonValidator = options.JsonValidator;
+        
+        Debug.Assert(jsonValidator is not null);
         Debug.Assert(FullUriRef is not null);
-        Debug.Assert(options.SchemaResourceRegistry is not null);
 
-        return options.SchemaResourceRegistry.GetSchemaResource(GetBaseUri(FullUriRef));
+        Uri baseUri = GetBaseUri(FullUriRef);
+        JsonSchemaResource? schemaResource = jsonValidator.GlobalSchemaResourceRegistry.GetSchemaResource(baseUri);
+
+        if (schemaResource is not null || jsonValidator.ExternalSchemaDocumentPopulator is null)
+        {
+            return schemaResource;
+        }
+
+        LockGenerator<Uri>? lockGenerator = jsonValidator.GlobalSchemaResourceRegistry.LockGenerator;
+        Debug.Assert(lockGenerator is not null);
+        
+        lock (lockGenerator.GetLock(baseUri))
+        {
+            schemaResource = jsonValidator.GlobalSchemaResourceRegistry.GetSchemaResource(baseUri);
+
+            if (schemaResource is not null)
+            {
+                return schemaResource;
+            }
+
+            var externalSchemaRegistry = new ExternalSchemaRegistry(jsonValidator.GlobalSchemaResourceRegistry, jsonValidator.ValidatorOptions);
+            jsonValidator.ExternalSchemaDocumentPopulator.Populate(baseUri, externalSchemaRegistry);
+        }
+
+        return jsonValidator.GlobalSchemaResourceRegistry.GetSchemaResource(baseUri);
     }
 
     /// <returns>Uri from <paramref name="fullUri"/> without fragment</returns>
