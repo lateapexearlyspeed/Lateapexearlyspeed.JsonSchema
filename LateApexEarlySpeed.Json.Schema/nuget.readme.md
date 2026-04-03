@@ -225,6 +225,30 @@ await jsonValidator.AddHttpDocumentAsync(new Uri("http://this-is-json-schema-doc
 ValidationResult validationResult = jsonValidator.Validate(instance);
 ```
 
+- dynamic registration during validation — provide an `IExternalSchemaDocumentPopulator` implementation to resolve and register an external schema automatically at the moment the validator first encounters an unregistered `$ref` target:
+```csharp
+var jsonValidator = new JsonValidator(jsonSchema)
+{
+    ExternalSchemaDocumentPopulator = new FileSystemSchemaPopulator()
+};
+ValidationResult validationResult = jsonValidator.Validate(instance);
+
+// Sample IExternalSchemaDocumentPopulator implementation
+public class FileSystemSchemaPopulator : IExternalSchemaDocumentPopulator
+{
+    // Called at validation time when a $ref target is not yet registered
+    public void Populate(Uri baseUri, ExternalSchemaRegistry externalSchemaRegistry)
+    {
+        string filePath = baseUri.LocalPath;
+        if (File.Exists(filePath))
+        {
+            externalSchemaRegistry.Register(File.ReadAllText(filePath));
+        }
+    }
+}
+```
+The populator is called only once per base URI — the result is cached in the validator's global resource registry.
+
 ## Custom keyword support
 
 Besides of standard keywords defined in json schema specification, library supports to create custom keyword for additional validation requirement. Eg:
