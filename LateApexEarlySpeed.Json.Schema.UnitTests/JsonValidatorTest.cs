@@ -3,6 +3,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
+using LateApexEarlySpeed.Json.Schema.JSchema;
+using LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 using Xunit;
 using Xunit.Abstractions;
@@ -184,6 +186,54 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                 }
 
                 Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions { ValidateFormat = false, OutputFormat = outputFormat }).IsValid);
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(JsonSchemaTestSuite))]
+        public async Task ValidateByExternalSchemaDocumentPopulator_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
+        {
+            _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
+            _testOutputHelper.WriteLine($"Test description: {testDescription}");
+
+            var jsonValidator = new JsonValidator(schema, new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword })
+            {
+                ExternalSchemaDocumentPopulator = new TestExternalSchemaDocumentPopulator(_externalSchemaDocuments, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword })
+            };
+
+            if (TestCasesDependOnRemoteHttpDocuments.Contains(testCaseDescription))
+            {
+                foreach (Uri remoteUri in _httpBasedDocumentUris)
+                {
+                    await jsonValidator.AddHttpDocumentAsync(remoteUri);
+                }
+            }
+
+            Assert.Equal(expectedValidationResult, jsonValidator.Validate(instance, new JsonSchemaOptions{ValidateFormat = false, OutputFormat = outputFormat }).IsValid);
+        }
+
+        private class TestExternalSchemaDocumentPopulator : IExternalSchemaDocumentPopulator
+        {
+            private readonly JsonElement[] _externalJsonSchemaDocuments;
+            private readonly JsonValidatorOptions _jsonValidatorOptions;
+
+            public TestExternalSchemaDocumentPopulator(IEnumerable<string> externalSchemaDocuments, JsonValidatorOptions jsonValidatorOptions)
+            {
+                _externalJsonSchemaDocuments = externalSchemaDocuments.Select(doc => JsonSerializer.Deserialize<JsonElement>(doc)).ToArray();
+                _jsonValidatorOptions = jsonValidatorOptions;
+            }
+
+            public void Populate(Uri baseUri, ExternalSchemaRegistry externalSchemaRegistry)
+            {    
+                foreach (JsonElement schemaDocument in _externalJsonSchemaDocuments)
+                {
+                    Uri currentId = new Uri(schemaDocument.GetProperty(IdKeyword.Keyword).GetString()!);
+
+                    if (currentId == baseUri)
+                    {
+                        externalSchemaRegistry.Register(schemaDocument, _jsonValidatorOptions);
+                    }
+                }
             }
         }
 

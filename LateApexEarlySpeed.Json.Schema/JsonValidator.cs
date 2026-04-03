@@ -15,8 +15,10 @@ public class JsonValidator
     private static readonly HttpJsonDocumentClient HttpJsonDocumentClient = new();
 
     private readonly IJsonSchemaDocument _mainSchemaDoc;
-    private readonly SchemaResourceRegistry _globalSchemaResourceRegistry = new(1);
-    private readonly JsonValidatorOptions _jsonValidatorOptions;
+    private IExternalSchemaDocumentPopulator? _externalSchemaDocumentPopulator;
+
+    internal JsonValidatorOptions ValidatorOptions { get; }
+    internal SchemaResourceRegistry GlobalSchemaResourceRegistry { get; } = new(1);
 
     /// <summary>
     /// Initializes a new instance of <see cref="JsonValidator"/> class for specified <paramref name="jsonSchema"/> and with specified <paramref name="options"/>
@@ -34,9 +36,9 @@ public class JsonValidator
     /// <param name="options">Options to control validation behavior</param>
     public JsonValidator(ReadOnlySpan<char> jsonSchema, JsonValidatorOptions? options = null)
     {
-        _jsonValidatorOptions = InitializeJsonValidatorOptions(options);
+        ValidatorOptions = InitializeJsonValidatorOptions(options);
 
-        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, _globalSchemaResourceRegistry, _jsonValidatorOptions);
+        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, GlobalSchemaResourceRegistry, ValidatorOptions);
     }
 
     /// <summary>
@@ -46,9 +48,9 @@ public class JsonValidator
     /// <param name="options">Options to control validation behavior</param>
     public JsonValidator(JsonElement jsonSchema, JsonValidatorOptions? options = null)
     {
-        _jsonValidatorOptions = InitializeJsonValidatorOptions(options);
+        ValidatorOptions = InitializeJsonValidatorOptions(options);
 
-        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, _globalSchemaResourceRegistry, _jsonValidatorOptions);
+        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, GlobalSchemaResourceRegistry, ValidatorOptions);
     }
 
     /// <summary>
@@ -59,16 +61,16 @@ public class JsonValidator
     /// <remarks>This method will not dispose <paramref name="utf8JsonSchema"/> parameter </remarks>
     public JsonValidator(Stream utf8JsonSchema, JsonValidatorOptions? options = null)
     {
-        _jsonValidatorOptions = InitializeJsonValidatorOptions(options);
+        ValidatorOptions = InitializeJsonValidatorOptions(options);
 
-        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(utf8JsonSchema, _globalSchemaResourceRegistry, _jsonValidatorOptions);
+        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(utf8JsonSchema, GlobalSchemaResourceRegistry, ValidatorOptions);
     }
 
     internal JsonValidator(BodyJsonSchemaDocument mainSchemaDoc, JsonValidatorOptions? options = null)
     {
-        _jsonValidatorOptions = InitializeJsonValidatorOptions(options);
+        ValidatorOptions = InitializeJsonValidatorOptions(options);
 
-        JsonSchemaDocument.UpdateDocWithGlobalResourceRegistry(mainSchemaDoc, _globalSchemaResourceRegistry);
+        JsonSchemaDocument.UpdateDocWithGlobalResourceRegistry(mainSchemaDoc, GlobalSchemaResourceRegistry);
         _mainSchemaDoc = mainSchemaDoc;
     }
 
@@ -78,17 +80,6 @@ public class JsonValidator
         return options is null || options.Equals(JsonValidatorOptions.Default) 
             ? JsonValidatorOptions.Default 
             : options;
-    }
-
-    [Pure]
-    private JsonValidatorOptions CreateOverriddenJsonValidatorOptions(JsonValidatorOptions? options)
-    {
-        if (options is null)
-        {
-            return _jsonValidatorOptions;
-        }
-
-        return options.Equals(JsonValidatorOptions.Default) ? JsonValidatorOptions.Default : options;
     }
 
     /// <summary>
@@ -105,7 +96,7 @@ public class JsonValidator
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
     public void AddExternalDocument(ReadOnlySpan<char> externalJsonSchema, JsonValidatorOptions? options = null)
     {
-        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalJsonSchema, _globalSchemaResourceRegistry, CreateOverriddenJsonValidatorOptions(options));
+        new ExternalSchemaRegistry(GlobalSchemaResourceRegistry, ValidatorOptions).Register(externalJsonSchema, options);
     }
 
     /// <summary>
@@ -115,7 +106,7 @@ public class JsonValidator
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
     public void AddExternalDocument(Stream externalUtf8JsonSchema, JsonValidatorOptions? options = null)
     {
-        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalUtf8JsonSchema, _globalSchemaResourceRegistry, CreateOverriddenJsonValidatorOptions(options));
+        new ExternalSchemaRegistry(GlobalSchemaResourceRegistry, ValidatorOptions).Register(externalUtf8JsonSchema, options);
     }
 
     /// <summary>
@@ -125,7 +116,7 @@ public class JsonValidator
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
     public void AddExternalDocument(JsonElement externalJsonSchema, JsonValidatorOptions? options = null)
     {
-        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(externalJsonSchema, _globalSchemaResourceRegistry, CreateOverriddenJsonValidatorOptions(options));
+        new ExternalSchemaRegistry(GlobalSchemaResourceRegistry, ValidatorOptions).Register(externalJsonSchema, options);
     }
 
     /// <summary>
@@ -138,6 +129,22 @@ public class JsonValidator
     {
         string jsonSchemaText = await HttpJsonDocumentClient.GetDocumentAsync(remoteUri);
         AddExternalDocument(jsonSchemaText, options);
+    }
+
+    /// <summary>
+    /// Gets or sets an <see cref="IExternalSchemaDocumentPopulator"/> instance for current <see cref="JsonValidator"/>, used to populate required external json schema document during validation (on-fly), compared with pre-registered external json schema document before validation by <see cref="AddExternalDocument(string, JsonValidatorOptions?)"/>
+    /// </summary>
+    /// <remarks>
+    /// This <see cref="ExternalSchemaDocumentPopulator"/> will only populate external json schema document when there was no matched pre-registered external json schema document.
+    /// </remarks>
+    public IExternalSchemaDocumentPopulator? ExternalSchemaDocumentPopulator
+    {
+        get => _externalSchemaDocumentPopulator;
+        set
+        {
+            _externalSchemaDocumentPopulator = value;
+            GlobalSchemaResourceRegistry.EnableConcurrency = value is not null;
+        }
     }
 
     /// <summary>
@@ -193,7 +200,7 @@ public class JsonValidator
     /// <returns><see cref="ValidationResult"/> to represent validation result</returns>
     public ValidationResult Validate(JsonElement jsonInstance, JsonSchemaOptions? options = null)
     {
-        options = new JsonSchemaOptions(options, _globalSchemaResourceRegistry);
+        options = new JsonSchemaOptions(options, this);
 
         return _mainSchemaDoc.DoValidation(new JsonInstanceElement(jsonInstance, LinkedListBasedImmutableJsonPointer.Empty), options);
     }

@@ -4,6 +4,8 @@ namespace LateApexEarlySpeed.Json.Schema.Common;
 
 internal class SchemaResourceRegistry
 {
+    private object? _lock;
+
     private readonly List<JsonSchemaResource> _schemaResources;
 
     public SchemaResourceRegistry(int capacity)
@@ -13,43 +15,108 @@ internal class SchemaResourceRegistry
 
     public JsonSchemaResource? GetSchemaResource(Uri baseUri)
     {
-        foreach (JsonSchemaResource schemaResource in _schemaResources)
+        if (EnableConcurrency)
         {
-            if (schemaResource.BaseUri == baseUri)
-            {
-                return schemaResource;
-            }
+            Monitor.Enter(_lock);
         }
 
-        return null;
+        try
+        {
+            foreach (JsonSchemaResource schemaResource in _schemaResources)
+            {
+                if (schemaResource.BaseUri == baseUri)
+                {
+                    return schemaResource;
+                }
+            }
+
+            return null;
+        }
+        finally
+        {
+            if (EnableConcurrency)
+            {
+                Monitor.Exit(_lock);
+            }
+        }
     }
 
     public void AddSchemaResource(JsonSchemaResource schemaResource)
     {
-        foreach (JsonSchemaResource resource in _schemaResources)
+        if (EnableConcurrency)
         {
-            if (resource.BaseUri == schemaResource.BaseUri)
-            {
-                throw new ArgumentException($"a schema resource with same base uri: {schemaResource.BaseUri} already exists.", nameof(schemaResource));
-            }
+            Monitor.Enter(_lock);
         }
 
-        _schemaResources.Add(schemaResource);
+        try
+        {
+            foreach (JsonSchemaResource resource in _schemaResources)
+            {
+                if (resource.BaseUri == schemaResource.BaseUri)
+                {
+                    throw new ArgumentException($"a schema resource with same base uri: {schemaResource.BaseUri} already exists.", nameof(schemaResource));
+                }
+            }
+
+            _schemaResources.Add(schemaResource);
+        }
+        finally
+        {
+            if (EnableConcurrency)
+            {
+                Monitor.Exit(_lock);
+            }
+        }
     }
 
     public void AddSchemaResourcesFromRegistry(SchemaResourceRegistry otherSchemaResourceRegistry)
     {
-        foreach (JsonSchemaResource otherResource in otherSchemaResourceRegistry._schemaResources)
+        if (EnableConcurrency)
         {
-            foreach (JsonSchemaResource resource in _schemaResources)
-            {
-                if (resource.BaseUri == otherResource.BaseUri)
-                {
-                    throw new ArgumentException($"a schema resource with same base uri: {otherResource.BaseUri} already exists.", nameof(otherSchemaResourceRegistry));
-                }
-            }
+            Monitor.Enter(_lock);
         }
 
-        _schemaResources.AddRange(otherSchemaResourceRegistry._schemaResources);
+        try
+        {
+            foreach (JsonSchemaResource otherResource in otherSchemaResourceRegistry._schemaResources)
+            {
+                foreach (JsonSchemaResource resource in _schemaResources)
+                {
+                    if (resource.BaseUri == otherResource.BaseUri)
+                    {
+                        throw new ArgumentException($"a schema resource with same base uri: {otherResource.BaseUri} already exists.", nameof(otherSchemaResourceRegistry));
+                    }
+                }
+            }
+
+            _schemaResources.AddRange(otherSchemaResourceRegistry._schemaResources);
+        }
+        finally
+        {
+            if (EnableConcurrency)
+            {
+                Monitor.Exit(_lock);
+            }
+        }
+    }
+
+    public LockGenerator<Uri>? LockGenerator { get; private set; }
+
+    public bool EnableConcurrency
+    {
+        get => _lock is not null;
+        set
+        {
+            if (value)
+            {
+                _lock = new object();
+                LockGenerator = new LockGenerator<Uri>();
+            }
+            else
+            {
+                _lock = null;
+                LockGenerator = null;
+            }
+        }
     }
 }
