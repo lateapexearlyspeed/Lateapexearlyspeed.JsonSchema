@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 
@@ -87,6 +88,11 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
     public string GetRawText()
     {
         return InternalJsonElement.GetRawText();
+    }
+
+    public ReadOnlySpan<byte> GetRawUtf8Value()
+    {
+        return JsonMarshal.GetRawUtf8Value(InternalJsonElement);
     }
 
     /// <summary>
@@ -254,12 +260,15 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 
             case JsonValueKind.String:
 
+                if (GetRawUtf8Value().SequenceEqual(other.GetRawUtf8Value()))
+                {
+                    return EquivalentResult.Success();
+                }
+
                 string curString = GetString()!;
                 string otherString = other.GetString()!;
 
-                return curString == otherString
-                    ? EquivalentResult.Success()
-                    : EquivalentResult.Fail(() => StringNotSameMessageTemplate(curString, otherString), _instanceLocation, other._instanceLocation);
+                return EquivalentResult.Fail(() => StringNotSameMessageTemplate(curString, otherString), _instanceLocation, other._instanceLocation);
 
             case JsonValueKind.Number:
                 return NumberEquivalent(other);
