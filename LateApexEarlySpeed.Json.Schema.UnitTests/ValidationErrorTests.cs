@@ -39,22 +39,22 @@ public class ValidationErrorTests
             const string expectedKeyword = "keyword: keyword-value";
             const string expectedKeywordLocation = "relative keyword location (in json pointer format): /type";
 
-            yield return new object[] { new ValidationError(errorMessage, null, null, instanceLocation), 
+            yield return new object[] { new ValidationError(ResultCode.AllSubSchemaFailed, errorMessage, null, null, instanceLocation), 
                 errorMessage + Environment.NewLine + expectedInstanceLocation + Environment.NewLine};
 
-            yield return new object[] { new ValidationError(errorMessage, null, keyword, instanceLocation), 
+            yield return new object[] { new ValidationError(ResultCode.AllSubSchemaFailed, errorMessage, null, keyword, instanceLocation), 
                 errorMessage + Environment.NewLine + expectedInstanceLocation + Environment.NewLine + expectedKeyword};
 
-            yield return new object[] { new ValidationError(null, errorMessage, instanceLocation, null, null, null), 
+            yield return new object[] { new ValidationError(ResultCode.AllSubSchemaFailed, null, errorMessage, instanceLocation, null, null, null), 
                 errorMessage + Environment.NewLine + expectedInstanceLocation + Environment.NewLine};
 
-            yield return new object[] { new ValidationError(keyword, errorMessage, instanceLocation, null, null, null), 
+            yield return new object[] { new ValidationError(ResultCode.AllSubSchemaFailed, keyword, errorMessage, instanceLocation, null, null, null), 
                 errorMessage + Environment.NewLine + expectedInstanceLocation + Environment.NewLine + expectedKeyword};
 
-            yield return new object[] { new ValidationError(null, errorMessage, instanceLocation, keywordLocation, null, null), 
+            yield return new object[] { new ValidationError(ResultCode.AllSubSchemaFailed, null, errorMessage, instanceLocation, keywordLocation, null, null), 
                 errorMessage + Environment.NewLine + expectedInstanceLocation + Environment.NewLine + expectedKeywordLocation + Environment.NewLine};
 
-            yield return new object[] { new ValidationError(keyword, errorMessage, instanceLocation, keywordLocation, null, null), 
+            yield return new object[] { new ValidationError(ResultCode.AllSubSchemaFailed, keyword, errorMessage, instanceLocation, keywordLocation, null, null), 
                 errorMessage + Environment.NewLine + expectedInstanceLocation + Environment.NewLine + expectedKeywordLocation + Environment.NewLine + expectedKeyword};
         }
     }

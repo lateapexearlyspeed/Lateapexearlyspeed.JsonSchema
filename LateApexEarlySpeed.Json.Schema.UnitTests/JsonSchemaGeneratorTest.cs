@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
@@ -55,6 +55,7 @@ public class JsonSchemaGeneratorTest
             ValidationError expectedError = expectedValidationResult.ValidationErrors.Single();
             ValidationError actualError = validationResult.ValidationErrors.Single();
 
+            Assert.Equal(expectedError.ResultCode, actualError.ResultCode);
             Assert.Equal(expectedError.Keyword, actualError.Keyword);
             Assert.Equal(expectedError.ErrorMessage, actualError.ErrorMessage);
             Assert.Equal(expectedError.InstanceLocation, actualError.InstanceLocation);
@@ -183,7 +184,7 @@ public class JsonSchemaGeneratorTest
     {
         yield return TestSample.Create<int?>("1", ValidationResult.ValidResult);
         yield return TestSample.Create<int?>("null", ValidationResult.ValidResult);
-        yield return TestSample.Create<int?>("\"a\"", CreateSingleErrorResult("anyOf", AnyOfKeyword.ErrorMessage(), 
+        yield return TestSample.Create<int?>("\"a\"", CreateSingleErrorResult(ResultCode.AllSubSchemaFailed, "anyOf", AnyOfKeyword.ErrorMessage(), 
             LinkedListBasedImmutableJsonPointer.Empty, 
             LinkedListBasedImmutableJsonPointer.Create("/anyOf"), 
             GetSchemaResourceBaseUri<int?>(),
@@ -204,7 +205,7 @@ public class JsonSchemaGeneratorTest
                 "InnerProp": 1
               }
             }
-            """, CreateSingleErrorResult("anyOf", AnyOfKeyword.ErrorMessage(),
+            """, CreateSingleErrorResult(ResultCode.AllSubSchemaFailed, "anyOf", AnyOfKeyword.ErrorMessage(),
             LinkedListBasedImmutableJsonPointer.Empty,
             LinkedListBasedImmutableJsonPointer.Create("/anyOf"), 
             GetSchemaResourceBaseUri<CustomStruct?>(),
@@ -218,7 +219,7 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<DateTimeOffset>("\"1990-02-25T15:59:59.1-08:00\"", ValidationResult.ValidResult);
         yield return TestSample.Create<DateTimeOffset>("\"1990-02-25T15:59:59.1\"", ValidationResult.ValidResult);
 
-        yield return TestSample.Create<DateTimeOffset>("\"abc1990-02-25T15:59:59.1\"", CreateSingleErrorResult("ext-DateTimeOffsetFormat", DateTimeOffsetFormatExtensionKeyword.ErrorMessage(),
+        yield return TestSample.Create<DateTimeOffset>("\"abc1990-02-25T15:59:59.1\"", CreateSingleErrorResult(ResultCode.InvalidFormat, "ext-DateTimeOffsetFormat", DateTimeOffsetFormatExtensionKeyword.ErrorMessage(),
             LinkedListBasedImmutableJsonPointer.Empty, 
             LinkedListBasedImmutableJsonPointer.Create("/ext-DateTimeOffsetFormat"), 
             GetSchemaResourceBaseUri<DateTimeOffset>(),
@@ -231,7 +232,7 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<DateTime>("\"1990-02-25T15:59:59.1\"", ValidationResult.ValidResult);
         yield return TestSample.Create<DateTime>("\"1990-02-25T15:59:59.1-08:00\"", ValidationResult.ValidResult);
 
-        yield return TestSample.Create<DateTime>("\"abc1990-02-25T15:59:59.1-08:00\"", CreateSingleErrorResult("ext-DateTimeFormat", DateTimeFormatExtensionKeyword.ErrorMessage(),
+        yield return TestSample.Create<DateTime>("\"abc1990-02-25T15:59:59.1-08:00\"", CreateSingleErrorResult(ResultCode.InvalidFormat, "ext-DateTimeFormat", DateTimeFormatExtensionKeyword.ErrorMessage(),
             LinkedListBasedImmutableJsonPointer.Empty,
             LinkedListBasedImmutableJsonPointer.Create("/ext-DateTimeFormat"),
             GetSchemaResourceBaseUri<DateTime>(),
@@ -241,7 +242,7 @@ public class JsonSchemaGeneratorTest
     private static IEnumerable<TestSample> CreateSamplesForArbitraryJsonArray()
     {
         yield return TestSample.Create<JsonArray>("[1, 2, 3]", ValidationResult.ValidResult);
-        yield return TestSample.Create<JsonArray>("null", CreateSingleErrorResult("type", GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Array),
+        yield return TestSample.Create<JsonArray>("null", CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Array),
             LinkedListBasedImmutableJsonPointer.Empty, 
             LinkedListBasedImmutableJsonPointer.Create("/type"), 
             GetSchemaResourceBaseUri<JsonArray>(),
@@ -257,7 +258,7 @@ public class JsonSchemaGeneratorTest
             }
             """, ValidationResult.ValidResult);
 
-        yield return TestSample.Create<JsonObject>("null", CreateSingleErrorResult("type", GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object),
+        yield return TestSample.Create<JsonObject>("null", CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object),
             LinkedListBasedImmutableJsonPointer.Empty,
             LinkedListBasedImmutableJsonPointer.Create("/type"),
             GetSchemaResourceBaseUri<JsonObject>(),
@@ -277,19 +278,25 @@ public class JsonSchemaGeneratorTest
     {
         yield return TestSample.Create<T>("0", ValidationResult.ValidResult);
         yield return TestSample.Create<T>("1", ValidationResult.ValidResult);
-        yield return TestSample.Create<T>("-1", CreateSingleErrorResult("minimum",
+        yield return TestSample.Create<T>("-1", CreateSingleErrorResult(
+            ResultCode.NumberOutOfRange,
+            "minimum",
             "Instance '-1' is less than '0'",
             LinkedListBasedImmutableJsonPointer.Empty,
             LinkedListBasedImmutableJsonPointer.Create("/minimum")!,
             GetSchemaResourceBaseUri<T>(),
             GetSchemaResourceBaseUri<T>()));
-        yield return TestSample.Create<T>("\"abc\"", CreateSingleErrorResult("type",
+        yield return TestSample.Create<T>("\"abc\"", CreateSingleErrorResult(
+            ResultCode.InvalidTokenKind,
+            "type",
             GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Integer),
             LinkedListBasedImmutableJsonPointer.Empty,
             LinkedListBasedImmutableJsonPointer.Create("/type")!,
             GetSchemaResourceBaseUri<T>(),
             GetSchemaResourceBaseUri<T>()));
-        yield return TestSample.Create<T>("1.5", CreateSingleErrorResult("type",
+        yield return TestSample.Create<T>("1.5", CreateSingleErrorResult(
+            ResultCode.InvalidTokenKind,
+            "type",
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Integer),
             LinkedListBasedImmutableJsonPointer.Empty,
             LinkedListBasedImmutableJsonPointer.Create("/type")!,
@@ -316,7 +323,7 @@ public class JsonSchemaGeneratorTest
 
         if (typeof(T) != typeof(ulong))
         {
-            yield return TestSample.Create<T>(instanceData.ToString(), CreateSingleErrorResult("maximum", MaximumKeyword.ErrorMessage(instanceData, max),
+            yield return TestSample.Create<T>(instanceData.ToString(), CreateSingleErrorResult(ResultCode.NumberOutOfRange, "maximum", MaximumKeyword.ErrorMessage(instanceData, max),
                 LinkedListBasedImmutableJsonPointer.Create("")!,
                 LinkedListBasedImmutableJsonPointer.Create("/maximum"),
                 GetSchemaResourceBaseUri<T>(),
@@ -329,13 +336,17 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<T>("0", ValidationResult.ValidResult);
         yield return TestSample.Create<T>("1", ValidationResult.ValidResult);
         yield return TestSample.Create<T>("-1", ValidationResult.ValidResult);
-        yield return TestSample.Create<T>("\"abc\"", CreateSingleErrorResult("type",
+        yield return TestSample.Create<T>("\"abc\"", CreateSingleErrorResult(
+            ResultCode.InvalidTokenKind,
+            "type",
             GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Integer),
             LinkedListBasedImmutableJsonPointer.Empty,
             LinkedListBasedImmutableJsonPointer.Create("/type")!,
             GetSchemaResourceBaseUri<T>(),
             GetSchemaResourceBaseUri<T>()));
-        yield return TestSample.Create<T>("1.5", CreateSingleErrorResult("type",
+        yield return TestSample.Create<T>("1.5", CreateSingleErrorResult(
+            ResultCode.InvalidTokenKind,
+            "type",
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Integer),
             LinkedListBasedImmutableJsonPointer.Empty,
             LinkedListBasedImmutableJsonPointer.Create("/type")!,
@@ -369,7 +380,7 @@ public class JsonSchemaGeneratorTest
         
         ulong instanceDataForMaxTest = max + 1;
 
-        yield return TestSample.Create<T>(instanceDataForMaxTest.ToString(), CreateSingleErrorResult("maximum", MaximumKeyword.ErrorMessage(instanceDataForMaxTest, max),
+        yield return TestSample.Create<T>(instanceDataForMaxTest.ToString(), CreateSingleErrorResult(ResultCode.NumberOutOfRange, "maximum", MaximumKeyword.ErrorMessage(instanceDataForMaxTest, max),
             LinkedListBasedImmutableJsonPointer.Empty, 
             LinkedListBasedImmutableJsonPointer.Create("/maximum"), 
             GetSchemaResourceBaseUri<T>(),
@@ -380,7 +391,7 @@ public class JsonSchemaGeneratorTest
         {
             long instanceDataForMinTest = min - 1;
         
-            yield return TestSample.Create<T>(instanceDataForMinTest.ToString(), CreateSingleErrorResult("minimum", MinimumKeyword.ErrorMessage(instanceDataForMinTest, min),
+            yield return TestSample.Create<T>(instanceDataForMinTest.ToString(), CreateSingleErrorResult(ResultCode.NumberOutOfRange, "minimum", MinimumKeyword.ErrorMessage(instanceDataForMinTest, min),
                 LinkedListBasedImmutableJsonPointer.Empty, 
                 LinkedListBasedImmutableJsonPointer.Create("/minimum"), 
                 GetSchemaResourceBaseUri<T>(),
@@ -395,7 +406,9 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<T>("1", ValidationResult.ValidResult);
         yield return TestSample.Create<T>("1.5", ValidationResult.ValidResult);
         yield return TestSample.Create<T>("-1.5", ValidationResult.ValidResult);
-        yield return TestSample.Create<T>("\"abc\"", CreateSingleErrorResult("type",
+        yield return TestSample.Create<T>("\"abc\"", CreateSingleErrorResult(
+            ResultCode.InvalidTokenKind,
+            "type",
             GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Number),
             LinkedListBasedImmutableJsonPointer.Empty,
             LinkedListBasedImmutableJsonPointer.Create("/type")!,
@@ -407,7 +420,7 @@ public class JsonSchemaGeneratorTest
             double max = float.MaxValue;
             double instanceData = max * 2;
 
-            yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), CreateSingleErrorResult("maximum", MaximumKeyword.ErrorMessage(instanceData, max),
+            yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), CreateSingleErrorResult(ResultCode.NumberOutOfRange, "maximum", MaximumKeyword.ErrorMessage(instanceData, max),
                 LinkedListBasedImmutableJsonPointer.Empty, 
                 LinkedListBasedImmutableJsonPointer.Create("/maximum"), 
                 GetSchemaResourceBaseUri<T>(),
@@ -417,7 +430,7 @@ public class JsonSchemaGeneratorTest
             double min = float.MinValue;
             instanceData = min * 2;
 
-            yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), CreateSingleErrorResult("minimum", MinimumKeyword.ErrorMessage(instanceData, min),
+            yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), CreateSingleErrorResult(ResultCode.NumberOutOfRange, "minimum", MinimumKeyword.ErrorMessage(instanceData, min),
                 LinkedListBasedImmutableJsonPointer.Empty,
                 LinkedListBasedImmutableJsonPointer.Create("/minimum"),
                 GetSchemaResourceBaseUri<T>(),
@@ -428,7 +441,7 @@ public class JsonSchemaGeneratorTest
         {
             double instanceData = (double)decimal.MaxValue * 2;
 
-            yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), CreateSingleErrorResult("maximum",
+            yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), CreateSingleErrorResult(ResultCode.NumberOutOfRange, "maximum",
                 MaximumKeyword.ErrorMessage(instanceData, decimal.MaxValue),
                 LinkedListBasedImmutableJsonPointer.Empty,
                 LinkedListBasedImmutableJsonPointer.Create("/maximum"),
@@ -438,7 +451,7 @@ public class JsonSchemaGeneratorTest
 
             instanceData = (double)decimal.MinValue * 2;
             
-            yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), CreateSingleErrorResult("minimum",
+            yield return TestSample.Create<T>(instanceData.ToString(CultureInfo.InvariantCulture), CreateSingleErrorResult(ResultCode.NumberOutOfRange, "minimum",
                 MinimumKeyword.ErrorMessage(instanceData, decimal.MinValue),
                 LinkedListBasedImmutableJsonPointer.Empty,
                 LinkedListBasedImmutableJsonPointer.Create("/minimum"),
@@ -452,7 +465,9 @@ public class JsonSchemaGeneratorTest
     {
         yield return TestSample.Create<bool>("true", ValidationResult.ValidResult);
         yield return TestSample.Create<bool>("false", ValidationResult.ValidResult);
-        yield return TestSample.Create<bool>("\"true\"", CreateSingleErrorResult("type",
+        yield return TestSample.Create<bool>("\"true\"", CreateSingleErrorResult(
+            ResultCode.InvalidTokenKind,
+            "type",
             GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Boolean),
             LinkedListBasedImmutableJsonPointer.Empty,
             LinkedListBasedImmutableJsonPointer.Create("/type")!,
@@ -464,7 +479,9 @@ public class JsonSchemaGeneratorTest
     {
         yield return TestSample.Create<string>("\"abc\"", ValidationResult.ValidResult);
         yield return TestSample.Create<string>("null", ValidationResult.ValidResult);
-        yield return TestSample.Create<string>("100", CreateSingleErrorResult("type",
+        yield return TestSample.Create<string>("100", CreateSingleErrorResult(
+            ResultCode.InvalidTokenKind,
+            "type",
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.String, InstanceType.Null),
             LinkedListBasedImmutableJsonPointer.Empty,
             LinkedListBasedImmutableJsonPointer.Create("/type")!,
@@ -515,7 +532,7 @@ public class JsonSchemaGeneratorTest
 
         yield return TestSample.Create(intCollection, "null", ValidationResult.ValidResult);
         
-        yield return TestSample.Create(intCollection, "1", CreateSingleErrorResult("type", GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Array, InstanceType.Null),
+        yield return TestSample.Create(intCollection, "1", CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Array, InstanceType.Null),
             LinkedListBasedImmutableJsonPointer.Empty, 
             LinkedListBasedImmutableJsonPointer.Create("/type"), 
             GetSchemaResourceBaseUri(intCollection),
@@ -527,7 +544,7 @@ public class JsonSchemaGeneratorTest
     "Prop": "abc"
   }
 ]
-""", CreateSingleErrorResult("type", 
+""", CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", 
             GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Number),
             LinkedListBasedImmutableJsonPointer.Create("/0/Prop")!,
             LinkedListBasedImmutableJsonPointer.Create("/items/$ref/properties/Prop/type"),
@@ -562,7 +579,7 @@ public class JsonSchemaGeneratorTest
 {
   "PropName": "invalid"
 }
-""", CreateSingleErrorResult("type", GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Object, InstanceType.Null),
+""", CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Object, InstanceType.Null),
             LinkedListBasedImmutableJsonPointer.Create("/PropName")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/PropName/$ref/type"),
             GetSchemaResourceBaseUri<CustomClass>(),
@@ -578,7 +595,7 @@ public class JsonSchemaGeneratorTest
             {
               "NewFieldName": 1
             }
-            """, CreateSingleErrorResult("minimum", MinimumKeyword.ErrorMessage(1, 2),
+            """, CreateSingleErrorResult(ResultCode.NumberOutOfRange, "minimum", MinimumKeyword.ErrorMessage(1, 2),
             LinkedListBasedImmutableJsonPointer.Create("/NewFieldName")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/NewFieldName/allOf/0/minimum"),
             GetSchemaResourceBaseUri<CustomClass>(),
@@ -604,7 +621,7 @@ public class JsonSchemaGeneratorTest
                 }
             }
         }
-        """, CreateSingleErrorResult("type", GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Integer),
+        """, CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Integer),
             LinkedListBasedImmutableJsonPointer.Create("/PropName/InnerProp2/InnerInnerProp")!, 
             LinkedListBasedImmutableJsonPointer.Create("/properties/PropName/$ref/properties/InnerProp2/$ref/properties/InnerInnerProp/type"),
             GetSchemaResourceBaseUri<CustomClass>(),
@@ -648,7 +665,7 @@ public class JsonSchemaGeneratorTest
                 "InnerProp": 1
             }
         }
-        """, CreateSingleErrorResult("type", GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.String, InstanceType.Null),
+        """, CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.String, InstanceType.Null),
             LinkedListBasedImmutableJsonPointer.Create("/PropName/InnerProp")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/PropName/$ref/properties/InnerProp/type"),
             GetSchemaResourceBaseUri<CustomStruct>(),
@@ -659,7 +676,7 @@ public class JsonSchemaGeneratorTest
             {
               "PropName": null
             }
-            """, CreateSingleErrorResult("type", GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object),
+            """, CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object),
             LinkedListBasedImmutableJsonPointer.Create("/PropName")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/PropName/$ref/type"),
             GetSchemaResourceBaseUri<CustomStruct>(),
@@ -670,7 +687,7 @@ public class JsonSchemaGeneratorTest
         {
           "PropName": "invalid"
         }
-        """, CreateSingleErrorResult("type", GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Object),
+        """, CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", GetInvalidTokenErrorMessage(InstanceType.String.ToString(), InstanceType.Object),
             LinkedListBasedImmutableJsonPointer.Create("/PropName")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/PropName/$ref/type"),
             GetSchemaResourceBaseUri<CustomStruct>(),
@@ -711,7 +728,7 @@ public class JsonSchemaGeneratorTest
                 "P1": 123
               }
             }
-            """, CreateSingleErrorResult("type", 
+            """, CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", 
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             LinkedListBasedImmutableJsonPointer.Create("/Prop/P1")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/additionalProperties/$ref/type"),
@@ -734,13 +751,13 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<TestEnum>("1", ValidationResult.ValidResult);
         yield return TestSample.Create<TestEnum>("2", ValidationResult.ValidResult);
 
-        yield return TestSample.Create<TestEnum>("\"D\"", CreateSingleErrorResult("enum", EnumKeyword.ErrorMessage("D"),
+        yield return TestSample.Create<TestEnum>("\"D\"", CreateSingleErrorResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage("D"),
             LinkedListBasedImmutableJsonPointer.Empty, 
             LinkedListBasedImmutableJsonPointer.Create("/enum"),
             GetSchemaResourceBaseUri<TestEnum>(),
             GetSchemaResourceBaseUri<TestEnum>()));
 
-        yield return TestSample.Create<TestEnum>("3", CreateSingleErrorResult("enum",
+        yield return TestSample.Create<TestEnum>("3", CreateSingleErrorResult(ResultCode.NotFoundInAllowedList, "enum",
             EnumKeyword.ErrorMessage("3"),
             LinkedListBasedImmutableJsonPointer.Empty, 
             LinkedListBasedImmutableJsonPointer.Create("/enum"),
@@ -762,13 +779,13 @@ public class JsonSchemaGeneratorTest
         yield return TestSample.Create<TestEnumWithJsonStringEnumConverter>("\"B\"", ValidationResult.ValidResult);
         yield return TestSample.Create<TestEnumWithJsonStringEnumConverter>("\"C\"", ValidationResult.ValidResult);
 
-        yield return TestSample.Create<TestEnumWithJsonStringEnumConverter>("\"D\"", CreateSingleErrorResult("enum", EnumKeyword.ErrorMessage("D"),
+        yield return TestSample.Create<TestEnumWithJsonStringEnumConverter>("\"D\"", CreateSingleErrorResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage("D"),
             LinkedListBasedImmutableJsonPointer.Empty,
             LinkedListBasedImmutableJsonPointer.Create("/enum"),
             GetSchemaResourceBaseUri<TestEnumWithJsonStringEnumConverter>(),
             GetSchemaResourceBaseUri<TestEnumWithJsonStringEnumConverter>()));
 
-        yield return TestSample.Create<TestEnumWithJsonStringEnumConverter>("0", CreateSingleErrorResult("enum",
+        yield return TestSample.Create<TestEnumWithJsonStringEnumConverter>("0", CreateSingleErrorResult(ResultCode.NotFoundInAllowedList, "enum",
             EnumKeyword.ErrorMessage("0"),
             LinkedListBasedImmutableJsonPointer.Empty,
             LinkedListBasedImmutableJsonPointer.Create("/enum"),
@@ -776,7 +793,7 @@ public class JsonSchemaGeneratorTest
             GetSchemaResourceBaseUri<TestEnumWithJsonStringEnumConverter>()
         ));
 
-        yield return TestSample.Create<TestEnumWithJsonStringEnumConverter>("3", CreateSingleErrorResult("enum",
+        yield return TestSample.Create<TestEnumWithJsonStringEnumConverter>("3", CreateSingleErrorResult(ResultCode.NotFoundInAllowedList, "enum",
             EnumKeyword.ErrorMessage("3"),
             LinkedListBasedImmutableJsonPointer.Empty,
             LinkedListBasedImmutableJsonPointer.Create("/enum"),
@@ -817,7 +834,7 @@ public class JsonSchemaGeneratorTest
             {
               "TestEnum": "D"
             }
-            """, CreateSingleErrorResult("enum", EnumKeyword.ErrorMessage("D"),
+            """, CreateSingleErrorResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage("D"),
             LinkedListBasedImmutableJsonPointer.Create("/TestEnum")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/TestEnum/allOf/0/enum"),
             GetSchemaResourceBaseUri<EnumPropertyTestClass>(),
@@ -827,7 +844,7 @@ public class JsonSchemaGeneratorTest
             {
               "TestEnum": "0"
             }
-            """, CreateSingleErrorResult("enum", EnumKeyword.ErrorMessage("0"),
+            """, CreateSingleErrorResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage("0"),
             LinkedListBasedImmutableJsonPointer.Create("/TestEnum")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/TestEnum/allOf/0/enum"),
             GetSchemaResourceBaseUri<EnumPropertyTestClass>(),
@@ -837,7 +854,7 @@ public class JsonSchemaGeneratorTest
             {
               "TestEnum": "3"
             }
-            """, CreateSingleErrorResult("enum", EnumKeyword.ErrorMessage("3"),
+            """, CreateSingleErrorResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage("3"),
             LinkedListBasedImmutableJsonPointer.Create("/TestEnum")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/TestEnum/allOf/0/enum"),
             GetSchemaResourceBaseUri<EnumPropertyTestClass>(),
@@ -854,7 +871,7 @@ public class JsonSchemaGeneratorTest
     {
         yield return TestSample.Create<Guid>($"\"{Guid.NewGuid()}\"", ValidationResult.ValidResult);
 
-        yield return TestSample.Create<Guid>("\"123321\"", CreateSingleErrorResult("format", FormatKeyword.ErrorMessage("uuid"),
+        yield return TestSample.Create<Guid>("\"123321\"", CreateSingleErrorResult(ResultCode.InvalidFormat, "format", FormatKeyword.ErrorMessage("uuid"),
             LinkedListBasedImmutableJsonPointer.Empty, 
             LinkedListBasedImmutableJsonPointer.Create("/format"), 
             GetSchemaResourceBaseUri<Guid>(),
@@ -884,7 +901,7 @@ public class JsonSchemaGeneratorTest
             {
               "PropName": 1
             }
-            """, CreateSingleErrorResult("type", 
+            """, CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", 
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             LinkedListBasedImmutableJsonPointer.Create("/PropName")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/PropName/$ref/type"), 
@@ -895,7 +912,7 @@ public class JsonSchemaGeneratorTest
             {
               "propName": 1
             }
-            """, CreateSingleErrorResult("type", 
+            """, CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", 
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             LinkedListBasedImmutableJsonPointer.Create("/propName")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/propName/$ref/type"),
@@ -906,7 +923,7 @@ public class JsonSchemaGeneratorTest
             {
               "prop_name": 1
             }
-            """, CreateSingleErrorResult("type", 
+            """, CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", 
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             LinkedListBasedImmutableJsonPointer.Create("/prop_name")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/prop_name/$ref/type"),
@@ -917,7 +934,7 @@ public class JsonSchemaGeneratorTest
             {
               "PROP_NAME": 1
             }
-            """, CreateSingleErrorResult("type", 
+            """, CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", 
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             LinkedListBasedImmutableJsonPointer.Create("/PROP_NAME")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/PROP_NAME/$ref/type"),
@@ -928,7 +945,7 @@ public class JsonSchemaGeneratorTest
             {
               "prop-name": 1
             }
-            """, CreateSingleErrorResult("type", 
+            """, CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", 
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             LinkedListBasedImmutableJsonPointer.Create("/prop-name")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/prop-name/$ref/type"),
@@ -939,7 +956,7 @@ public class JsonSchemaGeneratorTest
             {
               "PROP-NAME": 1
             }
-            """, CreateSingleErrorResult("type", 
+            """, CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", 
             GetInvalidTokenErrorMessage(InstanceType.Number.ToString(), InstanceType.Object, InstanceType.Null),
             LinkedListBasedImmutableJsonPointer.Create("/PROP-NAME")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/PROP-NAME/$ref/type"),
@@ -974,7 +991,7 @@ public class JsonSchemaGeneratorTest
         {
           "Prop": 1
         }
-        """, CreateSingleErrorResult("required", RequiredKeyword.ErrorMessage("NewPropName"),
+        """, CreateSingleErrorResult(ResultCode.NotFoundRequiredProperty, "required", RequiredKeyword.ErrorMessage("NewPropName"),
             LinkedListBasedImmutableJsonPointer.Create("")!,
             LinkedListBasedImmutableJsonPointer.Create("/required"),
             GetSchemaResourceBaseUri<RequiredAttributeForCustomNamedPropertyTestClass>(),
@@ -1000,7 +1017,7 @@ public class JsonSchemaGeneratorTest
             {
               "Prop": [1, 2, 1]
             }
-            """, CreateSingleErrorResult("uniqueItems", UniqueItemsKeyword.ErrorMessage("1", 0, 2),
+            """, CreateSingleErrorResult(ResultCode.DuplicatedArrayItems, "uniqueItems", UniqueItemsKeyword.ErrorMessage("1", 0, 2),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/uniqueItems"), 
             GetSchemaResourceBaseUri<UniqueItemsAttributeTestClass>(),
@@ -1031,7 +1048,7 @@ public class JsonSchemaGeneratorTest
                 "InnerProp": "cba"
               }
             }
-            """, CreateSingleErrorResult("type", 
+            """, CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", 
             GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array),
             LinkedListBasedImmutableJsonPointer.Create("/StringProp")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/StringProp/allOf/1/type"),
@@ -1043,7 +1060,7 @@ public class JsonSchemaGeneratorTest
               "StringProp": "abc",
               "ObjectProp": null
             }
-            """, CreateSingleErrorResult("type",
+            """, CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type",
             GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array),
             LinkedListBasedImmutableJsonPointer.Create("/ObjectProp")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/ObjectProp/allOf/1/type"),
@@ -1138,7 +1155,9 @@ public class JsonSchemaGeneratorTest
             {
               "IntegerProp2": null
             }
-            """, CreateSingleErrorResult("type",
+            """, CreateSingleErrorResult(
+            ResultCode.InvalidTokenKind,
+            "type",
             GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Integer),
             LinkedListBasedImmutableJsonPointer.Create("/IntegerProp2")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/IntegerProp2/type")!,
@@ -1149,7 +1168,9 @@ public class JsonSchemaGeneratorTest
             {
               "StringProp2": null
             }
-            """, CreateSingleErrorResult("type",
+            """, CreateSingleErrorResult(
+            ResultCode.InvalidTokenKind,
+            "type",
             GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array),
             LinkedListBasedImmutableJsonPointer.Create("/StringProp2")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/StringProp2/allOf/1/type")!,
@@ -1162,7 +1183,9 @@ public class JsonSchemaGeneratorTest
                 "IntegerProp2": null
               }
             }
-            """, CreateSingleErrorResult("type",
+            """, CreateSingleErrorResult(
+            ResultCode.InvalidTokenKind,
+            "type",
             GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Integer),
             LinkedListBasedImmutableJsonPointer.Create("/ObjectProp1/IntegerProp2")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/ObjectProp1/properties/IntegerProp2/type")!,
@@ -1175,7 +1198,9 @@ public class JsonSchemaGeneratorTest
                 "StringProp2": null
               }
             }
-            """, CreateSingleErrorResult("type",
+            """, CreateSingleErrorResult(
+            ResultCode.InvalidTokenKind,
+            "type",
             GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array),
             LinkedListBasedImmutableJsonPointer.Create("/ObjectProp1/StringProp2")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/ObjectProp1/properties/StringProp2/allOf/1/type")!,
@@ -1190,7 +1215,9 @@ public class JsonSchemaGeneratorTest
                 ]
               }
             }
-            """, CreateSingleErrorResult("type",
+            """, CreateSingleErrorResult(
+            ResultCode.InvalidTokenKind,
+            "type",
             GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array),
             LinkedListBasedImmutableJsonPointer.Create("/ObjectProp1/GenericProp1/0/StringProp2")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/ObjectProp1/properties/GenericProp1/items/$ref/properties/StringProp2/allOf/1/type")!,
@@ -1201,7 +1228,9 @@ public class JsonSchemaGeneratorTest
             {
               "ObjectProp2": null
             }
-            """, CreateSingleErrorResult("type",
+            """, CreateSingleErrorResult(
+            ResultCode.InvalidTokenKind,
+            "type",
             GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array),
             LinkedListBasedImmutableJsonPointer.Create("/ObjectProp2")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/ObjectProp2/allOf/1/type")!,
@@ -1214,7 +1243,9 @@ public class JsonSchemaGeneratorTest
                 "GenericProp2": null
               }
             }
-            """, CreateSingleErrorResult("type",
+            """, CreateSingleErrorResult(
+            ResultCode.InvalidTokenKind,
+            "type",
             GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array),
             LinkedListBasedImmutableJsonPointer.Create("/ObjectProp2/GenericProp2")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/ObjectProp2/allOf/0/properties/GenericProp2/allOf/1/type")!,
@@ -1267,7 +1298,7 @@ public class JsonSchemaGeneratorTest
             {
               "NewPropName": null
             }
-            """, CreateSingleErrorResult("type", 
+            """, CreateSingleErrorResult(ResultCode.InvalidTokenKind, "type", 
             GetInvalidTokenErrorMessage(InstanceType.Null.ToString(), InstanceType.Integer),
             LinkedListBasedImmutableJsonPointer.Create("/NewPropName")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/NewPropName/type"),
@@ -1293,7 +1324,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": "aa"
 }
-""", CreateSingleErrorResult("pattern", PatternKeyword.ErrorMessage("a*b", "aa"),
+""", CreateSingleErrorResult(ResultCode.RegexNotMatch, "pattern", PatternKeyword.ErrorMessage("a*b", "aa"),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/pattern"),
             GetSchemaResourceBaseUri<PatternAttributeTestClass>(),
@@ -1316,9 +1347,9 @@ public class JsonSchemaGeneratorTest
     private static string GetInvalidTokenErrorMessage(string actualType, params InstanceType[] expectedTypes) 
         => $"Expected type(s): '{string.Join('|', expectedTypes)}' but actual is '{actualType}'";
 
-    private static ValidationResult CreateSingleErrorResult(string? keyword, string errorMessage, ImmutableJsonPointer instanceLocation, ImmutableJsonPointer? relativeKeywordLocation, Uri? schemaResourceBaseUri, Uri? subSchemaRefFullUri)
+    private static ValidationResult CreateSingleErrorResult(ResultCode resultCode, string? keyword, string errorMessage, ImmutableJsonPointer instanceLocation, ImmutableJsonPointer? relativeKeywordLocation, Uri? schemaResourceBaseUri, Uri? subSchemaRefFullUri)
     {
-        return ValidationResult.SingleErrorFailedResult(new ValidationError(keyword, errorMessage, instanceLocation, relativeKeywordLocation, schemaResourceBaseUri, subSchemaRefFullUri));
+        return ValidationResult.SingleErrorFailedResult(new ValidationError(resultCode, keyword, errorMessage, instanceLocation, relativeKeywordLocation, schemaResourceBaseUri, subSchemaRefFullUri));
     }
 
     private static IEnumerable<TestSample> CreateSamplesForMaximumAttribute()
@@ -1339,7 +1370,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": 2.50001
 }
-""", CreateSingleErrorResult("maximum", MaximumKeyword.ErrorMessage(2.50001, 2.5),
+""", CreateSingleErrorResult(ResultCode.NumberOutOfRange, "maximum", MaximumKeyword.ErrorMessage(2.50001, 2.5),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!, LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/allOf/0/maximum"),
             GetSchemaResourceBaseUri<MaximumAttributeTestClass>(),
             GetSchemaResourceBaseUri<MaximumAttributeTestClass>()
@@ -1370,7 +1401,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": 2.499999
 }
-""", CreateSingleErrorResult("minimum", MinimumKeyword.ErrorMessage(2.499999, 2.5),
+""", CreateSingleErrorResult(ResultCode.NumberOutOfRange, "minimum", MinimumKeyword.ErrorMessage(2.499999, 2.5),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!, LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/allOf/0/minimum"),
             GetSchemaResourceBaseUri<MinimumAttributeTestClass>(),
             GetSchemaResourceBaseUri<MinimumAttributeTestClass>()
@@ -1407,7 +1438,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": -1.50001
 }
-""", CreateSingleErrorResult("minimum", MinimumKeyword.ErrorMessage(-1.50001, -1.5), 
+""", CreateSingleErrorResult(ResultCode.NumberOutOfRange, "minimum", MinimumKeyword.ErrorMessage(-1.50001, -1.5), 
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/allOf/0/minimum"), 
             GetSchemaResourceBaseUri<NumberRangeAttributeTestClass>(),
@@ -1418,7 +1449,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": 2.50001
 }
-""", CreateSingleErrorResult("maximum", MaximumKeyword.ErrorMessage(2.50001, 2.5),
+""", CreateSingleErrorResult(ResultCode.NumberOutOfRange, "maximum", MaximumKeyword.ErrorMessage(2.50001, 2.5),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!,
             LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/allOf/1/maximum"),
             GetSchemaResourceBaseUri<NumberRangeAttributeTestClass>(),
@@ -1448,7 +1479,9 @@ public class JsonSchemaGeneratorTest
   "Prop": "12345::"
 }
 """,
-            CreateSingleErrorResult("format",
+            CreateSingleErrorResult(
+                ResultCode.InvalidFormat,
+                "format",
                 FormatKeyword.ErrorMessage("ipv6"),
                 LinkedListBasedImmutableJsonPointer.Create("/Prop")!,
                 LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/format")!,
@@ -1480,7 +1513,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": ""
 }
-""", CreateSingleErrorResult("minLength", MinLengthKeyword.ErrorMessage(0, 1),
+""", CreateSingleErrorResult(ResultCode.StringLengthOutOfRange, "minLength", MinLengthKeyword.ErrorMessage(0, 1),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!, LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/minLength"),
             GetSchemaResourceBaseUri<MinLengthAttributeTestClass<string>>(),
             GetSchemaResourceBaseUri<MinLengthAttributeTestClass<string>>()
@@ -1490,7 +1523,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": []
 }
-""", CreateSingleErrorResult("minItems", MinItemsKeyword.ErrorMessage(0, 1),
+""", CreateSingleErrorResult(ResultCode.ArrayLengthOutOfRange, "minItems", MinItemsKeyword.ErrorMessage(0, 1),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!, LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/minItems"),
             GetSchemaResourceBaseUri<MinLengthAttributeTestClass<int[]>>(),
             GetSchemaResourceBaseUri<MinLengthAttributeTestClass<int[]>>()
@@ -1521,7 +1554,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": "abcd"
 }
-""", CreateSingleErrorResult("maxLength", MaxLengthKeyword.ErrorMessage(4, 3),
+""", CreateSingleErrorResult(ResultCode.StringLengthOutOfRange, "maxLength", MaxLengthKeyword.ErrorMessage(4, 3),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!, LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/maxLength"),
             GetSchemaResourceBaseUri<MaxLengthAttributeTestClass<string>>(),
             GetSchemaResourceBaseUri<MaxLengthAttributeTestClass<string>>()
@@ -1531,7 +1564,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": [1, 2, 3, 4]
 }
-""", CreateSingleErrorResult("maxItems", MaxItemsKeyword.ErrorMessage(4, 3),
+""", CreateSingleErrorResult(ResultCode.ArrayLengthOutOfRange, "maxItems", MaxItemsKeyword.ErrorMessage(4, 3),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!, LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/maxItems"),
             GetSchemaResourceBaseUri<MaxLengthAttributeTestClass<int[]>>(),
             GetSchemaResourceBaseUri<MaxLengthAttributeTestClass<int[]>>()
@@ -1586,7 +1619,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": ""
 }
-""", CreateSingleErrorResult("minLength", MinLengthKeyword.ErrorMessage(0, 1),
+""", CreateSingleErrorResult(ResultCode.StringLengthOutOfRange, "minLength", MinLengthKeyword.ErrorMessage(0, 1),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!, LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/allOf/0/minLength"),
             GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<string>>(),
             GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<string>>()
@@ -1596,7 +1629,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": []
 }
-""", CreateSingleErrorResult("minItems", MinItemsKeyword.ErrorMessage(0, 1),
+""", CreateSingleErrorResult(ResultCode.ArrayLengthOutOfRange, "minItems", MinItemsKeyword.ErrorMessage(0, 1),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!, LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/allOf/0/minItems"),
             GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<int[]>>(),
             GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<int[]>>()
@@ -1606,7 +1639,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": "abcd"
 }
-""", CreateSingleErrorResult("maxLength", MaxLengthKeyword.ErrorMessage(4, 3),
+""", CreateSingleErrorResult(ResultCode.StringLengthOutOfRange, "maxLength", MaxLengthKeyword.ErrorMessage(4, 3),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!, LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/allOf/1/maxLength"),
             GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<string>>(),
             GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<string>>()
@@ -1616,7 +1649,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": [1, 2, 3, 4]
 }
-""", CreateSingleErrorResult("maxItems", MaxItemsKeyword.ErrorMessage(4, 3),
+""", CreateSingleErrorResult(ResultCode.ArrayLengthOutOfRange, "maxItems", MaxItemsKeyword.ErrorMessage(4, 3),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!, LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/allOf/1/maxItems"),
             GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<int[]>>(),
             GetSchemaResourceBaseUri<LengthRangeAttributeTestClass<int[]>>()
@@ -1645,7 +1678,9 @@ public class JsonSchemaGeneratorTest
   "Prop": "127.0.0.0.1"
 }
 """,
-            CreateSingleErrorResult("format",
+            CreateSingleErrorResult(
+                ResultCode.InvalidFormat,
+                "format",
                 FormatKeyword.ErrorMessage("ipv4"),
                 LinkedListBasedImmutableJsonPointer.Create("/Prop")!,
                 LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/format")!,
@@ -1674,7 +1709,7 @@ public class JsonSchemaGeneratorTest
   "Prop": 1
 }
 """,
-            CreateSingleErrorResult("enum", EnumKeyword.ErrorMessage("1"),
+            CreateSingleErrorResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage("1"),
                 LinkedListBasedImmutableJsonPointer.Create("/Prop")!,
                 LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/enum"),
                 GetSchemaResourceBaseUri<StringEnumAttributeTestClass>(),
@@ -1686,7 +1721,7 @@ public class JsonSchemaGeneratorTest
   "Prop": "c"
 }
 """,
-            CreateSingleErrorResult("enum", EnumKeyword.ErrorMessage("c"),
+            CreateSingleErrorResult(ResultCode.NotFoundInAllowedList, "enum", EnumKeyword.ErrorMessage("c"),
                 LinkedListBasedImmutableJsonPointer.Create("/Prop")!,
                 LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/enum"),
                 GetSchemaResourceBaseUri<StringEnumAttributeTestClass>(),
@@ -1720,7 +1755,9 @@ public class JsonSchemaGeneratorTest
 {
   "Email": "A text containing a hello@world.com email address."
 } 
-""", CreateSingleErrorResult("format",
+""", CreateSingleErrorResult(
+                ResultCode.InvalidFormat,
+                "format",
                 FormatKeyword.ErrorMessage("email"),
                 LinkedListBasedImmutableJsonPointer.Create("/Email")!,
                 LinkedListBasedImmutableJsonPointer.Create("/properties/Email/format")!,
@@ -1732,7 +1769,9 @@ public class JsonSchemaGeneratorTest
 {
   "Email": "@world.com"
 } 
-""", CreateSingleErrorResult("format",
+""", CreateSingleErrorResult(
+                ResultCode.InvalidFormat,
+                "format",
                 FormatKeyword.ErrorMessage("email"),
                 LinkedListBasedImmutableJsonPointer.Create("/Email")!,
                 LinkedListBasedImmutableJsonPointer.Create("/properties/Email/format")!,
@@ -1764,7 +1803,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": 4.3
 }
-""", CreateSingleErrorResult("multipleOf", DoubleMultipleOfChecker.ErrorMessage(4.3, 1.5),
+""", CreateSingleErrorResult(ResultCode.FailedToMultiple, "multipleOf", DoubleMultipleOfChecker.ErrorMessage(4.3, 1.5),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!, LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/multipleOf"),
             GetSchemaResourceBaseUri<MultipleOfAttributeTestClass>(),
             GetSchemaResourceBaseUri<MultipleOfAttributeTestClass>()
@@ -1789,7 +1828,7 @@ public class JsonSchemaGeneratorTest
 {
  "Prop": 3
 }
-""", CreateSingleErrorResult("enum", 
+""", CreateSingleErrorResult(ResultCode.NotFoundInAllowedList, "enum", 
             EnumKeyword.ErrorMessage("3"),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!, LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/enum"),
             GetSchemaResourceBaseUri<IntegerEnumAttributeTestClass>(),
@@ -1821,7 +1860,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": 3.0
 }
-""", CreateSingleErrorResult("exclusiveMaximum", ExclusiveMaximumKeyword.ErrorMessage(3.0, 3),
+""", CreateSingleErrorResult(ResultCode.NumberOutOfRange, "exclusiveMaximum", ExclusiveMaximumKeyword.ErrorMessage(3.0, 3),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!, LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/exclusiveMaximum"),
             GetSchemaResourceBaseUri<ExclusiveMaximumAttributeTestClass>(),
             GetSchemaResourceBaseUri<ExclusiveMaximumAttributeTestClass>()
@@ -1852,7 +1891,7 @@ public class JsonSchemaGeneratorTest
 {
   "Prop": 2.5
 }
-""", CreateSingleErrorResult("exclusiveMinimum", ExclusiveMinimumKeyword.ErrorMessage(2.5, 2.5),
+""", CreateSingleErrorResult(ResultCode.NumberOutOfRange, "exclusiveMinimum", ExclusiveMinimumKeyword.ErrorMessage(2.5, 2.5),
             LinkedListBasedImmutableJsonPointer.Create("/Prop")!, LinkedListBasedImmutableJsonPointer.Create("/properties/Prop/exclusiveMinimum"),
             GetSchemaResourceBaseUri<ExclusiveMinimumAttributeTestClass>(),
             GetSchemaResourceBaseUri<ExclusiveMinimumAttributeTestClass>()
