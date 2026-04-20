@@ -51,6 +51,7 @@ namespace JsonSchemaConsoleApp
             {
                 ValidationError validationError = validationResult.ValidationErrors.First();
                 Console.WriteLine($"Failed keyword: {validationError.Keyword}");
+                Console.WriteLine($"ResultCode: {validationError.ResultCode}");
                 Console.WriteLine($"Error message: {validationError.ErrorMessage}");
                 Console.WriteLine($"Failed instance location: {validationError.InstanceLocation}");
                 Console.WriteLine($"Failed relative keyword location: {validationError.RelativeKeywordLocation}");

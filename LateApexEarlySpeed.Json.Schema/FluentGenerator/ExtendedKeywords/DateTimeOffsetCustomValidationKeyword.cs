@@ -33,12 +33,12 @@ internal class DateTimeOffsetCustomValidationKeyword : KeywordBase
 
         if (!canParse)
         {
-            return ValidationResult.SingleErrorFailedResult(new ValidationError(DateTimeOffsetFormatExtensionKeyword.ErrorMessage(), options.ValidationPathStack, Name, instance.Location));
+            return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.InvalidFormat, DateTimeOffsetFormatExtensionKeyword.ErrorMessage(), options.ValidationPathStack, Name, instance.Location));
         }
 
         return _validator(data)
             ? ValidationResult.ValidResult
-            : ValidationResult.SingleErrorFailedResult(new ValidationError(_errorMessageFunc(data), options.ValidationPathStack,
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.FailedForCustomValidation, _errorMessageFunc(data), options.ValidationPathStack,
                 Name, instance.Location));
     }
 }
