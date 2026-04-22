@@ -1,8 +1,9 @@
-﻿using System.Diagnostics;
+﻿using LateApexEarlySpeed.Json.Schema.Common;
+using System.Collections;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using LateApexEarlySpeed.Json.Schema.Common;
 
 namespace LateApexEarlySpeed.Json.Schema.JInstance;
 
@@ -21,49 +22,266 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
         _cacheHolder = new CacheHolder();
     }
 
-    public IEnumerable<JsonInstanceProperty> EnumerateObject()
+    public InstanceObjectEnumerable EnumerateObject()
     {
-        return _cacheHolder.Properties ?? EnumerateObjectAndCacheResult();
+        return new InstanceObjectEnumerable(this);
     }
 
-    private IEnumerable<JsonInstanceProperty> EnumerateObjectAndCacheResult()
+    public readonly struct InstanceObjectEnumerable : IEnumerable<JsonInstanceProperty>
     {
-        var properties = new List<JsonInstanceProperty>();
+        private readonly JsonInstanceElement _jsonInstanceElement;
 
-        JsonElement.ObjectEnumerator objectEnumerator = InternalJsonElement.EnumerateObject();
-        foreach (JsonProperty jsonProperty in objectEnumerator)
+        internal InstanceObjectEnumerable(JsonInstanceElement jsonInstanceElement)
         {
-            var jsonInstanceProperty = new JsonInstanceProperty(jsonProperty, _instanceLocation);
-
-            yield return jsonInstanceProperty;
-
-            properties.Add(jsonInstanceProperty);
+            _jsonInstanceElement = jsonInstanceElement;
         }
 
-        _cacheHolder.Properties = properties;
-    }
-
-    public IEnumerable<JsonInstanceElement> EnumerateArray()
-    {
-        return _cacheHolder.ArrayItems ?? EnumerateArrayAndCacheResult();
-    }
-
-    private IEnumerable<JsonInstanceElement> EnumerateArrayAndCacheResult()
-    {
-        var arrayItems = new List<JsonInstanceElement>();
-
-        int idx = 0;
-
-        foreach (JsonElement item in InternalJsonElement.EnumerateArray())
+        public InstanceObjectEnumerator GetEnumerator()
         {
-            var jsonInstanceElement = new JsonInstanceElement(item, _instanceLocation.Add(idx++));
-
-            yield return jsonInstanceElement;
-
-            arrayItems.Add(jsonInstanceElement);
+            return new InstanceObjectEnumerator(_jsonInstanceElement);
         }
 
-        _cacheHolder.ArrayItems = arrayItems;
+        public struct InstanceObjectEnumerator : IEnumerator<JsonInstanceProperty>
+        {
+            private readonly LinkedListBasedImmutableJsonPointer _instanceLocation;
+            private readonly CacheHolder _cacheHolder;
+
+            private JsonElement.ObjectEnumerator _objectEnumerator;
+            private List<JsonInstanceProperty>.Enumerator _cacheListEnumerator;
+
+            /// <summary>
+            /// Besides accumulate the enumerated properties, this field is also used as the flag to indicate whether cache existed or not:
+            /// If this field is not null, it means cache did not exist and enumerator should enumerate from <see cref="_objectEnumerator"/>;
+            /// if this field is null, it means cache already existed and enumerator should enumerate from <see cref="_cacheListEnumerator"/>.
+            /// </summary>
+            /// <remarks>
+            /// Also see <see cref="UseCache"/>
+            /// </remarks>
+            private List<JsonInstanceProperty>? _properties;
+
+            internal InstanceObjectEnumerator(JsonInstanceElement jsonInstanceElement)
+            {
+                _instanceLocation = jsonInstanceElement._instanceLocation;
+                _cacheHolder = jsonInstanceElement._cacheHolder;
+
+                if (_cacheHolder.Properties is null)
+                {
+                    _objectEnumerator = jsonInstanceElement.InternalJsonElement.EnumerateObject();
+                    _properties = new();
+                }
+                else
+                {
+                    _cacheListEnumerator = _cacheHolder.Properties.GetEnumerator();
+                    _properties = null;
+                }
+            }
+
+            public bool MoveNext()
+            {
+                return UseCache() ? MoveNextByCache() : MoveNextWithoutCache();
+            }
+
+            private bool MoveNextByCache()
+            {
+                if (_cacheListEnumerator.MoveNext())
+                {
+                    Current = _cacheListEnumerator.Current;
+                    return true;
+                }
+
+                return false;
+            }
+
+            private bool MoveNextWithoutCache()
+            {
+                Debug.Assert(_properties is not null);
+
+                if (_objectEnumerator.MoveNext())
+                {
+                    Current = new JsonInstanceProperty(_objectEnumerator.Current, _instanceLocation);
+                    _properties.Add(Current);
+
+                    return true;
+                }
+
+                _cacheHolder.Properties = _properties;
+                return false;
+            }
+
+            public void Reset()
+            {
+                if (UseCache())
+                {
+                    ((IEnumerator)_cacheListEnumerator).Reset();
+                }
+                else
+                {
+                    _objectEnumerator.Reset();
+                    _properties = new();
+                }
+            }
+
+            public JsonInstanceProperty Current { get; private set; }
+
+            object IEnumerator.Current => Current;
+
+            public void Dispose()
+            {
+                if (UseCache())
+                {
+                    _cacheListEnumerator.Dispose();
+                }
+                else
+                {
+                    _objectEnumerator.Dispose();
+                }
+            }
+
+            private bool UseCache() => _properties is null;
+        }
+
+        IEnumerator<JsonInstanceProperty> IEnumerable<JsonInstanceProperty>.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+
+    public InstanceArrayEnumerable EnumerateArray()
+    {
+        return new InstanceArrayEnumerable(this);
+    }
+
+    public readonly struct InstanceArrayEnumerable : IEnumerable<JsonInstanceElement>
+    {
+        private readonly JsonInstanceElement _jsonInstanceElement;
+
+        internal InstanceArrayEnumerable(JsonInstanceElement jsonInstanceElement)
+        {
+            _jsonInstanceElement = jsonInstanceElement;
+        }
+
+        public InstanceArrayEnumerator GetEnumerator()
+        {
+            return new InstanceArrayEnumerator(_jsonInstanceElement);
+        }
+
+        public struct InstanceArrayEnumerator : IEnumerator<JsonInstanceElement>
+        {
+            private readonly LinkedListBasedImmutableJsonPointer _instanceLocation;
+            private readonly CacheHolder _cacheHolder;
+
+            private JsonElement.ArrayEnumerator _arrayEnumerator;
+            private List<JsonInstanceElement>.Enumerator _cacheListEnumerator;
+
+            /// <summary>
+            /// Besides accumulate the enumerated items, this field is also used as the flag to indicate whether cache existed or not:
+            /// If this field is not null, it means cache did not exist and enumerator should enumerate from <see cref="_arrayEnumerator"/>;
+            /// if this field is null, it means cache already existed and enumerator should enumerate from <see cref="_cacheListEnumerator"/>.
+            /// </summary>
+            /// <remarks>
+            /// Also see <see cref="UseCache"/>
+            /// </remarks>
+            private List<JsonInstanceElement>? _items;
+
+            private int _idx;
+
+            internal InstanceArrayEnumerator(JsonInstanceElement jsonInstanceElement)
+            {
+                _instanceLocation = jsonInstanceElement._instanceLocation;
+                _cacheHolder = jsonInstanceElement._cacheHolder;
+
+                if (_cacheHolder.ArrayItems is null)
+                {
+                    _arrayEnumerator = jsonInstanceElement.InternalJsonElement.EnumerateArray();
+                    _items = new();
+                    _idx = 0;
+                }
+                else
+                {
+                    _cacheListEnumerator = _cacheHolder.ArrayItems.GetEnumerator();
+                    _items = null;
+                }
+            }
+
+            public bool MoveNext()
+            {
+                return UseCache() ? MoveNextByCache() : MoveNextWithoutCache();
+            }
+
+            private bool MoveNextByCache()
+            {
+                if (_cacheListEnumerator.MoveNext())
+                {
+                    Current = _cacheListEnumerator.Current;
+                    return true;
+                }
+
+                return false;
+            }
+
+            private bool MoveNextWithoutCache()
+            {
+                Debug.Assert(_items is not null);
+
+                if (_arrayEnumerator.MoveNext())
+                {
+                    Current = new JsonInstanceElement(_arrayEnumerator.Current, _instanceLocation.Add(_idx++));
+                    _items.Add(Current);
+
+                    return true;
+                }
+
+                _cacheHolder.ArrayItems = _items;
+                return false;
+            }
+
+            public void Reset()
+            {
+                if (UseCache())
+                {
+                    ((IEnumerator)_cacheListEnumerator).Reset();
+                }
+                else
+                {
+                    _arrayEnumerator.Reset();
+                    _items = new();
+                    _idx = 0;
+                }
+            }
+
+            public JsonInstanceElement Current { get; private set; }
+
+            object IEnumerator.Current => Current;
+
+            public void Dispose()
+            {
+                if (UseCache())
+                {
+                    _cacheListEnumerator.Dispose();
+                }
+                else
+                {
+                    _arrayEnumerator.Dispose();
+                }
+            }
+
+            private bool UseCache() => _items is null;
+        }
+
+        IEnumerator<JsonInstanceElement> IEnumerable<JsonInstanceElement>.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 
     public LinkedListBasedImmutableJsonPointer Location => _instanceLocation;
