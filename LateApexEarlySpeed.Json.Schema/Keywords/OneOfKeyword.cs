@@ -38,10 +38,11 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly OneOfKeyword _oneOfKeyword;
         private readonly JsonInstanceElement _instance;
@@ -67,6 +68,30 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
                 }
 
                 yield return result;
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            foreach (JsonSchema subSchema in _oneOfKeyword._subSchemas)
+            {
+                ValidationResult result = subSchema.Validate(_instance, _options);
+                if (result.IsValid)
+                {
+                    _validatedSchemaCount++;
+                }
+
+                ValidationResult? fastResult = null;
+                if (_validatedSchemaCount > 1)
+                {
+                    var error = new ValidationError(ResultCode.MoreThanOnePassedSchemaFound, "More than one schema validate instance", _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
+                    fastResult = ValidationResult.SingleErrorFailedResult(error);
+                }
+
+                if (!context.Report(result, fastResult))
+                {
+                    break;
+                }
             }
         }
 

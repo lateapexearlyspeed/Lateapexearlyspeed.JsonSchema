@@ -62,10 +62,11 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new WithoutMaxContainsValidator(this, instance, options), options.OutputFormat);
+        var validator = new WithoutMaxContainsValidator(this, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class WithoutMaxContainsValidator : IValidator
+    private struct WithoutMaxContainsValidator : IValidator
     {
         private readonly ArrayContainsValidator _arrayContainsValidator;
         private readonly JsonInstanceElement _instance;
@@ -92,6 +93,29 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
                 }
 
                 yield return validationResult;
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
+
+            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
+            {
+                ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
+                if (validationResult.IsValid)
+                {
+                    _validatedItemCount++;
+                }
+
+                ValidationResult? fastResult = _validatedItemCount >= _arrayContainsValidator.MinContains
+                    ? ValidationResult.ValidResult
+                    : null;
+
+                if (!context.Report(validationResult, fastResult))
+                {
+                    break;
+                }
             }
         }
 
@@ -126,10 +150,11 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
 
     private ValidationResult ValidateWithMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return ValidationResultsComposer.Compose(new WithMaxContainsValidator(this, instance, options), options.OutputFormat);
+        var validator = new WithMaxContainsValidator(this, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class WithMaxContainsValidator : IValidator
+    private struct WithMaxContainsValidator : IValidator
     {
         private readonly ArrayContainsValidator _arrayContainsValidator;
         private readonly JsonInstanceElement _instance;
@@ -156,6 +181,32 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
                 }
 
                 yield return validationResult;
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
+
+            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
+            {
+                ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
+                if (validationResult.IsValid)
+                {
+                    _validatedItemCount++;
+                }
+
+                ValidationResult? fastResult = null;
+                if (_validatedItemCount > _arrayContainsValidator.MaxContains)
+                {
+                    ValidationError error = CreateValidationErrorWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMaxContainsErrorMessage(_instance.ToString(), _arrayContainsValidator.MaxContains.Value), MaxContainsKeywordName, _options.ValidationPathStack, _instance.Location);
+                    fastResult = ValidationResult.SingleErrorFailedResult(error);
+                }
+
+                if (!context.Report(validationResult, fastResult))
+                {
+                    break;
+                }
             }
         }
 
@@ -218,10 +269,11 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
 
     private ValidationResult ValidateWithoutMinContainsAndMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return ValidationResultsComposer.Compose(new WithoutMinContainsAndMaxContainsValidator(this, instance, options), options.OutputFormat);
+        var validator = new WithoutMinContainsAndMaxContainsValidator(this, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class WithoutMinContainsAndMaxContainsValidator : IValidator
+    private struct WithoutMinContainsAndMaxContainsValidator : IValidator
     {
         private readonly ArrayContainsValidator _arrayContainsValidator;
         private readonly JsonInstanceElement _instance;
@@ -248,6 +300,25 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
                 }
 
                 yield return validationResult;
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
+
+            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
+            {
+                ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
+                if (validationResult.IsValid)
+                {
+                    _fastReturnResult = ValidationResult.ValidResult;
+                }
+
+                if (!context.Report(validationResult, _fastReturnResult))
+                {
+                    break;
+                }
             }
         }
 

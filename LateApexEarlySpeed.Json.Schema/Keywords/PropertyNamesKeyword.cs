@@ -29,10 +29,11 @@ internal class PropertyNamesKeyword : KeywordBase, ISchemaContainerElement, ISin
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly PropertyNamesKeyword _propertyNamesKeyword;
         private readonly JsonInstanceElement _instance;
@@ -58,6 +59,27 @@ internal class PropertyNamesKeyword : KeywordBase, ISchemaContainerElement, ISin
                 }
 
                 yield return validationResult;
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            foreach (JsonInstanceProperty jsonProperty in _instance.EnumerateObject())
+            {
+                ValidationResult validationResult = _propertyNamesKeyword.Schema.Validate(new JsonInstanceElement(JsonSerializer.SerializeToElement(jsonProperty.Name), LinkedListBasedImmutableJsonPointer.Empty), _options);
+                if (!validationResult.IsValid)
+                {
+                    _fastReturnError = new ValidationError(ResultCode.InvalidPropertyName, ErrorMessage(jsonProperty.Name), _options.ValidationPathStack, _propertyNamesKeyword.Name, _instance.Location);
+                }
+
+                ValidationResult? fastResult = _fastReturnError is null
+                    ? null
+                    : ValidationResult.SingleErrorFailedResult(_fastReturnError);
+
+                if (!context.Report(validationResult, fastResult))
+                {
+                    break;
+                }
             }
         }
 

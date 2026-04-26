@@ -29,10 +29,11 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement, 
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly PatternPropertiesKeyword _patternPropertiesKeyword;
         private readonly JsonInstanceElement _instance;
@@ -65,6 +66,32 @@ internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement, 
                         }
 
                         yield return validationResult;
+                    }
+                }
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            foreach (JsonInstanceProperty jsonProperty in _instance.EnumerateObject())
+            {
+                string propertyName = jsonProperty.Name;
+                JsonInstanceElement propertyValue = jsonProperty.Value;
+
+                foreach (KeyValuePair<string, JsonSchema> patternSchema in _patternPropertiesKeyword.PatternSchemas)
+                {
+                    if (RegexMatcher.IsMatch(patternSchema.Key, propertyName, _options.RegexMatchTimeout))
+                    {
+                        ValidationResult validationResult = patternSchema.Value.Validate(propertyValue, _options);
+                        if (!validationResult.IsValid)
+                        {
+                            _fastReturnResult = validationResult;
+                        }
+
+                        if (!context.Report(validationResult, _fastReturnResult))
+                        {
+                            return;
+                        }
                     }
                 }
             }

@@ -34,10 +34,11 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement, IJsonSc
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly PropertiesKeyword _propertiesKeyword;
         private readonly JsonInstanceElement _instance;
@@ -74,6 +75,27 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement, IJsonSc
             validationResult = _fastReturnResult;
 
             return _fastReturnResult is not null;
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
+            {
+                if (_propertiesKeyword.PropertiesSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? schema))
+                {
+                    ValidationResult result = schema.Validate(instanceProperty.Value, _options);
+
+                    if (!result.IsValid)
+                    {
+                        _fastReturnResult = result;
+                    }
+
+                    if (!context.Report(result, _fastReturnResult))
+                    {
+                        break;
+                    }
+                }
+            }
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);

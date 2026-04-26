@@ -44,10 +44,11 @@ internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword, ISchemaContain
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(_schemas, instance, options), options.OutputFormat);
+        var validator = new Validator(_schemas, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly JsonSchema[] _schemas;
         private readonly JsonInstanceElement _instance;
@@ -81,6 +82,31 @@ internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword, ISchemaContain
                 }
 
                 yield return validationResult;
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            int idx = 0;
+
+            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
+            {
+                if (idx >= _schemas.Length)
+                {
+                    break;
+                }
+
+                ValidationResult validationResult = _schemas[idx++].Validate(instanceItem, _options);
+
+                if (!validationResult.IsValid)
+                {
+                    _fastReturnResult = validationResult;
+                }
+
+                if (!context.Report(validationResult, _fastReturnResult))
+                {
+                    break;
+                }
             }
         }
 
@@ -139,10 +165,11 @@ internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword, ISchemaContainerE
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(Schema, instance, options), options.OutputFormat);
+        var validator = new Validator(Schema, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly JsonSchema _schema;
         private readonly JsonInstanceElement _instance;
@@ -169,6 +196,24 @@ internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword, ISchemaContainerE
                 }
 
                 yield return validationResult;
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            foreach (JsonInstanceElement instanceElement in _instance.EnumerateArray())
+            {
+                ValidationResult validationResult = _schema.Validate(instanceElement, _options);
+
+                if (!validationResult.IsValid)
+                {
+                    _fastReturnResult = validationResult;
+                }
+
+                if (!context.Report(validationResult, _fastReturnResult))
+                {
+                    break;
+                }
             }
         }
 

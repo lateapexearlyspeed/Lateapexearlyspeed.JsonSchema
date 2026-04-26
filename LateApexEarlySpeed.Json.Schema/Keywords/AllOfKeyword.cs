@@ -49,10 +49,11 @@ internal class AllOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly AllOfKeyword _allOfKeyword;
         private readonly JsonInstanceElement _instance;
@@ -78,6 +79,23 @@ internal class AllOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
                 }
 
                 yield return result;
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            foreach (JsonSchema subSchema in _allOfKeyword._subSchemas)
+            {
+                ValidationResult result = subSchema.Validate(_instance, _options);
+                if (!result.IsValid)
+                {
+                    _fastReturnResult = result;
+                }
+
+                if (!context.Report(result, _fastReturnResult))
+                {
+                    break;
+                }
             }
         }
 

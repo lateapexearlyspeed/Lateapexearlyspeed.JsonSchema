@@ -156,10 +156,11 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly BodyJsonSchema _bodyJsonSchema;
         private readonly JsonInstanceElement _instance;
@@ -185,14 +186,26 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             for (int i = 0; i < _bodyJsonSchema._keywords.Count; i++)
             {
                 KeywordBase keyword = _bodyJsonSchema._keywords[i];
-                yield return ValidateAndSetFastReturnResult(keyword);
+                ValidationResult result = keyword.Validate(_instance, _options);
+                if (!result.IsValid)
+                {
+                    _fastReturnResult = result;
+                }
+
+                yield return result;
             }
 
             if (_bodyJsonSchema._schemaContainerValidators is not null)
             {
                 foreach (ISchemaContainerValidationNode schemaContainerValidationNode in _bodyJsonSchema._schemaContainerValidators)
                 {
-                    yield return ValidateAndSetFastReturnResult(schemaContainerValidationNode);
+                    ValidationResult result = schemaContainerValidationNode.Validate(_instance, _options);
+                    if (!result.IsValid)
+                    {
+                        _fastReturnResult = result;
+                    }
+
+                    yield return result;
                 }
             }
 
@@ -200,19 +213,62 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             {
                 foreach (IReferenceKeyword referenceKeyword in _bodyJsonSchema._referenceKeywords)
                 {
-                    yield return ValidateAndSetFastReturnResult(referenceKeyword);
+                    ValidationResult result = referenceKeyword.Validate(_instance, _options);
+                    if (!result.IsValid)
+                    {
+                        _fastReturnResult = result;
+                    }
+
+                    yield return result;
+                }
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
+            for (int i = 0; i < _bodyJsonSchema._keywords.Count; i++)
+            {
+                KeywordBase keyword = _bodyJsonSchema._keywords[i];
+
+                if (!ReportValidationAndCheckFastReturn(ref this, keyword, ref context))
+                {
+                    return;
                 }
             }
 
-            ValidationResult ValidateAndSetFastReturnResult(IValidationNode validationNode)
+            if (_bodyJsonSchema._schemaContainerValidators is not null)
             {
-                ValidationResult result = validationNode.Validate(_instance, _options);
+                foreach (ISchemaContainerValidationNode schemaContainerValidationNode in _bodyJsonSchema._schemaContainerValidators)
+                {
+                    if (!ReportValidationAndCheckFastReturn(ref this, schemaContainerValidationNode, ref context))
+                    {
+                        return;
+                    }
+                }
+            }
+
+            if (_bodyJsonSchema._referenceKeywords is not null)
+            {
+                foreach (IReferenceKeyword referenceKeyword in _bodyJsonSchema._referenceKeywords)
+                {
+                    if (!ReportValidationAndCheckFastReturn(ref this, referenceKeyword, ref context))
+                    {
+                        return;
+                    }
+                }
+            }
+
+            static bool ReportValidationAndCheckFastReturn(ref Validator thisValidator, IValidationNode validationNode, ref ValidationCompositionContext context)
+            {
+                ValidationResult result = validationNode.Validate(thisValidator._instance, thisValidator._options);
+
                 if (!result.IsValid)
                 {
-                    _fastReturnResult = result;
+                    thisValidator._fastReturnResult = result;
                 }
 
-                return result;
+                return context.Report(result, thisValidator._fastReturnResult);
             }
         }
 

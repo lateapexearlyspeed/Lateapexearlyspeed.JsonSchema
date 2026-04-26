@@ -54,10 +54,11 @@ internal class PrefixItemsKeyword : KeywordBase, ISchemaContainerElement, ISubSc
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly PrefixItemsKeyword _prefixItemsKeyword;
         private readonly JsonInstanceElement _instance;
@@ -89,6 +90,31 @@ internal class PrefixItemsKeyword : KeywordBase, ISchemaContainerElement, ISubSc
                 }
 
                 yield return validationResult;
+
+                schemaIdx++;
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            int schemaIdx = 0;
+            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
+            {
+                if (schemaIdx >= _prefixItemsKeyword.SubSchemas.Count)
+                {
+                    break;
+                }
+
+                ValidationResult validationResult = _prefixItemsKeyword.SubSchemas[schemaIdx].Validate(instanceItem, _options);
+                if (!validationResult.IsValid)
+                {
+                    _fastReturnResult = validationResult;
+                }
+
+                if (!context.Report(validationResult, _fastReturnResult))
+                {
+                    break;
+                }
 
                 schemaIdx++;
             }

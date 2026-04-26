@@ -33,10 +33,11 @@ internal class AdditionalItemsKeyword : KeywordBase, ISchemaContainerElement, IS
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly AdditionalItemsKeyword _keyword;
         private readonly JsonInstanceElement _instance;
@@ -74,6 +75,35 @@ internal class AdditionalItemsKeyword : KeywordBase, ISchemaContainerElement, IS
                 }
 
                 yield return validationResult;
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            Debug.Assert(_keyword.ItemsWithMultiSchemasKeyword is not null);
+            int prefixSchemasCount = _keyword.ItemsWithMultiSchemasKeyword.SubSchemas.Count;
+
+            int idx = 0;
+
+            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
+            {
+                if (idx < prefixSchemasCount)
+                {
+                    idx++;
+                    continue;
+                }
+
+                ValidationResult validationResult = _keyword._schema.Validate(instanceItem, _options);
+
+                if (!validationResult.IsValid)
+                {
+                    _fastReturnResult = validationResult;
+                }
+
+                if (!context.Report(validationResult, _fastReturnResult))
+                {
+                    break;
+                }
             }
         }
 

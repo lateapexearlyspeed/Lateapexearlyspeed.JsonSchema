@@ -33,10 +33,11 @@ internal class AdditionalPropertiesKeyword : KeywordBase, ISchemaContainerElemen
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly AdditionalPropertiesKeyword _additionalPropertiesKeyword;
         private readonly JsonInstanceElement _instance;
@@ -75,6 +76,37 @@ internal class AdditionalPropertiesKeyword : KeywordBase, ISchemaContainerElemen
                     }
 
                     yield return validationResult;
+                }
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            foreach (JsonInstanceProperty jsonProperty in _instance.EnumerateObject())
+            {
+                string propertyName = jsonProperty.Name;
+
+                bool containsInPropertiesKeyword = _additionalPropertiesKeyword.PropertiesKeyword is not null && _additionalPropertiesKeyword.PropertiesKeyword.ContainsPropertyName(propertyName);
+
+                if (containsInPropertiesKeyword)
+                {
+                    continue;
+                }
+
+                bool containsMatchedPattern = _additionalPropertiesKeyword.PatternPropertiesKeyword is not null && _additionalPropertiesKeyword.PatternPropertiesKeyword.ContainsMatchedPattern(propertyName, _options.RegexMatchTimeout);
+
+                if (!containsMatchedPattern)
+                {
+                    ValidationResult validationResult = _additionalPropertiesKeyword.Schema.Validate(jsonProperty.Value, _options);
+                    if (!validationResult.IsValid)
+                    {
+                        _fastReturnResult = validationResult;
+                    }
+
+                    if (!context.Report(validationResult, _fastReturnResult))
+                    {
+                        break;
+                    }
                 }
             }
         }

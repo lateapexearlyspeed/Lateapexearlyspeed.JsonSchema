@@ -35,10 +35,11 @@ internal class RequiredKeyword : KeywordBase
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly RequiredKeyword _requiredKeyword;
         private readonly JsonInstanceElement _instance;
@@ -75,6 +76,34 @@ internal class RequiredKeyword : KeywordBase
                 }
 
                 yield return validationResult;
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            HashSet<string> instanceProperties = _instance.EnumerateObject().Select(prop => prop.Name)
+                .ToHashSet(_requiredKeyword._propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
+
+            foreach (string requiredProperty in _requiredKeyword._requiredProperties)
+            {
+                ValidationResult validationResult;
+
+                if (instanceProperties.Contains(requiredProperty))
+                {
+                    validationResult = ValidationResult.ValidResult;
+                }
+                else
+                {
+                    var curError = new ValidationError(ResultCode.NotFoundRequiredProperty, ErrorMessage(requiredProperty), _options.ValidationPathStack, _requiredKeyword.Name, _instance.Location);
+                    validationResult = ValidationResult.SingleErrorFailedResult(curError);
+
+                    _fastReturnResult = validationResult;
+                }
+
+                if (!context.Report(validationResult, _fastReturnResult))
+                {
+                    break;
+                }
             }
         }
 

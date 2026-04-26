@@ -21,7 +21,8 @@ internal class DependentRequiredKeyword : KeywordBase
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(DependentProperties, Name, instance, options), options.OutputFormat);
+        var validator = new Validator(DependentProperties, Name, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
     public static string ErrorMessage(string dependentProperty, string requiredProp)
@@ -29,7 +30,7 @@ internal class DependentRequiredKeyword : KeywordBase
         return $"Instance contains property '{dependentProperty}' but does not contain dependent property '{requiredProp}'";
     }
 
-    internal class Validator : IValidator
+    internal struct Validator : IValidator
     {
         private readonly IReadOnlyDictionary<string, string[]> _dependentProperties;
         private readonly string _keywordName;
@@ -72,11 +73,40 @@ internal class DependentRequiredKeyword : KeywordBase
             }
         }
 
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            var instancePropertyNames = new HashSet<string>(_instance.EnumerateObject().Select(p => p.Name));
+
+            foreach (KeyValuePair<string, string[]> dependentProperty in _dependentProperties)
+            {
+                if (instancePropertyNames.Contains(dependentProperty.Key))
+                {
+                    foreach (string requiredProp in dependentProperty.Value)
+                    {
+                        if (!instancePropertyNames.Contains(requiredProp))
+                        {
+                            _fastReturnResult = ValidationResult.SingleErrorFailedResult(new ValidationError(
+                                ResultCode.NotFoundRequiredDependentProperty,
+                                ErrorMessage(dependentProperty.Key, requiredProp),
+                                _options.ValidationPathStack,
+                                _keywordName,
+                                _instance.Location));
+
+                            if (!context.Report(_fastReturnResult, _fastReturnResult))
+                            {
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
         {
             return (validationResult = _fastReturnResult) is not null;
         }
 
-        public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
+        public readonly ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 }

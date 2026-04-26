@@ -34,10 +34,11 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement, I
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(_dependentSchemas, instance, options), options.OutputFormat);
+        var validator = new Validator(_dependentSchemas, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    internal class Validator : IValidator
+    internal struct Validator : IValidator
     {
         private readonly IReadOnlyDictionary<string, JsonSchema> _dependentSchemas;
         private readonly JsonInstanceElement _instance;
@@ -69,12 +70,32 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement, I
             }
         }
 
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
+            {
+                if (_dependentSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? subSchema))
+                {
+                    ValidationResult result = subSchema.Validate(_instance, _options);
+                    if (!result.IsValid)
+                    {
+                        _fastReturnResult = result;
+                    }
+
+                    if (!context.Report(result, _fastReturnResult))
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
         public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
         {
             return (validationResult = _fastReturnResult) is not null;
         }
 
-        public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
+        public readonly ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

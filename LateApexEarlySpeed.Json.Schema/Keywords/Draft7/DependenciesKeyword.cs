@@ -45,52 +45,103 @@ internal class DependenciesKeyword : KeywordBase, ISchemaContainerElement, IJson
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
-        private readonly List<IValidator> _subValidators = new(2);
+        private DependentSchemasKeyword.Validator? _dependentSchemaValidator;
+        private DependentRequiredKeyword.Validator? _dependentRequiredValidator;
 
         public Validator(DependenciesKeyword keyword, JsonInstanceElement instance, JsonSchemaOptions options)
         {
             if (keyword._dependenciesSchema is not null)
             {
-                _subValidators.Add(new DependentSchemasKeyword.Validator(keyword._dependenciesSchema, instance, options));
+                _dependentSchemaValidator = new DependentSchemasKeyword.Validator(keyword._dependenciesSchema, instance, options);
             }
             
             if (keyword._dependenciesProperty is not null)
             {
-                _subValidators.Add(new DependentRequiredKeyword.Validator(keyword._dependenciesProperty, keyword.Name, instance, options));
+                _dependentRequiredValidator = new DependentRequiredKeyword.Validator(keyword._dependenciesProperty, keyword.Name, instance, options);
             }
         }
 
         public IEnumerable<ValidationResult> EnumerateValidationResults()
         {
-            foreach (IValidator subValidator in _subValidators)
+            if (_dependentSchemaValidator.HasValue)
             {
-                foreach (ValidationResult validationResult in subValidator.EnumerateValidationResults())
+                foreach (ValidationResult result in _dependentSchemaValidator.Value.EnumerateValidationResults())
                 {
-                    yield return validationResult;
+                    yield return result;
                 }
+            }
+
+            if (_dependentRequiredValidator.HasValue)
+            {
+                foreach (ValidationResult result in _dependentRequiredValidator.Value.EnumerateValidationResults())
+                {
+                    yield return result;
+                }
+            }
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            if (_dependentSchemaValidator.HasValue)
+            {
+                DependentSchemasKeyword.Validator dependentSchemaValidator = _dependentSchemaValidator.Value;
+                dependentSchemaValidator.CollectValidationResults(ref context);
+
+                // We need to assign back the validator to the field because of the possibility of updated validator (e.g. fast return result).
+                // In that case, the state of the validator is changed, and we need to keep that change for the next calls (like CanFinishFast or Result).
+                _dependentSchemaValidator = dependentSchemaValidator;
+            }
+
+            if (_dependentRequiredValidator.HasValue)
+            {
+                DependentRequiredKeyword.Validator dependentRequiredValidator = _dependentRequiredValidator.Value;
+                dependentRequiredValidator.CollectValidationResults(ref context);
+
+                // We need to assign back the validator to the field because of the possibility of updated validator (e.g. fast return result).
+                // In that case, the state of the validator is changed, and we need to keep that change for the next calls (like CanFinishFast or Result).
+                _dependentRequiredValidator = dependentRequiredValidator;
             }
         }
 
         public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
         {
-            foreach (IValidator subValidator in _subValidators)
+            if (_dependentSchemaValidator.HasValue && _dependentSchemaValidator.Value.CanFinishFast(out validationResult))
             {
-                if (subValidator.CanFinishFast(out validationResult))
-                {
-                    return true;
-                }
+                return true;
+            }
+
+            if (_dependentRequiredValidator.HasValue && _dependentRequiredValidator.Value.CanFinishFast(out validationResult))
+            {
+                return true;
             }
 
             validationResult = null;
             return false;
         }
 
-        public ResultTuple Result => _subValidators.Any(validator => !validator.Result.IsValid) ? ResultTuple.Invalid(null) : ResultTuple.Valid();
+        public ResultTuple Result
+        {
+            get
+            {
+                if (_dependentSchemaValidator.HasValue && !_dependentSchemaValidator.Value.Result.IsValid)
+                {
+                    return ResultTuple.Invalid(null);
+                }
+
+                if (_dependentRequiredValidator.HasValue && !_dependentRequiredValidator.Value.Result.IsValid)
+                {
+                    return ResultTuple.Invalid(null);
+                }
+
+                return ResultTuple.Valid();
+            }
+        }
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

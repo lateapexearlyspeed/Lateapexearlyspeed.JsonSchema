@@ -7,6 +7,8 @@ internal interface IValidator
     IEnumerable<ValidationResult> EnumerateValidationResults();
     bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult);
 
+    void CollectValidationResults(ref ValidationCompositionContext context);
+
     /// <remarks>
     /// NOTE for implementations: there are some cases in which <see cref="ResultTuple.CurError"/> of <see cref="Result"/> Must NOT null.
     /// Check <see cref="ValidationResultsComposer"/> code to understand.
