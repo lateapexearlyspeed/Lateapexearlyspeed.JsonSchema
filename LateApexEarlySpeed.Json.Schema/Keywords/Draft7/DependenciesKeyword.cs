@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -46,7 +45,7 @@ internal class DependenciesKeyword : KeywordBase, ISchemaContainerElement, IJson
         }
 
         var validator = new Validator(this, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     private struct Validator : IValidator
@@ -67,25 +66,6 @@ internal class DependenciesKeyword : KeywordBase, ISchemaContainerElement, IJson
             }
         }
 
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            if (_dependentSchemaValidator.HasValue)
-            {
-                foreach (ValidationResult result in _dependentSchemaValidator.Value.EnumerateValidationResults())
-                {
-                    yield return result;
-                }
-            }
-
-            if (_dependentRequiredValidator.HasValue)
-            {
-                foreach (ValidationResult result in _dependentRequiredValidator.Value.EnumerateValidationResults())
-                {
-                    yield return result;
-                }
-            }
-        }
-
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
             if (_dependentSchemaValidator.HasValue)
@@ -94,7 +74,7 @@ internal class DependenciesKeyword : KeywordBase, ISchemaContainerElement, IJson
                 dependentSchemaValidator.CollectValidationResults(ref context);
 
                 // We need to assign back the validator to the field because of the possibility of updated validator (e.g. fast return result).
-                // In that case, the state of the validator is changed, and we need to keep that change for the next calls (like CanFinishFast or Result).
+                // In that case, the state of the validator is changed, and we need to keep that change for the next calls (like .Result).
                 _dependentSchemaValidator = dependentSchemaValidator;
             }
 
@@ -104,25 +84,9 @@ internal class DependenciesKeyword : KeywordBase, ISchemaContainerElement, IJson
                 dependentRequiredValidator.CollectValidationResults(ref context);
 
                 // We need to assign back the validator to the field because of the possibility of updated validator (e.g. fast return result).
-                // In that case, the state of the validator is changed, and we need to keep that change for the next calls (like CanFinishFast or Result).
+                // In that case, the state of the validator is changed, and we need to keep that change for the next calls (like .Result).
                 _dependentRequiredValidator = dependentRequiredValidator;
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            if (_dependentSchemaValidator.HasValue && _dependentSchemaValidator.Value.CanFinishFast(out validationResult))
-            {
-                return true;
-            }
-
-            if (_dependentRequiredValidator.HasValue && _dependentRequiredValidator.Value.CanFinishFast(out validationResult))
-            {
-                return true;
-            }
-
-            validationResult = null;
-            return false;
         }
 
         public ResultTuple Result

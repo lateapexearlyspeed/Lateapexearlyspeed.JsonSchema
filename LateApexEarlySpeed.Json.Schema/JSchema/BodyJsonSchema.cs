@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -157,7 +156,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         var validator = new Validator(this, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     private struct Validator : IValidator
@@ -180,50 +179,6 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
         /// Although it was more readable, the profiler showed linq Concat() taking high cpu time percentage during validation of <see cref="BodyJsonSchema"/> which is in frequent call path.
         /// That is the reason to change to implement it by validating validation-node-collections one by one.
         /// </remarks>
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
-            for (int i = 0; i < _bodyJsonSchema._keywords.Count; i++)
-            {
-                KeywordBase keyword = _bodyJsonSchema._keywords[i];
-                ValidationResult result = keyword.Validate(_instance, _options);
-                if (!result.IsValid)
-                {
-                    _fastReturnResult = result;
-                }
-
-                yield return result;
-            }
-
-            if (_bodyJsonSchema._schemaContainerValidators is not null)
-            {
-                foreach (ISchemaContainerValidationNode schemaContainerValidationNode in _bodyJsonSchema._schemaContainerValidators)
-                {
-                    ValidationResult result = schemaContainerValidationNode.Validate(_instance, _options);
-                    if (!result.IsValid)
-                    {
-                        _fastReturnResult = result;
-                    }
-
-                    yield return result;
-                }
-            }
-
-            if (_bodyJsonSchema._referenceKeywords is not null)
-            {
-                foreach (IReferenceKeyword referenceKeyword in _bodyJsonSchema._referenceKeywords)
-                {
-                    ValidationResult result = referenceKeyword.Validate(_instance, _options);
-                    if (!result.IsValid)
-                    {
-                        _fastReturnResult = result;
-                    }
-
-                    yield return result;
-                }
-            }
-        }
-
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
             // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
@@ -270,11 +225,6 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
                 return context.Report(result, thisValidator._fastReturnResult);
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            return (validationResult = _fastReturnResult) is not null;
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);

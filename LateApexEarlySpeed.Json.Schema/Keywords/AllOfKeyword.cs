@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.Contracts;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -50,7 +49,7 @@ internal class AllOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         var validator = new Validator(this, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     private struct Validator : IValidator
@@ -68,20 +67,6 @@ internal class AllOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
             _options = options;
         }
 
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            foreach (JsonSchema subSchema in _allOfKeyword._subSchemas)
-            {
-                ValidationResult result = subSchema.Validate(_instance, _options);
-                if (!result.IsValid)
-                { 
-                    _fastReturnResult = result;
-                }
-
-                yield return result;
-            }
-        }
-
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
             foreach (JsonSchema subSchema in _allOfKeyword._subSchemas)
@@ -97,13 +82,6 @@ internal class AllOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
                     break;
                 }
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            validationResult = _fastReturnResult;
-
-            return _fastReturnResult is not null;
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);

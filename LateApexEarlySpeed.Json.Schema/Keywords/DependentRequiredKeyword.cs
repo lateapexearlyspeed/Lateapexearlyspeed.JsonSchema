@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -22,7 +21,7 @@ internal class DependentRequiredKeyword : KeywordBase
         }
 
         var validator = new Validator(DependentProperties, Name, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     public static string ErrorMessage(string dependentProperty, string requiredProp)
@@ -45,32 +44,6 @@ internal class DependentRequiredKeyword : KeywordBase
             _keywordName = keywordName;
             _instance = instance;
             _options = options;
-        }
-
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            var instancePropertyNames = new HashSet<string>(_instance.EnumerateObject().Select(p => p.Name));
-
-            foreach (KeyValuePair<string, string[]> dependentProperty in _dependentProperties)
-            {
-                if (instancePropertyNames.Contains(dependentProperty.Key))
-                {
-                    foreach (string requiredProp in dependentProperty.Value)
-                    {
-                        if (!instancePropertyNames.Contains(requiredProp))
-                        {
-                            _fastReturnResult = ValidationResult.SingleErrorFailedResult(new ValidationError(
-                                ResultCode.NotFoundRequiredDependentProperty,
-                                ErrorMessage(dependentProperty.Key, requiredProp),
-                                _options.ValidationPathStack,
-                                _keywordName,
-                                _instance.Location));
-
-                            yield return _fastReturnResult;
-                        }
-                    }
-                }
-            }
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
@@ -100,11 +73,6 @@ internal class DependentRequiredKeyword : KeywordBase
                     }
                 }
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            return (validationResult = _fastReturnResult) is not null;
         }
 
         public readonly ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);

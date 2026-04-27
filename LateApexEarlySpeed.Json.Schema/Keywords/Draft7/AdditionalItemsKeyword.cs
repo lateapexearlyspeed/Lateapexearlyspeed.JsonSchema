@@ -4,7 +4,6 @@ using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
@@ -34,7 +33,7 @@ internal class AdditionalItemsKeyword : KeywordBase, ISchemaContainerElement, IS
         }
 
         var validator = new Validator(this, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     private struct Validator : IValidator
@@ -50,32 +49,6 @@ internal class AdditionalItemsKeyword : KeywordBase, ISchemaContainerElement, IS
             _keyword = keyword;
             _instance = instance;
             _options = options;
-        }
-
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            Debug.Assert(_keyword.ItemsWithMultiSchemasKeyword is not null);
-            int prefixSchemasCount = _keyword.ItemsWithMultiSchemasKeyword.SubSchemas.Count;
-
-            int idx = 0;
-
-            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
-            {
-                if (idx < prefixSchemasCount)
-                {
-                    idx++;
-                    continue;
-                }
-
-                ValidationResult validationResult = _keyword._schema.Validate(instanceItem, _options);
-
-                if (!validationResult.IsValid)
-                {
-                    _fastReturnResult = validationResult;
-                }
-
-                yield return validationResult;
-            }
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
@@ -105,11 +78,6 @@ internal class AdditionalItemsKeyword : KeywordBase, ISchemaContainerElement, IS
                     break;
                 }
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            return (validationResult = _fastReturnResult) is not null;
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);

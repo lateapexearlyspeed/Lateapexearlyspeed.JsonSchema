@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -35,7 +34,7 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement, IJsonSc
         }
 
         var validator = new Validator(this, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     private struct Validator : IValidator
@@ -51,30 +50,6 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement, IJsonSc
             _propertiesKeyword = propertiesKeyword;
             _instance = instance;
             _options = options;
-        }
-
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
-            {
-                if (_propertiesKeyword.PropertiesSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? schema))
-                {
-                    ValidationResult result = schema.Validate(instanceProperty.Value, _options);
-                    if (!result.IsValid)
-                    {
-                        _fastReturnResult = result;
-                    }
-
-                    yield return result;
-                }
-            }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            validationResult = _fastReturnResult;
-
-            return _fastReturnResult is not null;
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)

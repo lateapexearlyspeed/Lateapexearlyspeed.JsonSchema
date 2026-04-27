@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -34,7 +33,7 @@ internal class AdditionalPropertiesKeyword : KeywordBase, ISchemaContainerElemen
         }
 
         var validator = new Validator(this, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     private struct Validator : IValidator
@@ -50,34 +49,6 @@ internal class AdditionalPropertiesKeyword : KeywordBase, ISchemaContainerElemen
             _additionalPropertiesKeyword = additionalPropertiesKeyword;
             _instance = instance;
             _options = options;
-        }
-
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            foreach (JsonInstanceProperty jsonProperty in _instance.EnumerateObject())
-            {
-                string propertyName = jsonProperty.Name;
-
-                bool containsInPropertiesKeyword = _additionalPropertiesKeyword.PropertiesKeyword is not null && _additionalPropertiesKeyword.PropertiesKeyword.ContainsPropertyName(propertyName);
-
-                if (containsInPropertiesKeyword)
-                {
-                    continue;
-                }
-
-                bool containsMatchedPattern = _additionalPropertiesKeyword.PatternPropertiesKeyword is not null && _additionalPropertiesKeyword.PatternPropertiesKeyword.ContainsMatchedPattern(propertyName, _options.RegexMatchTimeout);
-
-                if (!containsMatchedPattern)
-                {
-                    ValidationResult validationResult = _additionalPropertiesKeyword.Schema.Validate(jsonProperty.Value, _options);
-                    if (!validationResult.IsValid)
-                    {
-                        _fastReturnResult = validationResult;
-                    }
-
-                    yield return validationResult;
-                }
-            }
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
@@ -109,11 +80,6 @@ internal class AdditionalPropertiesKeyword : KeywordBase, ISchemaContainerElemen
                     }
                 }
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            return (validationResult = _fastReturnResult) is not null;
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);

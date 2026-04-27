@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -63,7 +62,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
         }
 
         var validator = new WithoutMaxContainsValidator(this, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     private struct WithoutMaxContainsValidator : IValidator
@@ -78,22 +77,6 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
             _arrayContainsValidator = arrayContainsValidator;
             _instance = instance;
             _options = options;
-        }
-
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
-
-            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
-            {
-                ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
-                if (validationResult.IsValid)
-                {
-                    _validatedItemCount++;
-                }
-
-                yield return validationResult;
-            }
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
@@ -119,18 +102,6 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
             }
         }
 
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            if (_validatedItemCount >= _arrayContainsValidator.MinContains)
-            {
-                validationResult = ValidationResult.ValidResult;
-                return true;
-            }
-
-            validationResult = null;
-            return false;
-        }
-
         public ResultTuple Result
         {
             get
@@ -151,7 +122,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
     private ValidationResult ValidateWithMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         var validator = new WithMaxContainsValidator(this, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     private struct WithMaxContainsValidator : IValidator
@@ -166,22 +137,6 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
             _arrayContainsValidator = arrayContainsValidator;
             _instance = instance;
             _options = options;
-        }
-
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
-
-            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
-            {
-                ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
-                if (validationResult.IsValid)
-                {
-                    _validatedItemCount++;
-                }
-
-                yield return validationResult;
-            }
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
@@ -208,20 +163,6 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
                     break;
                 }
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            if (_validatedItemCount > _arrayContainsValidator.MaxContains)
-            {
-                ValidationError error = CreateValidationErrorWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, GetFailedMaxContainsErrorMessage(_instance.ToString(), _arrayContainsValidator.MaxContains.Value), MaxContainsKeywordName, _options.ValidationPathStack, _instance.Location);
-                validationResult = ValidationResult.SingleErrorFailedResult(error);
-
-                return true;
-            }
-
-            validationResult = null;
-            return false;
         }
 
         public ResultTuple Result
@@ -270,7 +211,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
     private ValidationResult ValidateWithoutMinContainsAndMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         var validator = new WithoutMinContainsAndMaxContainsValidator(this, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     private struct WithoutMinContainsAndMaxContainsValidator : IValidator
@@ -285,22 +226,6 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
             _arrayContainsValidator = arrayContainsValidator;
             _instance = instance;
             _options = options;
-        }
-
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
-
-            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
-            {
-                ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
-                if (validationResult.IsValid)
-                {
-                    _fastReturnResult = ValidationResult.ValidResult;
-                }
-
-                yield return validationResult;
-            }
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
@@ -320,13 +245,6 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
                     break;
                 }
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            validationResult = _fastReturnResult;
-
-            return _fastReturnResult is not null;
         }
 
         public ResultTuple Result

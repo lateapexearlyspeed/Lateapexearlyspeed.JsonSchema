@@ -3,7 +3,6 @@ using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
@@ -45,7 +44,7 @@ internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword, ISchemaContain
         }
 
         var validator = new Validator(_schemas, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     private struct Validator : IValidator
@@ -61,28 +60,6 @@ internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword, ISchemaContain
             _schemas = schemas;
             _instance = instance;
             _options = options;
-        }
-
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            int idx = 0;
-
-            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
-            {
-                if (idx >= _schemas.Length)
-                {
-                    break;
-                }
-
-                ValidationResult validationResult = _schemas[idx++].Validate(instanceItem, _options);
-
-                if (!validationResult.IsValid)
-                {
-                    _fastReturnResult = validationResult;
-                }
-
-                yield return validationResult;
-            }
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
@@ -108,11 +85,6 @@ internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword, ISchemaContain
                     break;
                 }
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            return (validationResult = _fastReturnResult) is not null;
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
@@ -166,7 +138,7 @@ internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword, ISchemaContainerE
         }
 
         var validator = new Validator(Schema, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     private struct Validator : IValidator
@@ -182,21 +154,6 @@ internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword, ISchemaContainerE
             _schema = schema;
             _instance = instance;
             _options = options;
-        }
-
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            foreach (JsonInstanceElement instanceElement in _instance.EnumerateArray())
-            {
-                ValidationResult validationResult = _schema.Validate(instanceElement, _options);
-
-                if (!validationResult.IsValid)
-                {
-                    _fastReturnResult = validationResult;
-                }
-
-                yield return validationResult;
-            }
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
@@ -215,11 +172,6 @@ internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword, ISchemaContainerE
                     break;
                 }
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            return (validationResult = _fastReturnResult) is not null;
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);

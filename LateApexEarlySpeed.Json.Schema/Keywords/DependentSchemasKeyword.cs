@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -35,7 +34,7 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement, I
         }
 
         var validator = new Validator(_dependentSchemas, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     internal struct Validator : IValidator
@@ -51,23 +50,6 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement, I
             _dependentSchemas = dependentSchemas;
             _instance = instance;
             _options = options;
-        }
-
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
-            {
-                if (_dependentSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? subSchema))
-                {
-                    ValidationResult result = subSchema.Validate(_instance, _options);
-                    if (!result.IsValid)
-                    {
-                        _fastReturnResult = result;
-                    }
-
-                    yield return result;
-                }
-            }
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
@@ -88,11 +70,6 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement, I
                     }
                 }
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            return (validationResult = _fastReturnResult) is not null;
         }
 
         public readonly ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);

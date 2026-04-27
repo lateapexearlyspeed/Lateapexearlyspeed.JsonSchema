@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -36,7 +35,7 @@ internal class RequiredKeyword : KeywordBase
         }
 
         var validator = new Validator(this, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     private struct Validator : IValidator
@@ -52,31 +51,6 @@ internal class RequiredKeyword : KeywordBase
             _requiredKeyword = requiredKeyword;
             _instance = instance;
             _options = options;
-        }
-
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            HashSet<string> instanceProperties = _instance.EnumerateObject().Select(prop => prop.Name)
-                .ToHashSet(_requiredKeyword._propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
-
-            foreach (string requiredProperty in _requiredKeyword._requiredProperties)
-            {
-                ValidationResult validationResult;
-
-                if (instanceProperties.Contains(requiredProperty))
-                {
-                    validationResult = ValidationResult.ValidResult;
-                }
-                else
-                {
-                    var curError = new ValidationError(ResultCode.NotFoundRequiredProperty, ErrorMessage(requiredProperty), _options.ValidationPathStack, _requiredKeyword.Name, _instance.Location);
-                    validationResult = ValidationResult.SingleErrorFailedResult(curError);
-
-                    _fastReturnResult = validationResult;
-                }
-
-                yield return validationResult;
-            }
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
@@ -105,11 +79,6 @@ internal class RequiredKeyword : KeywordBase
                     break;
                 }
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            return (validationResult = _fastReturnResult) is not null;
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);

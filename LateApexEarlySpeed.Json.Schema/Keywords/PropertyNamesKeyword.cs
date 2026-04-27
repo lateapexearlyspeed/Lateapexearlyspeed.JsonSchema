@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -30,7 +29,7 @@ internal class PropertyNamesKeyword : KeywordBase, ISchemaContainerElement, ISin
         }
 
         var validator = new Validator(this, instance, options);
-        return ValidationResultsComposer.ComposeV2(ref validator, options.OutputFormat);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
     private struct Validator : IValidator
@@ -46,20 +45,6 @@ internal class PropertyNamesKeyword : KeywordBase, ISchemaContainerElement, ISin
             _propertyNamesKeyword = propertyNamesKeyword;
             _instance = instance;
             _options = options;
-        }
-
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
-        {
-            foreach (JsonInstanceProperty jsonProperty in _instance.EnumerateObject())
-            {
-                ValidationResult validationResult = _propertyNamesKeyword.Schema.Validate(new JsonInstanceElement(JsonSerializer.SerializeToElement(jsonProperty.Name), LinkedListBasedImmutableJsonPointer.Empty), _options);
-                if (!validationResult.IsValid)
-                {
-                    _fastReturnError = new ValidationError(ResultCode.InvalidPropertyName, ErrorMessage(jsonProperty.Name), _options.ValidationPathStack, _propertyNamesKeyword.Name, _instance.Location);
-                }
-
-                yield return validationResult;
-            }
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
@@ -81,18 +66,6 @@ internal class PropertyNamesKeyword : KeywordBase, ISchemaContainerElement, ISin
                     break;
                 }
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            if (_fastReturnError is null)
-            {
-                validationResult = null;
-                return false;
-            }
-
-            validationResult = ValidationResult.SingleErrorFailedResult(_fastReturnError);
-            return true;
         }
 
         public ResultTuple Result => _fastReturnError is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);

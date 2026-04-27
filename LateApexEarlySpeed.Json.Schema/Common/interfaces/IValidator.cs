@@ -1,12 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace LateApexEarlySpeed.Json.Schema.Common.interfaces;
+﻿namespace LateApexEarlySpeed.Json.Schema.Common.interfaces;
 
 internal interface IValidator
 {
-    IEnumerable<ValidationResult> EnumerateValidationResults();
-    bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult);
-
     void CollectValidationResults(ref ValidationCompositionContext context);
 
     /// <remarks>
