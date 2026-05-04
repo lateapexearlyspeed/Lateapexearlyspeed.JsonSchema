@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.Contracts;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -47,10 +46,11 @@ internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly AnyOfKeyword _anyOfKeyword;
         private readonly JsonInstanceElement _instance;
@@ -65,7 +65,7 @@ internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
             _options = options;
         }
 
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        public void CollectValidationResults(ref ValidationCompositionContext context)
         {
             foreach (JsonSchema subSchema in _anyOfKeyword._subSchemas)
             {
@@ -75,15 +75,11 @@ internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
                     _fastReturnResult = result;
                 }
 
-                yield return result;
+                if (!context.Report(result, _fastReturnResult))
+                {
+                    break;
+                }
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            validationResult = _fastReturnResult;
-
-            return _fastReturnResult is not null;
         }
 
         public ResultTuple Result

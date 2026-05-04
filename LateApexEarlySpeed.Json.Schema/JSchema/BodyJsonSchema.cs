@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -156,10 +155,11 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly BodyJsonSchema _bodyJsonSchema;
         private readonly JsonInstanceElement _instance;
@@ -179,20 +179,27 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
         /// Although it was more readable, the profiler showed linq Concat() taking high cpu time percentage during validation of <see cref="BodyJsonSchema"/> which is in frequent call path.
         /// That is the reason to change to implement it by validating validation-node-collections one by one.
         /// </remarks>
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        public void CollectValidationResults(ref ValidationCompositionContext context)
         {
             // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
             for (int i = 0; i < _bodyJsonSchema._keywords.Count; i++)
             {
                 KeywordBase keyword = _bodyJsonSchema._keywords[i];
-                yield return ValidateAndSetFastReturnResult(keyword);
+
+                if (!ReportValidationAndCheckFastReturn(ref this, keyword, ref context))
+                {
+                    return;
+                }
             }
 
             if (_bodyJsonSchema._schemaContainerValidators is not null)
             {
                 foreach (ISchemaContainerValidationNode schemaContainerValidationNode in _bodyJsonSchema._schemaContainerValidators)
                 {
-                    yield return ValidateAndSetFastReturnResult(schemaContainerValidationNode);
+                    if (!ReportValidationAndCheckFastReturn(ref this, schemaContainerValidationNode, ref context))
+                    {
+                        return;
+                    }
                 }
             }
 
@@ -200,25 +207,24 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             {
                 foreach (IReferenceKeyword referenceKeyword in _bodyJsonSchema._referenceKeywords)
                 {
-                    yield return ValidateAndSetFastReturnResult(referenceKeyword);
+                    if (!ReportValidationAndCheckFastReturn(ref this, referenceKeyword, ref context))
+                    {
+                        return;
+                    }
                 }
             }
 
-            ValidationResult ValidateAndSetFastReturnResult(IValidationNode validationNode)
+            static bool ReportValidationAndCheckFastReturn(ref Validator thisValidator, IValidationNode validationNode, ref ValidationCompositionContext context)
             {
-                ValidationResult result = validationNode.Validate(_instance, _options);
+                ValidationResult result = validationNode.Validate(thisValidator._instance, thisValidator._options);
+
                 if (!result.IsValid)
                 {
-                    _fastReturnResult = result;
+                    thisValidator._fastReturnResult = result;
                 }
 
-                return result;
+                return context.Report(result, thisValidator._fastReturnResult);
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            return (validationResult = _fastReturnResult) is not null;
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);

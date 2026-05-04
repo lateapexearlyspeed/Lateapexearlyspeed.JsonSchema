@@ -5,38 +5,67 @@ namespace LateApexEarlySpeed.Json.Schema.Common;
 
 internal static class ValidationResultsComposer
 {
-    public static ValidationResult Compose(IValidator validator, OutputFormat outputFormat)
+    public static ValidationResult Compose<TValidator>(ref TValidator validator, OutputFormat outputFormat) where TValidator : struct, IValidator
     {
-        var validationErrorsBuilder = new ImmutableValidationErrorCollection.Builder();
+        var context = new ValidationCompositionContext(outputFormat);
+        validator.CollectValidationResults(ref context);
+        return context.BuildFinalResult(validator.Result);
+    }
+}
 
-        foreach (ValidationResult validationResult in validator.EnumerateValidationResults())
+internal ref struct ValidationCompositionContext
+{
+    private readonly OutputFormat _outputFormat;
+    private ImmutableValidationErrorCollection.Builder _builder;
+    private ValidationResult? _fastResult;
+
+    public ValidationCompositionContext(OutputFormat outputFormat)
+    {
+        _builder = new ImmutableValidationErrorCollection.Builder();
+        _outputFormat = outputFormat;
+    }
+
+    public bool Report(ValidationResult iterationResult, ValidationResult? fastResult)
+    {
+        if (_fastResult is not null)
         {
-            if (outputFormat == OutputFormat.FailFast && validator.CanFinishFast(out ValidationResult? fastResult))
-            {
-                return fastResult;
-            }
-
-            if (outputFormat == OutputFormat.List)
-            {
-                validationErrorsBuilder.AddChildCollection(validationResult.ValidationErrorsList);
-            }
+            return false;
         }
 
-        ResultTuple resultTuple = validator.Result;
+        if (_outputFormat == OutputFormat.FailFast && fastResult is not null)
+        {
+            _fastResult = fastResult;
+            return false;
+        }
+
+        if (_outputFormat == OutputFormat.List)
+        {
+            _builder.AddChildCollection(iterationResult.ValidationErrorsList);
+        }
+
+        return true;
+    }
+
+    public ValidationResult BuildFinalResult(ResultTuple resultTuple)
+    {
+        if (_fastResult is not null)
+        {
+            return _fastResult;
+        }
 
         if (resultTuple.IsValid)
         {
-            if (outputFormat == OutputFormat.FailFast)
+            if (_outputFormat == OutputFormat.FailFast)
             {
                 return ValidationResult.ValidResult;
             }
 
-            return new ValidationResult(true, validationErrorsBuilder.ToImmutable());
+            return new ValidationResult(true, _builder.ToImmutable());
         }
 
         ImmutableValidationErrorCollection errorCollection;
 
-        if (outputFormat == OutputFormat.FailFast)
+        if (_outputFormat == OutputFormat.FailFast)
         {
             Debug.Assert(resultTuple.CurError is not null);
             errorCollection = new ImmutableValidationErrorCollection(resultTuple.CurError);
@@ -45,10 +74,10 @@ internal static class ValidationResultsComposer
         {
             if (resultTuple.CurError is not null)
             {
-                validationErrorsBuilder.SetCurrent(resultTuple.CurError);
+                _builder.SetCurrent(resultTuple.CurError);
             }
-            
-            errorCollection = validationErrorsBuilder.ToImmutable();
+
+            errorCollection = _builder.ToImmutable();
         }
 
         return new ValidationResult(false, errorCollection);

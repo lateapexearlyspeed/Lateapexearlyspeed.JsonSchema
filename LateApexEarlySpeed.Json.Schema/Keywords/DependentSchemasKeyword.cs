@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -34,10 +33,11 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement, I
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(_dependentSchemas, instance, options), options.OutputFormat);
+        var validator = new Validator(_dependentSchemas, instance, options);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
-    internal class Validator : IValidator
+    internal struct Validator : IValidator
     {
         private readonly IReadOnlyDictionary<string, JsonSchema> _dependentSchemas;
         private readonly JsonInstanceElement _instance;
@@ -52,7 +52,7 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement, I
             _options = options;
         }
 
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        public void CollectValidationResults(ref ValidationCompositionContext context)
         {
             foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
             {
@@ -64,17 +64,15 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement, I
                         _fastReturnResult = result;
                     }
 
-                    yield return result;
+                    if (!context.Report(result, _fastReturnResult))
+                    {
+                        break;
+                    }
                 }
             }
         }
 
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            return (validationResult = _fastReturnResult) is not null;
-        }
-
-        public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
+        public readonly ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

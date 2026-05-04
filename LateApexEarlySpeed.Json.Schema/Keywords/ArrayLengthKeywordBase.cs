@@ -16,7 +16,7 @@ internal abstract class ArrayLengthKeywordBase : KeywordBase, IBenchmarkValueKey
             return ValidationResult.ValidResult;
         }
 
-        int instanceLength = instance.EnumerateArray().Count();
+        int instanceLength = instance.GetArrayLength();
 
         return IsSizeInRange(instanceLength)
             ? ValidationResult.ValidResult

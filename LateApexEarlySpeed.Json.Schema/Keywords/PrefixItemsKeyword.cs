@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.Contracts;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
@@ -54,10 +53,11 @@ internal class PrefixItemsKeyword : KeywordBase, ISchemaContainerElement, ISubSc
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly PrefixItemsKeyword _prefixItemsKeyword;
         private readonly JsonInstanceElement _instance;
@@ -72,7 +72,7 @@ internal class PrefixItemsKeyword : KeywordBase, ISchemaContainerElement, ISubSc
             _options = options;
         }
 
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        public void CollectValidationResults(ref ValidationCompositionContext context)
         {
             int schemaIdx = 0;
             foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
@@ -88,15 +88,13 @@ internal class PrefixItemsKeyword : KeywordBase, ISchemaContainerElement, ISubSc
                     _fastReturnResult = validationResult;
                 }
 
-                yield return validationResult;
+                if (!context.Report(validationResult, _fastReturnResult))
+                {
+                    break;
+                }
 
                 schemaIdx++;
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            return (validationResult = _fastReturnResult) is not null;
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);

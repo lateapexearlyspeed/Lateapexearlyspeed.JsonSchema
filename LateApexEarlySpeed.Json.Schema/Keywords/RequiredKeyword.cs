@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -35,10 +34,11 @@ internal class RequiredKeyword : KeywordBase
             return ValidationResult.ValidResult;
         }
 
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly RequiredKeyword _requiredKeyword;
         private readonly JsonInstanceElement _instance;
@@ -53,10 +53,9 @@ internal class RequiredKeyword : KeywordBase
             _options = options;
         }
 
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        public void CollectValidationResults(ref ValidationCompositionContext context)
         {
-            HashSet<string> instanceProperties = _instance.EnumerateObject().Select(prop => prop.Name)
-                .ToHashSet(_requiredKeyword._propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
+            HashSet<string> instanceProperties = _instance.ToPropertyNameSet(_requiredKeyword._propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
 
             foreach (string requiredProperty in _requiredKeyword._requiredProperties)
             {
@@ -74,13 +73,11 @@ internal class RequiredKeyword : KeywordBase
                     _fastReturnResult = validationResult;
                 }
 
-                yield return validationResult;
+                if (!context.Report(validationResult, _fastReturnResult))
+                {
+                    break;
+                }
             }
-        }
-
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            return (validationResult = _fastReturnResult) is not null;
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);

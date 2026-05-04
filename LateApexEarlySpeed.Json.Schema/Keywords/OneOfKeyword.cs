@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
@@ -38,10 +37,11 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return ValidationResultsComposer.Compose(new Validator(this, instance, options), options.OutputFormat);
+        var validator = new Validator(this, instance, options);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
-    private class Validator : IValidator
+    private struct Validator : IValidator
     {
         private readonly OneOfKeyword _oneOfKeyword;
         private readonly JsonInstanceElement _instance;
@@ -56,7 +56,7 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
             _options = options;
         }
 
-        public IEnumerable<ValidationResult> EnumerateValidationResults()
+        public void CollectValidationResults(ref ValidationCompositionContext context)
         {
             foreach (JsonSchema subSchema in _oneOfKeyword._subSchemas)
             {
@@ -66,22 +66,18 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
                     _validatedSchemaCount++;
                 }
 
-                yield return result;
-            }
-        }
+                ValidationResult? fastResult = null;
+                if (_validatedSchemaCount > 1)
+                {
+                    var error = new ValidationError(ResultCode.MoreThanOnePassedSchemaFound, "More than one schema validate instance", _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
+                    fastResult = ValidationResult.SingleErrorFailedResult(error);
+                }
 
-        public bool CanFinishFast([NotNullWhen(true)] out ValidationResult? validationResult)
-        {
-            if (_validatedSchemaCount > 1)
-            {
-                var error = new ValidationError(ResultCode.MoreThanOnePassedSchemaFound, "More than one schema validate instance", _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
-                validationResult = ValidationResult.SingleErrorFailedResult(error);
-                
-                return true;
+                if (!context.Report(result, fastResult))
+                {
+                    break;
+                }
             }
-
-            validationResult = null;
-            return false;
         }
 
         public ResultTuple Result
