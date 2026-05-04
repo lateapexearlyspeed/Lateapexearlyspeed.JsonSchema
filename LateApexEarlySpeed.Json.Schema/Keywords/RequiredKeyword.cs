@@ -55,8 +55,7 @@ internal class RequiredKeyword : KeywordBase
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
-            HashSet<string> instanceProperties = _instance.EnumerateObject().Select(prop => prop.Name)
-                .ToHashSet(_requiredKeyword._propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
+            HashSet<string> instanceProperties = _instance.ToPropertyNameSet(_requiredKeyword._propertyNameIgnoreCase ? StringComparer.OrdinalIgnoreCase : null);
 
             foreach (string requiredProperty in _requiredKeyword._requiredProperties)
             {

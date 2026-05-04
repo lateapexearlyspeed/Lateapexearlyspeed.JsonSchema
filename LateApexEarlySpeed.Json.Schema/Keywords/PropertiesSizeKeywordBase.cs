@@ -16,7 +16,7 @@ internal abstract class PropertiesSizeKeywordBase : KeywordBase, IBenchmarkValue
             return ValidationResult.ValidResult;
         }
 
-        int instanceProperties = instance.EnumerateObject().Count();
+        int instanceProperties = instance.GetPropertyCount();
 
         return IsSizeInRange(instanceProperties)
             ? ValidationResult.ValidResult

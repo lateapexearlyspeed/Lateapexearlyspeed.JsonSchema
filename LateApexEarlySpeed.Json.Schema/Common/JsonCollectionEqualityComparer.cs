@@ -30,16 +30,16 @@ internal class OrderedJsonCollectionComparer : JsonCollectionEqualityComparer
         Debug.Assert(jsonArray1.ValueKind == JsonValueKind.Array);
         Debug.Assert(jsonArray2.ValueKind == JsonValueKind.Array);
 
-        int arrayLength1 = jsonArray1.EnumerateArray().Count();
-        int arrayLength2 = jsonArray2.EnumerateArray().Count();
+        int arrayLength1 = jsonArray1.GetArrayLength();
+        int arrayLength2 = jsonArray2.GetArrayLength();
 
         if (arrayLength1 != arrayLength2)
         {
             return EquivalentResult.Fail(() => $"Array length not same, one is {arrayLength1} but another is {arrayLength2}", jsonArray1.Location, jsonArray2.Location);
         }
 
-        using (IEnumerator<JsonInstanceElement> enumerator1 = jsonArray1.EnumerateArray().GetEnumerator())
-        using (IEnumerator<JsonInstanceElement> enumerator2 = jsonArray2.EnumerateArray().GetEnumerator())
+        using (JsonInstanceElement.InstanceArrayEnumerable.InstanceArrayEnumerator enumerator1 = jsonArray1.EnumerateArray().GetEnumerator())
+        using (JsonInstanceElement.InstanceArrayEnumerable.InstanceArrayEnumerator enumerator2 = jsonArray2.EnumerateArray().GetEnumerator())
         {
             while (enumerator1.MoveNext())
             {
@@ -66,9 +66,9 @@ internal class OrderlessJsonCollectionComparer : JsonCollectionEqualityComparer
         Debug.Assert(jsonArray1.ValueKind == JsonValueKind.Array);
         Debug.Assert(jsonArray2.ValueKind == JsonValueKind.Array);
 
-        int arrayLength1 = jsonArray1.EnumerateArray().Count();
+        int arrayLength1 = jsonArray1.GetArrayLength();
 
-        JsonInstanceElement[] tmpJsonArray2 = jsonArray2.EnumerateArray().ToArray();
+        JsonInstanceElement[] tmpJsonArray2 = jsonArray2.ToArray();
         int arrayLength2 = tmpJsonArray2.Length;
 
         if (arrayLength1 != arrayLength2)

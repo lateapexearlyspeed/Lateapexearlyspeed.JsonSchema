@@ -48,7 +48,7 @@ internal class DependentRequiredKeyword : KeywordBase
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
-            var instancePropertyNames = new HashSet<string>(_instance.EnumerateObject().Select(p => p.Name));
+            HashSet<string> instancePropertyNames = _instance.ToPropertyNameSet();
 
             foreach (KeyValuePair<string, string[]> dependentProperty in _dependentProperties)
             {

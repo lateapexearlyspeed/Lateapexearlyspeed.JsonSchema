@@ -589,9 +589,9 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
         Debug.Assert(ValueKind == JsonValueKind.Object);
         Debug.Assert(other.ValueKind == JsonValueKind.Object);
 
-        Dictionary<string, JsonInstanceElement> otherProperties = other.EnumerateObject().ToDictionary(prop => prop.Name, prop => prop.Value);
+        Dictionary<string, JsonInstanceElement> otherProperties = other.ToPropertyDictionary();
 
-        int thisPropertyCount = EnumerateObject().Count();
+        int thisPropertyCount = this.GetPropertyCount();
         if (thisPropertyCount != otherProperties.Count)
         {
             return EquivalentResult.Fail(() => $"Property count not same, one is {thisPropertyCount} but another is {otherProperties.Count}", _instanceLocation, other._instanceLocation);

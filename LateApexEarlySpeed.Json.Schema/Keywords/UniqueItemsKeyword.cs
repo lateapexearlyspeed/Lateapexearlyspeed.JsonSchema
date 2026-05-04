@@ -24,7 +24,7 @@ internal class UniqueItemsKeyword : KeywordBase
             return ValidationResult.ValidResult;
         }
 
-        JsonInstanceElement[] items = instance.EnumerateArray().ToArray();
+        JsonInstanceElement[] items = instance.ToArray();
         for (int i = 0; i < items.Length; i++)
         {
             JsonInstanceElement curItem = items[i];
