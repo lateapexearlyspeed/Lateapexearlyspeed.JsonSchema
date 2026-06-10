@@ -1,32 +1,29 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
 
 /// <summary>
-/// This is a workaround about associate <see cref="JsonValidatorOptions"/> instance info to <see cref="JsonSerializerOptions"/> instance, which currently is reliable way to implement.
+/// This is a workaround to associate <see cref="JsonValidatorOptions"/> instance info to <see cref="JsonSerializerOptions"/> instance,
+/// by using a dedicated marker converter in options to carry deserialization context.
 /// Note: for way of using <see cref="ConditionalWeakTable{TKey,TValue}"/>, it cannot always work, for example when: https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/issues/43.
 /// Reason is: when running in that environment, <see cref="JsonSerializerOptions"/> instance may be changed to another instance by STJ between JsonSerializer.Deserialize(option) and custom JsonConverter.Read(option)
-///
-/// TODO: when STJ releases new interface to accept state, this implementation should be updated (or removed).
 /// </summary>
 internal ref struct JsonSchemaDeserializerContext
 {
-    // Default JsonSerializerOptions.MaxDepth value is 0 (which represents 64), so here uses 65 to represent default validator option and 66 to represent enabling PropertyNameCaseInsensitive validation, etc. It is a workaround and not graceful, I know…
-    private const int BaseMaxDepth = 65;
-
     // Items in JsonSerializerOptionsCache are with following order:
     //
-    // | Dialect              | PropertyNameCaseInsensitive | MaxDepth |
-    // |----------------------|-----------------------------|----------|
-    // | DialectKind.Draft2020| false                       | 65       |
-    // | DialectKind.Draft2020| true                        | 66       |
-    // | DialectKind.Draft2019| false                       | 67       |
-    // | DialectKind.Draft2019| true                        | 68       |
-    // | DialectKind.Draft7   | false                       | 69       |
-    // | DialectKind.Draft7   | true                        | 70       |
+    // | Dialect              | PropertyNameCaseInsensitive | Cache index |
+    // |----------------------|-----------------------------|-------------|
+    // | DialectKind.Draft2020| false                       | 0           |
+    // | DialectKind.Draft2020| true                        | 1           |
+    // | DialectKind.Draft2019| false                       | 2           |
+    // | DialectKind.Draft2019| true                        | 3           |
+    // | DialectKind.Draft7   | false                       | 4           |
+    // | DialectKind.Draft7   | true                        | 5           |
     private static readonly JsonSerializerOptions[] JsonSerializerOptionsCache;
 
     public bool PropertyNameCaseInsensitive;
@@ -38,7 +35,8 @@ internal ref struct JsonSchemaDeserializerContext
 
         for (int i = 0; i < JsonSerializerOptionsCache.Length; i++)
         {
-            JsonSerializerOptionsCache[i] = new JsonSerializerOptions { MaxDepth = BaseMaxDepth + i };
+            var markerConverter = new JsonSchemaDeserializerContextMarkerConverter(new JsonSchemaDeserializerContext(i % 2 == 1, (DialectKind)(i / 2)));
+            JsonSerializerOptionsCache[i] = new JsonSerializerOptions { Converters = { markerConverter } };
         }
     }
 
@@ -50,15 +48,43 @@ internal ref struct JsonSchemaDeserializerContext
 
     public JsonSchemaDeserializerContext(JsonSerializerOptions jsonSerializerOptions)
     {
-        int maxDepthIdx = jsonSerializerOptions.MaxDepth - BaseMaxDepth;
-        Debug.Assert(maxDepthIdx >= 0 && maxDepthIdx < ValidationKeywordRegistry.SupportedDialectsCount * 2);
+        JsonConverter converter = jsonSerializerOptions.GetConverter(typeof(JsonSchemaDeserializerContextMarkerConverter.Marker));
+        Debug.Assert(converter is JsonSchemaDeserializerContextMarkerConverter);
 
-        PropertyNameCaseInsensitive = (maxDepthIdx & 0x1) == 0x1; // maxDepthIdx % 2 == 1;
-        Dialect = (DialectKind)(maxDepthIdx >> 1); // maxDepthIdx / 2
+        JsonSchemaDeserializerContextMarkerConverter contextContainerConverter = (JsonSchemaDeserializerContextMarkerConverter)converter;
+
+        PropertyNameCaseInsensitive = contextContainerConverter.PropertyNameCaseInsensitive;
+        Dialect = contextContainerConverter.Dialect;
     }
 
     public readonly JsonSerializerOptions ToJsonSerializerOptions()
     {
         return JsonSerializerOptionsCache[(int)Dialect * 2 + (PropertyNameCaseInsensitive ? 1 : 0)];
+    }
+}
+
+internal class JsonSchemaDeserializerContextMarkerConverter : JsonConverter<JsonSchemaDeserializerContextMarkerConverter.Marker>
+{
+    public JsonSchemaDeserializerContextMarkerConverter(JsonSchemaDeserializerContext jsonSchemaDeserializerContext)
+    {
+        PropertyNameCaseInsensitive = jsonSchemaDeserializerContext.PropertyNameCaseInsensitive;
+        Dialect = jsonSchemaDeserializerContext.Dialect;
+    }
+
+    public bool PropertyNameCaseInsensitive { get; }
+    public DialectKind Dialect { get; }
+
+    public override Marker Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        throw new NotSupportedException("Marker converter is not intended for JSON payload read.");
+    }
+
+    public override void Write(Utf8JsonWriter writer, Marker value, JsonSerializerOptions options)
+    {
+        throw new NotSupportedException("Marker converter is not intended for JSON payload write.");
+    }
+
+    internal class Marker
+    {
     }
 }
