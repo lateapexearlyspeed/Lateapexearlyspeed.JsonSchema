@@ -1,13 +1,15 @@
 ﻿# Lateapexearlyspeed.Json.Schema
 
-This is a high performance Json schema .Net implementation library based on [Json schema](https://json-schema.org/) - draft 2020.12 (latest one by 2023.12).
+This is a high performance Json schema .Net implementation library based on [Json schema](https://json-schema.org/), support draft7, draft2019 and draft2020 (most commonly used, stable, LTS and latest versions).
 
-This library also supports validator generation from your .net class code.
+This library also supports fluent validation and validator generation from your class code.
+
+More schema validation options like case-insensitive property names matching, dialect (schema version) selection, Regex cache, output format and so on, please check [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/More-validation-options).
 
 ---
-The json validation functionalities have passed [official json schema test-suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) for draft 2020.12 (except cases about limitation listed below)
+The json validation functionalities have passed [official json schema test-suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) for draft7, draft2019 and draft2020 (except cases about limitation listed below)
 
-**High performance** - this .Net library has good performance compared with existing more popular and excellent .Net implementations in common cases by BenchmarkDotnet result, but please verify in your use cases.
+**High performance** - this .Net library has good performance compared with existing more popular and excellent .Net implementations in common cases by BenchmarkDotnet [result](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Performance). **Update**: there is a [blog article](https://medium.com/@lateapexearlyspeed/performance-comparison-of-json-schema-implementations-for-net-ead3d092a473) to demonstrate performance advantage of this library comparing with other existing popular implementations based on official Json Schema test suite.
 
 *Some Benchmark result:*
 
@@ -30,6 +32,8 @@ The json validation functionalities have passed [official json schema test-suite
 | ValidateByThisValidator            |    15.47 us |  1.160 us |   3.421 us |    17.14 us |  1.4954 |      - |  18.45 KB |
 
 Note: "STJ" means "System.Text.Json" which is built-in json package in .net sdk, this library is also based on it.
+
+Note: the benchmark schema below uses draft 2020-12 specific keywords like `prefixItems` for demonstration. You can still select validation dialect by setting `JsonValidatorOptions.DefaultDialect`.
 
 *Benchmark Schema:*
 
@@ -174,6 +178,19 @@ else
     Console.WriteLine($"Failed relative keyword location: {validationResult.RelativeKeywordLocation}");
     Console.WriteLine($"Failed schema resource base uri: {validationResult.SchemaResourceBaseUri}");
 }
+```
+
+### Dialect Selection Example
+
+```csharp
+using LateApexEarlySpeed.Json.Schema.Keywords;
+
+var jsonValidator = new JsonValidator(jsonSchema, new JsonValidatorOptions
+{
+    DefaultDialect = DialectKind.Draft7
+});
+
+ValidationResult validationResult = jsonValidator.Validate(instance);
 ```
 
 ## Output Information
