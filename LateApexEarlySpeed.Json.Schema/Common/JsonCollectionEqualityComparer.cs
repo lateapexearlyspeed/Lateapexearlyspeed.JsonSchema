@@ -20,12 +20,12 @@ public abstract class JsonCollectionEqualityComparer
     /// </summary>
     public static JsonCollectionEqualityComparer Equivalence { get; } = new OrderlessJsonCollectionComparer();
 
-    protected internal abstract EquivalentResult Equals(JsonInstanceElement jsonArray1, JsonInstanceElement jsonArray2);
+    protected internal abstract EquivalentResult Equals(JsonInstanceElement jsonArray1, JsonInstanceElement jsonArray2, StringComparison stringComparison);
 }
 
 internal class OrderedJsonCollectionComparer : JsonCollectionEqualityComparer
 {
-    protected internal override EquivalentResult Equals(JsonInstanceElement jsonArray1, JsonInstanceElement jsonArray2)
+    protected internal override EquivalentResult Equals(JsonInstanceElement jsonArray1, JsonInstanceElement jsonArray2, StringComparison stringComparison)
     {
         Debug.Assert(jsonArray1.ValueKind == JsonValueKind.Array);
         Debug.Assert(jsonArray2.ValueKind == JsonValueKind.Array);
@@ -46,7 +46,7 @@ internal class OrderedJsonCollectionComparer : JsonCollectionEqualityComparer
                 bool hasElement = enumerator2.MoveNext();
                 Debug.Assert(hasElement);
 
-                EquivalentResult equivalentResult = enumerator1.Current.Equivalent(enumerator2.Current, this);
+                EquivalentResult equivalentResult = enumerator1.Current.Equivalent(enumerator2.Current, this, stringComparison);
 
                 if (!equivalentResult.Result)
                 {
@@ -61,7 +61,7 @@ internal class OrderedJsonCollectionComparer : JsonCollectionEqualityComparer
 
 internal class OrderlessJsonCollectionComparer : JsonCollectionEqualityComparer
 {
-    protected internal override EquivalentResult Equals(JsonInstanceElement jsonArray1, JsonInstanceElement jsonArray2)
+    protected internal override EquivalentResult Equals(JsonInstanceElement jsonArray1, JsonInstanceElement jsonArray2, StringComparison stringComparison)
     {
         Debug.Assert(jsonArray1.ValueKind == JsonValueKind.Array);
         Debug.Assert(jsonArray2.ValueKind == JsonValueKind.Array);
@@ -84,7 +84,7 @@ internal class OrderlessJsonCollectionComparer : JsonCollectionEqualityComparer
 
             for (int i = startIdx; i < tmpJsonArray2.Length; i++)
             {
-                equivalentResult = elementOfArray1.Equivalent(tmpJsonArray2[i], this);
+                equivalentResult = elementOfArray1.Equivalent(tmpJsonArray2[i], this, stringComparison);
 
                 if (equivalentResult.Result)
                 {

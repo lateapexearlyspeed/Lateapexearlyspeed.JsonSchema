@@ -20,9 +20,15 @@ internal class EnumKeyword : KeywordBase
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return _enumList.Contains(instance)
-            ? ValidationResult.ValidResult
-            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.NotFoundInAllowedList, ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location));
+        foreach (JsonInstanceElement element in _enumList)
+        {
+            if (element.Equivalent(instance, options.JsonArrayEqualityComparer, options.JsonStringComparison).Result)
+            {
+                return ValidationResult.ValidResult;
+            }
+        }
+
+        return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.NotFoundInAllowedList, ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location));
     }
 
     internal static string ErrorMessage(string instanceJsonText)
