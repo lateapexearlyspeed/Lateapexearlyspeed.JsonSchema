@@ -331,6 +331,43 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             Assert.True(jsonValidator.Validate(jsonInstance).IsValid);
         }
 
+        [Theory]
+        // Ordinal (exact, case-sensitive)
+        [InlineData("a", "a", StringComparison.Ordinal, true)]
+        [InlineData("a", "A", StringComparison.Ordinal, false)]
+        [InlineData("Hello", "Hello", StringComparison.Ordinal, true)]
+        [InlineData("Hello", "hello", StringComparison.Ordinal, false)]
+        [InlineData("", "", StringComparison.Ordinal, true)]
+        // OrdinalIgnoreCase (case-insensitive)
+        [InlineData("a", "A", StringComparison.OrdinalIgnoreCase, true)]
+        [InlineData("Hello", "hello", StringComparison.OrdinalIgnoreCase, true)]
+        [InlineData("Hello World", "HELLO WORLD", StringComparison.OrdinalIgnoreCase, true)]
+        [InlineData("Hello", "world", StringComparison.OrdinalIgnoreCase, false)]
+        // Non-ASCII case folding ("\u00C5" = Å, "\u00E5" = å)
+        [InlineData("\u00C5", "\u00E5", StringComparison.OrdinalIgnoreCase, true)]
+        [InlineData("\u00C5", "\u00E5", StringComparison.Ordinal, false)]
+        // InvariantCulture / InvariantCultureIgnoreCase (deterministic across machines)
+        [InlineData("Hello", "hello", StringComparison.InvariantCulture, false)]
+        [InlineData("Hello", "hello", StringComparison.InvariantCultureIgnoreCase, true)]
+        // JSON-escaped instance still compares by its decoded value ("\\u0041" => JSON "\u0041" => "A")
+        [InlineData("A", "\\u0041", StringComparison.Ordinal, true)]
+        [InlineData("a", "\\u0041", StringComparison.OrdinalIgnoreCase, true)]
+        // Both sides escaped (exercises the raw-bytes fast path with escapes, and decode path)
+        [InlineData("\\u0041", "\\u0041", StringComparison.Ordinal, true)]
+        [InlineData("\\u0041", "\\u0061", StringComparison.OrdinalIgnoreCase, true)]
+        public void Validate_ConstKeywordWithCustomStringComparison(string constStringValue, string instanceStringValue, StringComparison stringComparison, bool expectedValidationResult)
+        {
+            string schema = $"{{ \"const\": \"{constStringValue}\" }}";
+            string instance = $"\"{instanceStringValue}\"";
+
+            Assert.Equal(expectedValidationResult, new JsonValidator(schema).Validate(instance, new JsonSchemaOptions { JsonStringComparison = stringComparison }).IsValid);
+
+            string schemaWithJsonArray = $"{{ \"const\": [\"{constStringValue}\"] }}";
+            string instanceWithJsonArray = $"[\"{instanceStringValue}\"]";
+
+            Assert.Equal(expectedValidationResult, new JsonValidator(schemaWithJsonArray).Validate(instanceWithJsonArray, new JsonSchemaOptions { JsonStringComparison = stringComparison }).IsValid);
+        }
+
         public static IEnumerable<object[]> JsonSchemaTestSuite 
             => JsonSchemaTestSuiteForDraft2020.Concat(JsonSchemaTestSuiteForDraft2019).Concat(JsonSchemaTestSuiteForDraft7);
 

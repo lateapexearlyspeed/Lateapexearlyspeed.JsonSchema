@@ -33,6 +33,11 @@ public class JsonSchemaOptions
     public JsonCollectionEqualityComparer JsonArrayEqualityComparer { get; set; } = JsonCollectionEqualityComparer.Equality;
 
     /// <summary>
+    /// Gets or sets a value that specifies the string comparison method to use when comparing JSON strings. Note it is not used for JSON property names comparison which can be configured by <see cref="JsonValidatorOptions.PropertyNameCaseInsensitive"/>.
+    /// </summary>
+    public StringComparison JsonStringComparison { get; set; } = StringComparison.Ordinal;
+
+    /// <summary>
     /// User entry point to create <see cref="JsonSchemaOptions"/> instance
     /// </summary>
     public JsonSchemaOptions()
@@ -52,6 +57,7 @@ public class JsonSchemaOptions
             RegexMatchTimeout = options.RegexMatchTimeout;
             OutputFormat = options.OutputFormat;
             JsonArrayEqualityComparer = options.JsonArrayEqualityComparer;
+            JsonStringComparison = options.JsonStringComparison;
         }
     }
 }

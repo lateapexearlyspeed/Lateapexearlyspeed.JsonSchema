@@ -3,12 +3,15 @@ using System.Collections;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 
 namespace LateApexEarlySpeed.Json.Schema.JInstance;
 
 public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 {
+    private const int MaxStringCharsOnStack = 256;
+
     private readonly LinkedListBasedImmutableJsonPointer _instanceLocation;
 
     private readonly CacheHolder _cacheHolder;
@@ -461,7 +464,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
         return true;
     }
 
-    public EquivalentResult Equivalent(JsonInstanceElement other, JsonCollectionEqualityComparer jsonCollectionEqualityComparer)
+    public EquivalentResult Equivalent(JsonInstanceElement other, JsonCollectionEqualityComparer jsonCollectionEqualityComparer, StringComparison stringComparison)
     {
         if (ValueKind != other.ValueKind)
         {
@@ -477,30 +480,68 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
                 return EquivalentResult.Success();
 
             case JsonValueKind.String:
-
-                if (GetRawUtf8Value().SequenceEqual(other.GetRawUtf8Value()))
-                {
-                    return EquivalentResult.Success();
-                }
-
-                string curString = GetString()!;
-                string otherString = other.GetString()!;
-
-                return EquivalentResult.Fail(() => StringNotSameMessageTemplate(curString, otherString), _instanceLocation, other._instanceLocation);
+                return StringEquivalent(other, stringComparison);
 
             case JsonValueKind.Number:
                 return NumberEquivalent(other);
 
             case JsonValueKind.Array:
-                return SequenceEquivalent(other, jsonCollectionEqualityComparer);
+                return SequenceEquivalent(other, jsonCollectionEqualityComparer, stringComparison);
 
             case JsonValueKind.Object:
-                return ObjectEquivalent(other, jsonCollectionEqualityComparer);
+                return ObjectEquivalent(other, jsonCollectionEqualityComparer, stringComparison);
 
             default:
                 Debug.Fail("Should not go to this default block, because all JsonValueKinds should already be handled.");
                 throw new NotImplementedException("Should not go here, because all JsonValueKinds should already be handled.");
         }
+    }
+
+    private EquivalentResult StringEquivalent(JsonInstanceElement other, StringComparison stringComparison)
+    {
+        ReadOnlySpan<byte> curRawBytes = GetRawUtf8Value();
+        ReadOnlySpan<byte> otherRawBytes = other.GetRawUtf8Value();
+
+        if (curRawBytes.SequenceEqual(otherRawBytes))
+        {
+            return EquivalentResult.Success();
+        }
+
+        scoped ReadOnlySpan<char> curDecodedChars;
+        scoped ReadOnlySpan<char> otherDecodedChars;
+
+        if (curRawBytes.IndexOf((byte)'\\') != -1 || otherRawBytes.IndexOf((byte)'\\') != -1) // need to json-decode
+        {
+            curDecodedChars = GetString();
+            otherDecodedChars = other.GetString();
+        }
+        else if (stringComparison == StringComparison.Ordinal)
+        {
+            string curString = GetString()!;
+            string otherString = other.GetString()!;
+
+            return EquivalentResult.Fail(() => StringNotSameMessageTemplate(curString, otherString), _instanceLocation, other._instanceLocation);
+        }
+        else
+        {
+            Span<char> tmpCharBuffer = curRawBytes.Length <= MaxStringCharsOnStack ? stackalloc char[curRawBytes.Length] : new char[curRawBytes.Length];
+            int charCount = Encoding.UTF8.GetChars(curRawBytes, tmpCharBuffer);
+            curDecodedChars = tmpCharBuffer.Slice(0, charCount);
+
+            tmpCharBuffer = otherRawBytes.Length <= MaxStringCharsOnStack ? stackalloc char[otherRawBytes.Length] : new char[otherRawBytes.Length];
+            charCount = Encoding.UTF8.GetChars(otherRawBytes, tmpCharBuffer);
+            otherDecodedChars = tmpCharBuffer.Slice(0, charCount);
+        }
+
+        if (curDecodedChars.Equals(otherDecodedChars, stringComparison))
+        {
+            return EquivalentResult.Success();
+        }
+
+        string curStr = GetString()!;
+        string otherStr = other.GetString()!;
+
+        return EquivalentResult.Fail(() => StringNotSameMessageTemplate(curStr, otherStr), _instanceLocation, other._instanceLocation);
     }
 
     private EquivalentResult NumberEquivalent(JsonInstanceElement other)
@@ -584,7 +625,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
         return $"String content not same, one is '{thisValue}', but another is '{otherValue}'";
     }
 
-    private EquivalentResult ObjectEquivalent(JsonInstanceElement other, JsonCollectionEqualityComparer jsonCollectionEqualityComparer)
+    private EquivalentResult ObjectEquivalent(JsonInstanceElement other, JsonCollectionEqualityComparer jsonCollectionEqualityComparer, StringComparison stringComparison)
     {
         Debug.Assert(ValueKind == JsonValueKind.Object);
         Debug.Assert(other.ValueKind == JsonValueKind.Object);
@@ -604,7 +645,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
                 return EquivalentResult.Fail(() => $"Properties not match, one has property:{thisProperty.Name} but another not", _instanceLocation, other._instanceLocation);
             }
 
-            EquivalentResult equivalentResult = thisProperty.Value.Equivalent(otherPropertyValue, jsonCollectionEqualityComparer);
+            EquivalentResult equivalentResult = thisProperty.Value.Equivalent(otherPropertyValue, jsonCollectionEqualityComparer, stringComparison);
             if (!equivalentResult.Result)
             {
                 return equivalentResult;
@@ -614,14 +655,14 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
         return EquivalentResult.Success();
     }
 
-    private EquivalentResult SequenceEquivalent(JsonInstanceElement other, JsonCollectionEqualityComparer jsonCollectionEqualityComparer)
+    private EquivalentResult SequenceEquivalent(JsonInstanceElement other, JsonCollectionEqualityComparer jsonCollectionEqualityComparer, StringComparison stringComparison)
     {
-        return jsonCollectionEqualityComparer.Equals(this, other);
+        return jsonCollectionEqualityComparer.Equals(this, other, stringComparison);
     }
 
     public bool Equals(JsonInstanceElement other)
     {
-        return Equivalent(other, JsonCollectionEqualityComparer.Equality).Result;
+        return Equivalent(other, JsonCollectionEqualityComparer.Equality, StringComparison.Ordinal).Result;
     }
 
     public override bool Equals(object? obj)
@@ -641,7 +682,7 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 
     public override int GetHashCode()
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public static JsonInstanceElement ParseValue(ref Utf8JsonReader reader)

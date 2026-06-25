@@ -21,7 +21,7 @@ internal class ConstKeyword : KeywordBase
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        EquivalentResult equivalentResult = _constValue.Equivalent(instance, options.JsonArrayEqualityComparer);
+        EquivalentResult equivalentResult = _constValue.Equivalent(instance, options.JsonArrayEqualityComparer, options.JsonStringComparison);
 
         if (equivalentResult.Result)
         {
