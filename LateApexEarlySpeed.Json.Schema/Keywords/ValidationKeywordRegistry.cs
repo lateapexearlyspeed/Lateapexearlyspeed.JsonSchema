@@ -239,8 +239,8 @@ public class ValidationKeywordRegistry
 
     private void AddKeyword(Type keywordType)
     {
-        ReadOnlySpan<char> keywordName = KeywordBase.GetKeywordName(keywordType);
-        DialectKind[] dialects = KeywordBase.GetKeywordDialects(keywordType);
+        ReadOnlySpan<char> keywordName = KeywordHelper.GetKeywordName(keywordType);
+        DialectKind[] dialects = KeywordHelper.GetKeywordDialects(keywordType);
 
         DialectKeywordRegistry dialectKeywordRegistry;
         if (_keywordsDictionary.TryGetValue(keywordName, out IDialectKeywordRegistry? dialectKeywords))
@@ -279,8 +279,8 @@ public class ValidationKeywordRegistry
     {
         Type keywordType = typeof(TKeyword);
         
-        ReadOnlySpan<char> keywordName = KeywordBase.GetKeywordName(keywordType);
-        DialectKind[] dialects = KeywordBase.GetKeywordDialects(keywordType);
+        ReadOnlySpan<char> keywordName = KeywordHelper.GetKeywordName(keywordType);
+        DialectKind[] dialects = KeywordHelper.GetKeywordDialects(keywordType);
 
         if (dialects.Length == SupportedDialectsCount) // current keyword supports all dialects
         {

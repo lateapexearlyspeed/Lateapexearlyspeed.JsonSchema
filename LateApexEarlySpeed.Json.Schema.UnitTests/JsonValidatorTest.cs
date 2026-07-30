@@ -750,7 +750,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
             ValidationError? error = validationResult.ValidationErrors.SingleOrDefault();
 
-            Assert.Equal(expectedIsValid ? null : KeywordBase.GetKeywordName<ConstKeyword>(), error?.Keyword);
+            Assert.Equal(expectedIsValid ? null : KeywordHelper.GetKeywordName(typeof(ConstKeyword)), error?.Keyword);
             Assert.Equal(expectedErrorMessage, error?.ErrorMessage);
             Assert.Equal(expectedInstanceLocation, error?.InstanceLocation.ToString());
             Assert.Equal(expectedKeywordLocation, error?.RelativeKeywordLocation?.ToString());

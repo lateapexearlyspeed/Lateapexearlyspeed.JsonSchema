@@ -9,7 +9,7 @@ internal class ThrowHelper
     [Pure]
     public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException<TKeyword>(JsonValueKind expectedJsonKind) where TKeyword : KeywordBase
     {
-        return CreateKeywordHasInvalidJsonValueKindJsonException(KeywordBase.GetKeywordName<TKeyword>(), expectedJsonKind);
+        return CreateKeywordHasInvalidJsonValueKindJsonException(KeywordHelper.GetKeywordName(typeof(TKeyword)), expectedJsonKind);
     }
 
     [Pure]
@@ -98,12 +98,12 @@ internal class ThrowHelper
 
     private static string CreateKeywordPrefixContent<TKeyword>() where TKeyword : KeywordBase
     {
-        return CreateKeywordPrefixContent(KeywordBase.GetKeywordName<TKeyword>());
+        return CreateKeywordPrefixContent(KeywordHelper.GetKeywordName(typeof(TKeyword)));
     }
 
     private static string CreateKeywordPrefixContent(Type keywordType)
     {
-        return CreateKeywordPrefixContent(KeywordBase.GetKeywordName(keywordType));
+        return CreateKeywordPrefixContent(KeywordHelper.GetKeywordName(keywordType));
     }
 
     private static string CreateKeywordPrefixContent(string keywordName)
