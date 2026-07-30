@@ -12,7 +12,7 @@ public class MaxLengthAttribute : Attribute, IKeywordGenerator
         _max = max;
     }
 
-    public KeywordBase CreateKeyword(Type type)
+    public ValidationKeywordBase CreateKeyword(Type type)
     {
         return type == typeof(string)
             ? new MaxLengthKeyword { BenchmarkValue = _max }

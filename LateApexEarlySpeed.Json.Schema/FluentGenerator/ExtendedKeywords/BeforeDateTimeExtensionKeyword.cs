@@ -7,7 +7,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords;
 namespace LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 
 [Keyword("ext-BeforeDateTime")]
-internal class BeforeDateTimeExtensionKeyword : KeywordBase
+internal class BeforeDateTimeExtensionKeyword : ValidationKeywordBase
 {
     private readonly string[]? _formats;
     private readonly DateTime _before;

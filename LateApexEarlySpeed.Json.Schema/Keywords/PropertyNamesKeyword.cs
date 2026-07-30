@@ -11,7 +11,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("propertyNames")]
 [JsonConverter(typeof(SingleSchemaJsonConverter<PropertyNamesKeyword>))]
-internal class PropertyNamesKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
+internal class PropertyNamesKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
 {
     private JsonSchema _schema = null!;
 

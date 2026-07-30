@@ -93,9 +93,9 @@ public class ArrayKeywordBuilder : KeywordBuilder
         return this;
     }
 
-    private static void AddHasLengthKeyword(List<KeywordBase> keywords, uint length)
+    private static void AddHasLengthKeyword(List<ValidationKeywordBase> keywords, uint length)
     {
-        keywords.AddRange(new KeywordBase[]
+        keywords.AddRange(new ValidationKeywordBase[]
         {
             new MinItemsKeyword { BenchmarkValue = length },
             new MaxItemsKeyword {BenchmarkValue = length}
@@ -175,7 +175,7 @@ public class ArrayKeywordBuilder : KeywordBuilder
 
         var arrayContainsValidator = new ArrayContainsValidator(jsonSchemaBuilder.Build(), null, null);
 
-        _schemas.Add(new BodyJsonSchema(Enumerable.Empty<KeywordBase>(), 
+        _schemas.Add(new BodyJsonSchema(Enumerable.Empty<ValidationKeywordBase>(), 
             new ISchemaContainerValidationNode[] {arrayContainsValidator}, null, null, null, null, null));
 
         return this;
@@ -235,7 +235,7 @@ public class ArrayKeywordBuilder : KeywordBuilder
         BodyJsonSchema subSchema = builder.Build();
         var arrayContainsValidator = new ArrayContainsValidator(subSchema, 1, 1);
 
-        _schemas.Add(new BodyJsonSchema(Enumerable.Empty<KeywordBase>(), new ISchemaContainerValidationNode[] {arrayContainsValidator}, 
+        _schemas.Add(new BodyJsonSchema(Enumerable.Empty<ValidationKeywordBase>(), new ISchemaContainerValidationNode[] {arrayContainsValidator}, 
             null, null, null, null, null));
 
         return this;

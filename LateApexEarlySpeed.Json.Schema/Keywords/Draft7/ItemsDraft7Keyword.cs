@@ -13,7 +13,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords.Draft7;
 [Keyword("items")]
 [Dialect(DialectKind.Draft7, DialectKind.Draft201909)]
 [JsonConverter(typeof(ItemsDraft7KeywordJsonConverter))]
-internal abstract class ItemsDraft7Keyword : KeywordBase
+internal abstract class ItemsDraft7Keyword : ValidationKeywordBase
 {
 }
 

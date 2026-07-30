@@ -12,7 +12,7 @@ public class PatternAttribute : Attribute, IKeywordGenerator
         _pattern = pattern;
     }
 
-    public KeywordBase CreateKeyword(Type type)
+    public ValidationKeywordBase CreateKeyword(Type type)
     {
         return new PatternKeyword(_pattern);
     }

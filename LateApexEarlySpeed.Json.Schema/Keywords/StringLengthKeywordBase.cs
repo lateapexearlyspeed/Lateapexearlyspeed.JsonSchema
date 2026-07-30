@@ -6,7 +6,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-internal abstract class StringLengthKeywordBase : KeywordBase, IBenchmarkValueKeyword
+internal abstract class StringLengthKeywordBase : ValidationKeywordBase, IBenchmarkValueKeyword
 {
     public uint BenchmarkValue { get; init; }
 

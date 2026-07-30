@@ -7,7 +7,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords;
 namespace LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 
 [Keyword("ext-custom-DateTime")]
-internal class DateTimeCustomValidationKeyword : KeywordBase
+internal class DateTimeCustomValidationKeyword : ValidationKeywordBase
 {
     private readonly string[]? _formats;
     private readonly Func<DateTime, bool> _validator;

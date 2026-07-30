@@ -9,7 +9,7 @@ namespace LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 
 [Keyword("ext-noProperties")]
 [JsonConverter(typeof(ExtendedKeywordJsonConverter))]
-internal class NoPropertiesKeyword : KeywordBase
+internal class NoPropertiesKeyword : ValidationKeywordBase
 {
     private readonly HashSet<string> _propertyBlackList;
 

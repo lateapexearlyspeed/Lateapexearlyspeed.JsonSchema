@@ -11,18 +11,18 @@ internal class StringDictionarySchemaGenerationCandidate : ISchemaGenerationCand
         return typeToConvert.IsConstructedGenericType && typeToConvert.GetGenericTypeDefinition() == typeof(Dictionary<,>) && typeToConvert.GetGenericArguments()[0] == typeof(string);
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         var typeKeyword = new TypeKeyword(InstanceType.Object, InstanceType.Null);
         IType valueType = typeToConvert.GenericTypeArguments[1];
-        JsonSchema valueSchema = JsonSchemaGenerator.GenerateSchema(valueType, Enumerable.Empty<KeywordBase>(), options);
+        JsonSchema valueSchema = JsonSchemaGenerator.GenerateSchema(valueType, Enumerable.Empty<ValidationKeywordBase>(), options);
 
         JsonSchema propertySchema;
         if (valueSchema is JsonSchemaResource valueSchemaResource)
         {
             options.SchemaDefinitions.AddSchemaDefinition(valueType.Type, valueSchemaResource);
 
-            propertySchema = SchemaGenerationHelper.GenerateSchemaReference(valueType.Type, Enumerable.Empty<KeywordBase>(), options.MainDocumentBaseUri!);
+            propertySchema = SchemaGenerationHelper.GenerateSchemaReference(valueType.Type, Enumerable.Empty<ValidationKeywordBase>(), options.MainDocumentBaseUri!);
         }
         else
         {
@@ -34,7 +34,7 @@ internal class StringDictionarySchemaGenerationCandidate : ISchemaGenerationCand
             Schema = propertySchema
         };
 
-        var keywords = new List<KeywordBase> { typeKeyword, additionalPropertiesKeyword };
+        var keywords = new List<ValidationKeywordBase> { typeKeyword, additionalPropertiesKeyword };
         keywords.AddRange(keywordsFromProperty);
 
         return new BodyJsonSchema(keywords);

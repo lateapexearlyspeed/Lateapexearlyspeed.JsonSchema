@@ -10,7 +10,7 @@ namespace LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 
 [Keyword("ext-contains")]
 [JsonConverter(typeof(ExtendedKeywordJsonConverter))]
-internal class ContainsKeyword : KeywordBase
+internal class ContainsKeyword : ValidationKeywordBase
 {
     private readonly JsonSchema _schema;
 

@@ -12,7 +12,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [Keyword("items")]
 [Dialect(DialectKind.Draft202012)]
 [JsonConverter(typeof(SingleSchemaJsonConverter<ItemsKeyword>))]
-internal class ItemsKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
+internal class ItemsKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
 {
     private JsonSchema _schema = null!;
 

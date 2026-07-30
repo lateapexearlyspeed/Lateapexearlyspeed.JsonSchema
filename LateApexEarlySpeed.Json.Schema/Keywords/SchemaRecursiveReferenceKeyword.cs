@@ -10,7 +10,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword(Keyword)]
 [JsonConverter(typeof(SchemaRecursiveReferenceKeywordJsonConverter))]
-internal class SchemaRecursiveReferenceKeyword : KeywordBase, IReferenceKeyword
+internal class SchemaRecursiveReferenceKeyword : ValidationKeywordBase, IReferenceKeyword
 {
     public const string Keyword = "$recursiveRef";
 

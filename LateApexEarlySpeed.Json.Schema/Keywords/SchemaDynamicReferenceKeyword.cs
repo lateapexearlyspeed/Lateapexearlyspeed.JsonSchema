@@ -10,7 +10,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword(Keyword)]
 [JsonConverter(typeof(SchemaDynamicReferenceKeywordJsonConverter))]
-internal class SchemaDynamicReferenceKeyword : KeywordBase, IReferenceKeyword
+internal class SchemaDynamicReferenceKeyword : ValidationKeywordBase, IReferenceKeyword
 {
     public const string Keyword = "$dynamicRef";
 

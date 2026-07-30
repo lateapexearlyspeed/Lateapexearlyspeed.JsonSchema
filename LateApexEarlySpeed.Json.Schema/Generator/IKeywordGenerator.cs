@@ -4,5 +4,5 @@ namespace LateApexEarlySpeed.Json.Schema.Generator;
 
 internal interface IKeywordGenerator
 {
-    public KeywordBase CreateKeyword(Type type);
+    public ValidationKeywordBase CreateKeyword(Type type);
 }

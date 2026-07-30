@@ -12,7 +12,7 @@ internal static class KeywordHelper
 
     public static string GetKeywordName(Type keywordType)
     {
-        Debug.Assert(typeof(KeywordBase).IsAssignableFrom(keywordType) || typeof(AnnotationKeywordBase).IsAssignableFrom(keywordType));
+        Debug.Assert(typeof(ValidationKeywordBase).IsAssignableFrom(keywordType) || typeof(AnnotationKeywordBase).IsAssignableFrom(keywordType));
 
         return NameForKeywordTypes.GetOrAdd(keywordType, type =>
         {
@@ -34,7 +34,7 @@ internal static class KeywordHelper
 
     public static DialectKind[] GetKeywordDialects(Type keywordType)
     {
-        Debug.Assert(typeof(KeywordBase).IsAssignableFrom(keywordType) || typeof(AnnotationKeywordBase).IsAssignableFrom(keywordType));
+        Debug.Assert(typeof(ValidationKeywordBase).IsAssignableFrom(keywordType) || typeof(AnnotationKeywordBase).IsAssignableFrom(keywordType));
 
         DialectAttribute? dialectAttribute = keywordType.GetCustomAttribute<DialectAttribute>();
 

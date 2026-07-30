@@ -136,7 +136,7 @@ public class CustomKeywordTests
 
 [Keyword("custom-keyword-2")]
 [JsonConverter(typeof(TwoIsValidKeywordJsonConverter))]
-public class TwoIsValidKeyword : KeywordBase
+public class TwoIsValidKeyword : ValidationKeywordBase
 {
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
@@ -167,7 +167,7 @@ public class TwoIsValidKeywordJsonConverter : JsonConverter<TwoIsValidKeyword>
 
 [Keyword("custom-keyword-2")]
 [JsonConverter(typeof(TwoIsInvalidKeywordJsonConverter))]
-public class TwoIsInvalidKeyword : KeywordBase
+public class TwoIsInvalidKeyword : ValidationKeywordBase
 {
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
@@ -198,7 +198,7 @@ public class TwoIsInvalidKeywordJsonConverter : JsonConverter<TwoIsInvalidKeywor
 
 [Keyword("custom-keyword-1")]
 [JsonConverter(typeof(OneIsValidKeywordJsonConverter))]
-public class OneIsValidKeyword : KeywordBase
+public class OneIsValidKeyword : ValidationKeywordBase
 {
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {

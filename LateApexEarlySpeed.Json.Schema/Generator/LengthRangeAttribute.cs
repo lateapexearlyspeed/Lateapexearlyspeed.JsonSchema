@@ -15,7 +15,7 @@ public class LengthRangeAttribute : Attribute, IKeywordGenerator
         _max = max;
     }
 
-    public KeywordBase CreateKeyword(Type type)
+    public ValidationKeywordBase CreateKeyword(Type type)
     {
         return new AllOfKeyword(new []
         {
@@ -24,14 +24,14 @@ public class LengthRangeAttribute : Attribute, IKeywordGenerator
         });
     }
 
-    private KeywordBase CreateKeywordForMax(Type type)
+    private ValidationKeywordBase CreateKeywordForMax(Type type)
     {
         return type == typeof(string)
             ? new MaxLengthKeyword { BenchmarkValue = _max }
             : new MaxItemsKeyword { BenchmarkValue = _max };
     }
 
-    private KeywordBase CreateKeywordForMin(Type type)
+    private ValidationKeywordBase CreateKeywordForMin(Type type)
     {
         return type == typeof(string)
             ? new MinLengthKeyword { BenchmarkValue = _min }

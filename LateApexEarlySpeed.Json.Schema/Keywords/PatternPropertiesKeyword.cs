@@ -10,7 +10,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("patternProperties")]
 [JsonConverter(typeof(PatternPropertiesKeywordJsonConverter))]
-internal class PatternPropertiesKeyword : KeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class PatternPropertiesKeyword : ValidationKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
 {
     private readonly Dictionary<string, JsonSchema> _patternSchemas;
 

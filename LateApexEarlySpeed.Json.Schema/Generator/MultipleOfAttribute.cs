@@ -12,7 +12,7 @@ public class MultipleOfAttribute : Attribute, IKeywordGenerator
         _multipleOf = multipleOf;
     }
 
-    public KeywordBase CreateKeyword(Type type)
+    public ValidationKeywordBase CreateKeyword(Type type)
     {
         return new MultipleOfKeyword(_multipleOf);
     }

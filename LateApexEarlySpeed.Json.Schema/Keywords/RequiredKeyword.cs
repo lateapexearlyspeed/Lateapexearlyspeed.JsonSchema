@@ -9,7 +9,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("required")]
 [JsonConverter(typeof(RequiredKeywordJsonConverter))]
-internal class RequiredKeyword : KeywordBase
+internal class RequiredKeyword : ValidationKeywordBase
 {
     private readonly bool _propertyNameIgnoreCase;
     private readonly string[] _requiredProperties;

@@ -6,7 +6,7 @@ namespace LateApexEarlySpeed.Json.Schema.Generator;
 // ReSharper disable once InconsistentNaming
 public class IPv6Attribute : Attribute, IKeywordGenerator
 {
-    public KeywordBase CreateKeyword(Type type)
+    public ValidationKeywordBase CreateKeyword(Type type)
     {
         return new FormatKeyword(IPv6FormatValidator.FormatName, new IPv6FormatValidator());
     }

@@ -232,7 +232,7 @@ public class ValidationKeywordRegistry
     /// </summary>
     /// <typeparam name="TKeyword">New keyword type to be added</typeparam>
     /// <exception cref="ArgumentException">A keyword type with the same keyword name and dialect already exists in the <see cref="ValidationKeywordRegistry"/></exception>
-    public void AddKeyword<TKeyword>() where TKeyword : KeywordBase
+    public void AddKeyword<TKeyword>() where TKeyword : ValidationKeywordBase
     {
         AddKeyword(typeof(TKeyword));
     }
@@ -275,7 +275,7 @@ public class ValidationKeywordRegistry
     /// If specified keyword name and dialect does not exist, it is added; otherwise it is updated with new keyword type.
     /// </summary>
     /// <typeparam name="TKeyword">New keyword type to be set</typeparam>
-    public void SetKeyword<TKeyword>() where TKeyword : KeywordBase
+    public void SetKeyword<TKeyword>() where TKeyword : ValidationKeywordBase
     {
         Type keywordType = typeof(TKeyword);
         

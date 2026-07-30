@@ -10,7 +10,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("multipleOf")]
 [JsonConverter(typeof(MultipleOfKeywordJsonConverter))]
-internal class MultipleOfKeyword : KeywordBase
+internal class MultipleOfKeyword : ValidationKeywordBase
 {
     private readonly IMultipleOfChecker _multipleOfChecker;
 

@@ -11,7 +11,7 @@ internal class UInt16SchemaGenerationCandidate : ISchemaGenerationCandidate
         return typeToConvert == typeof(ushort);
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         return SchemaGenerationHelper.GenerateSchemaForUnsignedInteger(keywordsFromProperty, ushort.MaxValue);
     }

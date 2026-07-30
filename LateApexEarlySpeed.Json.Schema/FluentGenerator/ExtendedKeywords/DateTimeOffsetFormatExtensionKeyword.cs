@@ -7,7 +7,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords;
 namespace LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 
 [Keyword("ext-DateTimeOffsetFormat")]
-internal class DateTimeOffsetFormatExtensionKeyword : KeywordBase
+internal class DateTimeOffsetFormatExtensionKeyword : ValidationKeywordBase
 {
     private readonly string[]? _formats;
 

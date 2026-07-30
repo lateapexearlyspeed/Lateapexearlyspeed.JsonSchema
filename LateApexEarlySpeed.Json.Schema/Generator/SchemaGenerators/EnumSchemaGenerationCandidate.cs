@@ -15,7 +15,7 @@ internal class EnumSchemaGenerationCandidate : ISchemaGenerationCandidate
         return typeToConvert.IsEnum;
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         IEnumerable<JsonInstanceElement> allowedStringEnums = typeToConvert.Type.GetEnumNames().Select(name => JsonInstanceSerializer.SerializeToElement(name));
 
@@ -32,7 +32,7 @@ internal class EnumSchemaGenerationCandidate : ISchemaGenerationCandidate
         
         var enumKeyword = new EnumKeyword(enumCollection);
 
-        var keywords = new List<KeywordBase> { enumKeyword };
+        var keywords = new List<ValidationKeywordBase> { enumKeyword };
         keywords.AddRange(keywordsFromProperty);
         keywords.AddRange(SchemaGenerationHelper.GenerateKeywordsFromType(typeToConvert.Type));
 

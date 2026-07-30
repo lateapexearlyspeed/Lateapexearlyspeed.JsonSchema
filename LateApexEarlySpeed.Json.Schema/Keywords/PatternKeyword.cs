@@ -8,7 +8,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("pattern")]
 [JsonConverter(typeof(PatternKeywordJsonConverter))]
-internal class PatternKeyword : KeywordBase
+internal class PatternKeyword : ValidationKeywordBase
 {
     public PatternKeyword(string pattern)
     {

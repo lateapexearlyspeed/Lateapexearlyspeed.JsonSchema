@@ -9,7 +9,7 @@ namespace LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 
 [Keyword("ext-custom-JsonElementBasedValidation")]
 [JsonConverter(typeof(ExtendedKeywordJsonConverter))]
-internal class JsonElementBasedObjectCustomValidationKeyword : KeywordBase
+internal class JsonElementBasedObjectCustomValidationKeyword : ValidationKeywordBase
 {
     private readonly Func<JsonElement, bool> _validator;
     private readonly Func<JsonElement, string> _errorMessageFunc;

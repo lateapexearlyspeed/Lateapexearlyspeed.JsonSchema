@@ -11,7 +11,7 @@ internal class DoubleSchemaGenerationCandidate : ISchemaGenerationCandidate
         return typeToConvert == typeof(double);
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         return SchemaGenerationHelper.GenerateSchemaForDouble(keywordsFromProperty, double.MinValue, double.MaxValue);
     }

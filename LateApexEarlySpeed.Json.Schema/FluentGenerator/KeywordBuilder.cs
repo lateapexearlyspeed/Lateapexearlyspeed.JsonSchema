@@ -4,13 +4,13 @@ namespace LateApexEarlySpeed.Json.Schema.FluentGenerator;
 
 public class KeywordBuilder
 {
-    protected internal readonly List<KeywordBase> Keywords = new();
+    protected internal readonly List<ValidationKeywordBase> Keywords = new();
 
     public KeywordBuilder()
     {
     }
 
-    protected KeywordBuilder(KeywordBase keyword)
+    protected KeywordBuilder(ValidationKeywordBase keyword)
     {
         Keywords.Add(keyword);
     }
@@ -23,12 +23,12 @@ public class KeywordBuilder
 
 internal readonly struct KeywordCollection
 {
-    public KeywordCollection(List<KeywordBase> keywords, ArrayContainsValidator? arrayContainsValidator = null)
+    public KeywordCollection(List<ValidationKeywordBase> keywords, ArrayContainsValidator? arrayContainsValidator = null)
     {
         Keywords = keywords;
         ArrayContainsValidator = arrayContainsValidator;
     }
 
-    public List<KeywordBase> Keywords { get; }
+    public List<ValidationKeywordBase> Keywords { get; }
     public ArrayContainsValidator? ArrayContainsValidator { get; }
 }

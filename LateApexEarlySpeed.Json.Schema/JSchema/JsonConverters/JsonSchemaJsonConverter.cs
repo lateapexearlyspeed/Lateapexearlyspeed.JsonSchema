@@ -47,7 +47,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
         reader.Read();
 
-        var validationKeywords = new List<KeywordBase>();
+        var validationKeywords = new List<ValidationKeywordBase>();
 
         var deserializerContext = new JsonSchemaDeserializerContext(options);
 
@@ -104,7 +104,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
             if (keywordType is not null)
             {
-                KeywordBase? keyword = JsonSerializer.Deserialize(ref reader, keywordType, options) as KeywordBase;
+                ValidationKeywordBase? keyword = JsonSerializer.Deserialize(ref reader, keywordType, options) as ValidationKeywordBase;
 
                 Debug.Assert(keyword != null);
                 validationKeywords.Add(keyword);
@@ -372,9 +372,9 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         return reader.CopyString(keywordNameBuffer);
     }
 
-    private static void ThrowIfKeywordsHaveDuplication(ICollection<KeywordBase> keywords)
+    private static void ThrowIfKeywordsHaveDuplication(ICollection<ValidationKeywordBase> keywords)
     {
-        KeywordBase? duplicatedKeyword = keywords.FindFirstDuplicatedItem(keyword => keyword.Name);
+        ValidationKeywordBase? duplicatedKeyword = keywords.FindFirstDuplicatedItem(keyword => keyword.Name);
         if (duplicatedKeyword is not null)
         {
             throw ThrowHelper.CreateJsonSchemaHasDuplicatedKeywordsJsonException(duplicatedKeyword.Name);
@@ -425,7 +425,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
 
             // Keyword part:
-            foreach (KeywordBase keyword in schema.Keywords)
+            foreach (ValidationKeywordBase keyword in schema.Keywords)
             {
                 writer.WritePropertyName(keyword.Name);
                 JsonSerializer.Serialize(writer, keyword, keyword.GetType(), options);

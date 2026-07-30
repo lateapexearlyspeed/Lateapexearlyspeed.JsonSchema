@@ -15,7 +15,7 @@ public class NumberRangeAttribute : Attribute, IKeywordGenerator
         _max = max;
     }
 
-    public KeywordBase CreateKeyword(Type type)
+    public ValidationKeywordBase CreateKeyword(Type type)
     {
         return new AllOfKeyword(new[]
         {

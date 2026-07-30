@@ -11,7 +11,7 @@ internal class FloatSchemaGenerationCandidate : ISchemaGenerationCandidate
         return typeToConvert == typeof(float);
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         return SchemaGenerationHelper.GenerateSchemaForDouble(keywordsFromProperty, float.MinValue, float.MaxValue);
     }

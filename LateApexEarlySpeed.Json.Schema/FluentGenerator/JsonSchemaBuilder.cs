@@ -214,7 +214,7 @@ public class JsonSchemaBuilder
     {
         return _keywordBuilder is not null 
             ? BuildBodyJsonSchema(_keywordBuilder) 
-            : new BodyJsonSchema(Enumerable.Empty<KeywordBase>());
+            : new BodyJsonSchema(Enumerable.Empty<ValidationKeywordBase>());
     }
 
     internal static BodyJsonSchema BuildBodyJsonSchema(KeywordBuilder keywordBuilder)

@@ -10,7 +10,7 @@ namespace LateApexEarlySpeed.Json.Schema.JSchema;
 internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 {
     private readonly ISchemaContainerValidationNode[]? _schemaContainerValidators;
-    private readonly IReadOnlyList<KeywordBase> _keywords;
+    private readonly IReadOnlyList<ValidationKeywordBase> _keywords;
     private readonly IReferenceKeyword[]? _referenceKeywords;
 
     /// <summary>
@@ -56,7 +56,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public IReadOnlyList<ISchemaContainerValidationNode>? SchemaContainerValidators => _schemaContainerValidators;
 
-    public IReadOnlyList<KeywordBase> Keywords => _keywords;
+    public IReadOnlyList<ValidationKeywordBase> Keywords => _keywords;
 
     public IReadOnlyList<IReferenceKeyword>? ReferenceKeywords => _referenceKeywords;
 
@@ -64,12 +64,12 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public string? DynamicAnchor { get; }
 
-    public BodyJsonSchema(IEnumerable<KeywordBase> keywords) : this(keywords, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null)
+    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords) : this(keywords, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null)
     {
 
     }
 
-    public BodyJsonSchema(IEnumerable<KeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
+    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
     {
         _keywords = MergeKeywords(keywords.ToArray());
 
@@ -104,31 +104,31 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
     /// <summary>
     /// Put all duplicated keywords and original 'allOf' keyword(s) into one newly created 'allOf' keyword, so that de-dup them
     /// </summary>
-    private static IReadOnlyList<KeywordBase> MergeKeywords(KeywordBase[] keywords)
+    private static IReadOnlyList<ValidationKeywordBase> MergeKeywords(ValidationKeywordBase[] keywords)
     {
         if (keywords.FindFirstDuplicatedItem(keyword => keyword.Name) is null)
         {
             return keywords;
         }
 
-        var keywordGroups = new Dictionary<string, List<KeywordBase>>(keywords.Length);
-        foreach (KeywordBase keyword in keywords)
+        var keywordGroups = new Dictionary<string, List<ValidationKeywordBase>>(keywords.Length);
+        foreach (ValidationKeywordBase keyword in keywords)
         {
-            if (!keywordGroups.TryGetValue(keyword.Name, out List<KeywordBase>? group))
+            if (!keywordGroups.TryGetValue(keyword.Name, out List<ValidationKeywordBase>? group))
             {
                 // Assume there is no much duplication cases, so initialize 'group' with capacity of 1
-                group = new List<KeywordBase>(1);
+                group = new List<ValidationKeywordBase>(1);
                 keywordGroups[keyword.Name] = group;
             }
 
             group.Add(keyword);
         }
 
-        var result = new List<KeywordBase>(keywords.Length);
+        var result = new List<ValidationKeywordBase>(keywords.Length);
 
         // this includes all duplicated keywords (including 'allOf' keyword)
-        var duplicatedKeywords = new List<KeywordBase>();
-        foreach (KeyValuePair<string, List<KeywordBase>> keywordGroup in keywordGroups)
+        var duplicatedKeywords = new List<ValidationKeywordBase>();
+        foreach (KeyValuePair<string, List<ValidationKeywordBase>> keywordGroup in keywordGroups)
         {
             if (keywordGroup.Key == AllOfKeyword.Keyword) // found 'allOf' keyword(s)
             {
@@ -184,7 +184,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
             for (int i = 0; i < _bodyJsonSchema._keywords.Count; i++)
             {
-                KeywordBase keyword = _bodyJsonSchema._keywords[i];
+                ValidationKeywordBase keyword = _bodyJsonSchema._keywords[i];
 
                 if (!ReportValidationAndCheckFastReturn(ref this, keyword, ref context))
                 {
@@ -235,7 +235,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
         // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
         for (var i = 0; i < _keywords.Count; i++)
         {
-            KeywordBase keyword = _keywords[i];
+            ValidationKeywordBase keyword = _keywords[i];
             if (keyword.Name == name && keyword is ISchemaContainerElement schemaContainerElement)
             {
                 return schemaContainerElement;
@@ -273,7 +273,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
         // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
         for (var i = 0; i < _keywords.Count; i++)
         {
-            KeywordBase validationKeyword = _keywords[i];
+            ValidationKeywordBase validationKeyword = _keywords[i];
             if (validationKeyword is ISchemaContainerElement element)
             {
                 yield return element;
@@ -337,7 +337,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
     {
         IEnumerable<ISchemaContainerElement> schemaElements = Enumerable.Empty<ISchemaContainerElement>();
 
-        foreach (KeywordBase keyword in _keywords)
+        foreach (ValidationKeywordBase keyword in _keywords)
         {
             if (keyword is ISchemaContainerElement schemaContainerElement)
             {
@@ -430,7 +430,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public void RemoveIdFromAllChildrenSchemaElements()
     {
-        foreach (KeywordBase keyword in _keywords)
+        foreach (ValidationKeywordBase keyword in _keywords)
         {
             if (keyword is IJsonSchemaResourceNodesCleanable resourceIdCleanable)
             {

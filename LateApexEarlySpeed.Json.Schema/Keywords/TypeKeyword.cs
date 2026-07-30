@@ -9,7 +9,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("type")]
 [JsonConverter(typeof(TypeKeywordJsonConverter))]
-internal class TypeKeyword : KeywordBase
+internal class TypeKeyword : ValidationKeywordBase
 {
     private static readonly Dictionary<InstanceType, JsonValueKind> InstanceTypeJsonKindMap = new()
     {

@@ -11,7 +11,7 @@ internal class GuidSchemaGenerationCandidate : ISchemaGenerationCandidate
         return typeToConvert == typeof(Guid);
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         var typeKeyword = new TypeKeyword(InstanceType.String);
         var formatKeyword = new FormatKeyword(GuidFormatValidator.FormatName, new GuidFormatValidator());
