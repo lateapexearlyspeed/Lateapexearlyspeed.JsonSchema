@@ -7,9 +7,9 @@ namespace LateApexEarlySpeed.Json.Schema.Common;
 internal class ThrowHelper
 {
     [Pure]
-    public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException<TKeyword>(JsonValueKind expectedJsonKind) where TKeyword : ValidationKeywordBase
+    public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException<TKeyword>(JsonValueKind expectedJsonKind)
     {
-        return CreateKeywordHasInvalidJsonValueKindJsonException(KeywordHelper.GetKeywordName(typeof(TKeyword)), expectedJsonKind);
+        return CreateKeywordHasInvalidJsonValueKindJsonException(KeywordHelper.GetKeywordName<TKeyword>(), expectedJsonKind);
     }
 
     [Pure]
@@ -19,7 +19,7 @@ internal class ThrowHelper
     }
 
     [Pure]
-    public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException<TKeyword>(params JsonValueKind[] expectedJsonKinds) where TKeyword : ValidationKeywordBase
+    public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException<TKeyword>(params JsonValueKind[] expectedJsonKinds)
     {
         return new JsonException(CreateKeywordPrefixContent<TKeyword>() + $" expects json kinds: \"{string.Join(",", expectedJsonKinds)}\"");
     }
@@ -96,9 +96,9 @@ internal class ThrowHelper
         return new JsonException(CreateKeywordPrefixContent(keywordName) + " expects non-negative integer.");
     }
 
-    private static string CreateKeywordPrefixContent<TKeyword>() where TKeyword : ValidationKeywordBase
+    private static string CreateKeywordPrefixContent<TKeyword>()
     {
-        return CreateKeywordPrefixContent(KeywordHelper.GetKeywordName(typeof(TKeyword)));
+        return CreateKeywordPrefixContent(KeywordHelper.GetKeywordName<TKeyword>());
     }
 
     private static string CreateKeywordPrefixContent(Type keywordType)

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Reflection;
-using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
@@ -9,6 +8,8 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 internal static class KeywordHelper
 {
     private static readonly ConcurrentDictionary<Type, string> NameForKeywordTypes = new();
+
+    public static string GetKeywordName<TKeyword>() => GetKeywordName(typeof(TKeyword));
 
     public static string GetKeywordName(Type keywordType)
     {

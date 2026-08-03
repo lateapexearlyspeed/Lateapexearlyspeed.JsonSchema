@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
-internal abstract class AnnotationKeywordBase
+public abstract class AnnotationKeywordBase
 {
     protected AnnotationKeywordBase()
     {
@@ -15,23 +15,41 @@ internal abstract class AnnotationKeywordBase
 
     public string Name { get; }
 
-    public abstract AnnotationCollection Annotate(JsonInstanceElement instance, JsonSchemaOptions options);
-}
-
-internal class AnnotationCollection
-{
-}
-
-internal class Annotation
-{
-    public Annotation(ImmutableJsonPointer instanceLocation, ImmutableJsonPointer relativeKeywordLocation, Uri schemaResourceBaseUri, Uri subSchemaRefFullUri, string keyword, JsonElement value)
+    public Annotation Annotate(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        InstanceLocation = instanceLocation;
-        RelativeKeywordLocation = relativeKeywordLocation;
-        SchemaResourceBaseUri = schemaResourceBaseUri;
-        SubSchemaRefFullUri = subSchemaRefFullUri;
+        options.ValidationPathStack.PushRelativeLocation(Name);
+
+        Annotation annotation = AnnotateCore(instance, options);
+
+        options.ValidationPathStack.PopRelativeLocation();
+
+        return annotation;
+    }
+
+    public abstract Annotation AnnotateCore(JsonInstanceElement instance, JsonSchemaOptions options);
+}
+
+public class AnnotationKeyword<T> : AnnotationKeywordBase
+{
+    public T Value { get; init; } = default!;
+
+    public override Annotation AnnotateCore(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return new Annotation(Name, JsonSerializer.SerializeToElement(Value), instance.Location, options.ValidationPathStack);
+    }
+}
+
+public class Annotation
+{
+    public Annotation(string keyword, JsonElement value, ImmutableJsonPointer instanceLocation, ValidationPathStack validationPathStack)
+    {
         Keyword = keyword;
         Value = value;
+        InstanceLocation = instanceLocation;
+
+        RelativeKeywordLocation = validationPathStack.RelativeKeywordLocationStack.ToJsonPointer();
+        SchemaResourceBaseUri = validationPathStack.ReferencedSchemaLocationStack.Peek().resource.BaseUri!;
+        SubSchemaRefFullUri = validationPathStack.ReferencedSchemaLocationStack.Peek().subSchemaRefFullUri;
     }
 
     /// <summary>
