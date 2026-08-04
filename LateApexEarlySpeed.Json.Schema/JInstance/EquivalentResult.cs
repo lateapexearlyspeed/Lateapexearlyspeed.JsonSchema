@@ -4,6 +4,9 @@ namespace LateApexEarlySpeed.Json.Schema.JInstance;
 
 public class EquivalentResult
 {
+    private static readonly EquivalentResult SuccessfulResult = new() { Result = true };
+    private static readonly EquivalentResult FailedResultWithoutDetails = new();
+
     private readonly Func<string>? _detailedMessageFactory;
 
     public bool Result { get; private init; }
@@ -26,5 +29,13 @@ public class EquivalentResult
         };
     }
 
-    public static EquivalentResult Success() => new() { Result = true };
+    internal static EquivalentResult FailWithoutDetails() => FailedResultWithoutDetails;
+
+    public static EquivalentResult Success() => SuccessfulResult;
+}
+
+internal enum ComparisonDetail
+{
+    ResultOnly,
+    IncludeFailureDetails
 }

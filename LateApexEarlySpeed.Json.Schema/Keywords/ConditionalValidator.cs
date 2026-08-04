@@ -43,7 +43,14 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
 
         if (options.OutputFormat == OutputFormat.FailFast)
         {
-            return PredictEvaluator.Validate(instance, options).IsValid
+            bool predicateIsValid;
+            
+            using (options.SuppressValidationErrorsScope())
+            {
+                predicateIsValid = PredictEvaluator.Validate(instance, options).IsValid;
+            }
+
+            return predicateIsValid
                 ? PositiveValidator.Validate(instance, options)
                 : NegativeValidator.Validate(instance, options);
         }

@@ -83,6 +83,8 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
         {
             Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
 
+            using JsonSchemaOptions.ValidationErrorSuppressionScope _ = _options.SuppressValidationErrorsScope(_options.OutputFormat == OutputFormat.FailFast);
+
             foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
             {
                 ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
@@ -142,6 +144,8 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
             Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
+
+            using JsonSchemaOptions.ValidationErrorSuppressionScope _ = _options.SuppressValidationErrorsScope(_options.OutputFormat == OutputFormat.FailFast);
 
             foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
             {
@@ -231,6 +235,8 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
             Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
+
+            using JsonSchemaOptions.ValidationErrorSuppressionScope _ = _options.SuppressValidationErrorsScope(_options.OutputFormat == OutputFormat.FailFast);
 
             foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
             {

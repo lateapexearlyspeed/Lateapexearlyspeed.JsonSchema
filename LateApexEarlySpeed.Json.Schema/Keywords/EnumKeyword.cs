@@ -22,10 +22,15 @@ internal class EnumKeyword : KeywordBase
     {
         foreach (JsonInstanceElement element in _enumList)
         {
-            if (element.Equivalent(instance, options.JsonArrayEqualityComparer, options.JsonStringComparison).Result)
+            if (element.Equivalent(instance, options.JsonArrayEqualityComparer, options.JsonStringComparison, ComparisonDetail.ResultOnly).Result)
             {
                 return ValidationResult.ValidResult;
             }
+        }
+
+        if (options.SuppressValidationErrors)
+        {
+            return ValidationResult.InvalidResultWithoutErrors;
         }
 
         return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.NotFoundInAllowedList, ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location));

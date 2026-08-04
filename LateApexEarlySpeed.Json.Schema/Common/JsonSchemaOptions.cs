@@ -37,6 +37,8 @@ public class JsonSchemaOptions
     /// </summary>
     public StringComparison JsonStringComparison { get; set; } = StringComparison.Ordinal;
 
+    internal bool SuppressValidationErrors { get; private set; }
+
     /// <summary>
     /// User entry point to create <see cref="JsonSchemaOptions"/> instance
     /// </summary>
@@ -58,6 +60,29 @@ public class JsonSchemaOptions
             OutputFormat = options.OutputFormat;
             JsonArrayEqualityComparer = options.JsonArrayEqualityComparer;
             JsonStringComparison = options.JsonStringComparison;
+        }
+    }
+
+    internal ValidationErrorSuppressionScope SuppressValidationErrorsScope(bool suppressValidationErrors = true)
+    {
+        return new ValidationErrorSuppressionScope(this, suppressValidationErrors);
+    }
+
+    internal readonly struct ValidationErrorSuppressionScope : IDisposable
+    {
+        private readonly JsonSchemaOptions _options;
+        private readonly bool _previousValue;
+
+        public ValidationErrorSuppressionScope(JsonSchemaOptions options, bool suppressValidationErrors)
+        {
+            _options = options;
+            _previousValue = options.SuppressValidationErrors;
+            options.SuppressValidationErrors = _previousValue || suppressValidationErrors;
+        }
+
+        public void Dispose()
+        {
+            _options.SuppressValidationErrors = _previousValue;
         }
     }
 }

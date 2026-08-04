@@ -67,6 +67,8 @@ internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
+            using JsonSchemaOptions.ValidationErrorSuppressionScope _ = _options.SuppressValidationErrorsScope(_options.OutputFormat == OutputFormat.FailFast);
+
             foreach (JsonSchema subSchema in _anyOfKeyword._subSchemas)
             {
                 ValidationResult result = subSchema.Validate(_instance, _options);

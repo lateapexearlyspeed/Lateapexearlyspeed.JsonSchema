@@ -21,11 +21,19 @@ internal class ConstKeyword : KeywordBase
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        EquivalentResult equivalentResult = _constValue.Equivalent(instance, options.JsonArrayEqualityComparer, options.JsonStringComparison);
+        ComparisonDetail comparisonDetail = options.SuppressValidationErrors
+            ? ComparisonDetail.ResultOnly
+            : ComparisonDetail.IncludeFailureDetails;
+        EquivalentResult equivalentResult = _constValue.Equivalent(instance, options.JsonArrayEqualityComparer, options.JsonStringComparison, comparisonDetail);
 
         if (equivalentResult.Result)
         {
             return ValidationResult.ValidResult;
+        }
+
+        if (options.SuppressValidationErrors)
+        {
+            return ValidationResult.InvalidResultWithoutErrors;
         }
 
         Debug.Assert(equivalentResult.DetailedMessage is not null);

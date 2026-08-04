@@ -21,11 +21,21 @@ public abstract class JsonCollectionEqualityComparer
     public static JsonCollectionEqualityComparer Equivalence { get; } = new OrderlessJsonCollectionComparer();
 
     protected internal abstract EquivalentResult Equals(JsonInstanceElement jsonArray1, JsonInstanceElement jsonArray2, StringComparison stringComparison);
+
+    internal virtual EquivalentResult Equals(JsonInstanceElement jsonArray1, JsonInstanceElement jsonArray2, StringComparison stringComparison, ComparisonDetail comparisonDetail)
+    {
+        return Equals(jsonArray1, jsonArray2, stringComparison);
+    }
 }
 
 internal class OrderedJsonCollectionComparer : JsonCollectionEqualityComparer
 {
     protected internal override EquivalentResult Equals(JsonInstanceElement jsonArray1, JsonInstanceElement jsonArray2, StringComparison stringComparison)
+    {
+        return Equals(jsonArray1, jsonArray2, stringComparison, ComparisonDetail.IncludeFailureDetails);
+    }
+
+    internal override EquivalentResult Equals(JsonInstanceElement jsonArray1, JsonInstanceElement jsonArray2, StringComparison stringComparison, ComparisonDetail comparisonDetail)
     {
         Debug.Assert(jsonArray1.ValueKind == JsonValueKind.Array);
         Debug.Assert(jsonArray2.ValueKind == JsonValueKind.Array);
@@ -35,7 +45,9 @@ internal class OrderedJsonCollectionComparer : JsonCollectionEqualityComparer
 
         if (arrayLength1 != arrayLength2)
         {
-            return EquivalentResult.Fail(() => $"Array length not same, one is {arrayLength1} but another is {arrayLength2}", jsonArray1.Location, jsonArray2.Location);
+            return comparisonDetail == ComparisonDetail.ResultOnly
+                ? EquivalentResult.FailWithoutDetails()
+                : CreateArrayLengthMismatchResult(arrayLength1, arrayLength2, jsonArray1.Location, jsonArray2.Location);
         }
 
         using (JsonInstanceElement.InstanceArrayEnumerable.InstanceArrayEnumerator enumerator1 = jsonArray1.EnumerateArray().GetEnumerator())
@@ -46,7 +58,7 @@ internal class OrderedJsonCollectionComparer : JsonCollectionEqualityComparer
                 bool hasElement = enumerator2.MoveNext();
                 Debug.Assert(hasElement);
 
-                EquivalentResult equivalentResult = enumerator1.Current.Equivalent(enumerator2.Current, this, stringComparison);
+                EquivalentResult equivalentResult = enumerator1.Current.Equivalent(enumerator2.Current, this, stringComparison, comparisonDetail);
 
                 if (!equivalentResult.Result)
                 {
@@ -57,11 +69,21 @@ internal class OrderedJsonCollectionComparer : JsonCollectionEqualityComparer
 
         return EquivalentResult.Success();
     }
+
+    private static EquivalentResult CreateArrayLengthMismatchResult(int arrayLength1, int arrayLength2, LinkedListBasedImmutableJsonPointer location1, LinkedListBasedImmutableJsonPointer location2)
+    {
+        return EquivalentResult.Fail(() => $"Array length not same, one is {arrayLength1} but another is {arrayLength2}", location1, location2);
+    }
 }
 
 internal class OrderlessJsonCollectionComparer : JsonCollectionEqualityComparer
 {
     protected internal override EquivalentResult Equals(JsonInstanceElement jsonArray1, JsonInstanceElement jsonArray2, StringComparison stringComparison)
+    {
+        return Equals(jsonArray1, jsonArray2, stringComparison, ComparisonDetail.IncludeFailureDetails);
+    }
+
+    internal override EquivalentResult Equals(JsonInstanceElement jsonArray1, JsonInstanceElement jsonArray2, StringComparison stringComparison, ComparisonDetail comparisonDetail)
     {
         Debug.Assert(jsonArray1.ValueKind == JsonValueKind.Array);
         Debug.Assert(jsonArray2.ValueKind == JsonValueKind.Array);
@@ -73,7 +95,9 @@ internal class OrderlessJsonCollectionComparer : JsonCollectionEqualityComparer
 
         if (arrayLength1 != arrayLength2)
         {
-            return EquivalentResult.Fail(() => $"Array length not same, one is {arrayLength1} but another is {arrayLength2}", jsonArray1.Location, jsonArray2.Location);
+            return comparisonDetail == ComparisonDetail.ResultOnly
+                ? EquivalentResult.FailWithoutDetails()
+                : CreateArrayLengthMismatchResult(arrayLength1, arrayLength2, jsonArray1.Location, jsonArray2.Location);
         }
 
         int startIdx = 0;
@@ -84,7 +108,7 @@ internal class OrderlessJsonCollectionComparer : JsonCollectionEqualityComparer
 
             for (int i = startIdx; i < tmpJsonArray2.Length; i++)
             {
-                equivalentResult = elementOfArray1.Equivalent(tmpJsonArray2[i], this, stringComparison);
+                equivalentResult = elementOfArray1.Equivalent(tmpJsonArray2[i], this, stringComparison, comparisonDetail);
 
                 if (equivalentResult.Result)
                 {
@@ -108,5 +132,10 @@ internal class OrderlessJsonCollectionComparer : JsonCollectionEqualityComparer
         }
 
         return EquivalentResult.Success();
+    }
+
+    private static EquivalentResult CreateArrayLengthMismatchResult(int arrayLength1, int arrayLength2, LinkedListBasedImmutableJsonPointer location1, LinkedListBasedImmutableJsonPointer location2)
+    {
+        return EquivalentResult.Fail(() => $"Array length not same, one is {arrayLength1} but another is {arrayLength2}", location1, location2);
     }
 }

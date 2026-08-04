@@ -280,26 +280,28 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             }
         }
 
-        IEnumerable<ISchemaContainerElement> schemaContainers = Enumerable.Empty<ISchemaContainerElement>();
-
         if (_schemaContainerValidators is not null)
         {
-            schemaContainers = schemaContainers.Concat(_schemaContainerValidators);
+            foreach (ISchemaContainerValidationNode schemaContainerValidator in _schemaContainerValidators)
+            {
+                yield return schemaContainerValidator;
+            }
         }
 
         if (_defsKeywords is not null)
         {
-            schemaContainers = schemaContainers.Concat(_defsKeywords.Select(def => def.keyword));
+            foreach ((string _, DefsKeyword keyword) in _defsKeywords)
+            {
+                yield return keyword;
+            }
         }
 
         if (_potentialSchemaContainerElements is not null)
         {
-            schemaContainers = schemaContainers.Concat(_potentialSchemaContainerElements.Values);
-        }
-
-        foreach (ISchemaContainerElement containerElement in schemaContainers)
-        {
-            yield return containerElement;
+            foreach (ISchemaContainerElement potentialSchemaContainerElement in _potentialSchemaContainerElements.Values)
+            {
+                yield return potentialSchemaContainerElement;
+            }
         }
     }
 
@@ -335,29 +337,28 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
     /// </summary>
     public void RemoveIdFromAllInvalidKeywordPropertiesRecursively()
     {
-        IEnumerable<ISchemaContainerElement> schemaElements = Enumerable.Empty<ISchemaContainerElement>();
-
         foreach (KeywordBase keyword in _keywords)
         {
             if (keyword is ISchemaContainerElement schemaContainerElement)
             {
-                schemaElements = schemaElements.Append(schemaContainerElement);
+                RemoveIdFromAllInvalidKeywordPropertiesRecursivelyInternal(schemaContainerElement);
             }
         }
 
         if (_schemaContainerValidators is not null)
         {
-            schemaElements = schemaElements.Concat(_schemaContainerValidators);
+            foreach (ISchemaContainerValidationNode schemaContainerValidator in _schemaContainerValidators)
+            {
+                RemoveIdFromAllInvalidKeywordPropertiesRecursivelyInternal(schemaContainerValidator);
+            }
         }
 
         if (_defsKeywords is not null)
         {
-            schemaElements = schemaElements.Concat(_defsKeywords.Select(def => def.keyword));
-        }
-
-        foreach (ISchemaContainerElement schemaElement in schemaElements)
-        {
-            RemoveIdFromAllInvalidKeywordPropertiesRecursivelyInternal(schemaElement);
+            foreach ((string _, DefsKeyword keyword) in _defsKeywords)
+            {
+                RemoveIdFromAllInvalidKeywordPropertiesRecursivelyInternal(keyword);
+            }
         }
 
         RemoveIdFromAllChildrenElementsOfPotentialSchemaElementTree();

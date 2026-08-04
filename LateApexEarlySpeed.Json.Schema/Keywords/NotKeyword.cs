@@ -22,7 +22,11 @@ internal class NotKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSche
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        ValidationResult validationResult = Schema.Validate(instance, options);
+        ValidationResult validationResult;
+        using (options.SuppressValidationErrorsScope(options.OutputFormat == OutputFormat.FailFast))
+        {
+            validationResult = Schema.Validate(instance, options);
+        }
 
         if (validationResult.IsValid)
         {

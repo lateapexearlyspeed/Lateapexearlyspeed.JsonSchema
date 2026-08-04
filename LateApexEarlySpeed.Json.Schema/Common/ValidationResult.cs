@@ -25,6 +25,8 @@ public class ValidationResult
     /// </summary>
     public static ValidationResult ValidResult { get; } = new(true, ImmutableValidationErrorCollection.Empty);
 
+    internal static ValidationResult InvalidResultWithoutErrors { get; } = new(false, ImmutableValidationErrorCollection.Empty);
+
     public static ValidationResult SingleErrorFailedResult(ValidationError singleError)
     {
         return new ValidationResult(false, new ImmutableValidationErrorCollection(singleError));
