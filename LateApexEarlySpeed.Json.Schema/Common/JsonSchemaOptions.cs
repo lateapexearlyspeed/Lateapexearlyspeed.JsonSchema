@@ -27,7 +27,7 @@ public class JsonSchemaOptions
     public OutputFormat OutputFormat { get; set; }
 
     /// <summary>
-    /// Gets or sets whether human-readable validation error messages are generated. The primary purpose of setting this property to <see langword="false"/> is to reduce allocations in failure-heavy validation workloads.
+    /// Gets or sets a value that defines whether human-readable validation error messages are generated. The primary purpose of setting this property to <see langword="false"/> is to reduce allocations in failure-heavy validation workloads.
     /// The default is <see langword="true"/>.
     /// </summary>
     /// <remarks>
