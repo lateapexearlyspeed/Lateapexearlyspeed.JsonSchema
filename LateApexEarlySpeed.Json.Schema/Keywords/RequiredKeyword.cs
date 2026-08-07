@@ -67,7 +67,7 @@ internal class RequiredKeyword : KeywordBase
                 }
                 else
                 {
-                    var curError = new ValidationError(ResultCode.NotFoundRequiredProperty, ErrorMessage(requiredProperty), _options.ValidationPathStack, _requiredKeyword.Name, _instance.Location);
+                    var curError = new ValidationError(ResultCode.NotFoundRequiredProperty, _options.GenerateErrorMessages ? ErrorMessage(requiredProperty) : string.Empty, _options.ValidationPathStack, _requiredKeyword.Name, _instance.Location);
                     validationResult = ValidationResult.SingleErrorFailedResult(curError);
 
                     _fastReturnResult = validationResult;

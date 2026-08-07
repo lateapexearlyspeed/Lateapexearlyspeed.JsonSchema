@@ -39,7 +39,7 @@ internal class TypeKeyword : KeywordBase
             }
         }
 
-        return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.InvalidTokenKind, GetErrorMessage(instance.ValueKind), options.ValidationPathStack, Name, instance.Location));
+        return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.InvalidTokenKind, options.GenerateErrorMessages ? GetErrorMessage(instance.ValueKind) : string.Empty, options.ValidationPathStack, Name, instance.Location));
     }
 
     private string GetErrorMessage(JsonValueKind actualKind)

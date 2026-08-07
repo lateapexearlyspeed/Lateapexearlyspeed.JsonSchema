@@ -60,7 +60,7 @@ internal class DependentRequiredKeyword : KeywordBase
                         {
                             _fastReturnResult = ValidationResult.SingleErrorFailedResult(new ValidationError(
                                 ResultCode.NotFoundRequiredDependentProperty,
-                                ErrorMessage(dependentProperty.Key, requiredProp),
+                                _options.GenerateErrorMessages ? ErrorMessage(dependentProperty.Key, requiredProp) : string.Empty,
                                 _options.ValidationPathStack,
                                 _keywordName,
                                 _instance.Location));
