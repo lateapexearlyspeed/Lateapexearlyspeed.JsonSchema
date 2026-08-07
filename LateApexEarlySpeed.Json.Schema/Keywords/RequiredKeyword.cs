@@ -73,7 +73,7 @@ internal class RequiredKeyword : ValidationKeywordBase
                     _fastReturnResult = validationResult;
                 }
 
-                if (!context.Report(validationResult, _fastReturnResult))
+                if (!context.ReportValidationResult(validationResult, _fastReturnResult))
                 {
                     break;
                 }

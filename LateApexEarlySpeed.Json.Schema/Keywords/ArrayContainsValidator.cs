@@ -95,7 +95,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
                     ? ValidationResult.ValidResult
                     : null;
 
-                if (!context.Report(validationResult, fastResult))
+                if (!context.ReportValidationResult(validationResult, fastResult))
                 {
                     break;
                 }
@@ -158,7 +158,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
                     fastResult = ValidationResult.SingleErrorFailedResult(error);
                 }
 
-                if (!context.Report(validationResult, fastResult))
+                if (!context.ReportValidationResult(validationResult, fastResult))
                 {
                     break;
                 }
@@ -240,7 +240,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
                     _fastReturnResult = ValidationResult.ValidResult;
                 }
 
-                if (!context.Report(validationResult, _fastReturnResult))
+                if (!context.ReportValidationResult(validationResult, _fastReturnResult))
                 {
                     break;
                 }

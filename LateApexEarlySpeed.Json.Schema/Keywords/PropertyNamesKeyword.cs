@@ -61,7 +61,7 @@ internal class PropertyNamesKeyword : ValidationKeywordBase, ISchemaContainerEle
                     ? null
                     : ValidationResult.SingleErrorFailedResult(_fastReturnError);
 
-                if (!context.Report(validationResult, fastResult))
+                if (!context.ReportValidationResult(validationResult, fastResult))
                 {
                     break;
                 }

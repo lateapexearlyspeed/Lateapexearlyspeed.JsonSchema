@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords;
+using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
@@ -10,7 +12,8 @@ namespace LateApexEarlySpeed.Json.Schema.JSchema;
 internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 {
     private readonly ISchemaContainerValidationNode[]? _schemaContainerValidators;
-    private readonly IReadOnlyList<ValidationKeywordBase> _keywords;
+    private readonly IReadOnlyList<ValidationKeywordBase> _validationKeywords;
+    private readonly AnnotationKeywordBase[]? _annotationKeywords;
     private readonly IReferenceKeyword[]? _referenceKeywords;
 
     /// <summary>
@@ -56,7 +59,9 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public IReadOnlyList<ISchemaContainerValidationNode>? SchemaContainerValidators => _schemaContainerValidators;
 
-    public IReadOnlyList<ValidationKeywordBase> Keywords => _keywords;
+    public IReadOnlyList<ValidationKeywordBase> ValidationKeywords => _validationKeywords;
+
+    public IReadOnlyList<AnnotationKeywordBase>? AnnotationKeywords => _annotationKeywords;
 
     public IReadOnlyList<IReferenceKeyword>? ReferenceKeywords => _referenceKeywords;
 
@@ -64,14 +69,19 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public string? DynamicAnchor { get; }
 
-    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords) : this(keywords, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null)
+    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords) : this(keywords, null, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null)
     {
 
     }
 
-    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
+    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords, IEnumerable<AnnotationKeywordBase>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
     {
-        _keywords = MergeKeywords(keywords.ToArray());
+        _validationKeywords = MergeKeywords(keywords.ToArray());
+
+        if (annotationKeywords is not null)
+        {
+            _annotationKeywords = annotationKeywords.ToArray();
+        }
 
         if (schemaContainerValidators is not null)
         {
@@ -159,7 +169,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
         return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
-    private struct Validator : IValidator
+    internal struct Validator
     {
         private readonly BodyJsonSchema _bodyJsonSchema;
         private readonly JsonInstanceElement _instance;
@@ -182,9 +192,9 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
             // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
-            for (int i = 0; i < _bodyJsonSchema._keywords.Count; i++)
+            for (int i = 0; i < _bodyJsonSchema._validationKeywords.Count; i++)
             {
-                ValidationKeywordBase keyword = _bodyJsonSchema._keywords[i];
+                ValidationKeywordBase keyword = _bodyJsonSchema._validationKeywords[i];
 
                 if (!ReportValidationAndCheckFastReturn(ref this, keyword, ref context))
                 {
@@ -223,19 +233,33 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
                     thisValidator._fastReturnResult = result;
                 }
 
-                return context.Report(result, thisValidator._fastReturnResult);
+                return context.ReportValidationResult(result, thisValidator._fastReturnResult);
             }
         }
 
-        public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
+        public void CollectAnnotations(ref ValidationCompositionContext context)
+        {
+            if (_bodyJsonSchema._annotationKeywords is not null && context.ShouldAnnotate(IsValid()))
+            {
+                foreach (AnnotationKeywordBase annotationKeyword in _bodyJsonSchema._annotationKeywords)
+                {
+                    context.ReportAnnotation(annotationKeyword.Annotate(_instance, _options));
+                }
+            }
+        }
+
+        public ResultTuple Result => IsValid() ? ResultTuple.Valid() : ResultTuple.Invalid(null);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool IsValid() => _fastReturnResult is null;
     }
 
     public override ISchemaContainerElement? GetSubElement(string name)
     {
         // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
-        for (var i = 0; i < _keywords.Count; i++)
+        for (var i = 0; i < _validationKeywords.Count; i++)
         {
-            ValidationKeywordBase keyword = _keywords[i];
+            ValidationKeywordBase keyword = _validationKeywords[i];
             if (keyword.Name == name && keyword is ISchemaContainerElement schemaContainerElement)
             {
                 return schemaContainerElement;
@@ -271,9 +295,9 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
     public override IEnumerable<ISchemaContainerElement> EnumerateElements()
     {
         // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
-        for (var i = 0; i < _keywords.Count; i++)
+        for (var i = 0; i < _validationKeywords.Count; i++)
         {
-            ValidationKeywordBase validationKeyword = _keywords[i];
+            ValidationKeywordBase validationKeyword = _validationKeywords[i];
             if (validationKeyword is ISchemaContainerElement element)
             {
                 yield return element;
@@ -322,12 +346,12 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id, DefsKeyword defsKeyword)
     {
-        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, _referenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, false, _potentialSchemaContainerElements, null, id, new[] { (DefsKeyword.Keyword, defsKeyword) });
+        return new BodyJsonSchemaDocument(_validationKeywords, _annotationKeywords, _schemaContainerValidators, _referenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, false, _potentialSchemaContainerElements, null, id, new[] { (DefsKeyword.Keyword, defsKeyword) });
     }
 
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id)
     {
-        return new BodyJsonSchemaDocument(_keywords, _schemaContainerValidators, _referenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, false, _potentialSchemaContainerElements, null, id, _defsKeywords);
+        return new BodyJsonSchemaDocument(_validationKeywords, _annotationKeywords, _schemaContainerValidators, _referenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, false, _potentialSchemaContainerElements, null, id, _defsKeywords);
     }
 
     /// <summary>
@@ -337,7 +361,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
     {
         IEnumerable<ISchemaContainerElement> schemaElements = Enumerable.Empty<ISchemaContainerElement>();
 
-        foreach (ValidationKeywordBase keyword in _keywords)
+        foreach (ValidationKeywordBase keyword in _validationKeywords)
         {
             if (keyword is ISchemaContainerElement schemaContainerElement)
             {
@@ -430,7 +454,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public void RemoveIdFromAllChildrenSchemaElements()
     {
-        foreach (ValidationKeywordBase keyword in _keywords)
+        foreach (ValidationKeywordBase keyword in _validationKeywords)
         {
             if (keyword is IJsonSchemaResourceNodesCleanable resourceIdCleanable)
             {

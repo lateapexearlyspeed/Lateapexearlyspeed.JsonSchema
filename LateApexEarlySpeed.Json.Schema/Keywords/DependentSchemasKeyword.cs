@@ -64,7 +64,7 @@ internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainer
                         _fastReturnResult = result;
                     }
 
-                    if (!context.Report(result, _fastReturnResult))
+                    if (!context.ReportValidationResult(result, _fastReturnResult))
                     {
                         break;
                     }

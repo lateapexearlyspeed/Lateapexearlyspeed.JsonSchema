@@ -310,7 +310,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         JsonSchema schema;
         if (typeToConvert == typeof(IJsonSchemaDocument))
         {
-            schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, recursiveAnchor, potentialSchemaContainerElements, schemaKeyword, id, defsKeywords);
+            schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, recursiveAnchor, TODO, potentialSchemaContainerElements, schemaKeyword, id, defsKeywords);
         }
         else if (id is not null)
         {
@@ -323,7 +323,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 plainNameIdentifier,
                 dynamicAnchor,
                 recursiveAnchor,
-                defsKeywords, potentialSchemaContainerElements);
+                defsKeywords, potentialSchemaContainerElements, TODO);
         }
         else if (schemaKeyword is not null)
         {
@@ -425,7 +425,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
 
             // Keyword part:
-            foreach (ValidationKeywordBase keyword in schema.Keywords)
+            foreach (ValidationKeywordBase keyword in schema.ValidationKeywords)
             {
                 writer.WritePropertyName(keyword.Name);
                 JsonSerializer.Serialize(writer, keyword, keyword.GetType(), options);

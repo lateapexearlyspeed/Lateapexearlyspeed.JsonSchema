@@ -67,7 +67,7 @@ internal class ItemsKeyword : ValidationKeywordBase, ISchemaContainerElement, IS
                     _fastReturnResult = validationResult;
                 }
 
-                if (!context.Report(validationResult, _fastReturnResult))
+                if (!context.ReportValidationResult(validationResult, _fastReturnResult))
                 {
                     break;
                 }

@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
 
@@ -13,21 +14,23 @@ public class ValidationResult
     /// </summary>
     public bool IsValid { get; }
     internal readonly ImmutableValidationErrorCollection ValidationErrorsList;
+    internal readonly AnnotationCollection AnnotationCollection;
 
-    internal ValidationResult(bool isValid, ImmutableValidationErrorCollection validationErrorsList)
+    internal ValidationResult(bool isValid, ImmutableValidationErrorCollection validationErrorsList, AnnotationCollection annotationCollection)
     {
         IsValid = isValid;
         ValidationErrorsList = validationErrorsList;
+        AnnotationCollection = annotationCollection;
     }
 
     /// <summary>
-    /// Singleton instance of 'pure' successful validation result, means there is no failure items in <see cref="ValidationErrors"/> property
+    /// Singleton instance of 'pure' successful validation result, means there is no failure items in <see cref="ValidationErrors"/> property and annotation items in <see cref="Annotations"/> property
     /// </summary>
-    public static ValidationResult ValidResult { get; } = new(true, ImmutableValidationErrorCollection.Empty);
+    public static ValidationResult ValidResult { get; } = new(true, ImmutableValidationErrorCollection.Empty, AnnotationCollection.Empty);
 
     public static ValidationResult SingleErrorFailedResult(ValidationError singleError)
     {
-        return new ValidationResult(false, new ImmutableValidationErrorCollection(singleError));
+        return new ValidationResult(false, new ImmutableValidationErrorCollection(singleError), AnnotationCollection.Empty);
     }
 
     /// <summary>
@@ -35,6 +38,13 @@ public class ValidationResult
     /// If <see cref="JsonSchemaOptions.OutputFormat"/> is set to <see cref="OutputFormat.FailFast"/>, this will contain only first found failed validation node.
     /// </summary>
     public IEnumerable<ValidationError> ValidationErrors => ValidationErrorsList.Enumerate();
+
+    public IEnumerable<Annotation> Annotations => new AnnotationCollection();
+}
+
+internal class AnnotationCollection
+{
+    public static AnnotationCollection Empty { get; set; } = new();
 }
 
 internal class ImmutableValidationErrorCollection

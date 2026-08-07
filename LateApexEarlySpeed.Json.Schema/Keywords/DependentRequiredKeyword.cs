@@ -65,7 +65,7 @@ internal class DependentRequiredKeyword : ValidationKeywordBase
                                 _keywordName,
                                 _instance.Location));
 
-                            if (!context.Report(_fastReturnResult, _fastReturnResult))
+                            if (!context.ReportValidationResult(_fastReturnResult, _fastReturnResult))
                             {
                                 return;
                             }

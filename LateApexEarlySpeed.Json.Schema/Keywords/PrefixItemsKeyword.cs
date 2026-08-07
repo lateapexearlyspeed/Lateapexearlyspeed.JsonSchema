@@ -88,7 +88,7 @@ internal class PrefixItemsKeyword : ValidationKeywordBase, ISchemaContainerEleme
                     _fastReturnResult = validationResult;
                 }
 
-                if (!context.Report(validationResult, _fastReturnResult))
+                if (!context.ReportValidationResult(validationResult, _fastReturnResult))
                 {
                     break;
                 }

@@ -36,7 +36,7 @@ internal class NotKeyword : ValidationKeywordBase, ISchemaContainerElement, ISin
             var errorBuilder = new ImmutableValidationErrorCollection.Builder();
             errorBuilder.SetCurrent(curError);
             errorBuilder.AddChildCollection(validationResult.ValidationErrorsList);
-            return new ValidationResult(false, errorBuilder.ToImmutable());
+            return new ValidationResult(false, errorBuilder.ToImmutable(), AnnotationCollection.Empty);
         }
 
         if (options.OutputFormat == OutputFormat.FailFast)
@@ -44,7 +44,7 @@ internal class NotKeyword : ValidationKeywordBase, ISchemaContainerElement, ISin
             return ValidationResult.ValidResult;
         }
 
-        return new ValidationResult(true, validationResult.ValidationErrorsList);
+        return new ValidationResult(true, validationResult.ValidationErrorsList, AnnotationCollection.Empty);
     }
 
     public static string ErrorMessage(string instanceText)

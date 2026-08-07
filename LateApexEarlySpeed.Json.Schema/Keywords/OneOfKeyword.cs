@@ -73,7 +73,7 @@ internal class OneOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
                     fastResult = ValidationResult.SingleErrorFailedResult(error);
                 }
 
-                if (!context.Report(result, fastResult))
+                if (!context.ReportValidationResult(result, fastResult))
                 {
                     break;
                 }

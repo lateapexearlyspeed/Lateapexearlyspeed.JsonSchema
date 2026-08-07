@@ -221,7 +221,7 @@ public class JsonSchemaBuilder
     {
         KeywordCollection keywordCollection = keywordBuilder.Build();
 
-        return new BodyJsonSchema(keywordCollection.Keywords,
+        return new BodyJsonSchema(keywordCollection.Keywords, null,
             keywordCollection.ArrayContainsValidator is null
                 ? Enumerable.Empty<ISchemaContainerValidationNode>()
                 : new ISchemaContainerValidationNode[] { keywordCollection.ArrayContainsValidator },

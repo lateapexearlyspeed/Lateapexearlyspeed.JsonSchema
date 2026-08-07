@@ -75,7 +75,7 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
                     _fastReturnResult = result;
                 }
 
-                if (!context.Report(result, _fastReturnResult))
+                if (!context.ReportValidationResult(result, _fastReturnResult))
                 {
                     break;
                 }
