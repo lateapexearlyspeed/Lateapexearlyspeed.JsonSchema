@@ -36,13 +36,13 @@ internal class ObjectCustomValidationKeyword : KeywordBase
         }
         catch (Exception)
         {
-            return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.FailedToDeserialize, $"Failed to deserialize to type: {_type}", options.ValidationPathStack,
+            return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.FailedToDeserialize, options.GenerateErrorMessages ? $"Failed to deserialize to type: {_type}" : string.Empty, options.ValidationPathStack,
                 Name, instance.Location));
         }
 
         return _validator(instanceData)
             ? ValidationResult.ValidResult
-            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.FailedForCustomValidation, _errorMessageFunc(instanceData), options.ValidationPathStack,
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.FailedForCustomValidation, options.GenerateErrorMessages ? _errorMessageFunc(instanceData) : string.Empty, options.ValidationPathStack,
                 Name, instance.Location));
     }
 }
