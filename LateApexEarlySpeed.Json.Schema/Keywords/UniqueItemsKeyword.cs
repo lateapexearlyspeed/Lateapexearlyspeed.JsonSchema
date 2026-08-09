@@ -33,7 +33,7 @@ internal class UniqueItemsKeyword : KeywordBase
             {
                 if (items[j].Equivalent(curItem, options.JsonArrayEqualityComparer, options.JsonStringComparison).Result)
                 {
-                    return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.DuplicatedArrayItems, ErrorMessage(curItem.ToString(), i, j), options.ValidationPathStack, Name, instance.Location));
+                    return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.DuplicatedArrayItems, options.GenerateErrorMessages ? ErrorMessage(curItem.ToString(), i, j) : string.Empty, options.ValidationPathStack, Name, instance.Location));
                 }
             }
         }

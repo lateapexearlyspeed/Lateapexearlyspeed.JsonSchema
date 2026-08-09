@@ -27,6 +27,15 @@ public class JsonSchemaOptions
     public OutputFormat OutputFormat { get; set; }
 
     /// <summary>
+    /// Gets or sets a value that defines whether human-readable validation error messages are generated. The primary purpose of setting this property to <see langword="false"/> is to reduce allocations in failure-heavy validation workloads.
+    /// The default is <see langword="true"/>.
+    /// </summary>
+    /// <remarks>
+    /// When <see langword="false"/>, validation errors retain their result code, keyword, instance location, and schema locations, but <see cref="ValidationError.ErrorMessage"/> is <see cref="string.Empty"/>.
+    /// </remarks>
+    public bool GenerateErrorMessages { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the <see cref="JsonCollectionEqualityComparer"/> implementation to use when compare JSON arrays.
     /// Default value is <see cref="JsonCollectionEqualityComparer.Equality"/>.
     /// </summary>
@@ -56,6 +65,7 @@ public class JsonSchemaOptions
             ValidateFormat = options.ValidateFormat;
             RegexMatchTimeout = options.RegexMatchTimeout;
             OutputFormat = options.OutputFormat;
+            GenerateErrorMessages = options.GenerateErrorMessages;
             JsonArrayEqualityComparer = options.JsonArrayEqualityComparer;
             JsonStringComparison = options.JsonStringComparison;
         }

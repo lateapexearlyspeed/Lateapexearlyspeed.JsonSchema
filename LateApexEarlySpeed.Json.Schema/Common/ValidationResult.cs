@@ -173,7 +173,9 @@ public class ValidationError
     public string? Keyword { get; init; }
 
     /// <summary>
-    /// The error message to briefly describe failure reason
+    /// Gets the human-readable description of the validation failure.
+    /// Built-in validators return <see cref="string.Empty"/> when
+    /// <see cref="JsonSchemaOptions.GenerateErrorMessages"/> is disabled.
     /// </summary>
     public string ErrorMessage { get; init; }
 
@@ -188,8 +190,12 @@ public class ValidationError
     /// <returns>A string representation of the current <see cref="ValidationError"/></returns>
     public override string ToString()
     {
-        var sb = new StringBuilder(ErrorMessage);
-        sb.AppendLine();
+        var sb = new StringBuilder();
+
+        if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            sb.AppendLine(ErrorMessage);
+        }
 
         sb.AppendFormat("Instance location (in json pointer format): {0}", InstanceLocation);
         sb.AppendLine();

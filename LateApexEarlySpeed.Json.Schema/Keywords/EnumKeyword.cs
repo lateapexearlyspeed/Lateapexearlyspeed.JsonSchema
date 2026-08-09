@@ -28,7 +28,7 @@ internal class EnumKeyword : KeywordBase
             }
         }
 
-        return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.NotFoundInAllowedList, ErrorMessage(instance.ToString()), options.ValidationPathStack, Name, instance.Location));
+        return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.NotFoundInAllowedList, options.GenerateErrorMessages ? ErrorMessage(instance.ToString()) : string.Empty, options.ValidationPathStack, Name, instance.Location));
     }
 
     internal static string ErrorMessage(string instanceJsonText)
