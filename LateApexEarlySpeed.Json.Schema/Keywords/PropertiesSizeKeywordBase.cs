@@ -20,7 +20,7 @@ internal abstract class PropertiesSizeKeywordBase : ValidationKeywordBase, IBenc
 
         return IsSizeInRange(instanceProperties)
             ? ValidationResult.ValidResult
-            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.PropertiesOutOfRange, GetErrorMessage(instanceProperties), options.ValidationPathStack, Name, instance.Location));
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.PropertiesOutOfRange, options.GenerateErrorMessages ? GetErrorMessage(instanceProperties) : string.Empty, options.ValidationPathStack, Name, instance.Location));
     }
 
     protected abstract bool IsSizeInRange(int instanceProperties);

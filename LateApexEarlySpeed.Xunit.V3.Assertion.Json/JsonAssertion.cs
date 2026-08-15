@@ -50,7 +50,7 @@ namespace LateApexEarlySpeed.Xunit.V3.Assertion.Json
             var jsonSchemaBuilder = new JsonSchemaBuilder();
             jsonSchemaBuilder.Equivalent(expectedJson);
             JsonValidator jsonValidator = jsonSchemaBuilder.BuildValidator();
-            ValidationResult validationResult = jsonValidator.Validate(actualJson, new JsonSchemaOptions { JsonArrayEqualityComparer = options.JsonArrayEqualityComparer });
+            ValidationResult validationResult = jsonValidator.Validate(actualJson, new JsonSchemaOptions { JsonArrayEqualityComparer = options.JsonArrayEqualityComparer, JsonStringComparison = options.JsonStringComparison });
 
             if (!validationResult.IsValid)
             {
@@ -82,6 +82,12 @@ namespace LateApexEarlySpeed.Xunit.V3.Assertion.Json
         /// Default value is <see cref="JsonCollectionEqualityComparer.Equality"/>.
         /// </summary>
         public JsonCollectionEqualityComparer JsonArrayEqualityComparer { get; set; } = JsonCollectionEqualityComparer.Equality;
+
+        /// <summary>
+        /// Gets or sets a value that specifies the string comparison method to use when comparing JSON strings.
+        /// Default value is <see cref="StringComparison.Ordinal"/>.
+        /// </summary>
+        public StringComparison JsonStringComparison { get; set; } = StringComparison.Ordinal;
     }
 
     public class JsonAssertException : XunitException

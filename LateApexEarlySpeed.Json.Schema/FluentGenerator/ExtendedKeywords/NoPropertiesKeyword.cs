@@ -29,7 +29,7 @@ internal class NoPropertiesKeyword : ValidationKeywordBase
         {
             if (_propertyBlackList.Contains(property.Name))
             {
-                return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.InvalidPropertyName, ErrorMessage(property.Name), options.ValidationPathStack,
+                return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.InvalidPropertyName, options.GenerateErrorMessages ? ErrorMessage(property.Name) : string.Empty, options.ValidationPathStack,
                     Name, instance.Location));
             }
         }

@@ -33,9 +33,9 @@ namespace LateApexEarlySpeed.Assertion.Json.UnitTests
             });
 
             string expectedExceptionMessage = "JsonAssertion.Meet() Failure: "
-                                              + "Expect type(s): 'Null' but actual is 'Number', location (in json pointer format): \"/0\"" + Environment.NewLine
-                                              + "Expect type(s): 'Null' but actual is 'Number', location (in json pointer format): \"/1\"" + Environment.NewLine
-                                              + "Not found any validated array items, array instance: [1, 2], location (in json pointer format): \"\"" + Environment.NewLine
+                                              + "Expected type(s): 'Null' but actual is 'Number', location (in json pointer format): \"/0\"" + Environment.NewLine
+                                              + "Expected type(s): 'Null' but actual is 'Number', location (in json pointer format): \"/1\"" + Environment.NewLine
+                                              + "No validated array items found, array instance: [1, 2], location (in json pointer format): \"\"" + Environment.NewLine
                                               + "Json kind not same, one is True, but another is Number, location (in json pointer format): \"/0\"" + Environment.NewLine
                                               + "Json kind not same, one is True, but another is Number, location (in json pointer format): \"/1\"" + Environment.NewLine
                                               + "Json kind not same, one is True, but another is Number, location (in json pointer format): \"/0\"" + Environment.NewLine
@@ -61,7 +61,7 @@ namespace LateApexEarlySpeed.Assertion.Json.UnitTests
             });
 
             Assert.Equal("JsonAssertion.Meet() Failure: Number not same, one is '5' but another is '4.9', location (in json pointer format): \"/p2\"" + Environment.NewLine 
-                       + "Instance not contain required property 'p1', location (in json pointer format): \"\"" + Environment.NewLine, jsonAssertException.Message);
+                       + "Instance does not contain required property 'p1', location (in json pointer format): \"\"" + Environment.NewLine, jsonAssertException.Message);
         }
 
         [Fact]
@@ -138,6 +138,41 @@ namespace LateApexEarlySpeed.Assertion.Json.UnitTests
                 yield return new object?[] { "[1, 2, 3]", null, false };
                 yield return new object?[] { "[1, 2, 3]", JsonCollectionEqualityComparer.Equality, false };
                 yield return new object?[] { "[1, 2, 3]", JsonCollectionEqualityComparer.Equivalence, false };
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(TestDataForJsonStringComparerOption))]
+        public void Equivalent_AssertStringWithJsonStringComparerOption(string actualJson, StringComparison jsonStringComparison, bool expectedAssertResult)
+        {
+            if (expectedAssertResult)
+            {
+                RunAssertion();
+            }
+            else
+            {
+                Assert.Throws<JsonAssertException>(RunAssertion);
+            }
+
+            void RunAssertion()
+            {
+                const string expectedJson = "\"abc\"";
+                JsonAssertion.Equivalent(expectedJson, actualJson, new JsonAssertionOptions { JsonStringComparison = jsonStringComparison });
+            }
+        }
+
+        public static IEnumerable<object?[]> TestDataForJsonStringComparerOption
+        {
+            get
+            {
+                yield return new object[] { "\"abc\"", StringComparison.Ordinal, true };
+                yield return new object[] { "\"ABC\"", StringComparison.Ordinal, false };
+                yield return new object[] { "\"ABC\"", StringComparison.OrdinalIgnoreCase, true };
+                yield return new object[] { "\"xyz\"", StringComparison.OrdinalIgnoreCase, false };
+                yield return new object[] { "\"ABC\"", StringComparison.InvariantCulture, false };
+                yield return new object[] { "\"ABC\"", StringComparison.InvariantCultureIgnoreCase, true };
+                yield return new object[] { "\"\\u0061\\u0062\\u0063\"", StringComparison.Ordinal, true };
+                yield return new object[] { "\"\\u0041\\u0042\\u0043\"", StringComparison.OrdinalIgnoreCase, true };
             }
         }
     }

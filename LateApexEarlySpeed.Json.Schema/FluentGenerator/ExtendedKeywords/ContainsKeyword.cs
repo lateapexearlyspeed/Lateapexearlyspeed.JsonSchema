@@ -35,7 +35,7 @@ internal class ContainsKeyword : ValidationKeywordBase
             }
         }
 
-        return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.NotFoundAnyValidatedArrayItem, ErrorMessage(instance.ToString()), options.ValidationPathStack,
+        return ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.NotFoundAnyValidatedArrayItem, options.GenerateErrorMessages ? ErrorMessage(instance.ToString()) : string.Empty, options.ValidationPathStack,
             Name, instance.Location));
     }
 

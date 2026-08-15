@@ -25,7 +25,7 @@ internal abstract class NumberRangeKeywordBase : ValidationKeywordBase
 
         return _benchmarkChecker.IsInRange(instance)
             ? ValidationResult.ValidResult 
-            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.NumberOutOfRange, _benchmarkChecker.GetErrorMessage(instance), options.ValidationPathStack, Name, instance.Location));
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.NumberOutOfRange, options.GenerateErrorMessages ? _benchmarkChecker.GetErrorMessage(instance) : string.Empty, options.ValidationPathStack, Name, instance.Location));
     }
 
     protected abstract class NonDecimalBenchmarkCheckerBase : IBenchmarkChecker

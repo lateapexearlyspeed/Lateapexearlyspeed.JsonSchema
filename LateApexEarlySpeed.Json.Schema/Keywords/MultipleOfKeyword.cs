@@ -56,7 +56,7 @@ internal class MultipleOfKeyword : ValidationKeywordBase
             return ValidationResult.ValidResult;
         }
 
-        MultipleOfResult multipleOfResult = _multipleOfChecker.Check(instance.InternalJsonElement);
+        MultipleOfResult multipleOfResult = _multipleOfChecker.Check(instance.InternalJsonElement, options.GenerateErrorMessages);
         return multipleOfResult.IsSuccess
             ? ValidationResult.ValidResult 
             : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.FailedToMultiple, multipleOfResult.ErrorMessage, options.ValidationPathStack, Name, instance.Location));
@@ -75,7 +75,7 @@ internal class DecimalMultipleOfChecker : IMultipleOfChecker
         _multipleOf = multipleOf;
     }
 
-    public MultipleOfResult Check(JsonElement instance)
+    public MultipleOfResult Check(JsonElement instance, bool generateErrorMessage)
     {
         Debug.Assert(_multipleOf > 0);
 
@@ -88,7 +88,7 @@ internal class DecimalMultipleOfChecker : IMultipleOfChecker
             decimal actualTolerance = _multipleOf * DecimalTolerance;
             return remainder < actualTolerance || Math.Abs(remainder - _multipleOf) < actualTolerance
                 ? MultipleOfResult.Success()
-                : MultipleOfResult.Fail(ErrorMessage(decimalInstance, _multipleOf));
+                : MultipleOfResult.Fail(generateErrorMessage ? ErrorMessage(decimalInstance, _multipleOf) : string.Empty);
         }
         else
         {
@@ -103,7 +103,7 @@ internal class DecimalMultipleOfChecker : IMultipleOfChecker
             double actualTolerance = multipleOf * DoubleTolerance;
             return remainder < actualTolerance || Math.Abs(remainder - multipleOf) < actualTolerance
                 ? MultipleOfResult.Success()
-                : MultipleOfResult.Fail(ErrorMessage(doubleInstance, _multipleOf));
+                : MultipleOfResult.Fail(generateErrorMessage ? ErrorMessage(doubleInstance, _multipleOf) : string.Empty);
         }
     }
 
@@ -127,7 +127,7 @@ internal class ULongMultipleOfChecker : IMultipleOfChecker
         _multipleOf = multipleOf;
     }
 
-    public MultipleOfResult Check(JsonElement instance)
+    public MultipleOfResult Check(JsonElement instance, bool generateErrorMessage)
     {
         Debug.Assert(_multipleOf != 0);
 
@@ -137,25 +137,25 @@ internal class ULongMultipleOfChecker : IMultipleOfChecker
             {
                 return longInstance == 0 
                     ? MultipleOfResult.Success() 
-                    : MultipleOfResult.Fail(ErrorMessage(longInstance, _multipleOf));
+                    : MultipleOfResult.Fail(generateErrorMessage ? ErrorMessage(longInstance, _multipleOf) : string.Empty);
             }
 
             return longInstance % (long)_multipleOf == 0 
                 ? MultipleOfResult.Success() 
-                : MultipleOfResult.Fail(ErrorMessage(longInstance, _multipleOf));
+                : MultipleOfResult.Fail(generateErrorMessage ? ErrorMessage(longInstance, _multipleOf) : string.Empty);
         }
 
         if (instance.TryGetUInt64(out ulong ulongInstance))
         {
             return ulongInstance % _multipleOf == 0
                 ? MultipleOfResult.Success()
-                : MultipleOfResult.Fail(ErrorMessage(ulongInstance, _multipleOf));
+                : MultipleOfResult.Fail(generateErrorMessage ? ErrorMessage(ulongInstance, _multipleOf) : string.Empty);
         }
 
         // Now the instance should be float point number
         double doubleInstance = instance.GetDouble();
         Debug.Assert(doubleInstance % _multipleOf != 0);
-        return MultipleOfResult.Fail(ErrorMessage(doubleInstance, _multipleOf));
+        return MultipleOfResult.Fail(generateErrorMessage ? ErrorMessage(doubleInstance, _multipleOf) : string.Empty);
     }
 
     public void WriteMultipleOfValue(Utf8JsonWriter writer)
@@ -180,7 +180,7 @@ internal class DoubleMultipleOfChecker : IMultipleOfChecker
         _multipleOf = multipleOf;
     }
 
-    public MultipleOfResult Check(JsonElement instance)
+    public MultipleOfResult Check(JsonElement instance, bool generateErrorMessage)
     {
         Debug.Assert(_multipleOf > 0);
 
@@ -197,7 +197,7 @@ internal class DoubleMultipleOfChecker : IMultipleOfChecker
         double actualTolerance = _multipleOf * Tolerance;
         return remainder < actualTolerance || Math.Abs(remainder - _multipleOf) < actualTolerance
             ? MultipleOfResult.Success()
-            : MultipleOfResult.Fail(ErrorMessage(instanceValue, _multipleOf));
+            : MultipleOfResult.Fail(generateErrorMessage ? ErrorMessage(instanceValue, _multipleOf) : string.Empty);
     }
 
     public void WriteMultipleOfValue(Utf8JsonWriter writer)
@@ -213,7 +213,7 @@ internal class DoubleMultipleOfChecker : IMultipleOfChecker
 
 internal interface IMultipleOfChecker
 {
-    MultipleOfResult Check(JsonElement instance);
+    MultipleOfResult Check(JsonElement instance, bool generateErrorMessage);
     void WriteMultipleOfValue(Utf8JsonWriter writer);
 }
 

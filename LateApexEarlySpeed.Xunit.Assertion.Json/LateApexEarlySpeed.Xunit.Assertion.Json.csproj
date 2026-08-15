@@ -17,9 +17,9 @@
     <PackageIcon>nuget.icon.jpg</PackageIcon>
     <PackageTags>Xunit;Json;Assertion;Assert;Test;Fluent</PackageTags>
     <PackageOutputPath>bin\Release\NugetPackage</PackageOutputPath>
-    <Version>2.1.1</Version>
-    <AssemblyVersion>2.1.1</AssemblyVersion>
-    <FileVersion>2.1.1</FileVersion>
+    <Version>2.2.0</Version>
+    <AssemblyVersion>2.2.0</AssemblyVersion>
+    <FileVersion>2.2.0</FileVersion>
     <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema</PackageProjectUrl>
   </PropertyGroup>
@@ -37,7 +37,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LateApexEarlySpeed.Json.Schema" Version="2.1.4" />
+    <PackageReference Include="LateApexEarlySpeed.Json.Schema" Version="4.0.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="xunit.assert" Version="2.4.2" />

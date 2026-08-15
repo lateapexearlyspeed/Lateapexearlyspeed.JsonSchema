@@ -20,7 +20,7 @@ internal abstract class ArrayLengthKeywordBase : ValidationKeywordBase, IBenchma
 
         return IsSizeInRange(instanceLength)
             ? ValidationResult.ValidResult
-            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.ArrayLengthOutOfRange, GetErrorMessage(instanceLength), options.ValidationPathStack, Name, instance.Location));
+            : ValidationResult.SingleErrorFailedResult(new ValidationError(ResultCode.ArrayLengthOutOfRange, options.GenerateErrorMessages ? GetErrorMessage(instanceLength) : string.Empty, options.ValidationPathStack, Name, instance.Location));
     }
 
     protected abstract bool IsSizeInRange(int instanceArrayLength);
