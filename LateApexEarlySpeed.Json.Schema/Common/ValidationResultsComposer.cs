@@ -27,14 +27,14 @@ internal static class ValidationResultsComposer
 internal ref struct ValidationCompositionContext
 {
     private readonly OutputFormat _outputFormat;
-    private ImmutableValidationErrorCollection.Builder _builder;
-    private AnnotationCollection _annotations;
+    private ImmutableValidationErrorCollection.Builder _errorCollectionBuilder;
+    private ImmutableDoubleEndedLinkedList<Annotation>.Builder _annotationListBuilder;
     private ValidationResult? _fastResult;
 
     public ValidationCompositionContext(OutputFormat outputFormat)
     {
-        _builder = new ImmutableValidationErrorCollection.Builder();
-        _annotations = new AnnotationCollection();
+        _errorCollectionBuilder = new ImmutableValidationErrorCollection.Builder();
+        _annotationListBuilder = new ImmutableDoubleEndedLinkedList<Annotation>.Builder();
         _outputFormat = outputFormat;
     }
 
@@ -53,8 +53,8 @@ internal ref struct ValidationCompositionContext
 
         if (_outputFormat == OutputFormat.List)
         {
-            _builder.AddChildCollection(iterationResult.ValidationErrorsList);
-            _annotations.AddChildCollection(iterationResult.AnnotationCollection);
+            _errorCollectionBuilder.AddChildCollection(iterationResult.ValidationErrorsList);
+            _annotationListBuilder.AddRange(iterationResult.AnnotationList);
         }
 
         return true;
@@ -62,7 +62,7 @@ internal ref struct ValidationCompositionContext
 
     public void ReportAnnotation(Annotation annotation)
     {
-        _annotations.Add(annotation);
+        _annotationListBuilder.Add(annotation);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -85,7 +85,7 @@ internal ref struct ValidationCompositionContext
                 return ValidationResult.ValidResult;
             }
 
-            return new ValidationResult(true, _builder.ToImmutable(), _annotations);
+            return new ValidationResult(true, _errorCollectionBuilder.ToImmutable(), _annotationListBuilder.ToImmutable());
         }
 
         ImmutableValidationErrorCollection errorCollection;
@@ -99,12 +99,12 @@ internal ref struct ValidationCompositionContext
         {
             if (resultTuple.CurError is not null)
             {
-                _builder.SetCurrent(resultTuple.CurError);
+                _errorCollectionBuilder.SetCurrent(resultTuple.CurError);
             }
 
-            errorCollection = _builder.ToImmutable();
+            errorCollection = _errorCollectionBuilder.ToImmutable();
         }
 
-        return new ValidationResult(false, errorCollection, AnnotationCollection.Empty);
+        return new ValidationResult(false, errorCollection, ImmutableDoubleEndedLinkedList<Annotation>.Empty);
     }
 }

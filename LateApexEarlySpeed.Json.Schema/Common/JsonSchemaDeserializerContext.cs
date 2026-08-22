@@ -28,20 +28,21 @@ internal ref struct JsonSchemaDeserializerContext
 
     /// <summary>
     /// The validator options associated with this deserialization context.
-    /// Provides access to property-name comparison settings and keyword resolution.
+    /// Provides access to property-name comparison settings, annotation collection setting and keyword resolution.
     /// </summary>
     private readonly JsonValidatorOptions _jsonValidatorOptions;
 
     public DialectKind Dialect;
     public readonly bool PropertyNameCaseInsensitive => _jsonValidatorOptions.PropertyNameCaseInsensitive;
+    public readonly bool CollectAnnotation => _jsonValidatorOptions.CollectAnnotation;
 
     static JsonSchemaDeserializerContext()
     {
-        JsonSerializerOptionsCache = new JsonSerializerOptions[ValidationKeywordRegistry.SupportedDialectsCount * 2];
+        JsonSerializerOptionsCache = new JsonSerializerOptions[ValidationKeywordRegistry.SupportedDialectsCount * 2 * 2];
 
         for (int i = 0; i < JsonSerializerOptionsCache.Length; i++)
         {
-            var markerConverter = new JsonSchemaDeserializerContextMarkerConverter(new JsonValidatorOptions { PropertyNameCaseInsensitive = i % 2 == 1 }, (DialectKind)(i / 2));
+            var markerConverter = new JsonSchemaDeserializerContextMarkerConverter(new JsonValidatorOptions { PropertyNameCaseInsensitive = (i / 2) % 2 == 1, CollectAnnotation = i % 2 == 1 }, (DialectKind)(i / 4));
             JsonSerializerOptionsCache[i] = new JsonSerializerOptions { Converters = { markerConverter } };
         }
     }
@@ -66,11 +67,11 @@ internal ref struct JsonSchemaDeserializerContext
     public readonly JsonSerializerOptions ToJsonSerializerOptions()
     {
         return _jsonValidatorOptions.JsonSerializerOptionsCache is null 
-            ? JsonSerializerOptionsCache[(int)Dialect * 2 + (PropertyNameCaseInsensitive ? 1 : 0)] 
+            ? JsonSerializerOptionsCache[(int)Dialect * 4 + (PropertyNameCaseInsensitive ? 2 : 0) + (CollectAnnotation ? 1 : 0)] 
             : _jsonValidatorOptions.JsonSerializerOptionsCache.GetJsonSerializerOptions(Dialect);
     }
 
-    public Type? GetKeyword(scoped ReadOnlySpan<char> keywordName)
+    public Type? GetValidationKeyword(scoped ReadOnlySpan<char> keywordName)
     {
         return _jsonValidatorOptions.InternalKeywordRegistry?.GetKeyword(keywordName, Dialect) ?? _jsonValidatorOptions.GlobalKeywordRegistry.GetKeyword(keywordName, Dialect);
     }

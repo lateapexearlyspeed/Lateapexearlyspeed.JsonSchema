@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Collections;
+using System.Diagnostics;
+using System.Text;
 using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
@@ -14,23 +16,23 @@ public class ValidationResult
     /// </summary>
     public bool IsValid { get; }
     internal readonly ImmutableValidationErrorCollection ValidationErrorsList;
-    internal readonly AnnotationCollection AnnotationCollection;
+    internal readonly ImmutableDoubleEndedLinkedList<Annotation> AnnotationList;
 
-    internal ValidationResult(bool isValid, ImmutableValidationErrorCollection validationErrorsList, AnnotationCollection annotationCollection)
+    internal ValidationResult(bool isValid, ImmutableValidationErrorCollection validationErrorsList, ImmutableDoubleEndedLinkedList<Annotation> annotationList)
     {
         IsValid = isValid;
         ValidationErrorsList = validationErrorsList;
-        AnnotationCollection = annotationCollection;
+        AnnotationList = annotationList;
     }
 
     /// <summary>
     /// Singleton instance of 'pure' successful validation result, means there is no failure items in <see cref="ValidationErrors"/> property and annotation items in <see cref="Annotations"/> property
     /// </summary>
-    public static ValidationResult ValidResult { get; } = new(true, ImmutableValidationErrorCollection.Empty, AnnotationCollection.Empty);
+    public static ValidationResult ValidResult { get; } = new(true, ImmutableValidationErrorCollection.Empty, ImmutableDoubleEndedLinkedList<Annotation>.Empty);
 
     public static ValidationResult SingleErrorFailedResult(ValidationError singleError)
     {
-        return new ValidationResult(false, new ImmutableValidationErrorCollection(singleError), AnnotationCollection.Empty);
+        return new ValidationResult(false, new ImmutableValidationErrorCollection(singleError), ImmutableDoubleEndedLinkedList<Annotation>.Empty);
     }
 
     /// <summary>
@@ -39,12 +41,154 @@ public class ValidationResult
     /// </summary>
     public IEnumerable<ValidationError> ValidationErrors => ValidationErrorsList.Enumerate();
 
-    public IEnumerable<Annotation> Annotations => new AnnotationCollection();
+    public IEnumerable<Annotation?> Annotations => AnnotationList;
 }
 
-internal class AnnotationCollection
+internal class ImmutableDoubleEndedLinkedList<T> : IEnumerable<T>
 {
-    public static AnnotationCollection Empty { get; set; } = new();
+    public static ImmutableDoubleEndedLinkedList<T> Empty { get; } = new();
+
+    private readonly LinkedNode? _header;
+    private readonly LinkedNode? _tailer;
+
+    private ImmutableDoubleEndedLinkedList()
+    {
+    }
+
+    private ImmutableDoubleEndedLinkedList(LinkedNode header, LinkedNode tailer)
+    {
+        _header = header;
+        _tailer = tailer;
+    }
+
+    public bool IsEmpty => _header is null;
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        return new Enumerator(this);
+    }
+
+    internal class Enumerator : IEnumerator<T>
+    {
+        private readonly ImmutableDoubleEndedLinkedList<T> _list;
+        private LinkedNode? _curNode;
+        private bool _hasEnd;
+
+        public Enumerator(ImmutableDoubleEndedLinkedList<T> list)
+        {
+            _list = list;
+        }
+
+        public bool MoveNext()
+        {
+            if (_list.IsEmpty)
+            {
+                return false;
+            }
+
+            if (_hasEnd)
+            {
+                return false;
+            }
+
+            _curNode = _curNode is null ? _list._header : _curNode.Next;
+
+            if (ReferenceEquals(_curNode, _list._tailer))
+            {
+                _hasEnd = true;
+            }
+
+            return true;
+        }
+
+        public void Reset()
+        {
+            _hasEnd = false;
+            _curNode = null;
+        }
+
+        public T Current => _curNode is null ? default! : _curNode.Value;
+
+        object? IEnumerator.Current => Current;
+
+        public void Dispose()
+        {
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    internal ref struct Builder
+    {
+        private LinkedNode? _header;
+        private LinkedNode? _tailer;
+
+        public void Add(T value)
+        {
+            var newNode = new LinkedNode(value);
+            if (_header is null)
+            {
+                _tailer = _header = newNode;
+            }
+            else
+            {
+                Debug.Assert(_tailer is not null);
+                Debug.Assert(_tailer.Next is null); // The tailer node's Next should be null, otherwise there will be one existing linked list is being corrupted which means there is internal logic bug
+
+                _tailer.Next = newNode;
+                _tailer = newNode;
+            }
+        }
+
+        public void AddRange(ImmutableDoubleEndedLinkedList<T> list)
+        {
+            if (list.IsEmpty)
+            {
+                return;
+            }
+
+            if (_header is null)
+            {
+                _header = list._header;
+                _tailer = list._tailer;
+            }
+            else
+            {
+                Debug.Assert(_tailer is not null);
+                Debug.Assert(_tailer.Next is null); // The tailer node's Next should be null, otherwise there will be one existing linked list is being corrupted which means there is internal logic bug
+             
+                _tailer.Next = list._header;
+                _tailer = list._tailer;
+            }
+        }
+
+        public ImmutableDoubleEndedLinkedList<T> ToImmutable()
+        {
+            if (_header is null)
+            {
+                Debug.Assert(_tailer is null);
+
+                return Empty;
+            }
+
+            Debug.Assert(_tailer is not null);
+            return new ImmutableDoubleEndedLinkedList<T>(_header, _tailer);
+        }
+    }
+
+    private class LinkedNode
+    {
+        public readonly T Value;
+        public LinkedNode? Next;
+
+        public LinkedNode(T value)
+        {
+            Value = value;
+        }
+    }
 }
 
 internal class ImmutableValidationErrorCollection

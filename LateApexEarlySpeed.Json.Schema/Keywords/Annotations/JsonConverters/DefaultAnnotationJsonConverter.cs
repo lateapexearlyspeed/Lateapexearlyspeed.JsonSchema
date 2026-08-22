@@ -16,4 +16,6 @@ public class DefaultAnnotationJsonConverter : JsonConverter<DefaultAnnotation>
     {
         value.Value.WriteTo(writer);
     }
+
+    public override bool HandleNull => true;
 }

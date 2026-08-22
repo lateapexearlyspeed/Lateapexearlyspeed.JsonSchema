@@ -22,4 +22,6 @@ public class ExamplesAnnotationJsonConverter : JsonConverter<ExamplesAnnotation>
     {
         JsonSerializer.Serialize(writer, value.Value, options);
     }
+
+    public override bool HandleNull => true;
 }
