@@ -44,6 +44,21 @@ public class ValidationResult
     public IEnumerable<Annotation> Annotations => AnnotationList;
 }
 
+/// <summary>
+/// Represents an immutable sequence whose observable range is bounded by a head node and a tail node.
+/// </summary>
+/// <remarks>
+/// This type is logically immutable rather than structurally immutable. A list instance represents
+/// the node range from its header through its tailer, inclusive. Enumeration stops when the captured
+/// tailer is reached, so appending nodes after that tailer does not change the values observed from
+/// an existing list instance.
+///
+/// The builder may reuse node ranges from existing lists to make <c>AddRange</c> an O(1) operation
+/// and avoid allocating replacement container nodes. This relies on a single-append ownership rule
+/// for the current builder tail: before the builder appends another range or value, the current tail
+/// node must not already have a next node. Debug assertions enforce this invariant and help catch
+/// accidental attempts to append from the same shared tail through multiple builders.
+/// </remarks>
 internal class ImmutableDoubleEndedLinkedList<T> : IEnumerable<T>
 {
     public static ImmutableDoubleEndedLinkedList<T> Empty { get; } = new();
@@ -136,13 +151,22 @@ internal class ImmutableDoubleEndedLinkedList<T> : IEnumerable<T>
             else
             {
                 Debug.Assert(_tailer is not null);
-                Debug.Assert(_tailer.Next is null); // The tailer node's Next should be null, otherwise there will be one existing linked list is being corrupted which means there is internal logic bug
+                Debug.Assert(_tailer.Next is null); // The builder must have exclusive append ownership of its current tail node; otherwise appending here would overwrite another list chain already linked after this shared tail.
 
                 _tailer.Next = newNode;
                 _tailer = newNode;
             }
         }
 
+        /// <summary>
+        /// Appends the observable range of <paramref name="list"/> to this builder.
+        /// </summary>
+        /// <remarks>
+        /// This method links the source list's node range directly instead of copying its nodes. The source
+        /// list remains logically unchanged because its enumeration is bounded by its own tailer. After a
+        /// shared range becomes this builder's tail, this builder is the only owner that may append after
+        /// that tail node.
+        /// </remarks>
         public void AddRange(ImmutableDoubleEndedLinkedList<T> list)
         {
             if (list.IsEmpty)
@@ -158,7 +182,7 @@ internal class ImmutableDoubleEndedLinkedList<T> : IEnumerable<T>
             else
             {
                 Debug.Assert(_tailer is not null);
-                Debug.Assert(_tailer.Next is null); // The tailer node's Next should be null, otherwise there will be one existing linked list is being corrupted which means there is internal logic bug
+                Debug.Assert(_tailer.Next is null); // The builder must have exclusive append ownership of its current tail node; otherwise appending here would overwrite another list chain already linked after this shared tail.
              
                 _tailer.Next = list._header;
                 _tailer = list._tailer;

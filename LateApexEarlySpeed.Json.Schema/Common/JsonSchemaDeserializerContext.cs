@@ -14,22 +14,22 @@ namespace LateApexEarlySpeed.Json.Schema.Common;
 /// </summary>
 internal ref struct JsonSchemaDeserializerContext
 {
-// Items in JsonSerializerOptionsCache are with following order:
-//
-// | Dialect                 | PropertyNameCaseInsensitive | CollectAnnotations | Cache index |
-// |-------------------------|-----------------------------|-------------------|-------------|
-// | DialectKind.Draft202012 | false                       | false             | 0           |
-// | DialectKind.Draft202012 | false                       | true              | 1           |
-// | DialectKind.Draft202012 | true                        | false             | 2           |
-// | DialectKind.Draft202012 | true                        | true              | 3           |
-// | DialectKind.Draft201909 | false                       | false             | 4           |
-// | DialectKind.Draft201909 | false                       | true              | 5           |
-// | DialectKind.Draft201909 | true                        | false             | 6           |
-// | DialectKind.Draft201909 | true                        | true              | 7           |
-// | DialectKind.Draft7      | false                       | false             | 8           |
-// | DialectKind.Draft7      | false                       | true              | 9           |
-// | DialectKind.Draft7      | true                        | false             | 10          |
-// | DialectKind.Draft7      | true                        | true              | 11          |
+    // Items in JsonSerializerOptionsCache are with following order:
+    //
+    // | Dialect                 | PropertyNameCaseInsensitive | CollectAnnotations | Cache index |
+    // |-------------------------|-----------------------------|--------------------|-------------|
+    // | DialectKind.Draft202012 | false                       | false              | 0           |
+    // | DialectKind.Draft202012 | false                       | true               | 1           |
+    // | DialectKind.Draft202012 | true                        | false              | 2           |
+    // | DialectKind.Draft202012 | true                        | true               | 3           |
+    // | DialectKind.Draft201909 | false                       | false              | 4           |
+    // | DialectKind.Draft201909 | false                       | true               | 5           |
+    // | DialectKind.Draft201909 | true                        | false              | 6           |
+    // | DialectKind.Draft201909 | true                        | true               | 7           |
+    // | DialectKind.Draft7      | false                       | false              | 8           |
+    // | DialectKind.Draft7      | false                       | true               | 9           |
+    // | DialectKind.Draft7      | true                        | false              | 10          |
+    // | DialectKind.Draft7      | true                        | true               | 11          |
     private static readonly JsonSerializerOptions[] JsonSerializerOptionsCache;
 
     /// <summary>
