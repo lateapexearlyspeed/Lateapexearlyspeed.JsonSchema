@@ -5,6 +5,6 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
 [Keyword("title")]
 [JsonConverter(typeof(StringAnnotationJsonConverter<TitleAnnotation>))]
-public class TitleAnnotation : AnnotationKeyword<string>
+public class TitleAnnotation : AnnotationKeywordBase
 {
 }

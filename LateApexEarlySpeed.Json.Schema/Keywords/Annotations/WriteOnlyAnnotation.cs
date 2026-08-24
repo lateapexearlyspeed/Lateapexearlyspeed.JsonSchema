@@ -5,6 +5,6 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
 [Keyword("writeOnly")]
 [JsonConverter(typeof(BooleanAnnotationJsonConverter<WriteOnlyAnnotation>))]
-public class WriteOnlyAnnotation : AnnotationKeyword<bool>
+public class WriteOnlyAnnotation : AnnotationKeywordBase
 {
 }

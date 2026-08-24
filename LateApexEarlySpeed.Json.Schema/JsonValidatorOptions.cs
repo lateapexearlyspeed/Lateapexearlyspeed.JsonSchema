@@ -92,9 +92,9 @@ public class JsonValidatorOptions
     /// Gets or sets a value that determines whether to collect annotation values during validation. The default value is <see langword="false"/>.
     /// </summary>
     /// <remarks>
-    /// The annotation collection happens only when <see cref="CollectAnnotation"/> is <see langword="true"/>, the validation result is valid and <see cref="JsonSchemaOptions.OutputFormat"/> is <see cref="OutputFormat.List"/>
+    /// The annotation collection happens only when <see cref="CollectAnnotations"/> is <see langword="true"/>, the validation result is valid and <see cref="JsonSchemaOptions.OutputFormat"/> is <see cref="OutputFormat.List"/>
     /// </remarks>
-    public bool CollectAnnotation { get; set; }
+    public bool CollectAnnotations { get; set; }
 
     /// <summary>
     /// Gets or sets a value that determines default dialect when there is no '$schema' identifier in Json schema. The default value is <see cref="DialectKind.Draft202012"/>.
@@ -154,7 +154,7 @@ public class JsonValidatorOptions
 
         return PropertyNameCaseInsensitive == other.PropertyNameCaseInsensitive 
                && IgnoreResourceIdInUnknownKeyword == other.IgnoreResourceIdInUnknownKeyword
-               && CollectAnnotation == other.CollectAnnotation
+               && CollectAnnotations == other.CollectAnnotations
                && DefaultDialect == other.DefaultDialect
                && ReferenceEquals(InternalKeywordRegistry, other.InternalKeywordRegistry)
                && ReferenceEquals(GlobalKeywordRegistry, other.GlobalKeywordRegistry)

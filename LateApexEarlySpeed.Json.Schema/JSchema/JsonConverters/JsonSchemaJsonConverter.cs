@@ -244,7 +244,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             }
             else if ((annotationType = AnnotationKeywordRegistry.GetKeyword(keywordName)) is not null)
             {
-                if (deserializerContext.CollectAnnotation)
+                if (deserializerContext.CollectAnnotations)
                 {
                     AnnotationKeywordBase? annotationKeyword = JsonSerializer.Deserialize(ref reader, annotationType, options) as AnnotationKeywordBase;
                     Debug.Assert(annotationKeyword is not null);
@@ -276,6 +276,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         if (deserializerContext.Dialect == DialectKind.Draft7 && schemaReference is not null)
         {
             validationKeywords.Clear();
+            annotationKeywords = null;
 
             Debug.Assert(referenceKeywords is not null);
             referenceKeywords.Clear();

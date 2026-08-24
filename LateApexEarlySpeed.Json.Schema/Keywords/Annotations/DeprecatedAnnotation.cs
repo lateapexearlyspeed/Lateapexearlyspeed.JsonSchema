@@ -5,6 +5,6 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
 [Keyword("deprecated")]
 [JsonConverter(typeof(BooleanAnnotationJsonConverter<DeprecatedAnnotation>))]
-public class DeprecatedAnnotation : AnnotationKeyword<bool>
+public class DeprecatedAnnotation : AnnotationKeywordBase
 {
 }

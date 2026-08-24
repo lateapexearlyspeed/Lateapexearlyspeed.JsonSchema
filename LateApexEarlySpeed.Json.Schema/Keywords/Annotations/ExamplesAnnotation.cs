@@ -1,11 +1,10 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Keywords.Annotations.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
 [Keyword("examples")]
 [JsonConverter(typeof(ExamplesAnnotationJsonConverter))]
-public class ExamplesAnnotation : AnnotationKeyword<JsonElement[]>
+public class ExamplesAnnotation : AnnotationKeywordBase
 {
 }

@@ -14,6 +14,7 @@ public abstract class AnnotationKeywordBase
     }
 
     public string Name { get; }
+    public JsonElement Value { get; init; }
 
     public Annotation Annotate(JsonInstanceElement instance, JsonSchemaOptions options)
     {
@@ -26,16 +27,9 @@ public abstract class AnnotationKeywordBase
         return annotation;
     }
 
-    public abstract Annotation AnnotateCore(JsonInstanceElement instance, JsonSchemaOptions options);
-}
-
-public class AnnotationKeyword<T> : AnnotationKeywordBase
-{
-    public T Value { get; init; } = default!;
-
-    public override Annotation AnnotateCore(JsonInstanceElement instance, JsonSchemaOptions options)
+    private Annotation AnnotateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        return new Annotation(Name, JsonSerializer.SerializeToElement(Value), instance.Location, options.ValidationPathStack);
+        return new Annotation(Name, Value, instance.Location, options.ValidationPathStack);
     }
 }
 

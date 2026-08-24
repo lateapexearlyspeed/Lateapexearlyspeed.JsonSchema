@@ -4,7 +4,7 @@ using LateApexEarlySpeed.Json.Schema.Common;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.Annotations.JsonConverters;
 
-public class StringAnnotationJsonConverter<TAnnotationKeyword> : JsonConverter<TAnnotationKeyword> where TAnnotationKeyword : AnnotationKeyword<string>, new()
+public class StringAnnotationJsonConverter<TAnnotationKeyword> : JsonConverter<TAnnotationKeyword> where TAnnotationKeyword : AnnotationKeywordBase, new()
 {
     public override TAnnotationKeyword Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -13,12 +13,12 @@ public class StringAnnotationJsonConverter<TAnnotationKeyword> : JsonConverter<T
             throw ThrowHelper.CreateKeywordHasInvalidJsonValueKindJsonException<TAnnotationKeyword>(JsonValueKind.String);
         }
 
-        return new TAnnotationKeyword { Value = reader.GetString()! };
+        return new TAnnotationKeyword { Value = JsonElement.ParseValue(ref reader) };
     }
 
     public override void Write(Utf8JsonWriter writer, TAnnotationKeyword value, JsonSerializerOptions options)
     {
-        writer.WriteStringValue(value.Value);
+        value.Value.WriteTo(writer);
     }
 
     public override bool HandleNull => true;

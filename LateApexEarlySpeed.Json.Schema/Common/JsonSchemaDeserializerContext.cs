@@ -14,16 +14,22 @@ namespace LateApexEarlySpeed.Json.Schema.Common;
 /// </summary>
 internal ref struct JsonSchemaDeserializerContext
 {
-    // Items in JsonSerializerOptionsCache are with following order:
-    //
-    // | Dialect              | PropertyNameCaseInsensitive | Cache index |
-    // |----------------------|-----------------------------|-------------|
-    // | DialectKind.Draft2020| false                       | 0           |
-    // | DialectKind.Draft2020| true                        | 1           |
-    // | DialectKind.Draft2019| false                       | 2           |
-    // | DialectKind.Draft2019| true                        | 3           |
-    // | DialectKind.Draft7   | false                       | 4           |
-    // | DialectKind.Draft7   | true                        | 5           |
+// Items in JsonSerializerOptionsCache are with following order:
+//
+// | Dialect                 | PropertyNameCaseInsensitive | CollectAnnotations | Cache index |
+// |-------------------------|-----------------------------|-------------------|-------------|
+// | DialectKind.Draft202012 | false                       | false             | 0           |
+// | DialectKind.Draft202012 | false                       | true              | 1           |
+// | DialectKind.Draft202012 | true                        | false             | 2           |
+// | DialectKind.Draft202012 | true                        | true              | 3           |
+// | DialectKind.Draft201909 | false                       | false             | 4           |
+// | DialectKind.Draft201909 | false                       | true              | 5           |
+// | DialectKind.Draft201909 | true                        | false             | 6           |
+// | DialectKind.Draft201909 | true                        | true              | 7           |
+// | DialectKind.Draft7      | false                       | false             | 8           |
+// | DialectKind.Draft7      | false                       | true              | 9           |
+// | DialectKind.Draft7      | true                        | false             | 10          |
+// | DialectKind.Draft7      | true                        | true              | 11          |
     private static readonly JsonSerializerOptions[] JsonSerializerOptionsCache;
 
     /// <summary>
@@ -34,7 +40,7 @@ internal ref struct JsonSchemaDeserializerContext
 
     public DialectKind Dialect;
     public readonly bool PropertyNameCaseInsensitive => _jsonValidatorOptions.PropertyNameCaseInsensitive;
-    public readonly bool CollectAnnotation => _jsonValidatorOptions.CollectAnnotation;
+    public readonly bool CollectAnnotations => _jsonValidatorOptions.CollectAnnotations;
 
     static JsonSchemaDeserializerContext()
     {
@@ -42,7 +48,7 @@ internal ref struct JsonSchemaDeserializerContext
 
         for (int i = 0; i < JsonSerializerOptionsCache.Length; i++)
         {
-            var markerConverter = new JsonSchemaDeserializerContextMarkerConverter(new JsonValidatorOptions { PropertyNameCaseInsensitive = (i / 2) % 2 == 1, CollectAnnotation = i % 2 == 1 }, (DialectKind)(i / 4));
+            var markerConverter = new JsonSchemaDeserializerContextMarkerConverter(new JsonValidatorOptions { PropertyNameCaseInsensitive = (i / 2) % 2 == 1, CollectAnnotations = i % 2 == 1 }, (DialectKind)(i / 4));
             JsonSerializerOptionsCache[i] = new JsonSerializerOptions { Converters = { markerConverter } };
         }
     }
@@ -67,7 +73,7 @@ internal ref struct JsonSchemaDeserializerContext
     public readonly JsonSerializerOptions ToJsonSerializerOptions()
     {
         return _jsonValidatorOptions.JsonSerializerOptionsCache is null 
-            ? JsonSerializerOptionsCache[(int)Dialect * 4 + (PropertyNameCaseInsensitive ? 2 : 0) + (CollectAnnotation ? 1 : 0)] 
+            ? JsonSerializerOptionsCache[(int)Dialect * 4 + (PropertyNameCaseInsensitive ? 2 : 0) + (CollectAnnotations ? 1 : 0)] 
             : _jsonValidatorOptions.JsonSerializerOptionsCache.GetJsonSerializerOptions(Dialect);
     }
 

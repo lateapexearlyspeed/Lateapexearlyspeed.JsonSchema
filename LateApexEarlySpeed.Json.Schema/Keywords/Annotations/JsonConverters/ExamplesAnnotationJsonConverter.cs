@@ -13,14 +13,12 @@ public class ExamplesAnnotationJsonConverter : JsonConverter<ExamplesAnnotation>
             throw ThrowHelper.CreateKeywordHasInvalidJsonValueKindJsonException<ExamplesAnnotation>(JsonValueKind.Array);
         }
 
-        JsonElement[] examples = JsonSerializer.Deserialize<JsonElement[]>(ref reader, options)!;
-
-        return new ExamplesAnnotation { Value = examples };
+        return new ExamplesAnnotation { Value = JsonElement.ParseValue(ref reader) };
     }
 
     public override void Write(Utf8JsonWriter writer, ExamplesAnnotation value, JsonSerializerOptions options)
     {
-        JsonSerializer.Serialize(writer, value.Value, options);
+        value.Value.WriteTo(writer);
     }
 
     public override bool HandleNull => true;

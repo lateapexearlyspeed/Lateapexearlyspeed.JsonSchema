@@ -41,7 +41,7 @@ public class ValidationResult
     /// </summary>
     public IEnumerable<ValidationError> ValidationErrors => ValidationErrorsList.Enumerate();
 
-    public IEnumerable<Annotation?> Annotations => AnnotationList;
+    public IEnumerable<Annotation> Annotations => AnnotationList;
 }
 
 internal class ImmutableDoubleEndedLinkedList<T> : IEnumerable<T>

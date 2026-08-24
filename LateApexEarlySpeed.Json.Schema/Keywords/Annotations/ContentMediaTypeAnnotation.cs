@@ -3,8 +3,8 @@ using LateApexEarlySpeed.Json.Schema.Keywords.Annotations.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
-[Keyword("description")]
-[JsonConverter(typeof(StringAnnotationJsonConverter<DescriptionAnnotation>))]
-public class DescriptionAnnotation : AnnotationKeywordBase
+[Keyword("contentMediaType")]
+[JsonConverter(typeof(StringAnnotationJsonConverter<ContentMediaTypeAnnotation>))]
+public class ContentMediaTypeAnnotation : AnnotationKeywordBase
 {
 }

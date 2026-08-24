@@ -5,6 +5,6 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
 [Keyword("readOnly")]
 [JsonConverter(typeof(BooleanAnnotationJsonConverter<ReadOnlyAnnotation>))]
-public class ReadOnlyAnnotation : AnnotationKeyword<bool>
+public class ReadOnlyAnnotation : AnnotationKeywordBase
 {
 }

@@ -163,7 +163,7 @@ public class ValidationKeywordRegistry
 {
     private readonly StringKeyedDictionary<IDialectKeywordRegistry> _keywordsDictionary;
 
-    private static readonly StringKeyedHashSet IgnoredKeywordNames = new() { "$comment", "$vocabulary", "contentEncoding", "contentMediaType", "contentSchema" };
+    private static readonly StringKeyedHashSet IgnoredKeywordNames = new() { "$comment", "$vocabulary" };
 
     /// <summary>
     /// Global level <see cref="ValidationKeywordRegistry"/> instance that registers and retrieves validation keywords.
