@@ -49,7 +49,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         reader.Read();
 
         var validationKeywords = new List<ValidationKeywordBase>();
-        List<AnnotationKeywordBase>? annotationKeywords = null;
+        List<IAnnotationKeyword>? annotationKeywords = null;
 
         var deserializerContext = new JsonSchemaDeserializerContext(options);
 
@@ -113,34 +113,38 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 Debug.Assert(keyword != null);
                 validationKeywords.Add(keyword);
 
-                // Store dependent keywords
-                if (keyword is PropertiesKeyword properties)
+                switch (keyword)
                 {
-                    propertiesKeyword = properties;
-                }
-                else if (keyword is PatternPropertiesKeyword pattern)
-                {
-                    patternPropertiesKeyword = pattern;
-                }
-                else if (keyword is AdditionalPropertiesKeyword additionalProperties)
-                {
-                    additionalPropertiesKeyword = additionalProperties;
-                }
-                else if (keyword is ItemsKeyword items)
-                {
-                    itemsKeyword = items;
-                }
-                else if (keyword is PrefixItemsKeyword prefixItems)
-                {
-                    prefixItemsKeyword = prefixItems;
-                }
-                else if (keyword is AdditionalItemsKeyword additionalItems)
-                {
-                    additionalItemsKeyword = additionalItems;
-                }
-                else if (keyword is ItemsWithMultiSchemasKeyword itemsWithMultiSchemas)
-                {
-                    itemsWithMultiSchemasKeyword = itemsWithMultiSchemas;
+                    // Store dependent keywords
+                    case PropertiesKeyword properties:
+                        propertiesKeyword = properties;
+                        break;
+                    case PatternPropertiesKeyword pattern:
+                        patternPropertiesKeyword = pattern;
+                        break;
+                    case AdditionalPropertiesKeyword additionalProperties:
+                        additionalPropertiesKeyword = additionalProperties;
+                        break;
+                    case ItemsKeyword items:
+                        itemsKeyword = items;
+                        break;
+                    case PrefixItemsKeyword prefixItems:
+                        prefixItemsKeyword = prefixItems;
+                        break;
+                    case AdditionalItemsKeyword additionalItems:
+                        additionalItemsKeyword = additionalItems;
+                        break;
+                    case ItemsWithMultiSchemasKeyword itemsWithMultiSchemas:
+                        itemsWithMultiSchemasKeyword = itemsWithMultiSchemas;
+                        break;
+                    // This is for 'format' keyword which is both validation keyword and annotation keyword
+                    case IAnnotationKeyword annotationKeyword:
+                        if (deserializerContext.CollectAnnotations)
+                        {
+                            annotationKeywords ??= new();
+                            annotationKeywords.Add(annotationKeyword);
+                        }
+                        break;
                 }
             }
             else if (keywordName.Equals(ConditionalValidator.IfKeywordName, StringComparison.Ordinal))
@@ -246,7 +250,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             {
                 if (deserializerContext.CollectAnnotations)
                 {
-                    AnnotationKeywordBase? annotationKeyword = JsonSerializer.Deserialize(ref reader, annotationType, options) as AnnotationKeywordBase;
+                    IAnnotationKeyword? annotationKeyword = JsonSerializer.Deserialize(ref reader, annotationType, options) as IAnnotationKeyword;
                     Debug.Assert(annotationKeyword is not null);
 
                     annotationKeywords ??= new();
@@ -366,7 +370,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
     /// <param name="annotationKeywords">reference may be set to <see langword="null"/>
     /// when the removed 'contentSchema' annotation was the only annotation keyword.
     /// </param>
-    private static void RemoveIgnoredContentSchemaAnnotation(ref List<AnnotationKeywordBase>? annotationKeywords)
+    private static void RemoveIgnoredContentSchemaAnnotation(ref List<IAnnotationKeyword>? annotationKeywords)
     {
         if (annotationKeywords is null)
         {
@@ -377,7 +381,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
         for (int i = 0; i < annotationKeywords.Count; i++)
         {
-            AnnotationKeywordBase keyword = annotationKeywords[i];
+            IAnnotationKeyword keyword = annotationKeywords[i];
             
             if (keyword.Name == ContentMediaTypeAnnotation.Keyword)
             {
@@ -502,10 +506,13 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             // Annotation keyword part:
             if (schema.AnnotationKeywords is not null)
             {
-                foreach (AnnotationKeywordBase annotationKeyword in schema.AnnotationKeywords)
+                foreach (IAnnotationKeyword annotationKeyword in schema.AnnotationKeywords)
                 {
-                    writer.WritePropertyName(annotationKeyword.Name);
-                    JsonSerializer.Serialize(writer, annotationKeyword, annotationKeyword.GetType(), options);
+                    if (annotationKeyword is not ValidationKeywordBase)
+                    {
+                        writer.WritePropertyName(annotationKeyword.Name);
+                        JsonSerializer.Serialize(writer, annotationKeyword, annotationKeyword.GetType(), options);
+                    }
                 }
             }
 

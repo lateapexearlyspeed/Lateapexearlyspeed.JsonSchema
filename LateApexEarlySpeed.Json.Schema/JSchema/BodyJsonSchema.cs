@@ -4,7 +4,6 @@ using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.Keywords;
-using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
@@ -13,7 +12,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 {
     private readonly ISchemaContainerValidationNode[]? _schemaContainerValidators;
     private readonly IReadOnlyList<ValidationKeywordBase> _validationKeywords;
-    private readonly AnnotationKeywordBase[]? _annotationKeywords;
+    private readonly IAnnotationKeyword[]? _annotationKeywords;
     private readonly IReferenceKeyword[]? _referenceKeywords;
 
     /// <summary>
@@ -61,7 +60,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public IReadOnlyList<ValidationKeywordBase> ValidationKeywords => _validationKeywords;
 
-    public IReadOnlyList<AnnotationKeywordBase>? AnnotationKeywords => _annotationKeywords;
+    public IReadOnlyList<IAnnotationKeyword>? AnnotationKeywords => _annotationKeywords;
 
     public IReadOnlyList<IReferenceKeyword>? ReferenceKeywords => _referenceKeywords;
 
@@ -74,7 +73,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     }
 
-    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords, IEnumerable<AnnotationKeywordBase>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
+    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords, IEnumerable<IAnnotationKeyword>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
     {
         _validationKeywords = MergeKeywords(keywords.ToArray());
 
@@ -241,7 +240,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
         {
             if (_bodyJsonSchema._annotationKeywords is not null && context.ShouldAnnotate(IsValid()))
             {
-                foreach (AnnotationKeywordBase annotationKeyword in _bodyJsonSchema._annotationKeywords)
+                foreach (IAnnotationKeyword annotationKeyword in _bodyJsonSchema._annotationKeywords)
                 {
                     if (annotationKeyword.ShouldAnnotate(_instance))
                     {

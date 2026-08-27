@@ -17,7 +17,8 @@ internal static class AnnotationKeywordRegistry
             typeof(WriteOnlyAnnotation),
             typeof(ContentEncodingAnnotation),
             typeof(ContentMediaTypeAnnotation),
-            typeof(ContentSchemaAnnotation)
+            typeof(ContentSchemaAnnotation),
+            typeof(FormatKeyword)
         };
 
         Keywords = new StringKeyedDictionary<Type>(20);

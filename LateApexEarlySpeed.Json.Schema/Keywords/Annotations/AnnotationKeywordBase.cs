@@ -1,10 +1,11 @@
 ﻿using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using System.Text.Json;
+using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
-public abstract class AnnotationKeywordBase
+public abstract class AnnotationKeywordBase : IAnnotationKeyword
 {
     protected AnnotationKeywordBase()
     {
@@ -18,21 +19,24 @@ public abstract class AnnotationKeywordBase
 
     public Annotation Annotate(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        options.ValidationPathStack.PushRelativeLocation(Name);
+        return AnnotationKeywordHelper.Annotate(Name, Value, instance, options);
+    }
 
-        Annotation annotation = AnnotateCore(instance, options);
+    public virtual bool ShouldAnnotate(JsonInstanceElement instance) => true;
+}
+
+internal static class AnnotationKeywordHelper
+{
+    public static Annotation Annotate(string name, JsonElement value, JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        options.ValidationPathStack.PushRelativeLocation(name);
+
+        var annotation = new Annotation(name, value, instance.Location, options.ValidationPathStack);
 
         options.ValidationPathStack.PopRelativeLocation();
 
         return annotation;
     }
-
-    private Annotation AnnotateCore(JsonInstanceElement instance, JsonSchemaOptions options)
-    {
-        return new Annotation(Name, Value, instance.Location, options.ValidationPathStack);
-    }
-
-    public virtual bool ShouldAnnotate(JsonInstanceElement instance) => true;
 }
 
 public class Annotation
