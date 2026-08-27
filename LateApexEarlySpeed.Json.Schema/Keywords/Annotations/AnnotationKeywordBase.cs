@@ -31,6 +31,8 @@ public abstract class AnnotationKeywordBase
     {
         return new Annotation(Name, Value, instance.Location, options.ValidationPathStack);
     }
+
+    public virtual bool ShouldAnnotate(JsonInstanceElement instance) => true;
 }
 
 public class Annotation

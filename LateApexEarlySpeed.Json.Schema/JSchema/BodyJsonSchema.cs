@@ -243,7 +243,10 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             {
                 foreach (AnnotationKeywordBase annotationKeyword in _bodyJsonSchema._annotationKeywords)
                 {
-                    context.ReportAnnotation(annotationKeyword.Annotate(_instance, _options));
+                    if (annotationKeyword.ShouldAnnotate(_instance))
+                    {
+                        context.ReportAnnotation(annotationKeyword.Annotate(_instance, _options));
+                    }
                 }
             }
         }

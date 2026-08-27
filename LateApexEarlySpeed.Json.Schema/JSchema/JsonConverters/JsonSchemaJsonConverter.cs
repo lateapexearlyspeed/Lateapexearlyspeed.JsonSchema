@@ -320,6 +320,8 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 schemaContainerValidators.Add(new ConditionalValidator(predictSchema, positiveSchema, negativeSchema));
             }
 
+            RemoveIgnoredContentSchemaAnnotation(ref annotationKeywords);
+
             // Although BodyJsonSchema supports merging duplicated keywords, but it is done by changing json schema tree structure. (That is:
             // when there is duplicated keywords, schema structure will be changed)
             // In json schema deserialization case, it is possible that original schema contains "json path" reference, so here we cannot 
@@ -356,6 +358,51 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         }
 
         return (T)(object)schema;
+    }
+
+    /// <summary>
+    /// Remove the 'contentSchema' annotation keyword because it is ignored when adjacent 'contentMediaType' is absent.
+    /// </summary>
+    /// <param name="annotationKeywords">reference may be set to <see langword="null"/>
+    /// when the removed 'contentSchema' annotation was the only annotation keyword.
+    /// </param>
+    private static void RemoveIgnoredContentSchemaAnnotation(ref List<AnnotationKeywordBase>? annotationKeywords)
+    {
+        if (annotationKeywords is null)
+        {
+            return;
+        }
+
+        int? contentSchemaIdx = null;
+
+        for (int i = 0; i < annotationKeywords.Count; i++)
+        {
+            AnnotationKeywordBase keyword = annotationKeywords[i];
+            
+            if (keyword.Name == ContentMediaTypeAnnotation.Keyword)
+            {
+                return;
+            }
+
+            if (keyword.Name == ContentSchemaAnnotation.Keyword)
+            {
+                contentSchemaIdx = i;
+            }
+        }
+
+        if (!contentSchemaIdx.HasValue)
+        {
+            return;
+        }
+
+        // From now, we should remove the 'contentSchema' annotation keyword, because it is ignored without adjacent 'contentMediaType'.
+        if (annotationKeywords.Count == 1) // here we can fast return null, because the only annotation keyword in list is 'contentSchema'.
+        {
+            annotationKeywords = null;
+            return;
+        }
+
+        annotationKeywords.RemoveAt(contentSchemaIdx.Value);
     }
 
     private static SchemaKeyword GetSchemaKeyword(ref Utf8JsonReader reader)
