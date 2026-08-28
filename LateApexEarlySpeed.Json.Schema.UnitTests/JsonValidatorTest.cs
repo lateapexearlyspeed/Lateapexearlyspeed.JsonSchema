@@ -22,7 +22,8 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         {
             "collect annotations inside a 'not', even if collection is disabled",
             "strict-tree schema, guards against misspelled properties",
-            "ref creates new scope when adjacent to keywords"
+            "ref creates new scope when adjacent to keywords",
+            "$ref with $recursiveAnchor"
         };
 
         private static readonly string[] TestCasesForIgnoreResourceIdInUnknownKeyword = new[]
