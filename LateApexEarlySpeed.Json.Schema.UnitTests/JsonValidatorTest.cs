@@ -1,11 +1,12 @@
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.JSchema.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords;
+using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -64,6 +65,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
             ValidationResult actualValidationResult = jsonValidator.Validate(instance, new JsonSchemaOptions{ValidateFormat = false, OutputFormat = outputFormat, GenerateErrorMessages = generateErrorMessage});
             Assert.Equal(expectedValidationResult, actualValidationResult.IsValid);
+            Assert.Same(ImmutableDoubleEndedLinkedList<Annotation>.Empty, actualValidationResult.Annotations);
 
             Assert.All(actualValidationResult.ValidationErrors, error =>
             {

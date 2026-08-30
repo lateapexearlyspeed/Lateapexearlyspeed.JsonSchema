@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
 
@@ -142,6 +143,7 @@ public class LinkedListBasedImmutableJsonPointer : ImmutableJsonPointer
     /// </summary>
     /// <remarks>Based on benchmark, this method is hot path, so we create <see cref="SingleLinkedList{T}"/> type which can share common path nodes for several <see cref="SingleLinkedList{T}"/> instances inside same path</remarks>
     /// <returns>Newly created <see cref="LinkedListBasedImmutableJsonPointer"/> instance.</returns>
+    [Pure]
     public LinkedListBasedImmutableJsonPointer Add(string unescapedReferenceToken)
     {
         return new LinkedListBasedImmutableJsonPointer(_referenceTokens.CreateByAppend(unescapedReferenceToken));
@@ -151,6 +153,7 @@ public class LinkedListBasedImmutableJsonPointer : ImmutableJsonPointer
     /// This method will not modify current instance, it is an immutable operation
     /// </summary>
     /// <returns>Newly created <see cref="LinkedListBasedImmutableJsonPointer"/> instance.</returns>
+    [Pure]
     public LinkedListBasedImmutableJsonPointer Add(int arrayItemIdx)
     {
         return new LinkedListBasedImmutableJsonPointer(_referenceTokens.CreateByAppend(arrayItemIdx.ToString()));
