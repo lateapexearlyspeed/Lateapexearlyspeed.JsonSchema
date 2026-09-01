@@ -16,7 +16,7 @@
 ![NuGet Version](https://img.shields.io/nuget/v/LateApexEarlySpeed.Nullability.Generic?label=LateApexEarlySpeed.Nullability.Generic)
 ![NuGet Version](https://img.shields.io/nuget/v/JsonQuery.Net?label=JsonQuery.Net)
 
-LateApexEarlySpeed.Json.Schema is a high-performance .NET JSON Schema validator implementation based on System.Text.Json. The core package supports Draft 7, Draft 2019-09, and Draft 2020-12, passes the official JSON Schema Test Suite with documented limitations, and includes fluent JSON validation plus validator/schema creation from .NET types.
+LateApexEarlySpeed.Json.Schema is a high-performance .NET JSON Schema validator implementation based on System.Text.Json. The core package supports Draft 7, Draft 2019-09, and Draft 2020-12, passes the official JSON Schema Test Suite with documented limitations, supports opt-in annotation collection, and includes fluent JSON validation plus validator/schema creation from .NET types.
 
 # What is all in Lateapexearlyspeed.JsonSchema
 
@@ -77,6 +77,7 @@ Choose this library when:
 - You want a validator implementation based on System.Text.Json.
 - You need Draft 7, Draft 2019-09, or Draft 2020-12 support (commonly used, stable, LTS, and latest JSON Schema dialects).
 - You want validation behavior covered by the official JSON Schema Test Suite, with documented limitations.
+- You want opt-in JSON Schema annotation collection.
 - You want fluent JSON validation for developer-friendly validation code.
 - You want validator/schema creation from .NET types.
 - You can reuse JsonValidator instances for better performance in repeated validation scenarios.
@@ -85,9 +86,11 @@ Choose this library when:
 
 - Supported JSON Schema dialects: Draft 7, Draft 2019-09, and Draft 2020-12.
 - Validation functionality is tested against the official JSON Schema Test Suite.
+- Annotation collection is supported as an opt-in feature through JsonValidatorOptions.CollectAnnotations.
+- Annotation collection is tested against the [official JSON Schema annotation test suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite/tree/main/annotations).
 - The test suite is included as a repository submodule and is run through the unit test project.
 - Format validation is supported for common formats including uri, uri-reference, date, time, date-time, email, uuid, hostname, ipv4, ipv6, json-pointer, and regex.
-- Current documented limitations: annotation collection is not supported; therefore unevaluatedProperties and unevaluatedItems are not supported; content-encoded string validation is not supported currently.
+- Current documented limitations: unevaluatedProperties and unevaluatedItems are not supported; automatic content-encoded string decoding/validation is not supported currently.
 
 ### Basic Usage
 
@@ -105,6 +108,8 @@ if (validationResult.IsValid)
 ```
 
 Output Information in [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Validation-Output)
+
+Annotation support in [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Annotation-Support)
 
 External json schema document reference support, please check [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/External-json-schema-document-reference)
 
