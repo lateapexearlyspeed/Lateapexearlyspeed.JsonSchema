@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
-using LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Common;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using LateApexEarlySpeed.Json.Schema.Keywords;
 using Xunit;
 
 namespace LateApexEarlySpeed.Json.Schema.UnitTests;
@@ -12,9 +12,9 @@ public class AnnotationTests
 
     [Theory]
     [MemberData(nameof(AnnotationTestSuite))]
-    public void Validate_InputFromJsonSchemaTestSuite(string schema, string instance, string keyword, string instanceLocation, Dictionary<string, JsonElement> expectedAnnotations)
+    public void Validate_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, string keyword, string instanceLocation, Dictionary<string, JsonElement> expectedAnnotations)
     {
-        var jsonValidator = new JsonValidator(schema, new JsonValidatorOptions { CollectAnnotations = true });
+        var jsonValidator = new JsonValidator(schema, new JsonValidatorOptions { CollectAnnotations = true, DefaultDialect = dialect });
         ValidationResult validationResult = jsonValidator.Validate(instance, new JsonSchemaOptions { OutputFormat = OutputFormat.List, ValidateFormat = true });
 
         Assert.True(validationResult.IsValid);
@@ -66,90 +66,74 @@ public class AnnotationTests
     {
         get
         {
-            AnnotationTestCase[] annotationCases = TestSuiteReader.ReadAnnotationTestCasesFromJsonSchemaTestSuite(UnsupportedFileNames);
+            TestCase[] annotationCases = TestSuiteReader.ReadAnnotationTestCasesFromJsonSchemaTestSuite(UnsupportedFileNames);
 
             return annotationCases.SelectMany(annotationCase
                 => annotationCase.Tests.SelectMany(testCase
-                    => testCase.Assertions.Select(assertion
-                        => new object[] { JsonSerializer.Serialize(annotationCase.Schema), JsonSerializer.Serialize(testCase.Instance), assertion.Keyword, assertion.InstanceLocation, assertion.Expected })));
+                    => testCase.Assertions.SelectMany(assertion
+                        => annotationCase.Dialects.Select(dialect 
+                            => new object[] { dialect, JsonSerializer.Serialize(annotationCase.Schema), JsonSerializer.Serialize(testCase.Instance), assertion.Keyword, assertion.InstanceLocation, assertion.Expected })
+                        )));
         }
     }
 
-    public class Assertion : IComparable<Assertion>
+    /// <summary>
+    /// Refer to: https://github.com/json-schema-org/JSON-Schema-Test-Suite/tree/main/annotations#test-case-components
+    /// </summary>
+    private class TestCase
     {
-        public Assertion(string keyword, ImmutableJsonPointer keywordLocation, ImmutableJsonPointer instanceLocation, JsonElement annotationValue)
+        private static readonly Dictionary<string, int> CompatibilityLevelTable = new()
         {
-            Keyword = keyword;
-            KeywordLocation = keywordLocation;
-            InstanceLocation = instanceLocation;
-            AnnotationValue = annotationValue;
-        }
+            { "3", 0 },
+            { "4", 0 },
+            { "6", 0 },
+            { "7", 0 },
+            { "2019", 1 },
+            { "2020", 2 }
+        };
 
-        public string Keyword { get; }
-        public ImmutableJsonPointer KeywordLocation { get; }
-        public ImmutableJsonPointer InstanceLocation { get; }
-        public JsonElement AnnotationValue { get; }
+        private static readonly DialectKind[] AvailableDialectKinds = new[] {
+            DialectKind.Draft7,
+            DialectKind.Draft201909,
+            DialectKind.Draft202012
+        };
 
-        public int CompareTo(Assertion? other)
-        {
-            Debug.Assert(other is not null);
-            
-            string thisKey = Keyword + KeywordLocation + InstanceLocation + JsonSerializer.Serialize(AnnotationValue);
-            string otherKey = other.Keyword + other.KeywordLocation + other.InstanceLocation + JsonSerializer.Serialize(other.AnnotationValue);
-        
-            return string.Compare(thisKey, otherKey, StringComparison.Ordinal);
-        }
+        [JsonPropertyName("compatibility")]
+        public string Compatibility { get; set; } = "3"; // If no compatibility is specified, it is assumed to support any dialects.
 
-        public override bool Equals(object? obj)
-        {
-            if (obj is null)
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            if (obj.GetType() != GetType())
-            {
-                return false;
-            }
-
-            return Equals((Assertion)obj);
-        }
-
-        protected bool Equals(Assertion other)
-        {
-            return Keyword == other.Keyword 
-                   && KeywordLocation.Equals(other.KeywordLocation) 
-                   && InstanceLocation.Equals(other.InstanceLocation) 
-                   && JsonSerializer.Serialize(AnnotationValue) == JsonSerializer.Serialize(other.AnnotationValue);
-        }
-
-        public override int GetHashCode() => 0;
-    }
-
-    private class AnnotationTestCase
-    {
         [JsonPropertyName("schema")]
         public JsonElement Schema { get; set; }
         
         [JsonPropertyName("tests")]
-        public TestCase[] Tests { get; set; } = null!;
+        public Test[] Tests { get; set; } = null!;
+
+        public IEnumerable<DialectKind> Dialects
+        {
+            get
+            {
+                int compatibilityLevel = CompatibilityLevelTable[Compatibility];
+
+                return AvailableDialectKinds.Skip(compatibilityLevel);
+            }
+        }
     }
 
-    private class TestCase
+    /// <summary>
+    /// Refer to: https://github.com/json-schema-org/JSON-Schema-Test-Suite/tree/main/annotations#test-components
+    /// </summary>
+    private class Test
     {
         [JsonPropertyName("instance")]
         public JsonElement Instance { get; set; }
         
         [JsonPropertyName("assertions")]
-        public AssertionCase[] Assertions { get; set; } = null!;
+        public Assertion[] Assertions { get; set; } = null!;
     }
 
-    private class AssertionCase
+    /// <summary>
+    /// Refer to: https://github.com/json-schema-org/JSON-Schema-Test-Suite/tree/main/annotations#assertions-components
+    /// </summary>
+    private class Assertion
     {
         [JsonPropertyName("location")]
         public string InstanceLocation { get; set; } = null!;
@@ -163,11 +147,11 @@ public class AnnotationTests
 
     private static class TestSuiteReader
     {
-        public static AnnotationTestCase[] ReadAnnotationTestCasesFromJsonSchemaTestSuite(string[] unsupportedFileNames)
+        public static TestCase[] ReadAnnotationTestCasesFromJsonSchemaTestSuite(string[] unsupportedFileNames)
         {
             string[] pathFiles = Directory.GetFiles(Path.Combine("JSON-Schema-Test-Suite", "annotations", "tests"));
 
-            IEnumerable<AnnotationTestCase> result = Enumerable.Empty<AnnotationTestCase>();
+            IEnumerable<TestCase> result = Enumerable.Empty<TestCase>();
 
             foreach (string pathFile in pathFiles)
             {
@@ -182,7 +166,7 @@ public class AnnotationTests
             return result.ToArray();
         }
 
-        private static IEnumerable<AnnotationTestCase> ReadTestCases(string pathFile)
+        private static IEnumerable<TestCase> ReadTestCases(string pathFile)
         {
             using (FileStream fs = File.OpenRead(pathFile))
             {
@@ -190,7 +174,7 @@ public class AnnotationTests
                 {
                     JsonElement suites = rootDoc.RootElement.GetProperty("suite");
 
-                    return suites.Deserialize<AnnotationTestCase[]>()!;
+                    return suites.Deserialize<TestCase[]>()!;
                 }
             }
         }
