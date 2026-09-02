@@ -11,7 +11,7 @@ internal class Int32SchemaGenerationCandidate : ISchemaGenerationCandidate
         return typeToConvert == typeof(int);
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         return SchemaGenerationHelper.GenerateSchemaForSignedInteger(keywordsFromProperty, int.MinValue, int.MaxValue);
     }

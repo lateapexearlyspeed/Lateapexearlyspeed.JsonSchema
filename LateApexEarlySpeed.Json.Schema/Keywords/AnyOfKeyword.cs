@@ -11,7 +11,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("anyOf")]
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<AnyOfKeyword>))]
-internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
 {
     private readonly JsonSchema[] _subSchemas = null!;
 
@@ -75,7 +75,7 @@ internal class AnyOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
                     _fastReturnResult = result;
                 }
 
-                if (!context.Report(result, _fastReturnResult))
+                if (!context.ReportValidationResult(result, _fastReturnResult))
                 {
                     break;
                 }

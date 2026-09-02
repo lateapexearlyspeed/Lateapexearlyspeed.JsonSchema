@@ -6,5 +6,5 @@ namespace LateApexEarlySpeed.Json.Schema.Generator.SchemaGenerators;
 
 internal interface ISchemaGenerator
 {
-    BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options);
+    BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options);
 }

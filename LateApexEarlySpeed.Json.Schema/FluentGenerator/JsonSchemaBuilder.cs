@@ -214,14 +214,14 @@ public class JsonSchemaBuilder
     {
         return _keywordBuilder is not null 
             ? BuildBodyJsonSchema(_keywordBuilder) 
-            : new BodyJsonSchema(Enumerable.Empty<KeywordBase>());
+            : new BodyJsonSchema(Enumerable.Empty<ValidationKeywordBase>());
     }
 
     internal static BodyJsonSchema BuildBodyJsonSchema(KeywordBuilder keywordBuilder)
     {
         KeywordCollection keywordCollection = keywordBuilder.Build();
 
-        return new BodyJsonSchema(keywordCollection.Keywords,
+        return new BodyJsonSchema(keywordCollection.Keywords, null,
             keywordCollection.ArrayContainsValidator is null
                 ? Enumerable.Empty<ISchemaContainerValidationNode>()
                 : new ISchemaContainerValidationNode[] { keywordCollection.ArrayContainsValidator },

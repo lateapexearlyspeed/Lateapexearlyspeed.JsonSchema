@@ -12,7 +12,7 @@ public class IntegerEnumAttribute : Attribute, IKeywordGenerator
         _enumKeywordGenerator = new EnumKeywordGenerator<int>(allowedValues);
     }
 
-    public KeywordBase CreateKeyword(Type type)
+    public ValidationKeywordBase CreateKeyword(Type type)
     {
         return _enumKeywordGenerator.CreateKeyword();
     }

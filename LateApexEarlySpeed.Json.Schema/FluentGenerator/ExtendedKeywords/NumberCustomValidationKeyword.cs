@@ -5,7 +5,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema.FluentGenerator.ExtendedKeywords;
 
-public abstract class NumberCustomValidationKeyword<T> : KeywordBase
+public abstract class NumberCustomValidationKeyword<T> : ValidationKeywordBase
 {
     private readonly Func<T, bool> _validator;
     private readonly Func<T, string> _errorMessageFunc;

@@ -11,7 +11,7 @@ internal class UriSchemaGenerationCandidate : ISchemaGenerationCandidate
         return typeToConvert == typeof(Uri);
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         var typeKeyword = new TypeKeyword(InstanceType.String, InstanceType.Null);
         var formatKeyword = new FormatKeyword(UriReferenceFormatValidator.FormatName, new UriReferenceFormatValidator());

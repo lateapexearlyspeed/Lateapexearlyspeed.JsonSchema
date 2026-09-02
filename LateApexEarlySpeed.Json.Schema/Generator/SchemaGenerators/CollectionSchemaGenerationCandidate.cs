@@ -32,20 +32,20 @@ internal class CollectionSchemaGenerationCandidate : ISchemaGenerationCandidate
         return typeToConvert.IsGenericType && _supportedGenericInterfaceDefinitions.Contains(typeToConvert.GetGenericTypeDefinition());
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
-        List<KeywordBase> keywords = new List<KeywordBase> { new TypeKeyword(InstanceType.Array, InstanceType.Null) };
+        List<ValidationKeywordBase> keywords = new List<ValidationKeywordBase> { new TypeKeyword(InstanceType.Array, InstanceType.Null) };
         keywords.AddRange(keywordsFromProperty);
 
         IType elementType = GetElementType(typeToConvert);
-        JsonSchema elementSchema = JsonSchemaGenerator.GenerateSchema(elementType, Enumerable.Empty<KeywordBase>(), options);
+        JsonSchema elementSchema = JsonSchemaGenerator.GenerateSchema(elementType, Enumerable.Empty<ValidationKeywordBase>(), options);
 
         JsonSchema itemsSchema;
         if (elementSchema is JsonSchemaResource elementSchemaResource)
         {
             options.SchemaDefinitions.AddSchemaDefinition(elementType.Type, elementSchemaResource);
 
-            itemsSchema = SchemaGenerationHelper.GenerateSchemaReference(elementType.Type, Enumerable.Empty<KeywordBase>(), options.MainDocumentBaseUri!);
+            itemsSchema = SchemaGenerationHelper.GenerateSchemaReference(elementType.Type, Enumerable.Empty<ValidationKeywordBase>(), options.MainDocumentBaseUri!);
         }
         else
         {

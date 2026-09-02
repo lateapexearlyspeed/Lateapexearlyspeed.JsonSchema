@@ -12,7 +12,7 @@ internal class JsonArraySchemaGenerationCandidate : ISchemaGenerationCandidate
         return typeToConvert == typeof(JsonArray);
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         return SchemaGenerationHelper.GenerateSchemaForJsonType(InstanceType.Array, keywordsFromProperty);
     }

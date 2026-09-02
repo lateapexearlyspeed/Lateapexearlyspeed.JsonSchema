@@ -1,13 +1,13 @@
 ﻿# Lateapexearlyspeed.Json.Schema
 
-This is a high performance Json schema .Net implementation library based on [Json schema](https://json-schema.org/), support draft7, draft2019 and draft2020 (most commonly used, stable, LTS and latest versions).
+This is a high performance Json schema .Net implementation library based on [Json schema](https://json-schema.org/), support draft7, draft2019 and draft2020 (most commonly used, stable, LTS and latest versions), and supports opt-in annotation collection.
 
 This library also supports fluent validation and validator generation from your class code.
 
 More schema validation options like case-insensitive property names matching, dialect (schema version) selection, Regex cache, output format and so on, please check [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/More-validation-options).
 
 ---
-The json validation functionalities have passed [official json schema test-suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) for draft7, draft2019 and draft2020 (except cases about limitation listed below)
+The json validation functionalities have passed [official json schema test-suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) for draft7, draft2019 and draft2020 (except cases about limitation listed below). Annotation collection is also tested against the [official JSON Schema annotation test suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite/tree/main/annotations).
 
 **High performance** - this .Net library has good performance compared with existing more popular and excellent .Net implementations in common cases by BenchmarkDotnet [result](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Performance). **Update**: there is a [blog article](https://medium.com/@lateapexearlyspeed/performance-comparison-of-json-schema-implementations-for-net-ead3d092a473) to demonstrate performance advantage of this library comparing with other existing popular implementations based on official Json Schema test suite.
 
@@ -223,6 +223,33 @@ When validation failed, you can check detailed error information by:
     https://example.com/schemas/common
     ```
 
+### Annotation Output
+
+Annotation collection is opt-in. To collect annotations, enable `JsonValidatorOptions.CollectAnnotations` when creating the `JsonValidator`, and validate with `OutputFormat.List`:
+
+```csharp
+var jsonValidator = new JsonValidator(jsonSchema, new JsonValidatorOptions
+{
+  CollectAnnotations = true
+});
+
+ValidationResult validationResult = jsonValidator.Validate(instance, new JsonSchemaOptions
+{
+  OutputFormat = OutputFormat.List
+});
+
+foreach (var annotation in validationResult.Annotations)
+{
+  Console.WriteLine($"{annotation.Keyword}: {annotation.Value}");
+}
+```
+
+Annotations are reported from `ValidationResult.Annotations` only for successful schema applications and only when the annotation keyword applies to the instance type.
+
+Annotation output includes `Keyword`, `Value`, and the same location/context fields described above for validation errors: `InstanceLocation`, `RelativeKeywordLocation`, `SubSchemaRefFullUri`, and `SchemaResourceBaseUri`.
+
+For more details, see [Annotation Support](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Annotation-Support).
+
 ## Performance Tips
 Reuse instantiated JsonValidator instances (which basically represent json schema) to validate incoming json instance data if possible in your cases, to gain better performance.
 
@@ -393,9 +420,9 @@ A format validator implementation is resolved per format name. The per-`JsonVali
 
 ## Limitation
 
-- This implementation focuses on json schema validation, currently not support Annotation
-- Due to lack Annotation support, it also not support following keywords: unevaluatedProperties, unevaluatedItems
-- Not support content-encoded string currently
+- Annotation collection is supported as an opt-in feature.
+- Not support following keywords currently: unevaluatedProperties, unevaluatedItems
+- Not support automatic content-encoded string decoding/validation currently
 
 ## Issue report
 

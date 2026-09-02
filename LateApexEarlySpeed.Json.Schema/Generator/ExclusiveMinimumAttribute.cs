@@ -12,7 +12,7 @@ public class ExclusiveMinimumAttribute : Attribute, IKeywordGenerator
         _minimum = minimum;
     }
 
-    public KeywordBase CreateKeyword(Type type)
+    public ValidationKeywordBase CreateKeyword(Type type)
     {
         return new ExclusiveMinimumKeyword(_minimum);
     }

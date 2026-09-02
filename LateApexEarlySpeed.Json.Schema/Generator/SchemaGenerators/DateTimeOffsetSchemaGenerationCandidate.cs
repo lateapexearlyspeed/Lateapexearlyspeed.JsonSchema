@@ -12,7 +12,7 @@ internal class DateTimeOffsetSchemaGenerationCandidate : ISchemaGenerationCandid
         return typeToConvert == typeof(DateTimeOffset);
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         var typeKeyword = new TypeKeyword(InstanceType.String);
         var dateTimeOffsetFormatExtensionKeyword = new DateTimeOffsetFormatExtensionKeyword();

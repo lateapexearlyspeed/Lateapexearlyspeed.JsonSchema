@@ -7,7 +7,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
-internal class SubSchemaCollectionJsonConverter<T> : JsonConverter<T> where T : KeywordBase, ISubSchemaCollection, new()
+internal class SubSchemaCollectionJsonConverter<T> : JsonConverter<T> where T : ValidationKeywordBase, ISubSchemaCollection, new()
 {
     public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

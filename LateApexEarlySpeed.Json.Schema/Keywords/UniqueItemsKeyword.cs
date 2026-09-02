@@ -8,7 +8,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("uniqueItems")]
 [JsonConverter(typeof(UniqueItemsKeywordJsonConverter))]
-internal class UniqueItemsKeyword : KeywordBase
+internal class UniqueItemsKeyword : ValidationKeywordBase
 {
     public bool Enabled { get; }
 

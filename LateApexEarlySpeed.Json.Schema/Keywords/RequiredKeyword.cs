@@ -9,7 +9,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("required")]
 [JsonConverter(typeof(RequiredKeywordJsonConverter))]
-internal class RequiredKeyword : KeywordBase
+internal class RequiredKeyword : ValidationKeywordBase
 {
     private readonly bool _propertyNameIgnoreCase;
     private readonly string[] _requiredProperties;
@@ -73,7 +73,7 @@ internal class RequiredKeyword : KeywordBase
                     _fastReturnResult = validationResult;
                 }
 
-                if (!context.Report(validationResult, _fastReturnResult))
+                if (!context.ReportValidationResult(validationResult, _fastReturnResult))
                 {
                     break;
                 }

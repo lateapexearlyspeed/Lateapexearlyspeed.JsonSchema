@@ -163,7 +163,7 @@ public class ValidationKeywordRegistry
 {
     private readonly StringKeyedDictionary<IDialectKeywordRegistry> _keywordsDictionary;
 
-    private static readonly StringKeyedHashSet IgnoredKeywordNames = new() { "$comment", "$vocabulary", "contentEncoding", "contentMediaType", "contentSchema", "default", "deprecated", "description", "examples", "readOnly", "title", "writeOnly" };
+    private static readonly StringKeyedHashSet IgnoredKeywordNames = new() { "$comment", "$vocabulary" };
 
     /// <summary>
     /// Global level <see cref="ValidationKeywordRegistry"/> instance that registers and retrieves validation keywords.
@@ -232,15 +232,15 @@ public class ValidationKeywordRegistry
     /// </summary>
     /// <typeparam name="TKeyword">New keyword type to be added</typeparam>
     /// <exception cref="ArgumentException">A keyword type with the same keyword name and dialect already exists in the <see cref="ValidationKeywordRegistry"/></exception>
-    public void AddKeyword<TKeyword>() where TKeyword : KeywordBase
+    public void AddKeyword<TKeyword>() where TKeyword : ValidationKeywordBase
     {
         AddKeyword(typeof(TKeyword));
     }
 
     private void AddKeyword(Type keywordType)
     {
-        ReadOnlySpan<char> keywordName = KeywordBase.GetKeywordName(keywordType);
-        DialectKind[] dialects = KeywordBase.GetKeywordDialects(keywordType);
+        ReadOnlySpan<char> keywordName = KeywordHelper.GetKeywordName(keywordType);
+        DialectKind[] dialects = KeywordHelper.GetKeywordDialects(keywordType);
 
         DialectKeywordRegistry dialectKeywordRegistry;
         if (_keywordsDictionary.TryGetValue(keywordName, out IDialectKeywordRegistry? dialectKeywords))
@@ -275,12 +275,12 @@ public class ValidationKeywordRegistry
     /// If specified keyword name and dialect does not exist, it is added; otherwise it is updated with new keyword type.
     /// </summary>
     /// <typeparam name="TKeyword">New keyword type to be set</typeparam>
-    public void SetKeyword<TKeyword>() where TKeyword : KeywordBase
+    public void SetKeyword<TKeyword>() where TKeyword : ValidationKeywordBase
     {
         Type keywordType = typeof(TKeyword);
         
-        ReadOnlySpan<char> keywordName = KeywordBase.GetKeywordName(keywordType);
-        DialectKind[] dialects = KeywordBase.GetKeywordDialects(keywordType);
+        ReadOnlySpan<char> keywordName = KeywordHelper.GetKeywordName(keywordType);
+        DialectKind[] dialects = KeywordHelper.GetKeywordDialects(keywordType);
 
         if (dialects.Length == SupportedDialectsCount) // current keyword supports all dialects
         {

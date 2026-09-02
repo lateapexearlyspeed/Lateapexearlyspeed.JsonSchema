@@ -12,13 +12,13 @@ namespace LateApexEarlySpeed.Json.Schema.Generator.SchemaGenerators;
 
 internal class CustomObjectSchemaGenerator : ISchemaGenerator
 {
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         TypeKeyword typeKeyword = typeToConvert.Type.IsValueType
             ? new TypeKeyword(InstanceType.Object)
             : new TypeKeyword(InstanceType.Object, InstanceType.Null);
 
-        IEnumerable<KeywordBase> keywordsOnType = SchemaGenerationHelper.GenerateKeywordsFromType(typeToConvert.Type);
+        IEnumerable<ValidationKeywordBase> keywordsOnType = SchemaGenerationHelper.GenerateKeywordsFromType(typeToConvert.Type);
 
         IPropertyInfo[] propertyInfos = typeToConvert.GetProperties(BindingFlags.Public | BindingFlags.Instance);
         IFieldInfo[] fieldInfos = typeToConvert.GetFields(BindingFlags.Public | BindingFlags.Instance);
@@ -29,7 +29,7 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
 
         RequiredKeyword? requiredKeyword = CreateRequiredKeyword(memberInfos.Select(m => m.MemberInfo), options);
 
-        IEnumerable<KeywordBase> keywords = keywordsOnType.Append(typeKeyword).Append(propertiesKeyword);
+        IEnumerable<ValidationKeywordBase> keywords = keywordsOnType.Append(typeKeyword).Append(propertiesKeyword);
         if (requiredKeyword is not null)
         {
             keywords = keywords.Append(requiredKeyword);
@@ -40,7 +40,7 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
             return new BodyJsonSchema(keywords);
         }
 
-        return new JsonSchemaResource(null, new Uri(typeToConvert.Type.FullName!, UriKind.Relative), keywords, new List<ISchemaContainerValidationNode>(0), null, null, null, false, null, null);
+        return new JsonSchemaResource(null, new Uri(typeToConvert.Type.FullName!, UriKind.Relative), keywords, null, new List<ISchemaContainerValidationNode>(0), null, null, null, false, null, null);
     }
 
     private static PropertiesKeyword CreatePropertiesKeyword(IEnumerable<IMemberInfo> memberInfos, JsonSchemaGeneratorOptions options)
@@ -51,7 +51,7 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
         {
             IType memberType = memberInfo.GetMemberType();
 
-            KeywordBase[] keywordsOfMember = GenerateKeywordsFromMemberInfo(memberInfo);
+            ValidationKeywordBase[] keywordsOfMember = GenerateKeywordsFromMemberInfo(memberInfo);
             JsonSchema propertySchema = JsonSchemaGenerator.GenerateSchema(memberType, keywordsOfMember, options);
 
             if (propertySchema is JsonSchemaResource propertySchemaResource)
@@ -61,17 +61,17 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
                 propertySchema = SchemaGenerationHelper.GenerateSchemaReference(memberType.Type, keywordsOfMember, options.MainDocumentBaseUri!);
             }
 
-            List<KeywordBase>? keywordsForAdditionalAttributes = null;
+            List<ValidationKeywordBase>? keywordsForAdditionalAttributes = null;
 
             if (!memberType.Type.IsValueType && options.NullabilityTypeInfo.ReferenceTypeNullabilityPolicy.GetNullabilityState(memberInfo) == NullabilityState.NotNull)
             {
                 var typeKeyword = new TypeKeyword(InstanceType.Object, InstanceType.String, InstanceType.Number, InstanceType.Boolean, InstanceType.Array);
-                keywordsForAdditionalAttributes = new List<KeywordBase>(2) { typeKeyword };
+                keywordsForAdditionalAttributes = new List<ValidationKeywordBase>(2) { typeKeyword };
             }
 
             if (memberType.Type.IsEnum && EnumSchemaGenerationCandidate.HasJsonStringEnumConverter(memberInfo.MemberInfo))
             {
-                keywordsForAdditionalAttributes ??= new List<KeywordBase>(1);
+                keywordsForAdditionalAttributes ??= new List<ValidationKeywordBase>(1);
                 keywordsForAdditionalAttributes.Add(new EnumKeyword(memberType.Type.GetEnumNames().Select(JsonInstanceSerializer.SerializeToElement)));
             }
 
@@ -79,7 +79,7 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
             {
                 var allOfKeyword = new AllOfKeyword(new[] { propertySchema, new BodyJsonSchema(keywordsForAdditionalAttributes) });
 
-                propertySchema = new BodyJsonSchema(new KeywordBase[] { allOfKeyword });
+                propertySchema = new BodyJsonSchema(new ValidationKeywordBase[] { allOfKeyword });
             }
 
             propertiesSchemas[GetPropertyName(memberInfo.MemberInfo, options)] = propertySchema;
@@ -110,7 +110,7 @@ internal class CustomObjectSchemaGenerator : ISchemaGenerator
     /// <summary>
     /// Extract attributes from either <see cref="PropertyInfo"/> or <see cref="FieldInfo"/>
     /// </summary>
-    private static KeywordBase[] GenerateKeywordsFromMemberInfo(IMemberInfo memberInfo)
+    private static ValidationKeywordBase[] GenerateKeywordsFromMemberInfo(IMemberInfo memberInfo)
     {
         IEnumerable<IKeywordGenerator> keywordGeneratorOnType = memberInfo.MemberInfo.GetCustomAttributes().OfType<IKeywordGenerator>();
         return keywordGeneratorOnType.Select(keywordGenerator => keywordGenerator.CreateKeyword(memberInfo.GetMemberType().Type)).ToArray();

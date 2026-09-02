@@ -5,7 +5,7 @@ using LateApexEarlySpeed.Json.Schema.JInstance;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-internal abstract class NumberRangeKeywordBase : KeywordBase
+internal abstract class NumberRangeKeywordBase : ValidationKeywordBase
 {
     private readonly IBenchmarkChecker _benchmarkChecker;
 

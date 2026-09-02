@@ -77,14 +77,14 @@ public static class JsonSchemaGenerator
             abstractType = new TypeWrapper(type);
         }
 
-        BodyJsonSchema jsonSchema = GenerateSchema(abstractType, Enumerable.Empty<KeywordBase>(), options);
+        BodyJsonSchema jsonSchema = GenerateSchema(abstractType, Enumerable.Empty<ValidationKeywordBase>(), options);
 
         BodyJsonSchemaDocument bodyJsonSchemaDocument = jsonSchema.TransformToSchemaDocument(mainDocumentBaseUri, new DefsKeyword(options.SchemaDefinitions.GetAll().ToDictionary(kv => kv.Key, kv => kv.Value as JsonSchema)));
 
         return new JsonValidator(bodyJsonSchemaDocument);
     }
 
-    internal static BodyJsonSchema GenerateSchema(IType type, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    internal static BodyJsonSchema GenerateSchema(IType type, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         JsonSchemaResource? schemaDefinition = options.SchemaDefinitions.GetSchemaDefinition(type.Type);
 

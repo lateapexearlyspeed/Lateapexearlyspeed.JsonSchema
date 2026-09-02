@@ -10,7 +10,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("dependentSchemas")]
 [JsonConverter(typeof(DependentSchemasKeywordJsonConverter))]
-internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
 {
     private readonly Dictionary<string, JsonSchema> _dependentSchemas;
 
@@ -64,7 +64,7 @@ internal class DependentSchemasKeyword : KeywordBase, ISchemaContainerElement, I
                         _fastReturnResult = result;
                     }
 
-                    if (!context.Report(result, _fastReturnResult))
+                    if (!context.ReportValidationResult(result, _fastReturnResult))
                     {
                         break;
                     }

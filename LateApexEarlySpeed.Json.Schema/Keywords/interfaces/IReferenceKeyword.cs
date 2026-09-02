@@ -2,7 +2,8 @@
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
-public interface IReferenceKeyword : INamedNode, IValidationNode
+public interface IReferenceKeyword : IValidationNode
 {
+    string Name { get; }
     Uri ParentResourceBaseUri { set; }
 }

@@ -11,7 +11,7 @@ internal class DecimalSchemaGenerationCandidate : ISchemaGenerationCandidate
         return typeToConvert == typeof(decimal);
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         return SchemaGenerationHelper.GenerateSchemaForDecimal(keywordsFromProperty);
     }

@@ -1,30 +1,19 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Reflection;
-using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-public abstract class KeywordBase : NamedValidationNode
-// public abstract class KeywordBase<TKeyword> : NamedValidationNode where TKeyword : KeywordBase<TKeyword>
+internal static class KeywordHelper
 {
-    // ReSharper disable once StaticMemberInGenericType
-    // private static readonly string NameForKeywordType;
     private static readonly ConcurrentDictionary<Type, string> NameForKeywordTypes = new();
 
-    /// <remarks><see cref="Name"/> here is always instantiated by constructor, so override it to make it 'non-nullable'</remarks>
-    public sealed override string Name { get; set; }
+    public static string GetKeywordName<TKeyword>() => GetKeywordName(typeof(TKeyword));
 
-    protected KeywordBase()
+    public static string GetKeywordName(Type keywordType)
     {
-        Type currentKeywordType = GetType();
-
-        Name = GetKeywordName(currentKeywordType);
-    }
-
-    internal static string GetKeywordName(Type keywordType)
-    {
-        Debug.Assert(typeof(KeywordBase).IsAssignableFrom(keywordType));
+        Debug.Assert(typeof(ValidationKeywordBase).IsAssignableFrom(keywordType) || typeof(AnnotationKeywordBase).IsAssignableFrom(keywordType));
 
         return NameForKeywordTypes.GetOrAdd(keywordType, type =>
         {
@@ -44,14 +33,9 @@ public abstract class KeywordBase : NamedValidationNode
         });
     }
 
-    public static string GetKeywordName<TKeyword>() where TKeyword : KeywordBase
+    public static DialectKind[] GetKeywordDialects(Type keywordType)
     {
-        return GetKeywordName(typeof(TKeyword));
-    }
-
-    internal static DialectKind[] GetKeywordDialects(Type keywordType)
-    {
-        Debug.Assert(typeof(KeywordBase).IsAssignableFrom(keywordType));
+        Debug.Assert(typeof(ValidationKeywordBase).IsAssignableFrom(keywordType) || typeof(AnnotationKeywordBase).IsAssignableFrom(keywordType));
 
         DialectAttribute? dialectAttribute = keywordType.GetCustomAttribute<DialectAttribute>();
 
@@ -81,24 +65,6 @@ public abstract class KeywordBase : NamedValidationNode
 
         return dialects;
     }
-
-    // static KeywordBase()
-    // {
-    //     Attribute? attr = typeof(TKeyword).GetCustomAttribute(typeof(KeywordAttribute));
-    //     if (attr is null)
-    //     {
-    //         throw new BadKeywordException($"Type:{typeof(TKeyword).Name} should have {nameof(KeywordAttribute)}");
-    //     }
-    //
-    //     KeywordAttribute keywordAttr = (KeywordAttribute)attr;
-    //     if (string.IsNullOrEmpty(keywordAttr.Name))
-    //     {
-    //         throw new BadKeywordException($"Type:{typeof(TKeyword).Name} should have {nameof(KeywordAttribute)} with non-empty {nameof(KeywordAttribute.Name)} property.");
-    //     }
-    //
-    //     NameForKeywordType = keywordAttr.Name;
-
-    // }
 }
 
 public class BadKeywordException : Exception

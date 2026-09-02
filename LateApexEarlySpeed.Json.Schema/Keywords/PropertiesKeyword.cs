@@ -10,7 +10,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("properties")]
 [JsonConverter(typeof(PropertiesKeywordJsonConverter))]
-internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class PropertiesKeyword : ValidationKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
 {
     private readonly Dictionary<string, JsonSchema> _propertiesSchemas;
 
@@ -65,7 +65,7 @@ internal class PropertiesKeyword : KeywordBase, ISchemaContainerElement, IJsonSc
                         _fastReturnResult = result;
                     }
 
-                    if (!context.Report(result, _fastReturnResult))
+                    if (!context.ReportValidationResult(result, _fastReturnResult))
                     {
                         break;
                     }

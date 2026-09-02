@@ -1,14 +1,16 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-using LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
+using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
+using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("format")]
 [JsonConverter(typeof(FormatKeywordJsonConverter))]
-public class FormatKeyword : KeywordBase
+public class FormatKeyword : ValidationKeywordBase, IAnnotationKeyword
 {
     /// <summary>
     /// The original format value from the JSON schema. It may be invalid (or unsupported) format value and can be used to serialize back to JSON schema.
@@ -38,5 +40,15 @@ public class FormatKeyword : KeywordBase
     public static string ErrorMessage(string format)
     {
         return $"Invalid string value for format: '{format}'";
+    }
+
+    public bool ShouldAnnotate(JsonInstanceElement instance)
+    {
+        return instance.ValueKind == JsonValueKind.String;
+    }
+
+    public Annotation Annotate(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return AnnotationKeywordHelper.Annotate(Name, JsonSerializer.SerializeToElement(Format), instance, options);
     }
 }

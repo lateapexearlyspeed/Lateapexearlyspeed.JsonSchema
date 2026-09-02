@@ -11,7 +11,7 @@ internal class SByteSchemaGenerationCandidate : ISchemaGenerationCandidate
         return typeToConvert == typeof(sbyte);
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         return SchemaGenerationHelper.GenerateSchemaForSignedInteger(keywordsFromProperty, sbyte.MinValue, sbyte.MaxValue);
     }

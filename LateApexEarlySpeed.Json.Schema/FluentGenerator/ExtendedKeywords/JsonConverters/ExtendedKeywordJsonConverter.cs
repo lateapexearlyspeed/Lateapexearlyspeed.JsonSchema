@@ -9,7 +9,7 @@ internal class ExtendedKeywordJsonConverter : JsonConverterFactory
 {
     public override bool CanConvert(Type typeToConvert)
     {
-        return typeof(KeywordBase).IsAssignableFrom(typeToConvert);
+        return typeof(ValidationKeywordBase).IsAssignableFrom(typeToConvert);
     }
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
@@ -18,7 +18,7 @@ internal class ExtendedKeywordJsonConverter : JsonConverterFactory
         return (JsonConverter)Activator.CreateInstance(converterType);
     }
 
-    private class ExtendedKeywordJsonConverterInner<TKeyword> : JsonConverter<TKeyword> where TKeyword : KeywordBase
+    private class ExtendedKeywordJsonConverterInner<TKeyword> : JsonConverter<TKeyword> where TKeyword : ValidationKeywordBase
     {
         public override TKeyword Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

@@ -11,7 +11,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword(Keyword)]
 [JsonConverter(typeof(SchemaReferenceKeywordJsonConverter))]
-internal class SchemaReferenceKeyword : KeywordBase, IReferenceKeyword
+internal class SchemaReferenceKeyword : ValidationKeywordBase, IReferenceKeyword
 {
     public const string Keyword = "$ref";
 

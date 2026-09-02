@@ -13,7 +13,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords.Draft7;
 [Keyword("items")]
 [Dialect(DialectKind.Draft7, DialectKind.Draft201909)]
 [JsonConverter(typeof(ItemsDraft7KeywordJsonConverter))]
-internal abstract class ItemsDraft7Keyword : KeywordBase
+internal abstract class ItemsDraft7Keyword : ValidationKeywordBase
 {
 }
 
@@ -80,7 +80,7 @@ internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword, ISchemaContain
                     _fastReturnResult = validationResult;
                 }
 
-                if (!context.Report(validationResult, _fastReturnResult))
+                if (!context.ReportValidationResult(validationResult, _fastReturnResult))
                 {
                     break;
                 }
@@ -167,7 +167,7 @@ internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword, ISchemaContainerE
                     _fastReturnResult = validationResult;
                 }
 
-                if (!context.Report(validationResult, _fastReturnResult))
+                if (!context.ReportValidationResult(validationResult, _fastReturnResult))
                 {
                     break;
                 }

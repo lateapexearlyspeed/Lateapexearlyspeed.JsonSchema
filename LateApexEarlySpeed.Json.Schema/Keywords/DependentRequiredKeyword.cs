@@ -9,7 +9,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("dependentRequired")]
 [JsonConverter(typeof(DependentRequiredKeywordJsonConverter))]
-internal class DependentRequiredKeyword : KeywordBase
+internal class DependentRequiredKeyword : ValidationKeywordBase
 {
     public Dictionary<string, string[]> DependentProperties { get; init; } = null!;
 
@@ -65,7 +65,7 @@ internal class DependentRequiredKeyword : KeywordBase
                                 _keywordName,
                                 _instance.Location));
 
-                            if (!context.Report(_fastReturnResult, _fastReturnResult))
+                            if (!context.ReportValidationResult(_fastReturnResult, _fastReturnResult))
                             {
                                 return;
                             }

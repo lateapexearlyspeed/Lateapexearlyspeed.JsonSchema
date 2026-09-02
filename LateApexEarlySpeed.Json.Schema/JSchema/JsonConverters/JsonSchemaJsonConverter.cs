@@ -6,6 +6,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords.Draft7;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema.JsonConverters;
@@ -47,7 +48,8 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
         reader.Read();
 
-        var validationKeywords = new List<KeywordBase>();
+        var validationKeywords = new List<ValidationKeywordBase>();
+        List<IAnnotationKeyword>? annotationKeywords = null;
 
         var deserializerContext = new JsonSchemaDeserializerContext(options);
 
@@ -85,6 +87,8 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
         while (reader.TokenType != JsonTokenType.EndObject)
         {
+            Type? annotationType;
+
             var byteCount = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
 
             if (byteCount > keywordNameBuffer.Length)
@@ -99,44 +103,48 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
             ReadOnlySpan<char> keywordName = keywordNameBuffer.Slice(0, keywordNameLength);
 
-            Type? keywordType = deserializerContext.GetKeyword(keywordName);
+            Type? keywordType = deserializerContext.GetValidationKeyword(keywordName);
             reader.Read();
 
             if (keywordType is not null)
             {
-                KeywordBase? keyword = JsonSerializer.Deserialize(ref reader, keywordType, options) as KeywordBase;
+                ValidationKeywordBase? keyword = JsonSerializer.Deserialize(ref reader, keywordType, options) as ValidationKeywordBase;
 
                 Debug.Assert(keyword != null);
                 validationKeywords.Add(keyword);
 
-                // Store dependent keywords
-                if (keyword is PropertiesKeyword properties)
+                switch (keyword)
                 {
-                    propertiesKeyword = properties;
-                }
-                else if (keyword is PatternPropertiesKeyword pattern)
-                {
-                    patternPropertiesKeyword = pattern;
-                }
-                else if (keyword is AdditionalPropertiesKeyword additionalProperties)
-                {
-                    additionalPropertiesKeyword = additionalProperties;
-                }
-                else if (keyword is ItemsKeyword items)
-                {
-                    itemsKeyword = items;
-                }
-                else if (keyword is PrefixItemsKeyword prefixItems)
-                {
-                    prefixItemsKeyword = prefixItems;
-                }
-                else if (keyword is AdditionalItemsKeyword additionalItems)
-                {
-                    additionalItemsKeyword = additionalItems;
-                }
-                else if (keyword is ItemsWithMultiSchemasKeyword itemsWithMultiSchemas)
-                {
-                    itemsWithMultiSchemasKeyword = itemsWithMultiSchemas;
+                    // Store dependent keywords
+                    case PropertiesKeyword properties:
+                        propertiesKeyword = properties;
+                        break;
+                    case PatternPropertiesKeyword pattern:
+                        patternPropertiesKeyword = pattern;
+                        break;
+                    case AdditionalPropertiesKeyword additionalProperties:
+                        additionalPropertiesKeyword = additionalProperties;
+                        break;
+                    case ItemsKeyword items:
+                        itemsKeyword = items;
+                        break;
+                    case PrefixItemsKeyword prefixItems:
+                        prefixItemsKeyword = prefixItems;
+                        break;
+                    case AdditionalItemsKeyword additionalItems:
+                        additionalItemsKeyword = additionalItems;
+                        break;
+                    case ItemsWithMultiSchemasKeyword itemsWithMultiSchemas:
+                        itemsWithMultiSchemasKeyword = itemsWithMultiSchemas;
+                        break;
+                    // This is for 'format' keyword which is both validation keyword and annotation keyword
+                    case IAnnotationKeyword annotationKeyword:
+                        if (deserializerContext.CollectAnnotations)
+                        {
+                            annotationKeywords ??= new();
+                            annotationKeywords.Add(annotationKeyword);
+                        }
+                        break;
                 }
             }
             else if (keywordName.Equals(ConditionalValidator.IfKeywordName, StringComparison.Ordinal))
@@ -238,6 +246,21 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             {
                 recursiveAnchor = reader.GetBoolean();
             }
+            else if ((annotationType = AnnotationKeywordRegistry.GetKeyword(keywordName)) is not null)
+            {
+                if (deserializerContext.CollectAnnotations)
+                {
+                    IAnnotationKeyword? annotationKeyword = JsonSerializer.Deserialize(ref reader, annotationType, options) as IAnnotationKeyword;
+                    Debug.Assert(annotationKeyword is not null);
+
+                    annotationKeywords ??= new();
+                    annotationKeywords.Add(annotationKeyword);
+                }
+                else
+                {
+                    reader.HandleFinalBlockAndSkip();
+                }
+            }
             else if (ValidationKeywordRegistry.IsIgnoredKeyword(keywordName))
             {
                 reader.HandleFinalBlockAndSkip();
@@ -257,6 +280,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         if (deserializerContext.Dialect == DialectKind.Draft7 && schemaReference is not null)
         {
             validationKeywords.Clear();
+            annotationKeywords = null;
 
             Debug.Assert(referenceKeywords is not null);
             referenceKeywords.Clear();
@@ -300,6 +324,8 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 schemaContainerValidators.Add(new ConditionalValidator(predictSchema, positiveSchema, negativeSchema));
             }
 
+            RemoveIgnoredContentSchemaAnnotation(ref annotationKeywords);
+
             // Although BodyJsonSchema supports merging duplicated keywords, but it is done by changing json schema tree structure. (That is:
             // when there is duplicated keywords, schema structure will be changed)
             // In json schema deserialization case, it is possible that original schema contains "json path" reference, so here we cannot 
@@ -310,7 +336,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         JsonSchema schema;
         if (typeToConvert == typeof(IJsonSchemaDocument))
         {
-            schema = new BodyJsonSchemaDocument(validationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, recursiveAnchor, potentialSchemaContainerElements, schemaKeyword, id, defsKeywords);
+            schema = new BodyJsonSchemaDocument(validationKeywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, recursiveAnchor, potentialSchemaContainerElements, schemaKeyword, id, defsKeywords);
         }
         else if (id is not null)
         {
@@ -318,6 +344,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 schemaKeyword,
                 id,
                 validationKeywords,
+                annotationKeywords,
                 schemaContainerValidators,
                 referenceKeywords,
                 plainNameIdentifier,
@@ -331,10 +358,55 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         }
         else
         {
-            schema = new BodyJsonSchema(validationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, defsKeywords, potentialSchemaContainerElements);
+            schema = new BodyJsonSchema(validationKeywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, defsKeywords, potentialSchemaContainerElements);
         }
 
         return (T)(object)schema;
+    }
+
+    /// <summary>
+    /// Remove the 'contentSchema' annotation keyword because it is ignored when adjacent 'contentMediaType' is absent.
+    /// </summary>
+    /// <param name="annotationKeywords">reference may be set to <see langword="null"/>
+    /// when the removed 'contentSchema' annotation was the only annotation keyword.
+    /// </param>
+    private static void RemoveIgnoredContentSchemaAnnotation(ref List<IAnnotationKeyword>? annotationKeywords)
+    {
+        if (annotationKeywords is null)
+        {
+            return;
+        }
+
+        int? contentSchemaIdx = null;
+
+        for (int i = 0; i < annotationKeywords.Count; i++)
+        {
+            IAnnotationKeyword keyword = annotationKeywords[i];
+            
+            if (keyword.Name == ContentMediaTypeAnnotation.Keyword)
+            {
+                return;
+            }
+
+            if (keyword.Name == ContentSchemaAnnotation.Keyword)
+            {
+                contentSchemaIdx = i;
+            }
+        }
+
+        if (!contentSchemaIdx.HasValue)
+        {
+            return;
+        }
+
+        // From now, we should remove the 'contentSchema' annotation keyword, because it is ignored without adjacent 'contentMediaType'.
+        if (annotationKeywords.Count == 1) // here we can fast return null, because the only annotation keyword in list is 'contentSchema'.
+        {
+            annotationKeywords = null;
+            return;
+        }
+
+        annotationKeywords.RemoveAt(contentSchemaIdx.Value);
     }
 
     private static SchemaKeyword GetSchemaKeyword(ref Utf8JsonReader reader)
@@ -372,9 +444,9 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         return reader.CopyString(keywordNameBuffer);
     }
 
-    private static void ThrowIfKeywordsHaveDuplication(ICollection<KeywordBase> keywords)
+    private static void ThrowIfKeywordsHaveDuplication(ICollection<ValidationKeywordBase> keywords)
     {
-        KeywordBase? duplicatedKeyword = keywords.FindFirstDuplicatedItem(keyword => keyword.Name);
+        ValidationKeywordBase? duplicatedKeyword = keywords.FindFirstDuplicatedItem(keyword => keyword.Name);
         if (duplicatedKeyword is not null)
         {
             throw ThrowHelper.CreateJsonSchemaHasDuplicatedKeywordsJsonException(duplicatedKeyword.Name);
@@ -424,11 +496,24 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 schema = (BodyJsonSchema)(object)value;
             }
 
-            // Keyword part:
-            foreach (KeywordBase keyword in schema.Keywords)
+            // Validation keyword part:
+            foreach (ValidationKeywordBase keyword in schema.ValidationKeywords)
             {
                 writer.WritePropertyName(keyword.Name);
                 JsonSerializer.Serialize(writer, keyword, keyword.GetType(), options);
+            }
+
+            // Annotation keyword part:
+            if (schema.AnnotationKeywords is not null)
+            {
+                foreach (IAnnotationKeyword annotationKeyword in schema.AnnotationKeywords)
+                {
+                    if (annotationKeyword is not ValidationKeywordBase)
+                    {
+                        writer.WritePropertyName(annotationKeyword.Name);
+                        JsonSerializer.Serialize(writer, annotationKeyword, annotationKeyword.GetType(), options);
+                    }
+                }
             }
 
             // defs part:

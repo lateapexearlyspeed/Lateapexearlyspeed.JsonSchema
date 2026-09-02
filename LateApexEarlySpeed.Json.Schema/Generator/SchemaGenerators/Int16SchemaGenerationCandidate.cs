@@ -11,7 +11,7 @@ internal class Int16SchemaGenerationCandidate : ISchemaGenerationCandidate
         return typeToConvert == typeof(short);
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         return SchemaGenerationHelper.GenerateSchemaForSignedInteger(keywordsFromProperty, short.MinValue, short.MaxValue);
     }

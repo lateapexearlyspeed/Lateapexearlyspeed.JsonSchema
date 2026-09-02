@@ -12,7 +12,7 @@ public class MinLengthAttribute : Attribute, IKeywordGenerator
         _min = min;
     }
 
-    public KeywordBase CreateKeyword(Type type)
+    public ValidationKeywordBase CreateKeyword(Type type)
     {
         return type == typeof(string)
             ? new MinLengthKeyword { BenchmarkValue = _min }

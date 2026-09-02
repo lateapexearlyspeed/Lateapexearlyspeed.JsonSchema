@@ -12,7 +12,7 @@ public class ExclusiveMaximumAttribute : Attribute, IKeywordGenerator
         _maximum = maximum;
     }
 
-    public KeywordBase CreateKeyword(Type type)
+    public ValidationKeywordBase CreateKeyword(Type type)
     {
         return new ExclusiveMaximumKeyword(_maximum);
     }

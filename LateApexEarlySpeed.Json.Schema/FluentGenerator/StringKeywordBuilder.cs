@@ -78,7 +78,7 @@ public class StringKeywordBuilder : KeywordBuilder
     /// <returns></returns>
     public StringKeywordBuilder NotMatch(string pattern)
     {
-        Keywords.Add(new NotKeyword{Schema = new BodyJsonSchema(new KeywordBase[] {new PatternKeyword(pattern)})});
+        Keywords.Add(new NotKeyword{Schema = new BodyJsonSchema(new ValidationKeywordBase[] {new PatternKeyword(pattern)})});
 
         return this;
     }

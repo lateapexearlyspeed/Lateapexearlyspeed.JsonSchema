@@ -12,7 +12,7 @@ internal class NullableValueTypeSchemaGenerationCandidate : ISchemaGenerationCan
         return Nullable.GetUnderlyingType(typeToConvert) is not null;
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         Debug.Assert(typeToConvert.GenericTypeArguments.Length == 1);
 
@@ -20,7 +20,7 @@ internal class NullableValueTypeSchemaGenerationCandidate : ISchemaGenerationCan
 
         BodyJsonSchema underlyingSchema = JsonSchemaGenerator.GenerateSchema(underlyingType, keywordsFromProperty, options);
 
-        var nullTypeSchema = new BodyJsonSchema(new KeywordBase[] { new TypeKeyword(InstanceType.Null) });
+        var nullTypeSchema = new BodyJsonSchema(new ValidationKeywordBase[] { new TypeKeyword(InstanceType.Null) });
 
         if (underlyingSchema is JsonSchemaResource schemaResource)
         {
@@ -30,6 +30,6 @@ internal class NullableValueTypeSchemaGenerationCandidate : ISchemaGenerationCan
 
         var anyOfKeyword = new AnyOfKeyword(new [] { nullTypeSchema, underlyingSchema });
 
-        return new BodyJsonSchema(new KeywordBase[] { anyOfKeyword });
+        return new BodyJsonSchema(new ValidationKeywordBase[] { anyOfKeyword });
     }
 }

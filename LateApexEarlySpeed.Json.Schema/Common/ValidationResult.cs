@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System.Collections;
+using System.Diagnostics;
+using System.Text;
+using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
 
@@ -13,21 +16,23 @@ public class ValidationResult
     /// </summary>
     public bool IsValid { get; }
     internal readonly ImmutableValidationErrorCollection ValidationErrorsList;
+    internal readonly ImmutableDoubleEndedLinkedList<Annotation> AnnotationList;
 
-    internal ValidationResult(bool isValid, ImmutableValidationErrorCollection validationErrorsList)
+    internal ValidationResult(bool isValid, ImmutableValidationErrorCollection validationErrorsList, ImmutableDoubleEndedLinkedList<Annotation> annotationList)
     {
         IsValid = isValid;
         ValidationErrorsList = validationErrorsList;
+        AnnotationList = annotationList;
     }
 
     /// <summary>
-    /// Singleton instance of 'pure' successful validation result, means there is no failure items in <see cref="ValidationErrors"/> property
+    /// Singleton instance of 'pure' successful validation result, means there is no failure items in <see cref="ValidationErrors"/> property and annotation items in <see cref="Annotations"/> property
     /// </summary>
-    public static ValidationResult ValidResult { get; } = new(true, ImmutableValidationErrorCollection.Empty);
+    public static ValidationResult ValidResult { get; } = new(true, ImmutableValidationErrorCollection.Empty, ImmutableDoubleEndedLinkedList<Annotation>.Empty);
 
     public static ValidationResult SingleErrorFailedResult(ValidationError singleError)
     {
-        return new ValidationResult(false, new ImmutableValidationErrorCollection(singleError));
+        return new ValidationResult(false, new ImmutableValidationErrorCollection(singleError), ImmutableDoubleEndedLinkedList<Annotation>.Empty);
     }
 
     /// <summary>
@@ -35,6 +40,179 @@ public class ValidationResult
     /// If <see cref="JsonSchemaOptions.OutputFormat"/> is set to <see cref="OutputFormat.FailFast"/>, this will contain only first found failed validation node.
     /// </summary>
     public IEnumerable<ValidationError> ValidationErrors => ValidationErrorsList.Enumerate();
+
+    public IEnumerable<Annotation> Annotations => AnnotationList;
+}
+
+/// <summary>
+/// Represents an immutable sequence whose observable range is bounded by a head node and a tail node.
+/// </summary>
+/// <remarks>
+/// This type is logically immutable rather than structurally immutable. A list instance represents
+/// the node range from its header through its tailer, inclusive. Enumeration stops when the captured
+/// tailer is reached, so appending nodes after that tailer does not change the values observed from
+/// an existing list instance.
+///
+/// The builder may reuse node ranges from existing lists to make <c>AddRange</c> an O(1) operation
+/// and avoid allocating replacement container nodes. This relies on a single-append ownership rule
+/// for the current builder tail: before the builder appends another range or value, the current tail
+/// node must not already have a next node. Debug assertions enforce this invariant and help catch
+/// accidental attempts to append from the same shared tail through multiple builders.
+/// </remarks>
+internal class ImmutableDoubleEndedLinkedList<T> : IEnumerable<T>
+{
+    public static ImmutableDoubleEndedLinkedList<T> Empty { get; } = new();
+
+    private readonly LinkedNode? _header;
+    private readonly LinkedNode? _tailer;
+
+    private ImmutableDoubleEndedLinkedList()
+    {
+    }
+
+    private ImmutableDoubleEndedLinkedList(LinkedNode header, LinkedNode tailer)
+    {
+        _header = header;
+        _tailer = tailer;
+    }
+
+    public bool IsEmpty => _header is null;
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        return new Enumerator(this);
+    }
+
+    internal class Enumerator : IEnumerator<T>
+    {
+        private readonly ImmutableDoubleEndedLinkedList<T> _list;
+        private LinkedNode? _curNode;
+        private bool _hasEnd;
+
+        public Enumerator(ImmutableDoubleEndedLinkedList<T> list)
+        {
+            _list = list;
+        }
+
+        public bool MoveNext()
+        {
+            if (_list.IsEmpty)
+            {
+                return false;
+            }
+
+            if (_hasEnd)
+            {
+                return false;
+            }
+
+            _curNode = _curNode is null ? _list._header : _curNode.Next;
+
+            if (ReferenceEquals(_curNode, _list._tailer))
+            {
+                _hasEnd = true;
+            }
+
+            return true;
+        }
+
+        public void Reset()
+        {
+            _hasEnd = false;
+            _curNode = null;
+        }
+
+        public T Current => _curNode is null ? default! : _curNode.Value;
+
+        object? IEnumerator.Current => Current;
+
+        public void Dispose()
+        {
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    internal ref struct Builder
+    {
+        private LinkedNode? _header;
+        private LinkedNode? _tailer;
+
+        public void Add(T value)
+        {
+            var newNode = new LinkedNode(value);
+            if (_header is null)
+            {
+                _tailer = _header = newNode;
+            }
+            else
+            {
+                Debug.Assert(_tailer is not null);
+                Debug.Assert(_tailer.Next is null); // The builder must have exclusive append ownership of its current tail node; otherwise appending here would overwrite another list chain already linked after this shared tail.
+
+                _tailer.Next = newNode;
+                _tailer = newNode;
+            }
+        }
+
+        /// <summary>
+        /// Appends the observable range of <paramref name="list"/> to this builder.
+        /// </summary>
+        /// <remarks>
+        /// This method links the source list's node range directly instead of copying its nodes. The source
+        /// list remains logically unchanged because its enumeration is bounded by its own tailer. After a
+        /// shared range becomes this builder's tail, this builder is the only owner that may append after
+        /// that tail node.
+        /// </remarks>
+        public void AddRange(ImmutableDoubleEndedLinkedList<T> list)
+        {
+            if (list.IsEmpty)
+            {
+                return;
+            }
+
+            if (_header is null)
+            {
+                _header = list._header;
+                _tailer = list._tailer;
+            }
+            else
+            {
+                Debug.Assert(_tailer is not null);
+                Debug.Assert(_tailer.Next is null); // The builder must have exclusive append ownership of its current tail node; otherwise appending here would overwrite another list chain already linked after this shared tail.
+             
+                _tailer.Next = list._header;
+                _tailer = list._tailer;
+            }
+        }
+
+        public ImmutableDoubleEndedLinkedList<T> ToImmutable()
+        {
+            if (_header is null)
+            {
+                Debug.Assert(_tailer is null);
+
+                return Empty;
+            }
+
+            Debug.Assert(_tailer is not null);
+            return new ImmutableDoubleEndedLinkedList<T>(_header, _tailer);
+        }
+    }
+
+    private class LinkedNode
+    {
+        public readonly T Value;
+        public LinkedNode? Next;
+
+        public LinkedNode(T value)
+        {
+            Value = value;
+        }
+    }
 }
 
 internal class ImmutableValidationErrorCollection

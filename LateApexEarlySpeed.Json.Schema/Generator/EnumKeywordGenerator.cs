@@ -12,7 +12,7 @@ internal class EnumKeywordGenerator<T> where T : notnull
         _allowedValues = allowedValues;
     }
 
-    public KeywordBase CreateKeyword()
+    public ValidationKeywordBase CreateKeyword()
     {
         return new EnumKeyword(_allowedValues.Select(value => JsonInstanceSerializer.SerializeToElement(value)));
     }

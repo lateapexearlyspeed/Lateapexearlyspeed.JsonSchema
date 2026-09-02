@@ -7,9 +7,9 @@ namespace LateApexEarlySpeed.Json.Schema.Common;
 internal class ThrowHelper
 {
     [Pure]
-    public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException<TKeyword>(JsonValueKind expectedJsonKind) where TKeyword : KeywordBase
+    public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException<TKeyword>(JsonValueKind expectedJsonKind)
     {
-        return CreateKeywordHasInvalidJsonValueKindJsonException(KeywordBase.GetKeywordName<TKeyword>(), expectedJsonKind);
+        return CreateKeywordHasInvalidJsonValueKindJsonException(KeywordHelper.GetKeywordName<TKeyword>(), expectedJsonKind);
     }
 
     [Pure]
@@ -19,7 +19,7 @@ internal class ThrowHelper
     }
 
     [Pure]
-    public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException<TKeyword>(params JsonValueKind[] expectedJsonKinds) where TKeyword : KeywordBase
+    public static JsonException CreateKeywordHasInvalidJsonValueKindJsonException<TKeyword>(params JsonValueKind[] expectedJsonKinds)
     {
         return new JsonException(CreateKeywordPrefixContent<TKeyword>() + $" expects json kinds: \"{string.Join(",", expectedJsonKinds)}\"");
     }
@@ -49,25 +49,25 @@ internal class ThrowHelper
     }
 
     [Pure]
-    public static JsonException CreateKeywordHasEmptyJsonArrayJsonException<TKeyword>() where TKeyword : KeywordBase
+    public static JsonException CreateKeywordHasEmptyJsonArrayJsonException<TKeyword>() where TKeyword : ValidationKeywordBase
     {
         return new JsonException(CreateKeywordPrefixContent<TKeyword>() + " expects non-empty json array.");
     }
 
     [Pure]
-    public static JsonException CreateKeywordHasDuplicatedJsonArrayElementsJsonException<TKeyword>() where TKeyword : KeywordBase
+    public static JsonException CreateKeywordHasDuplicatedJsonArrayElementsJsonException<TKeyword>() where TKeyword : ValidationKeywordBase
     {
         return new JsonException(CreateKeywordPrefixContent<TKeyword>() + " expects that elements in array must be unique.");
     }
 
     [Pure]
-    public static JsonException CreateKeywordHasInvalidRegexJsonException<TKeyword>(Exception innerException) where TKeyword : KeywordBase
+    public static JsonException CreateKeywordHasInvalidRegexJsonException<TKeyword>(Exception innerException) where TKeyword : ValidationKeywordBase
     {
         return new JsonException(CreateKeywordPrefixContent<TKeyword>() + " expects valid regex string.", innerException);
     }
 
     [Pure]
-    public static JsonException CreateKeywordHasInvalidUriJsonException<TKeyword>(Exception innerException) where TKeyword : KeywordBase
+    public static JsonException CreateKeywordHasInvalidUriJsonException<TKeyword>(Exception innerException) where TKeyword : ValidationKeywordBase
     {
         return new JsonException(CreateKeywordPrefixContent<TKeyword>() + " expects valid Uri.", innerException);
     }
@@ -79,13 +79,13 @@ internal class ThrowHelper
     }
 
     [Pure]
-    public static JsonException CreateKeywordHasInvalidPositiveNumberJsonException<TKeyword>() where TKeyword : KeywordBase
+    public static JsonException CreateKeywordHasInvalidPositiveNumberJsonException<TKeyword>() where TKeyword : ValidationKeywordBase
     {
         return new JsonException(CreateKeywordPrefixContent<TKeyword>() + " expects positive number.");
     }
 
     [Pure]
-    public static NotSupportedException CreateExtendedKeywordCannotSerializeToStandardJsonSchemaException<TKeyword>() where TKeyword : KeywordBase
+    public static NotSupportedException CreateExtendedKeywordCannotSerializeToStandardJsonSchemaException<TKeyword>() where TKeyword : ValidationKeywordBase
     {
         return new NotSupportedException(CreateKeywordPrefixContent<TKeyword>() + " is extended keyword type so cannot be serialized to standard json schema.");
     }
@@ -96,14 +96,14 @@ internal class ThrowHelper
         return new JsonException(CreateKeywordPrefixContent(keywordName) + " expects non-negative integer.");
     }
 
-    private static string CreateKeywordPrefixContent<TKeyword>() where TKeyword : KeywordBase
+    private static string CreateKeywordPrefixContent<TKeyword>()
     {
-        return CreateKeywordPrefixContent(KeywordBase.GetKeywordName<TKeyword>());
+        return CreateKeywordPrefixContent(KeywordHelper.GetKeywordName<TKeyword>());
     }
 
     private static string CreateKeywordPrefixContent(Type keywordType)
     {
-        return CreateKeywordPrefixContent(KeywordBase.GetKeywordName(keywordType));
+        return CreateKeywordPrefixContent(KeywordHelper.GetKeywordName(keywordType));
     }
 
     private static string CreateKeywordPrefixContent(string keywordName)

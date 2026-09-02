@@ -12,7 +12,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("oneOf")]
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<OneOfKeyword>))]
-internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class OneOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
 {
     private readonly JsonSchema[] _subSchemas = null!;
 
@@ -73,7 +73,7 @@ internal class OneOfKeyword : KeywordBase, ISubSchemaCollection, ISchemaContaine
                     fastResult = ValidationResult.SingleErrorFailedResult(error);
                 }
 
-                if (!context.Report(result, fastResult))
+                if (!context.ReportValidationResult(result, fastResult))
                 {
                     break;
                 }

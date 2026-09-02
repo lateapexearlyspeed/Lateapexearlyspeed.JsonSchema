@@ -2,6 +2,7 @@
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
+using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
@@ -49,22 +50,26 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
         }
 
         var errorsBuilder = new ImmutableValidationErrorCollection.Builder();
+        var annotationBuilder = new ImmutableDoubleEndedLinkedList<Annotation>.Builder();
 
         ValidationResult predictResult = PredictEvaluator.Validate(instance, options);
         errorsBuilder.AddChildCollection(predictResult.ValidationErrorsList);
+        annotationBuilder.AddRange(predictResult.AnnotationList);
 
         if (predictResult.IsValid)
         {
             ValidationResult positiveResult = PositiveValidator.Validate(instance, options);
             errorsBuilder.AddChildCollection(positiveResult.ValidationErrorsList);
+            annotationBuilder.AddRange(positiveResult.AnnotationList);
 
-            return new ValidationResult(positiveResult.IsValid, errorsBuilder.ToImmutable());
+            return new ValidationResult(positiveResult.IsValid, errorsBuilder.ToImmutable(), annotationBuilder.ToImmutable());
         }
 
         ValidationResult negativeResult = NegativeValidator.Validate(instance, options);
         errorsBuilder.AddChildCollection(negativeResult.ValidationErrorsList);
+        annotationBuilder.AddRange(negativeResult.AnnotationList);
 
-        return new ValidationResult(negativeResult.IsValid, errorsBuilder.ToImmutable());
+        return new ValidationResult(negativeResult.IsValid, errorsBuilder.ToImmutable(), annotationBuilder.ToImmutable());
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

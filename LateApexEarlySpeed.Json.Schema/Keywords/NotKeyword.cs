@@ -1,8 +1,10 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics;
+using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
+using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
@@ -10,7 +12,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("not")]
 [JsonConverter(typeof(SingleSchemaJsonConverter<NotKeyword>))]
-internal class NotKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
+internal class NotKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
 {
     private JsonSchema _schema = null!;
 
@@ -36,7 +38,7 @@ internal class NotKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSche
             var errorBuilder = new ImmutableValidationErrorCollection.Builder();
             errorBuilder.SetCurrent(curError);
             errorBuilder.AddChildCollection(validationResult.ValidationErrorsList);
-            return new ValidationResult(false, errorBuilder.ToImmutable());
+            return new ValidationResult(false, errorBuilder.ToImmutable(), ImmutableDoubleEndedLinkedList<Annotation>.Empty);
         }
 
         if (options.OutputFormat == OutputFormat.FailFast)
@@ -44,7 +46,8 @@ internal class NotKeyword : KeywordBase, ISchemaContainerElement, ISingleSubSche
             return ValidationResult.ValidResult;
         }
 
-        return new ValidationResult(true, validationResult.ValidationErrorsList);
+        Debug.Assert(validationResult.AnnotationList.IsEmpty);
+        return new ValidationResult(true, validationResult.ValidationErrorsList, validationResult.AnnotationList);
     }
 
     public static string ErrorMessage(string instanceText)

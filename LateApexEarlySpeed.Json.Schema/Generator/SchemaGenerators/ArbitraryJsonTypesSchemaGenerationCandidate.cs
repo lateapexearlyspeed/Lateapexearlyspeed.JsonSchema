@@ -13,7 +13,7 @@ internal class ArbitraryJsonTypesSchemaGenerationCandidate : ISchemaGenerationCa
         return typeToConvert == typeof(JsonElement) || typeToConvert == typeof(JsonDocument) || typeToConvert == typeof(JsonNode) || typeToConvert == typeof(JsonValue);
     }
 
-    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<KeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
+    public BodyJsonSchema Generate(IType typeToConvert, IEnumerable<ValidationKeywordBase> keywordsFromProperty, JsonSchemaGeneratorOptions options)
     {
         return new BodyJsonSchema(keywordsFromProperty);
     }
