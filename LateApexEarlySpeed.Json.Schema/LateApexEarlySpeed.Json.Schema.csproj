@@ -16,9 +16,9 @@
     <PackageIcon>nuget.icon.jpg</PackageIcon>
     <PackageTags>Json;Schema;Json schema;JsonSchema;JsonSchemaValidator;JSON Schema validator;Validation;System.Text.Json;DotNet;CSharp;Draft202012;Draft201909;Draft7;BenchmarkDotNet;Fluent Validation;SchemaValidatorGeneration;Generation</PackageTags>
     <PackageOutputPath>bin\Release\NugetPackage</PackageOutputPath>
-    <Version>4.1.0</Version>
-    <AssemblyVersion>4.1.0</AssemblyVersion>
-    <FileVersion>4.1.0</FileVersion>
+    <Version>4.2.0</Version>
+    <AssemblyVersion>4.2.0</AssemblyVersion>
+    <FileVersion>4.2.0</FileVersion>
     <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema</PackageProjectUrl>
   </PropertyGroup>
