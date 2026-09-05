@@ -27,11 +27,6 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             "$ref with $recursiveAnchor"
         };
 
-        private static readonly string[] TestCasesForIgnoreResourceIdInUnknownKeyword = new[]
-        {
-            "$id inside an unknown keyword is not a real identifier"
-        };
-
         private static readonly string[] TestCasesDependOnRemoteHttpDocuments = new[]
         {
             "invalid anchors",
@@ -55,7 +50,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         }
 
         [Theory]
-        [MemberData(nameof(JsonSchemaTestSuite))]
+        [MemberData(nameof(JsonSchemaFullTestSuite))]
         public async Task ValidateByStringSchema_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool generateErrorMessage, bool collectAnnotation, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
@@ -85,7 +80,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         }
 
         [Theory]
-        [MemberData(nameof(JsonSchemaTestSuite))]
+        [MemberData(nameof(JsonSchemaFullTestSuite))]
         public async Task GetStandardJsonSchemaText_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool generateErrorMessage, bool collectAnnotation, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
@@ -210,7 +205,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         }
 
         [Theory]
-        [MemberData(nameof(JsonSchemaTestSuite))]
+        [MemberData(nameof(JsonSchemaFullTestSuite))]
         public async Task ValidateByExternalSchemaDocumentPopulator_InputFromJsonSchemaTestSuite(DialectKind dialect, string schema, string instance, OutputFormat outputFormat, bool generateErrorMessage, bool collectAnnotation, bool ignoreResourceIdFromUnknownKeyword, bool expectedValidationResult, string testCaseDescription, string testDescription)
         {
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
@@ -391,51 +386,37 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             Assert.Equal(expectedValidationResult, new JsonValidator(schemaWithJsonArray).Validate(instanceWithJsonArray, new JsonSchemaOptions { JsonStringComparison = stringComparison }).IsValid);
         }
 
-        public static IEnumerable<object[]> JsonSchemaTestSuite 
-            => JsonSchemaTestSuiteForDraft2020.Concat(JsonSchemaTestSuiteForDraft2019).Concat(JsonSchemaTestSuiteForDraft7);
+        public static IEnumerable<object[]> JsonSchemaFullTestSuite => JsonSchemaTestSuite.WithOutputFormats().WithCollectAnnotation().WithGenerateErrorMessage().WithIgnoreResourceIdFromUnknownKeyword().Concat(JsonSchemaTestSuiteForIgnoreResourceIdFromUnknownKeyword);
 
-        private static IEnumerable<object[]> JsonSchemaTestSuiteForDraft2020
+        private static IEnumerable<object[]> JsonSchemaTestSuiteForIgnoreResourceIdFromUnknownKeyword
         {
             get
             {
-                TestCase[] testCases = TestSuiteReader.ReadTestCasesFromJsonSchemaTestSuite("draft2020-12", UnsupportedTestFiles, UnsupportedTestCases);
-                IEnumerable<TestCaseParameters> testCaseParameters = testCases.Select(t => new TestCaseParameters{IgnoreResourceIdFromUnknownKeyword = true, TestCase = t});
+                IEnumerable<object[]> testData = GenerateDefaultOptionsParameters(DialectKind.Draft202012, JsonSchemaTestSuiteByDraftVersion("draft2020-12"))
+                    .Concat(GenerateDefaultOptionsParameters(DialectKind.Draft201909, JsonSchemaTestSuiteByDraftVersion("draft2019-09")))
+                    .Concat(GenerateDefaultOptionsParameters(DialectKind.Draft7, JsonSchemaTestSuiteByDraftVersion("draft7")));
 
-                IEnumerable<TestCase> testCasesWithoutIgnoreResourceIdInUnknownKeyword = testCases.Where(t => !TestCasesForIgnoreResourceIdInUnknownKeyword.Contains(t.Description));
-                IEnumerable<TestCaseParameters> testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword = testCasesWithoutIgnoreResourceIdInUnknownKeyword.Select(t => new TestCaseParameters{IgnoreResourceIdFromUnknownKeyword = false, TestCase = t});
+                return testData.WithOutputFormats().WithCollectAnnotation().WithGenerateErrorMessage().WithIgnoreResourceIdFromUnknownKeyword(true);
 
-                return GenerateJsonSchemaTestDataParameters(DialectKind.Draft202012, testCaseParameters.Concat(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword));
-                // return GenerateJsonSchemaTestDataParameters(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword);
+                static IEnumerable<TestCase> JsonSchemaTestSuiteByDraftVersion(string draftVersion)
+                {
+                    return TestSuiteReader.ReadTestCasesFromFile(draftVersion, "optional", "unknownKeyword.json", UnsupportedTestCases);
+                }
             }
         }
 
-        private static IEnumerable<object[]> JsonSchemaTestSuiteForDraft2019
+        public static IEnumerable<object[]> JsonSchemaTestSuite
         {
             get
             {
-                TestCase[] testCases = TestSuiteReader.ReadTestCasesFromJsonSchemaTestSuite("draft2019-09", UnsupportedTestFiles, UnsupportedTestCases);
-                IEnumerable<TestCaseParameters> testCaseParameters = testCases.Select(t => new TestCaseParameters{IgnoreResourceIdFromUnknownKeyword = true, TestCase = t});
+                return GenerateDefaultOptionsParameters(DialectKind.Draft202012, JsonSchemaTestSuiteForDraftVersion("draft2020-12"))
+                    .Concat(GenerateDefaultOptionsParameters(DialectKind.Draft201909, JsonSchemaTestSuiteForDraftVersion("draft2019-09")))
+                    .Concat(GenerateDefaultOptionsParameters(DialectKind.Draft7, JsonSchemaTestSuiteForDraftVersion("draft7")));
 
-                IEnumerable<TestCase> tesCasesWithoutIgnoreResourceIdInUnknownKeyword = testCases.Where(t => !TestCasesForIgnoreResourceIdInUnknownKeyword.Contains(t.Description));
-                IEnumerable<TestCaseParameters> testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword = tesCasesWithoutIgnoreResourceIdInUnknownKeyword.Select(t => new TestCaseParameters{IgnoreResourceIdFromUnknownKeyword = false, TestCase = t});
-
-                return GenerateJsonSchemaTestDataParameters(DialectKind.Draft201909, testCaseParameters.Concat(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword));
-                // return GenerateJsonSchemaTestDataParameters(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword);
-            }
-        }
-
-        private static IEnumerable<object[]> JsonSchemaTestSuiteForDraft7
-        {
-            get
-            {
-                TestCase[] testCases = TestSuiteReader.ReadTestCasesFromJsonSchemaTestSuite("draft7", UnsupportedTestFiles, UnsupportedTestCases);
-                IEnumerable<TestCaseParameters> testCaseParameters = testCases.Select(t => new TestCaseParameters{IgnoreResourceIdFromUnknownKeyword = true, TestCase = t});
-
-                IEnumerable<TestCase> tesCasesWithoutIgnoreResourceIdInUnknownKeyword = testCases.Where(t => !TestCasesForIgnoreResourceIdInUnknownKeyword.Contains(t.Description));
-                IEnumerable<TestCaseParameters> testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword = tesCasesWithoutIgnoreResourceIdInUnknownKeyword.Select(t => new TestCaseParameters{IgnoreResourceIdFromUnknownKeyword = false, TestCase = t});
-
-                return GenerateJsonSchemaTestDataParameters(DialectKind.Draft7, testCaseParameters.Concat(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword));
-                // return GenerateJsonSchemaTestDataParameters(testCaseParametersWithoutIgnoreResourceIdInUnknownKeyword);
+                static IEnumerable<TestCase> JsonSchemaTestSuiteForDraftVersion(string draftVersion)
+                {
+                    return TestSuiteReader.ReadTestCasesFromJsonSchemaTestSuite(draftVersion, UnsupportedTestFiles, UnsupportedTestCases);
+                }
             }
         }
 
@@ -444,7 +425,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             get
             {
                 IEnumerable<TestCase> testCases = TestSuiteReader.ReadTestCases(Path.Combine("TestData", "format.json"), Array.Empty<string>());
-                return GenerateJsonSchemaTestDataParameters(DialectKind.Draft202012, testCases.Select(t => new TestCaseParameters { IgnoreResourceIdFromUnknownKeyword = false, TestCase = t }));
+                return GenerateDefaultOptionsParameters(DialectKind.Draft202012, testCases).WithOutputFormats().WithCollectAnnotation().WithGenerateErrorMessage();
             }
         }
 
@@ -453,38 +434,29 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             get
             {
                 IEnumerable<TestCase> testCases = TestSuiteReader.ReadTestCases(Path.Combine("TestData", "custom_format.json"), Array.Empty<string>());
-                return GenerateJsonSchemaTestDataParameters(DialectKind.Draft202012, testCases.Select(t => new TestCaseParameters { IgnoreResourceIdFromUnknownKeyword = false, TestCase = t }));
+                return GenerateDefaultOptionsParameters(DialectKind.Draft202012, testCases).WithOutputFormats().WithCollectAnnotation().WithGenerateErrorMessage();
             }
         }
 
-        private static IEnumerable<object[]> GenerateJsonSchemaTestDataParameters(DialectKind dialect, IEnumerable<TestCaseParameters> testCaseParameters)
+        private static IEnumerable<object[]> GenerateDefaultOptionsParameters(DialectKind dialect, IEnumerable<TestCase> testCases)
         {
-            foreach (TestCaseParameters testCaseParameter in testCaseParameters)
+            foreach (TestCase testCaseParameter in testCases)
             {
-                foreach (Test test in testCaseParameter.TestCase.Tests)
+                foreach (Test test in testCaseParameter.Tests)
                 {
-                    foreach (OutputFormat outputFormat in Enum.GetValues<OutputFormat>())
+                    yield return new object[]
                     {
-                        foreach (bool generateErrorMessage in new[]{false, true})
-                        {
-                            foreach (bool collectAnnotation in new[] { false, true })
-                            {
-                                yield return new object[]
-                                {
-                                    dialect,
-                                    JsonSerializer.Serialize(testCaseParameter.TestCase.JsonSchema),
-                                    JsonSerializer.Serialize(test.Instance),
-                                    outputFormat,
-                                    generateErrorMessage,
-                                    collectAnnotation,
-                                    testCaseParameter.IgnoreResourceIdFromUnknownKeyword,
-                                    test.ValidationResult,
-                                    testCaseParameter.TestCase.Description,
-                                    test.Description
-                                };                            
-                            }
-                        }
-                    }
+                        dialect,
+                        JsonSerializer.Serialize(testCaseParameter.JsonSchema),
+                        JsonSerializer.Serialize(test.Instance),
+                        OutputFormat.FailFast,
+                        true,
+                        false,
+                        false,
+                        test.ValidationResult,
+                        testCaseParameter.Description,
+                        test.Description
+                    };
                 }
             }
         }
@@ -1063,13 +1035,6 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             Assert.Equal(new Uri("http://lateapexearlyspeed"), validationError.SchemaResourceBaseUri);
         }
 
-        private class TestCaseParameters
-        {
-            public bool IgnoreResourceIdFromUnknownKeyword { get; init; }
-
-            public TestCase TestCase { get; init; } = null!;
-        }
-
         /// <summary>
         /// Refer to: https://github.com/json-schema-org/JSON-Schema-Test-Suite#terminology
         /// </summary>
@@ -1119,6 +1084,13 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                 return result.ToArray();
             }
 
+            public static TestCase[] ReadTestCasesFromFile(string draftVersion, string subPath, string fileName, string[] unsupportedTestCases)
+            {
+                string pathFile = Path.Combine("JSON-Schema-Test-Suite", "tests", draftVersion, subPath, fileName);
+
+                return ReadTestCases(pathFile, unsupportedTestCases).ToArray();
+            }
+
             public static IEnumerable<TestCase> ReadTestCases(string pathFile, string[] unsupportedTestCases)
             {
                 using (FileStream fs = File.OpenRead(pathFile))
@@ -1144,6 +1116,63 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
                 string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(pathFile);
                 return unsupportedKeywords.Contains(fileNameWithoutExtension);
             }
+        }
+    }
+
+    internal static class TestDataExtensions
+    {
+        public static IEnumerable<object[]> WithOutputFormats(this IEnumerable<object[]> testData)
+        {
+            return testData.SelectMany(t =>
+                Enum.GetValues<OutputFormat>().Select(outputFormat =>
+                {
+                    object[] results = t.ToArray();
+                    results[3] = outputFormat;
+
+                    return results;
+                }));
+        }
+
+        public static IEnumerable<object[]> WithGenerateErrorMessage(this IEnumerable<object[]> testData)
+        {
+            bool[] availableGenerateErrorMessages = new[] { false, true };
+
+            return testData.SelectMany(t =>
+                availableGenerateErrorMessages.Select(generateErrorMessage =>
+                {
+                    object[] results = t.ToArray();
+                    results[4] = generateErrorMessage;
+
+                    return results;
+                }));
+        }
+
+        public static IEnumerable<object[]> WithCollectAnnotation(this IEnumerable<object[]> testData)
+        {
+            bool[] availableCollectAnnotations = new[] { false, true };
+
+            return testData.SelectMany(t =>
+                availableCollectAnnotations.Select(collectAnnotation =>
+                {
+                    object[] results = t.ToArray();
+                    results[5] = collectAnnotation;
+
+                    return results;
+                }));
+        }
+
+        public static IEnumerable<object[]> WithIgnoreResourceIdFromUnknownKeyword(this IEnumerable<object[]> testData, bool? ignore = null)
+        {
+            bool[] availableIgnoreResourceIdFromUnknownKeywords = ignore.HasValue ? new[] { ignore.Value } : new[] { false, true };
+
+            return testData.SelectMany(t =>
+                availableIgnoreResourceIdFromUnknownKeywords.Select(ignoreResourceId =>
+                {
+                    object[] results = t.ToArray();
+                    results[6] = ignoreResourceId;
+
+                    return results;
+                }));
         }
     }
 }
