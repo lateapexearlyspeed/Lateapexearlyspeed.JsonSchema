@@ -225,6 +225,13 @@ JsonAssertion.Equivalent("""
 
 check available validation methods in [wiki](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/wiki/Fluent-schema-builder#available-fluent-validation-methods).
 
+## Additional usage aids
+
+- [AI usage guide](docs/ai-usage.md) - optional decision guide for users who ask an AI coding assistant to apply the validator or assertion packages.
+- [llms.txt](llms.txt) - optional concise map for AI tools and users who want a short index of the three primary user packages.
+
+These usage aids are scoped to `LateApexEarlySpeed.Json.Schema`, `LateApexEarlySpeed.Xunit.Assertion.Json`, and `LateApexEarlySpeed.Xunit.V3.Assertion.Json`.
+
 ## LateApexEarlySpeed.Nullability.Generic
 
 ### Intro

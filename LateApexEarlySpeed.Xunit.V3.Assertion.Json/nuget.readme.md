@@ -1,4 +1,14 @@
-﻿Provide fluent json assertion for Xunit v3.
+﻿# LateApexEarlySpeed.Xunit.V3.Assertion.Json
+
+Provide fluent JSON assertions for xUnit v3.
+
+Install:
+
+```powershell
+Install-Package LateApexEarlySpeed.Xunit.V3.Assertion.Json
+```
+
+Use this package in xUnit v3 test projects. For xUnit v2, use `LateApexEarlySpeed.Xunit.Assertion.Json` instead.
 
 There were already json related test assertion libraries, most ones were asserting json's equivalent.
 
@@ -84,3 +94,5 @@ Available assertion methods for json:
 - Or
 
 There are HasCustomValidation() overloads which can be used to create more custom validation logic unit.
+
+Optional AI assistant usage notes are available in [docs/ai-usage.md](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/blob/master/docs/ai-usage.md) and [llms.txt](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/blob/master/llms.txt).

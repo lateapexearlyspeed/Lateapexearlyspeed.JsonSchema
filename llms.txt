@@ -1,0 +1,122 @@
+# LateApexEarlySpeed JSON Schema and JSON Assertion Packages
+
+This repository contains three primary public packages for JSON Schema validation and JSON assertions in .NET:
+
+- LateApexEarlySpeed.Json.Schema
+- LateApexEarlySpeed.Xunit.Assertion.Json
+- LateApexEarlySpeed.Xunit.V3.Assertion.Json
+
+Other projects in this repository are support, benchmark, or unrelated package projects and are not part of this AI usage map.
+
+## Package Map
+
+### LateApexEarlySpeed.Json.Schema
+
+Install:
+
+```powershell
+Install-Package LateApexEarlySpeed.Json.Schema
+```
+
+Primary namespaces:
+
+```csharp
+using LateApexEarlySpeed.Json.Schema;
+using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.FluentGenerator;
+using LateApexEarlySpeed.Json.Schema.Generator;
+using LateApexEarlySpeed.Json.Schema.Keywords;
+```
+
+Primary APIs:
+
+- JsonValidator: validate JSON instances against a JSON Schema.
+- JsonValidatorOptions: configure schema parsing, default dialect, annotations, custom keywords, and custom formats.
+- JsonSchemaOptions: configure per-validation behavior such as output format, format validation, regex timeout, and error-message generation.
+- ValidationResult: inspect IsValid, ValidationErrors, and Annotations.
+- JsonSchemaBuilder: build a JsonValidator with fluent C# validation rules.
+- JsonSchemaGenerator: generate a JsonValidator from a .NET type.
+- FormatRegistry and FormatValidator: add custom format validation.
+
+Common rules:
+
+- Create one JsonValidator per schema and reuse it for repeated validation.
+- Use JsonValidatorOptions.DefaultDialect when schema text has no $schema.
+- Use JsonSchemaOptions.OutputFormat = OutputFormat.List when the caller needs all validation errors or annotation collection.
+- Set JsonValidatorOptions.CollectAnnotations = true and validate with OutputFormat.List to collect annotations.
+- Register external schemas with AddExternalDocument before validating schemas that use external $ref values.
+- Use JsonSchemaBuilder when the user wants to express validation rules in C# instead of raw JSON Schema text.
+- Use JsonSchemaGenerator.GenerateJsonValidator<T>() when the user wants to create a validator from .NET type shape.
+- Use options.FormatRegistry.AddFormat(...) to register custom formats for a specific validator instance.
+
+Important limitations:
+
+- unevaluatedProperties is not supported.
+- unevaluatedItems is not supported.
+- Automatic content-encoded string decoding and validation is not currently supported.
+- GetStandardJsonSchemaText() can throw NotSupportedException when the validator contains extended keywords from some fluent/custom/type-based construction paths.
+
+### LateApexEarlySpeed.Xunit.Assertion.Json
+
+Install for xUnit v2 tests:
+
+```powershell
+Install-Package LateApexEarlySpeed.Xunit.Assertion.Json
+```
+
+Primary namespace:
+
+```csharp
+using LateApexEarlySpeed.Xunit.Assertion.Json;
+```
+
+Primary APIs:
+
+- JsonAssertion.Meet(...): assert JSON shape and values with the same fluent rule style as the validator builder.
+- JsonAssertion.Equivalent(...): assert JSON equivalence.
+- JsonAssertionOptions: configure JSON array and string comparison behavior.
+- JsonAssertException: assertion failure with JSON Pointer locations.
+
+Use this package in projects that use xUnit v2.
+
+### LateApexEarlySpeed.Xunit.V3.Assertion.Json
+
+Install for xUnit v3 tests:
+
+```powershell
+Install-Package LateApexEarlySpeed.Xunit.V3.Assertion.Json
+```
+
+Primary namespace:
+
+```csharp
+using LateApexEarlySpeed.Xunit.V3.Assertion.Json;
+```
+
+Primary APIs:
+
+- JsonAssertion.Meet(...): assert JSON shape and values with the same fluent rule style as the validator builder.
+- JsonAssertion.Equivalent(...): assert JSON equivalence.
+- JsonAssertionOptions: configure JSON array and string comparison behavior.
+- JsonAssertException: assertion failure with JSON Pointer locations.
+
+Use this package in projects that use xUnit v3.
+
+## Choose The API
+
+- User has JSON Schema text and JSON instance text: use new JsonValidator(schema).Validate(instance).
+- User validates many instances with the same schema: create one JsonValidator and reuse it.
+- User wants all errors: pass new JsonSchemaOptions { OutputFormat = OutputFormat.List } to Validate.
+- User has no $schema and needs a specific dialect: pass new JsonValidatorOptions { DefaultDialect = DialectKind.Draft7 } or another DialectKind.
+- User wants validation rules in C#: use JsonSchemaBuilder and BuildValidator().
+- User wants a validator from a C# type: use JsonSchemaGenerator.GenerateJsonValidator<T>().
+- User writes xUnit v2 tests: install LateApexEarlySpeed.Xunit.Assertion.Json and use LateApexEarlySpeed.Xunit.Assertion.Json.
+- User writes xUnit v3 tests: install LateApexEarlySpeed.Xunit.V3.Assertion.Json and use LateApexEarlySpeed.Xunit.V3.Assertion.Json.
+
+## Docs
+
+- README.md: repository overview and package list.
+- docs/ai-usage.md: decision guide for users and AI assistants.
+- LateApexEarlySpeed.Json.Schema/nuget.readme.md: NuGet quickstart for JSON Schema validation.
+- LateApexEarlySpeed.Xunit.Assertion.Json/nuget.readme.md: NuGet quickstart for xUnit v2 JSON assertions.
+- LateApexEarlySpeed.Xunit.V3.Assertion.Json/nuget.readme.md: NuGet quickstart for xUnit v3 JSON assertions.

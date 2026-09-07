@@ -429,3 +429,5 @@ A format validator implementation is resolved per format name. The per-`JsonVali
 Welcome to raise issue and wishlist, I will try to fix if make sense, thanks !
 
 ## More doc is to be written
+
+Optional AI assistant usage guidance is available in [docs/ai-usage.md](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/blob/master/docs/ai-usage.md) and [llms.txt](https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/blob/master/llms.txt).
