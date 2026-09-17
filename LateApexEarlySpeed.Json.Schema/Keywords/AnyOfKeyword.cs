@@ -11,7 +11,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("anyOf")]
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<AnyOfKeyword>))]
-internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
 {
     private readonly JsonSchema[] _subSchemas = null!;
 
@@ -128,4 +128,45 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
     }
 
     public static string ErrorMessage() => "Instance failed validation against all sub-schemas";
+
+    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
+    {
+        private readonly AnyOfKeyword _anyOfKeyword;
+        private readonly JsonInstanceElement _instance;
+
+        public PropertyEvaluator(AnyOfKeyword anyOfKeyword, JsonInstanceElement instance)
+        {
+            _anyOfKeyword = anyOfKeyword;
+            _instance = instance;
+        }
+
+        public string Name => _anyOfKeyword.Name;
+
+        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
+        {
+            var evaluatedProperties = new HashSet<string>();
+
+            foreach (JsonSchema subSchema in _anyOfKeyword._subSchemas)
+            {
+                if (subSchema is not IPropertyEvaluator propertyEvaluator)
+                {
+                    continue;
+                }
+
+                ValidationResult result = subSchema.Validate(_instance, options);
+                if (result.IsValid)
+                {
+                    evaluatedProperties.AddRange(propertyEvaluator.GetEvaluatedProperties(_instance, options));
+                }
+            }
+
+            return evaluatedProperties;
+        }
+    }
+
+    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        var propertyEvaluator = new PropertyEvaluator(this, instance);
+        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
+    }
 }

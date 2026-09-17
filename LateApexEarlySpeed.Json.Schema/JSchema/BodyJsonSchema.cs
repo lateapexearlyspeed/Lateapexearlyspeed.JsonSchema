@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -8,9 +9,13 @@ using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
-internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
+internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
 {
     private readonly ISchemaContainerValidationNode[]? _schemaContainerValidators;
+
+    /// <remarks>
+    /// Convention: UnevaluatedPropertiesKeyword is always the last item in this list, if it exists.
+    /// </remarks>
     private readonly IReadOnlyList<ValidationKeywordBase> _validationKeywords;
     private readonly IAnnotationKeyword[]? _annotationKeywords;
     private readonly IReferenceKeyword[]? _referenceKeywords;
@@ -190,10 +195,18 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
         /// </remarks>
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
-            // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
-            for (int i = 0; i < _bodyJsonSchema._validationKeywords.Count; i++)
+            bool hasUnevaluatedPropertiesKeyword = false;
+
+            IReadOnlyList<ValidationKeywordBase> validationKeywords = _bodyJsonSchema._validationKeywords;
+            if (validationKeywords.Count > 0 && validationKeywords[validationKeywords.Count - 1] is UnevaluatedPropertiesKeyword)
             {
-                ValidationKeywordBase keyword = _bodyJsonSchema._validationKeywords[i];
+                hasUnevaluatedPropertiesKeyword = true;
+            }
+
+            // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
+            for (int i = 0; i < (hasUnevaluatedPropertiesKeyword ? validationKeywords.Count - 1 : validationKeywords.Count); i++)
+            {
+                ValidationKeywordBase keyword = validationKeywords[i];
 
                 if (!ReportValidationAndCheckFastReturn(ref this, keyword, ref context))
                 {
@@ -221,6 +234,14 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
                         return;
                     }
                 }
+            }
+
+            if (hasUnevaluatedPropertiesKeyword)
+            {
+                Debug.Assert(validationKeywords.Count > 0);
+
+                ValidationKeywordBase unevaluatedPropertiesKeyword = validationKeywords[validationKeywords.Count - 1];
+                ReportValidationAndCheckFastReturn(ref this, unevaluatedPropertiesKeyword, ref context);
             }
 
             static bool ReportValidationAndCheckFastReturn(ref Validator thisValidator, IValidationNode validationNode, ref ValidationCompositionContext context)
@@ -484,5 +505,71 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
         }
 
         RemoveIdFromAllChildrenElementsOfPotentialSchemaElementTree();
+    }
+
+    public virtual IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        var propertyEvaluator = new PropertyEvaluator(this, instance);
+        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
+    }
+
+    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
+    {
+        private readonly BodyJsonSchema _bodyJsonSchema;
+        private readonly JsonInstanceElement _instance;
+
+        public PropertyEvaluator(BodyJsonSchema bodyJsonSchema, JsonInstanceElement instance)
+        {
+            _bodyJsonSchema = bodyJsonSchema;
+            _instance = instance;
+        }
+
+        public string? Name => _bodyJsonSchema.Name;
+
+        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
+        {
+            if (_instance.ValueKind != JsonValueKind.Object)
+            {
+                return Array.Empty<string>();
+            }
+
+            IReadOnlyList<ValidationKeywordBase> validationKeywords = _bodyJsonSchema._validationKeywords;
+            if (validationKeywords.Count > 0 && validationKeywords[validationKeywords.Count - 1] is UnevaluatedPropertiesKeyword) // this means all instance properties are evaluated
+            {
+                return _instance.EnumerateObject().Select(p => p.Name).ToArray();
+            }
+
+            var properties = new HashSet<string>();
+
+            // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
+            for (int i = 0; i < validationKeywords.Count; i++)
+            {
+                if (validationKeywords[i] is IPropertyEvaluator propertyEvaluator)
+                {
+                    properties.AddRange(propertyEvaluator.GetEvaluatedProperties(_instance, options));
+                }
+            }
+
+            if (_bodyJsonSchema._schemaContainerValidators is not null)
+            {
+                foreach (ISchemaContainerValidationNode schemaContainerValidator in _bodyJsonSchema._schemaContainerValidators)
+                {
+                    if (schemaContainerValidator is IPropertyEvaluator propertyEvaluator)
+                    {
+                        properties.AddRange(propertyEvaluator.GetEvaluatedProperties(_instance, options));
+                    }
+                }
+            }
+
+            if (_bodyJsonSchema._referenceKeywords is not null)
+            {
+                foreach (IReferenceKeyword referenceKeyword in _bodyJsonSchema._referenceKeywords)
+                {
+                    properties.AddRange(referenceKeyword.GetEvaluatedProperties(_instance, options));
+                }
+            }
+
+            return properties;
+        }
     }
 }

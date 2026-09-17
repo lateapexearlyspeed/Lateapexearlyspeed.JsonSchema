@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -11,7 +12,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword(Keyword)]
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<AllOfKeyword>))]
-internal class AllOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class AllOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
 {
     public const string Keyword = "allOf";
 
@@ -114,6 +115,55 @@ internal class AllOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
                 BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _subSchemas[localIdx] = newSchema);
             }
         }
+    }
+
+    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
+    {
+        private readonly AllOfKeyword _allOfKeyword;
+        private readonly JsonInstanceElement _instance;
+
+        public PropertyEvaluator(AllOfKeyword allOfKeyword, JsonInstanceElement instance)
+        {
+            _allOfKeyword = allOfKeyword;
+            _instance = instance;
+        }
+
+        public string Name => _allOfKeyword.Name;
+
+        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
+        {
+            var evaluatedProperties = new HashSet<string>();
+
+            foreach (JsonSchema subSchema in _allOfKeyword._subSchemas)
+            {
+                if (subSchema is not IPropertyEvaluator propertyEvaluator)
+                {
+                    continue;
+                }
+
+                if (options.OutputFormat == OutputFormat.FailFast)
+                {
+                    Debug.Assert(subSchema.Validate(_instance, options).IsValid);
+                }
+                else
+                {
+                    if (!subSchema.Validate(_instance, options).IsValid)
+                    {
+                        break;
+                    }
+                }
+
+                evaluatedProperties.AddRange(propertyEvaluator.GetEvaluatedProperties(_instance, options));
+            }
+
+            return evaluatedProperties;
+        }
+    }
+
+    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        var propertyEvaluator = new PropertyEvaluator(this, instance);
+        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
     }
 }
 

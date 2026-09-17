@@ -1,4 +1,5 @@
-﻿using LateApexEarlySpeed.Json.Schema.Common;
+﻿using System.Diagnostics;
+using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
@@ -6,7 +7,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchemaResourceNodesCleanable
+internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
 {
     public const string IfKeywordName = "if";
     public const string ThenKeywordName = "then";
@@ -121,5 +122,42 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
         {
             BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(negativeValidatorSchema, newSchema => _negativeValidator = newSchema);
         }
+    }
+
+    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        if (PredictEvaluator is null)
+        {
+            return Array.Empty<string>();
+        }
+
+        var evaluatedProperties = new HashSet<string>();
+
+        ValidationResult predictResult = PredictEvaluator.Validate(instance, options);
+        if (predictResult.IsValid)
+        {
+            if (PredictEvaluator is IPropertyEvaluator predictEvaluator)
+            {
+                evaluatedProperties.AddRange(predictEvaluator.GetEvaluatedProperties(instance, options));
+            }
+
+            Debug.Assert(PositiveValidator.Validate(instance, options).IsValid);
+
+            if (PositiveValidator is IPropertyEvaluator positiveEvaluator)
+            {
+                evaluatedProperties.AddRange(positiveEvaluator.GetEvaluatedProperties(instance, options));
+            }
+        }
+        else
+        {
+            Debug.Assert(NegativeValidator.Validate(instance, options).IsValid);
+
+            if (NegativeValidator is IPropertyEvaluator negativeEvaluator)
+            {
+                evaluatedProperties.AddRange(negativeEvaluator.GetEvaluatedProperties(instance, options));
+            }
+        }
+        
+        return evaluatedProperties;
     }
 }

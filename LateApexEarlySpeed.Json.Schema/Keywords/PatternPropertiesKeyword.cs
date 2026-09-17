@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -10,7 +11,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("patternProperties")]
 [JsonConverter(typeof(PatternPropertiesKeywordJsonConverter))]
-internal class PatternPropertiesKeyword : ValidationKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class PatternPropertiesKeyword : ValidationKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
 {
     private readonly Dictionary<string, JsonSchema> _patternSchemas;
 
@@ -109,5 +110,62 @@ internal class PatternPropertiesKeyword : ValidationKeywordBase, ISchemaContaine
                 BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _patternSchemas[pattern] = newSchema);
             }
         }
+    }
+
+    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
+    {
+        private readonly PatternPropertiesKeyword _patternPropertiesKeyword;
+        private readonly JsonInstanceElement _instance;
+
+        public PropertyEvaluator(PatternPropertiesKeyword patternPropertiesKeyword, JsonInstanceElement instance)
+        {
+            _patternPropertiesKeyword = patternPropertiesKeyword;
+            _instance = instance;
+        }
+
+        public string Name => _patternPropertiesKeyword.Name;
+
+        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
+        {
+            if (_instance.ValueKind != JsonValueKind.Object)
+            {
+                return Array.Empty<string>();
+            }
+
+            var evaluatedProperties = new HashSet<string>();
+
+            foreach (JsonInstanceProperty jsonProperty in _instance.EnumerateObject())
+            {
+                string propertyName = jsonProperty.Name;
+
+                foreach (KeyValuePair<string, JsonSchema> patternSchema in _patternPropertiesKeyword._patternSchemas)
+                {
+                    if (RegexMatcher.IsMatch(patternSchema.Key, propertyName, options.RegexMatchTimeout))
+                    {
+                        if (options.OutputFormat == OutputFormat.FailFast)
+                        {
+                            Debug.Assert(patternSchema.Value.Validate(jsonProperty.Value, options).IsValid);
+                        }
+                        else
+                        {
+                            if (!patternSchema.Value.Validate(jsonProperty.Value, options).IsValid)
+                            {
+                                return evaluatedProperties;
+                            }
+                        }
+
+                        evaluatedProperties.Add(propertyName);
+                    }
+                }
+            }
+
+            return evaluatedProperties;
+        }
+    }
+
+    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        var propertyEvaluator = new PropertyEvaluator(this, instance);
+        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
     }
 }

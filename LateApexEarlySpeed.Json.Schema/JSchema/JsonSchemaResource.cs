@@ -125,4 +125,15 @@ internal class JsonSchemaResource : BodyJsonSchema
 
         return bodyJsonSchema;
     }
+
+    public override IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        options.ValidationPathStack.PushSchemaResource(this);
+
+        IReadOnlyCollection<string> result = base.GetEvaluatedProperties(instance, options);
+
+        options.ValidationPathStack.PopSchemaResource();
+
+        return result;
+    }
 }

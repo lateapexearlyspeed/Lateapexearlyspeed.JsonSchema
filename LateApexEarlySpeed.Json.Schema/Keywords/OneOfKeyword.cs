@@ -12,7 +12,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("oneOf")]
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<OneOfKeyword>))]
-internal class OneOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class OneOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
 {
     private readonly JsonSchema[] _subSchemas = null!;
 
@@ -131,5 +131,42 @@ internal class OneOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
                 BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _subSchemas[localIdx] = newSchema);
             }
         }
+    }
+
+    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
+    {
+        private readonly OneOfKeyword _oneOfKeyword;
+        private readonly JsonInstanceElement _instance;
+
+        public PropertyEvaluator(OneOfKeyword oneOfKeyword, JsonInstanceElement instance)
+        {
+            _oneOfKeyword = oneOfKeyword;
+            _instance = instance;
+        }
+
+        public string Name => _oneOfKeyword.Name;
+
+        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
+        {
+            var evaluatedProperties = new HashSet<string>();
+
+            foreach (JsonSchema subSchema in _oneOfKeyword._subSchemas)
+            {
+                if (subSchema is not IPropertyEvaluator propertyEvaluator || !subSchema.Validate(_instance, options).IsValid)
+                {
+                    continue;
+                }
+
+                evaluatedProperties.AddRange(propertyEvaluator.GetEvaluatedProperties(_instance, options));
+            }
+
+            return evaluatedProperties;
+        }
+    }
+
+    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        var propertyEvaluator = new PropertyEvaluator(this, instance);
+        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
     }
 }

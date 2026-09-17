@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -10,7 +11,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("properties")]
 [JsonConverter(typeof(PropertiesKeywordJsonConverter))]
-internal class PropertiesKeyword : ValidationKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class PropertiesKeyword : ValidationKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
 {
     private readonly Dictionary<string, JsonSchema> _propertiesSchemas;
 
@@ -107,5 +108,57 @@ internal class PropertiesKeyword : ValidationKeywordBase, ISchemaContainerElemen
                 BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _propertiesSchemas[property] = newSchema);
             }
         }
+    }
+
+    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
+    {
+        private readonly PropertiesKeyword _propertiesKeyword;
+        private readonly JsonInstanceElement _instance;
+
+        public PropertyEvaluator(PropertiesKeyword propertiesKeyword, JsonInstanceElement instance)
+        {
+            _propertiesKeyword = propertiesKeyword;
+            _instance = instance;
+        }
+
+        public string Name => _propertiesKeyword.Name;
+
+        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
+        {
+            if (_instance.ValueKind != JsonValueKind.Object)
+            {
+                return Array.Empty<string>();
+            }
+
+            var evaluatedProperties = new HashSet<string>();
+
+            foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
+            {
+                if (_propertiesKeyword._propertiesSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? schema))
+                {
+                    if (options.OutputFormat == OutputFormat.FailFast)
+                    {
+                        Debug.Assert(schema.Validate(instanceProperty.Value, options).IsValid);
+                    }
+                    else
+                    {
+                        if (!schema.Validate(instanceProperty.Value, options).IsValid)
+                        {
+                            break;
+                        }
+                    }
+
+                    evaluatedProperties.Add(instanceProperty.Name);
+                }
+            }
+
+            return evaluatedProperties;
+        }
+    }
+
+    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        var propertyEvaluator = new PropertyEvaluator(this, instance);
+        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
     }
 }

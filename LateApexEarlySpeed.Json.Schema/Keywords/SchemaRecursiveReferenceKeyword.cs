@@ -63,4 +63,47 @@ internal class SchemaRecursiveReferenceKeyword : ValidationKeywordBase, IReferen
         return options.ValidationPathStack.SchemaResourceStack.LastOrDefault(resource => resource.RecursiveAnchorEnabled) 
                ?? staticReferencedSchemaResource;
     }
+
+    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
+    {
+        private readonly SchemaRecursiveReferenceKeyword _schemaRecursiveReferenceKeyword;
+        private readonly JsonInstanceElement _instance;
+
+        public PropertyEvaluator(SchemaRecursiveReferenceKeyword schemaRecursiveReferenceKeyword, JsonInstanceElement instance)
+        {
+            _schemaRecursiveReferenceKeyword = schemaRecursiveReferenceKeyword;
+            _instance = instance;
+        }
+
+        public string Name => _schemaRecursiveReferenceKeyword.Name;
+
+        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
+        {
+            JsonSchemaResource referencedSchemaResource = _schemaRecursiveReferenceKeyword.GetReferencedSchemaResource(options);
+
+            if (!options.SchemaRecursionRecorder.TryPushRecord(referencedSchemaResource, _instance.Location))
+            {
+                throw new InvalidOperationException($"Infinite recursion loop detected. Instance path: {_instance.Location}");
+            }
+
+            options.ValidationPathStack.PushSchemaResource(referencedSchemaResource);
+
+            Debug.Assert(referencedSchemaResource.BaseUri is not null);
+            options.ValidationPathStack.PushReferencedSchema(referencedSchemaResource, referencedSchemaResource.BaseUri);
+
+            IReadOnlyCollection<string> result = referencedSchemaResource.GetEvaluatedProperties(_instance, options);
+
+            options.ValidationPathStack.PopReferencedSchema();
+            options.ValidationPathStack.PopSchemaResource();
+            options.SchemaRecursionRecorder.PopRecord();
+
+            return result;
+        }
+    }
+
+    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        var propertyEvaluator = new PropertyEvaluator(this, instance);
+        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
+    }
 }

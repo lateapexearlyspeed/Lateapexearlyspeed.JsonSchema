@@ -18,12 +18,9 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 {
     public class JsonValidatorTest : IClassFixture<JsonValidatorTestFixture>
     {
-        private static readonly string[] UnsupportedTestFiles = new[] { "unevaluatedItems", "unevaluatedProperties", "vocabulary" };
+        private static readonly string[] UnsupportedTestFiles = new[] { "unevaluatedItems", "vocabulary" };
         private static readonly string[] UnsupportedTestCases = new[]
         {
-            "collect annotations inside a 'not', even if collection is disabled",
-            "strict-tree schema, guards against misspelled properties",
-            "ref creates new scope when adjacent to keywords",
             "$ref with $recursiveAnchor"
         };
 

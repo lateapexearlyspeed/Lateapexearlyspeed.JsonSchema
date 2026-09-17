@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -10,7 +11,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("dependentSchemas")]
 [JsonConverter(typeof(DependentSchemasKeywordJsonConverter))]
-internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
 {
     private readonly Dictionary<string, JsonSchema> _dependentSchemas;
 
@@ -100,6 +101,53 @@ internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainer
             {
                 BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _dependentSchemas[name] = newSchema);
             }
+        }
+    }
+
+    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        var propertyEvaluator = new PropertyEvaluator(this, instance);
+        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
+    }
+
+    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
+    {
+        private readonly DependentSchemasKeyword _dependentSchemasKeyword;
+        private readonly JsonInstanceElement _instance;
+
+        public PropertyEvaluator(DependentSchemasKeyword dependentSchemasKeyword, JsonInstanceElement instance)
+        {
+            _dependentSchemasKeyword = dependentSchemasKeyword;
+            _instance = instance;
+        }
+
+        public string Name => _dependentSchemasKeyword.Name;
+
+        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
+        {
+            var evaluatedProperties = new HashSet<string>();
+
+            foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
+            {
+                if (_dependentSchemasKeyword._dependentSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? subSchema) && subSchema is IPropertyEvaluator propertyEvaluator)
+                {
+                    if (options.OutputFormat == OutputFormat.FailFast)
+                    {
+                        Debug.Assert(subSchema.Validate(_instance, options).IsValid);
+                    }
+                    else
+                    {
+                        if (!subSchema.Validate(_instance, options).IsValid)
+                        {
+                            break;
+                        }
+                    }
+
+                    evaluatedProperties.AddRange(propertyEvaluator.GetEvaluatedProperties(_instance, options));
+                }
+            }
+
+            return evaluatedProperties;
         }
     }
 }

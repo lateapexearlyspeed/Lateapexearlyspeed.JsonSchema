@@ -58,6 +58,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         PropertiesKeyword? propertiesKeyword = null;
         PatternPropertiesKeyword? patternPropertiesKeyword = null;
         AdditionalPropertiesKeyword? additionalPropertiesKeyword = null;
+        UnevaluatedPropertiesKeyword? unevaluatedPropertiesKeyword = null;
 
         PrefixItemsKeyword? prefixItemsKeyword = null;
         ItemsKeyword? itemsKeyword = null;
@@ -144,6 +145,9 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                             annotationKeywords ??= new();
                             annotationKeywords.Add(annotationKeyword);
                         }
+                        break;
+                    case UnevaluatedPropertiesKeyword unevaluatedProperties:
+                        unevaluatedPropertiesKeyword = unevaluatedProperties;
                         break;
                 }
             }
@@ -322,6 +326,27 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
             {
                 schemaContainerValidators ??= new List<ISchemaContainerValidationNode>(1);
                 schemaContainerValidators.Add(new ConditionalValidator(predictSchema, positiveSchema, negativeSchema));
+            }
+
+            if (unevaluatedPropertiesKeyword is not null)
+            {
+                validationKeywords.Remove(unevaluatedPropertiesKeyword);
+
+                IEnumerable<IPropertyEvaluator> propertyEvaluators = validationKeywords.OfType<IPropertyEvaluator>();
+
+                if (schemaContainerValidators is not null)
+                {
+                    propertyEvaluators = propertyEvaluators.Concat(schemaContainerValidators.OfType<IPropertyEvaluator>());
+                }
+
+                if (referenceKeywords is not null)
+                {
+                    propertyEvaluators = propertyEvaluators.Concat(referenceKeywords);
+                }
+
+                unevaluatedPropertiesKeyword.PropertyEvaluators = propertyEvaluators.ToArray();
+                
+                validationKeywords.Add(unevaluatedPropertiesKeyword);
             }
 
             RemoveIgnoredContentSchemaAnnotation(ref annotationKeywords);

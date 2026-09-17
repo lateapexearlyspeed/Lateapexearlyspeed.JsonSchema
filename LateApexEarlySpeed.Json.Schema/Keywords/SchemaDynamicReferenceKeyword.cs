@@ -125,4 +125,61 @@ internal class SchemaDynamicReferenceKeyword : ValidationKeywordBase, IReference
             .LastOrDefault(resource => resource.FindSubSchemaByDynamicAnchor(dynamicAnchor) is not null);
         return schemaResource ?? staticReferencedSchemaResource;
     }
+
+    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
+    {
+        private readonly SchemaDynamicReferenceKeyword _schemaDynamicReferenceKeyword;
+        private readonly JsonInstanceElement _instance;
+
+        public PropertyEvaluator(SchemaDynamicReferenceKeyword schemaDynamicReferenceKeyword, JsonInstanceElement instance)
+        {
+            _schemaDynamicReferenceKeyword = schemaDynamicReferenceKeyword;
+            _instance = instance;
+        }
+
+        public string Name => _schemaDynamicReferenceKeyword.Name;
+
+        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
+        {
+            (JsonSchema subSchema, Uri subSchemaFullUriRef)? referencedSchemaInfo = _schemaDynamicReferenceKeyword.GetReferencedSchema(options);
+
+            Debug.Assert(referencedSchemaInfo.HasValue);
+
+            JsonSchema referencedSubSchema = referencedSchemaInfo.Value.subSchema;
+            Uri subSchemaFullUriRef = referencedSchemaInfo.Value.subSchemaFullUriRef;
+
+            if (!options.SchemaRecursionRecorder.TryPushRecord(referencedSubSchema, _instance.Location))
+            {
+                throw new InvalidOperationException($"Infinite recursion loop detected. Instance path: {_instance.Location}");
+            }
+
+            JsonSchemaResource? referencedSchemaResource = _schemaDynamicReferenceKeyword.GetReferencedSchemaResource(options);
+
+            Debug.Assert(referencedSchemaResource is not null);
+            options.ValidationPathStack.PushSchemaResource(referencedSchemaResource);
+            options.ValidationPathStack.PushReferencedSchema(referencedSchemaResource, subSchemaFullUriRef);
+
+            IReadOnlyCollection<string> result;
+            if (referencedSubSchema is IPropertyEvaluator propertyEvaluator)
+            {
+                result = propertyEvaluator.GetEvaluatedProperties(_instance, options);
+            }
+            else
+            {
+                result = Array.Empty<string>();
+            }
+
+            options.ValidationPathStack.PopReferencedSchema();
+            options.ValidationPathStack.PopSchemaResource();
+            options.SchemaRecursionRecorder.PopRecord();
+
+            return result;
+        }
+    }
+
+    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        var propertyEvaluator = new PropertyEvaluator(this, instance);
+        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
+    }
 }

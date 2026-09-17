@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -11,7 +12,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("additionalProperties")]
 [JsonConverter(typeof(SingleSchemaJsonConverter<AdditionalPropertiesKeyword>))]
-internal class AdditionalPropertiesKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
+internal class AdditionalPropertiesKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
 {
     private JsonSchema _schema = null!;
 
@@ -109,5 +110,68 @@ internal class AdditionalPropertiesKeyword : ValidationKeywordBase, ISchemaConta
     public JsonSchema GetSchema()
     {
         return _schema;
+    }
+
+    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
+    {
+        private readonly AdditionalPropertiesKeyword _additionalPropertiesKeyword;
+        private readonly JsonInstanceElement _instance;
+
+        public PropertyEvaluator(AdditionalPropertiesKeyword additionalPropertiesKeyword, JsonInstanceElement instance)
+        {
+            _additionalPropertiesKeyword = additionalPropertiesKeyword;
+            _instance = instance;
+        }
+
+        public string Name => _additionalPropertiesKeyword.Name;
+
+        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
+        {
+            if (_instance.ValueKind != JsonValueKind.Object)
+            {
+                return Array.Empty<string>();
+            }
+
+            var evaluatedProperties = new HashSet<string>();
+
+            foreach (JsonInstanceProperty jsonProperty in _instance.EnumerateObject())
+            {
+                string propertyName = jsonProperty.Name;
+
+                bool containsInPropertiesKeyword = _additionalPropertiesKeyword.PropertiesKeyword is not null && _additionalPropertiesKeyword.PropertiesKeyword.ContainsPropertyName(propertyName);
+
+                if (containsInPropertiesKeyword)
+                {
+                    continue;
+                }
+
+                bool containsMatchedPattern = _additionalPropertiesKeyword.PatternPropertiesKeyword is not null && _additionalPropertiesKeyword.PatternPropertiesKeyword.ContainsMatchedPattern(propertyName, options.RegexMatchTimeout);
+
+                if (!containsMatchedPattern)
+                {
+                    if (options.OutputFormat == OutputFormat.FailFast)
+                    {
+                        Debug.Assert(_additionalPropertiesKeyword.Schema.Validate(jsonProperty.Value, options).IsValid);
+                    }
+                    else
+                    {
+                        if (!_additionalPropertiesKeyword.Schema.Validate(jsonProperty.Value, options).IsValid)
+                        {
+                            break;
+                        }
+                    }
+
+                    evaluatedProperties.Add(propertyName);
+                }
+            }
+
+            return evaluatedProperties;
+        }
+    }
+
+    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        var propertyEvaluator = new PropertyEvaluator(this, instance);
+        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
     }
 }
