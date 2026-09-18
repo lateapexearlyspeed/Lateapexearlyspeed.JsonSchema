@@ -125,7 +125,7 @@ internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainer
 
         public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
         {
-            var evaluatedProperties = new HashSet<string>();
+            HashSet<string>? evaluatedProperties = null;
 
             foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
             {
@@ -143,11 +143,16 @@ internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainer
                         }
                     }
 
-                    evaluatedProperties.AddRange(propertyEvaluator.GetEvaluatedProperties(_instance, options));
+                    IReadOnlyCollection<string> subSchemaEvaluatedProperties = propertyEvaluator.GetEvaluatedProperties(_instance, options);
+                    if (subSchemaEvaluatedProperties.Count != 0)
+                    {
+                        evaluatedProperties ??= new HashSet<string>();
+                        evaluatedProperties.AddRange(subSchemaEvaluatedProperties);
+                    }
                 }
             }
 
-            return evaluatedProperties;
+            return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
         }
     }
 }

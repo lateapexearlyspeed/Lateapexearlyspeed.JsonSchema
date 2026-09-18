@@ -131,21 +131,31 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
             return Array.Empty<string>();
         }
 
-        var evaluatedProperties = new HashSet<string>();
+        HashSet<string>? evaluatedProperties = null;
 
         ValidationResult predictResult = PredictEvaluator.Validate(instance, options);
         if (predictResult.IsValid)
         {
             if (PredictEvaluator is IPropertyEvaluator predictEvaluator)
             {
-                evaluatedProperties.AddRange(predictEvaluator.GetEvaluatedProperties(instance, options));
+                IReadOnlyCollection<string> predictProperties = predictEvaluator.GetEvaluatedProperties(instance, options);
+                if (predictProperties.Count != 0)
+                {
+                    evaluatedProperties ??= new HashSet<string>();
+                    evaluatedProperties.AddRange(predictProperties);
+                }
             }
 
             Debug.Assert(PositiveValidator.Validate(instance, options).IsValid);
 
             if (PositiveValidator is IPropertyEvaluator positiveEvaluator)
             {
-                evaluatedProperties.AddRange(positiveEvaluator.GetEvaluatedProperties(instance, options));
+                IReadOnlyCollection<string> positiveProperties = positiveEvaluator.GetEvaluatedProperties(instance, options);
+                if (positiveProperties.Count != 0)
+                {
+                    evaluatedProperties ??= new HashSet<string>();
+                    evaluatedProperties.AddRange(positiveProperties);
+                }
             }
         }
         else
@@ -154,10 +164,15 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
 
             if (NegativeValidator is IPropertyEvaluator negativeEvaluator)
             {
-                evaluatedProperties.AddRange(negativeEvaluator.GetEvaluatedProperties(instance, options));
+                IReadOnlyCollection<string> negativeProperties = negativeEvaluator.GetEvaluatedProperties(instance, options);
+                if (negativeProperties.Count != 0)
+                {
+                    evaluatedProperties ??= new HashSet<string>();
+                    evaluatedProperties.AddRange(negativeProperties);
+                }
             }
         }
         
-        return evaluatedProperties;
+        return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
     }
 }

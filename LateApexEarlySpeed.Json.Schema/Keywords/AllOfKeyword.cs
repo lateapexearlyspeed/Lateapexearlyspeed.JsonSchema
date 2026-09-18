@@ -132,7 +132,7 @@ internal class AllOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
 
         public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
         {
-            var evaluatedProperties = new HashSet<string>();
+            HashSet<string>? evaluatedProperties = null;
 
             foreach (JsonSchema subSchema in _allOfKeyword._subSchemas)
             {
@@ -153,10 +153,15 @@ internal class AllOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
                     }
                 }
 
-                evaluatedProperties.AddRange(propertyEvaluator.GetEvaluatedProperties(_instance, options));
+                IReadOnlyCollection<string> subSchemaEvaluatedProperties = propertyEvaluator.GetEvaluatedProperties(_instance, options);
+                if (subSchemaEvaluatedProperties.Count != 0)
+                {
+                    evaluatedProperties ??= new HashSet<string>();
+                    evaluatedProperties.AddRange(subSchemaEvaluatedProperties);
+                }
             }
 
-            return evaluatedProperties;
+            return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
         }
     }
 

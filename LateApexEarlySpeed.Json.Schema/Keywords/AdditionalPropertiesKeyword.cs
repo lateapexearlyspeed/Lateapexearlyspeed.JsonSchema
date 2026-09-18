@@ -131,8 +131,8 @@ internal class AdditionalPropertiesKeyword : ValidationKeywordBase, ISchemaConta
             {
                 return Array.Empty<string>();
             }
-
-            var evaluatedProperties = new HashSet<string>();
+            
+            HashSet<string>? evaluatedProperties = null;
 
             foreach (JsonInstanceProperty jsonProperty in _instance.EnumerateObject())
             {
@@ -161,11 +161,12 @@ internal class AdditionalPropertiesKeyword : ValidationKeywordBase, ISchemaConta
                         }
                     }
 
+                    evaluatedProperties ??= new HashSet<string>();
                     evaluatedProperties.Add(propertyName);
                 }
             }
 
-            return evaluatedProperties;
+            return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
         }
     }
 

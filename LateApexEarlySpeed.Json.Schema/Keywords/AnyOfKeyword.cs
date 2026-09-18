@@ -144,7 +144,7 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
 
         public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
         {
-            var evaluatedProperties = new HashSet<string>();
+            HashSet<string>? evaluatedProperties = null;
 
             foreach (JsonSchema subSchema in _anyOfKeyword._subSchemas)
             {
@@ -156,11 +156,16 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
                 ValidationResult result = subSchema.Validate(_instance, options);
                 if (result.IsValid)
                 {
-                    evaluatedProperties.AddRange(propertyEvaluator.GetEvaluatedProperties(_instance, options));
+                    IReadOnlyCollection<string> subSchemaEvaluatedProperties = propertyEvaluator.GetEvaluatedProperties(_instance, options);
+                    if (subSchemaEvaluatedProperties.Count != 0)
+                    {
+                        evaluatedProperties ??= new HashSet<string>();
+                        evaluatedProperties.AddRange(subSchemaEvaluatedProperties);
+                    }
                 }
             }
 
-            return evaluatedProperties;
+            return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
         }
     }
 

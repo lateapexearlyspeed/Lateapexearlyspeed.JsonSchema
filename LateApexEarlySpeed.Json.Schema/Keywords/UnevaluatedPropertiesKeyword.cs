@@ -24,7 +24,7 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
             return ValidationResult.ValidResult;
         }
 
-        HashSet<string> evaluatedProperties = FindEvaluatedPropertiesByOtherEvaluators(instance, options);
+        HashSet<string>? evaluatedProperties = FindEvaluatedPropertiesByOtherEvaluators(instance, options);
 
         options.ValidationPathStack.PushRelativeLocation(Name);
 
@@ -35,11 +35,11 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
         return result;
     }
 
-    private ValidationResult ValidateInternal(HashSet<string> evaluatedProperties, JsonInstanceElement instance, JsonSchemaOptions options)
+    private ValidationResult ValidateInternal(HashSet<string>? evaluatedProperties, JsonInstanceElement instance, JsonSchemaOptions options)
     {
         foreach (JsonInstanceProperty instanceProperty in instance.EnumerateObject())
         {
-            if (!evaluatedProperties.Contains(instanceProperty.Name))
+            if (evaluatedProperties is null || !evaluatedProperties.Contains(instanceProperty.Name))
             {
                 ValidationResult result = Schema.Validate(instanceProperty.Value, options);
                 if (!result.IsValid)
@@ -59,7 +59,7 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
             return Array.Empty<string>();
         }
 
-        HashSet<string> evaluatedProperties = FindEvaluatedPropertiesByOtherEvaluators(instance, options);
+        HashSet<string>? evaluatedProperties = FindEvaluatedPropertiesByOtherEvaluators(instance, options);
 
         var propertyEvaluator = new PropertyEvaluator(this, evaluatedProperties, instance);
         return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
@@ -68,10 +68,10 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
     private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
     {
         private readonly UnevaluatedPropertiesKeyword _unevaluatedPropertiesKeyword;
-        private readonly HashSet<string> _evaluatedProperties;
+        private readonly HashSet<string>? _evaluatedProperties;
         private readonly JsonInstanceElement _instance;
 
-        public PropertyEvaluator(UnevaluatedPropertiesKeyword unevaluatedPropertiesKeyword, HashSet<string> evaluatedProperties, JsonInstanceElement instance)
+        public PropertyEvaluator(UnevaluatedPropertiesKeyword unevaluatedPropertiesKeyword, HashSet<string>? evaluatedProperties, JsonInstanceElement instance)
         {
             _unevaluatedPropertiesKeyword = unevaluatedPropertiesKeyword;
             _evaluatedProperties = evaluatedProperties;
@@ -82,13 +82,13 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
 
         public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
         {
-            var result = new HashSet<string>();
+            HashSet<string>? result = null;
 
             foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
             {
                 string propertyName = instanceProperty.Name;
 
-                if (!_evaluatedProperties.Contains(propertyName))
+                if (_evaluatedProperties is null || !_evaluatedProperties.Contains(propertyName))
                 {
                     if (options.OutputFormat == OutputFormat.FailFast)
                     {
@@ -102,23 +102,27 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
                         }
                     }
 
+                    result ??= new HashSet<string>();
                     result.Add(propertyName);
                 }
             }
 
-            return result;
+            return result ?? (IReadOnlyCollection<string>)Array.Empty<string>();
         }
     }
 
-    private HashSet<string> FindEvaluatedPropertiesByOtherEvaluators(JsonInstanceElement instance, JsonSchemaOptions options)
+    private HashSet<string>? FindEvaluatedPropertiesByOtherEvaluators(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        var evaluatedProperties = new HashSet<string>();
+        HashSet<string>? evaluatedProperties = null;
 
         foreach (IPropertyEvaluator propertyEvaluator in PropertyEvaluators)
         {
-            foreach (string evaluatedProperty in propertyEvaluator.GetEvaluatedProperties(instance, options))
+            IReadOnlyCollection<string> properties = propertyEvaluator.GetEvaluatedProperties(instance, options);
+            
+            if (properties.Count != 0)
             {
-                evaluatedProperties.Add(evaluatedProperty);
+                evaluatedProperties ??= new HashSet<string>();
+                evaluatedProperties.AddRange(properties);
             }
         }
 

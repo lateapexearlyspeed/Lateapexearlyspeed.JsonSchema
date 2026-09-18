@@ -539,14 +539,14 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
                 return _instance.EnumerateObject().Select(p => p.Name).ToArray();
             }
 
-            var properties = new HashSet<string>();
+            HashSet<string>? properties = null;
 
             // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
             for (int i = 0; i < validationKeywords.Count; i++)
             {
                 if (validationKeywords[i] is IPropertyEvaluator propertyEvaluator)
                 {
-                    properties.AddRange(propertyEvaluator.GetEvaluatedProperties(_instance, options));
+                    AddProperties(propertyEvaluator, ref properties, options);
                 }
             }
 
@@ -556,7 +556,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
                 {
                     if (schemaContainerValidator is IPropertyEvaluator propertyEvaluator)
                     {
-                        properties.AddRange(propertyEvaluator.GetEvaluatedProperties(_instance, options));
+                        AddProperties(propertyEvaluator, ref properties, options);
                     }
                 }
             }
@@ -565,11 +565,21 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
             {
                 foreach (IReferenceKeyword referenceKeyword in _bodyJsonSchema._referenceKeywords)
                 {
-                    properties.AddRange(referenceKeyword.GetEvaluatedProperties(_instance, options));
+                    AddProperties(referenceKeyword, ref properties, options);
                 }
             }
 
-            return properties;
+            return properties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
+        }
+
+        private void AddProperties(IPropertyEvaluator propertyEvaluator, ref HashSet<string>? properties, JsonSchemaOptions options)
+        {
+            IReadOnlyCollection<string> evaluatedProperties = propertyEvaluator.GetEvaluatedProperties(_instance, options);
+            if (evaluatedProperties.Count != 0)
+            {
+                properties ??= new HashSet<string>();
+                properties.AddRange(evaluatedProperties);
+            }
         }
     }
 }
