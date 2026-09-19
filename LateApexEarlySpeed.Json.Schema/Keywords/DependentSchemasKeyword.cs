@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -131,18 +130,6 @@ internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainer
             {
                 if (_dependentSchemasKeyword._dependentSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? subSchema) && subSchema is IPropertyEvaluator propertyEvaluator)
                 {
-                    if (options.OutputFormat == OutputFormat.FailFast)
-                    {
-                        Debug.Assert(subSchema.Validate(_instance, options).IsValid);
-                    }
-                    else
-                    {
-                        if (!subSchema.Validate(_instance, options).IsValid)
-                        {
-                            break;
-                        }
-                    }
-
                     IReadOnlyCollection<string> subSchemaEvaluatedProperties = propertyEvaluator.GetEvaluatedProperties(_instance, options);
                     if (subSchemaEvaluatedProperties.Count != 0)
                     {

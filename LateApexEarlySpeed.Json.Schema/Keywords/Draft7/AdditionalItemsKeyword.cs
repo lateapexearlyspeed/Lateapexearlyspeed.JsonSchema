@@ -13,7 +13,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords.Draft7;
 [Keyword("additionalItems")]
 [Dialect(DialectKind.Draft7, DialectKind.Draft201909)]
 [JsonConverter(typeof(SingleSchemaJsonConverter<AdditionalItemsKeyword>))]
-internal class AdditionalItemsKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
+internal class AdditionalItemsKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable, IItemEvaluator
 {
     private JsonSchema _schema = null!;
 
@@ -81,6 +81,31 @@ internal class AdditionalItemsKeyword : ValidationKeywordBase, ISchemaContainerE
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
+    }
+
+    public IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        if (ItemsWithMultiSchemasKeyword is null || instance.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<int>();
+        }
+
+        int prefixSchemasCount = ItemsWithMultiSchemasKeyword.SubSchemas.Count;
+        int arrayLength = instance.GetArrayLength();
+
+        if (arrayLength <= prefixSchemasCount)
+        {
+            return Array.Empty<int>();
+        }
+
+        var evaluatedItems = new int[arrayLength - prefixSchemasCount];
+
+        for (int i = 0; i < evaluatedItems.Length; i++)
+        {
+            evaluatedItems[i] = i + prefixSchemasCount;
+        }
+
+        return evaluatedItems;
     }
 
     public ISchemaContainerElement? GetSubElement(string name) => _schema.GetSubElement(name);

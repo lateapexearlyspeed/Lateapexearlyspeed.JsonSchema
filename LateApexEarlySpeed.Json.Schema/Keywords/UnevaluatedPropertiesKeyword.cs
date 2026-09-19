@@ -4,7 +4,6 @@ using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
-using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -82,7 +81,7 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
 
         public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
         {
-            HashSet<string>? result = null;
+            List<string>? result = null;
 
             foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
             {
@@ -90,19 +89,7 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
 
                 if (_evaluatedProperties is null || !_evaluatedProperties.Contains(propertyName))
                 {
-                    if (options.OutputFormat == OutputFormat.FailFast)
-                    {
-                        Debug.Assert(_unevaluatedPropertiesKeyword.Schema.Validate(instanceProperty.Value, options).IsValid);
-                    }
-                    else
-                    {
-                        if (!_unevaluatedPropertiesKeyword.Schema.Validate(instanceProperty.Value, options).IsValid)
-                        {
-                            break;
-                        }
-                    }
-
-                    result ??= new HashSet<string>();
+                    result ??= new List<string>();
                     result.Add(propertyName);
                 }
             }

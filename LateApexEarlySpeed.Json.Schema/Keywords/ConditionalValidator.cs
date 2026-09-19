@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using LateApexEarlySpeed.Json.Schema.Common;
+﻿using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
@@ -146,8 +145,6 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
                 }
             }
 
-            Debug.Assert(PositiveValidator.Validate(instance, options).IsValid);
-
             if (PositiveValidator is IPropertyEvaluator positiveEvaluator)
             {
                 IReadOnlyCollection<string> positiveProperties = positiveEvaluator.GetEvaluatedProperties(instance, options);
@@ -160,8 +157,6 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
         }
         else
         {
-            Debug.Assert(NegativeValidator.Validate(instance, options).IsValid);
-
             if (NegativeValidator is IPropertyEvaluator negativeEvaluator)
             {
                 IReadOnlyCollection<string> negativeProperties = negativeEvaluator.GetEvaluatedProperties(instance, options);

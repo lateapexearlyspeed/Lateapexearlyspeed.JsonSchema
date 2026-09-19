@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.Contracts;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -139,18 +138,6 @@ internal class AllOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
                 if (subSchema is not IPropertyEvaluator propertyEvaluator)
                 {
                     continue;
-                }
-
-                if (options.OutputFormat == OutputFormat.FailFast)
-                {
-                    Debug.Assert(subSchema.Validate(_instance, options).IsValid);
-                }
-                else
-                {
-                    if (!subSchema.Validate(_instance, options).IsValid)
-                    {
-                        break;
-                    }
                 }
 
                 IReadOnlyCollection<string> subSchemaEvaluatedProperties = propertyEvaluator.GetEvaluatedProperties(_instance, options);

@@ -218,6 +218,7 @@ public class ValidationKeywordRegistry
                 typeof(PropertyNamesKeyword),
                 typeof(RequiredKeyword),
                 typeof(TypeKeyword),
+                typeof(UnevaluatedItemsKeyword),
                 typeof(UnevaluatedPropertiesKeyword),
                 typeof(UniqueItemsKeyword)
             };

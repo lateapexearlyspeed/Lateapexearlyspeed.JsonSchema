@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -132,7 +131,7 @@ internal class PatternPropertiesKeyword : ValidationKeywordBase, ISchemaContaine
                 return Array.Empty<string>();
             }
 
-            HashSet<string>? evaluatedProperties = null;
+            List<string>? evaluatedProperties = null;
 
             foreach (JsonInstanceProperty jsonProperty in _instance.EnumerateObject())
             {
@@ -142,20 +141,10 @@ internal class PatternPropertiesKeyword : ValidationKeywordBase, ISchemaContaine
                 {
                     if (RegexMatcher.IsMatch(patternSchema.Key, propertyName, options.RegexMatchTimeout))
                     {
-                        if (options.OutputFormat == OutputFormat.FailFast)
-                        {
-                            Debug.Assert(patternSchema.Value.Validate(jsonProperty.Value, options).IsValid);
-                        }
-                        else
-                        {
-                            if (!patternSchema.Value.Validate(jsonProperty.Value, options).IsValid)
-                            {
-                                return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
-                            }
-                        }
-
-                        evaluatedProperties ??= new HashSet<string>();
+                        evaluatedProperties ??= new List<string>();
                         evaluatedProperties.Add(propertyName);
+
+                        break;
                     }
                 }
             }

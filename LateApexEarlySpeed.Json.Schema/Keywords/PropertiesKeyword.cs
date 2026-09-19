@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -130,25 +129,13 @@ internal class PropertiesKeyword : ValidationKeywordBase, ISchemaContainerElemen
                 return Array.Empty<string>();
             }
 
-            HashSet<string>? evaluatedProperties = null;
+            List<string>? evaluatedProperties = null;
 
             foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
             {
-                if (_propertiesKeyword._propertiesSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? schema))
+                if (_propertiesKeyword._propertiesSchemas.TryGetValue(instanceProperty.Name, out _))
                 {
-                    if (options.OutputFormat == OutputFormat.FailFast)
-                    {
-                        Debug.Assert(schema.Validate(instanceProperty.Value, options).IsValid);
-                    }
-                    else
-                    {
-                        if (!schema.Validate(instanceProperty.Value, options).IsValid)
-                        {
-                            break;
-                        }
-                    }
-
-                    evaluatedProperties ??= new HashSet<string>();
+                    evaluatedProperties ??= new List<string>();
                     evaluatedProperties.Add(instanceProperty.Name);
                 }
             }
