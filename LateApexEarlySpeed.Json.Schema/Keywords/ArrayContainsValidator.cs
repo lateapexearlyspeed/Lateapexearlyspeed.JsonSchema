@@ -7,7 +7,7 @@ using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSchemaResourceNodesCleanable
+internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSchemaResourceNodesCleanable, IItemEvaluator
 {
     public const string ContainsKeywordName = "contains";
     public const string MaxContainsKeywordName = "maxContains";
@@ -298,4 +298,28 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
             BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _containsSchema = newSchema);
         }
     }
+
+    public IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        if (instance.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<int>();
+        }
+
+        var evaluatedItems = new List<int>();
+        int i = 0;
+        foreach (JsonInstanceElement instanceItem in instance.EnumerateArray())
+        {
+            if (ContainsSchema.Validate(instanceItem, options).IsValid)
+            {
+                evaluatedItems.Add(i);
+            }
+
+            i++;
+        }
+
+        return evaluatedItems;
+    }
+
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 }

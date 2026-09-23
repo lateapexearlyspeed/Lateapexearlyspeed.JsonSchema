@@ -13,8 +13,8 @@ internal class JsonSchemaResource : BodyJsonSchema
     /// </summary>
     private readonly Uri _id;
 
-    public JsonSchemaResource(SchemaKeyword? schemaKeyword, Uri id, IEnumerable<ValidationKeywordBase> keywords, IEnumerable<IAnnotationKeyword>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, bool recursiveAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
-        : base(keywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifierKeyword, dynamicAnchor, defsKeywords, potentialSchemaContainerElements)
+    public JsonSchemaResource(SchemaKeyword? schemaKeyword, Uri id, IEnumerable<ValidationKeywordBase> keywords, IEnumerable<IAnnotationKeyword>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, bool recursiveAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements, UnevaluatedPropertiesKeyword? unevaluatedPropertiesKeyword, UnevaluatedItemsKeyword? unevaluatedItemsKeyword)
+        : base(keywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifierKeyword, dynamicAnchor, defsKeywords, potentialSchemaContainerElements, unevaluatedPropertiesKeyword, unevaluatedItemsKeyword)
     {
         SchemaKeyword = schemaKeyword;
         _id = id;
@@ -116,7 +116,7 @@ internal class JsonSchemaResource : BodyJsonSchema
 
     public BodyJsonSchema TransformToBodyJsonSchema()
     {
-        var bodyJsonSchema = new BodyJsonSchema(ValidationKeywords, AnnotationKeywords, SchemaContainerValidators, ReferenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, DefsKeywords, PotentialSchemaContainerElements);
+        var bodyJsonSchema = new BodyJsonSchema(ValidationKeywords, AnnotationKeywords, SchemaContainerValidators, ReferenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, DefsKeywords, PotentialSchemaContainerElements, UnevaluatedPropertiesKeyword, UnevaluatedItemsKeyword);
 
         if (Name is not null)
         {
@@ -131,6 +131,17 @@ internal class JsonSchemaResource : BodyJsonSchema
         options.ValidationPathStack.PushSchemaResource(this);
 
         IReadOnlyCollection<string> result = base.GetEvaluatedProperties(instance, options);
+
+        options.ValidationPathStack.PopSchemaResource();
+
+        return result;
+    }
+
+    public override IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        options.ValidationPathStack.PushSchemaResource(this);
+
+        IReadOnlyCollection<int> result = base.GetEvaluatedItems(instance, options);
 
         options.ValidationPathStack.PopSchemaResource();
 

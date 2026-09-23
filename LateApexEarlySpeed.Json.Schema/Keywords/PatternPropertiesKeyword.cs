@@ -158,4 +158,6 @@ internal class PatternPropertiesKeyword : ValidationKeywordBase, ISchemaContaine
         var propertyEvaluator = new PropertyEvaluator(this, instance);
         return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
     }
+
+    public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedProperties(instance, options);
 }

@@ -1,4 +1,5 @@
 ﻿using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
@@ -79,25 +80,7 @@ internal class SchemaRecursiveReferenceKeyword : ValidationKeywordBase, IReferen
 
         public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
         {
-            JsonSchemaResource referencedSchemaResource = _schemaRecursiveReferenceKeyword.GetReferencedSchemaResource(options);
-
-            if (!options.SchemaRecursionRecorder.TryPushRecord(referencedSchemaResource, _instance.Location))
-            {
-                throw new InvalidOperationException($"Infinite recursion loop detected. Instance path: {_instance.Location}");
-            }
-
-            options.ValidationPathStack.PushSchemaResource(referencedSchemaResource);
-
-            Debug.Assert(referencedSchemaResource.BaseUri is not null);
-            options.ValidationPathStack.PushReferencedSchema(referencedSchemaResource, referencedSchemaResource.BaseUri);
-
-            IReadOnlyCollection<string> result = referencedSchemaResource.GetEvaluatedProperties(_instance, options);
-
-            options.ValidationPathStack.PopReferencedSchema();
-            options.ValidationPathStack.PopSchemaResource();
-            options.SchemaRecursionRecorder.PopRecord();
-
-            return result;
+            return _schemaRecursiveReferenceKeyword.GetEvaluatedInfoInternal<IPropertyEvaluator, string>(_instance, options);
         }
     }
 
@@ -106,4 +89,58 @@ internal class SchemaRecursiveReferenceKeyword : ValidationKeywordBase, IReferen
         var propertyEvaluator = new PropertyEvaluator(this, instance);
         return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
     }
+
+    private readonly struct ItemEvaluator : IItemCoreEvaluator
+    {
+        private readonly SchemaRecursiveReferenceKeyword _schemaRecursiveReferenceKeyword;
+        private readonly JsonInstanceElement _instance;
+
+        public ItemEvaluator(SchemaRecursiveReferenceKeyword schemaRecursiveReferenceKeyword, JsonInstanceElement instance)
+        {
+            _schemaRecursiveReferenceKeyword = schemaRecursiveReferenceKeyword;
+            _instance = instance;
+        }
+
+        public string Name => _schemaRecursiveReferenceKeyword.Name;
+
+        public IReadOnlyCollection<int> GetEvaluatedItems(JsonSchemaOptions options)
+        {
+            return _schemaRecursiveReferenceKeyword.GetEvaluatedInfoInternal<IItemEvaluator, int>(_instance, options);
+        }
+    }
+
+    public IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        var itemEvaluator = new ItemEvaluator(this, instance);
+        return itemEvaluator.GetEvaluatedItemsWithLocation(options);
+    }
+
+    private IReadOnlyCollection<TValue> GetEvaluatedInfoInternal<TEvaluator, TValue>(JsonInstanceElement instance, JsonSchemaOptions options) where TEvaluator : IInfoEvaluator<TValue>
+    {
+        JsonSchemaResource referencedSchemaResource = GetReferencedSchemaResource(options);
+
+        if (!options.SchemaRecursionRecorder.TryPushRecord(referencedSchemaResource, instance.Location))
+        {
+            throw new InvalidOperationException($"Infinite recursion loop detected. Instance path: {instance.Location}");
+        }
+
+        options.ValidationPathStack.PushSchemaResource(referencedSchemaResource);
+
+        Debug.Assert(referencedSchemaResource.BaseUri is not null);
+        options.ValidationPathStack.PushReferencedSchema(referencedSchemaResource, referencedSchemaResource.BaseUri);
+
+        IReadOnlyCollection<TValue> result = referencedSchemaResource is TEvaluator evaluator
+            ? evaluator.GetEvaluatedInfos(instance, options)
+            : Array.Empty<TValue>();
+
+        options.ValidationPathStack.PopReferencedSchema();
+        options.ValidationPathStack.PopSchemaResource();
+        options.SchemaRecursionRecorder.PopRecord();
+
+        return result;
+    }
+
+    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedProperties(instance, options);
+
+    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 }

@@ -142,4 +142,6 @@ internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainer
             return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
         }
     }
+
+    public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedProperties(instance, options);
 }

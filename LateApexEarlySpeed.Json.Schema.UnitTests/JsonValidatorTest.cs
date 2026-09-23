@@ -18,10 +18,10 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 {
     public class JsonValidatorTest : IClassFixture<JsonValidatorTestFixture>
     {
-        private static readonly string[] UnsupportedTestFiles = new[] { "unevaluatedItems", "vocabulary" };
-        private static readonly string[] UnsupportedTestCases = new[]
+        private static readonly string[] UnsupportedTestFiles = new[] { "vocabulary" };
+
+        private static readonly string[] UnsupportedTestCases = new string[]
         {
-            "$ref with $recursiveAnchor"
         };
 
         private static readonly string[] TestCasesDependOnRemoteHttpDocuments = new[]

@@ -9,10 +9,12 @@ using LateApexEarlySpeed.Json.Schema.Keywords.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-[Keyword("unevaluatedItems")]
+[Keyword(Keyword)]
 [JsonConverter(typeof(SingleSchemaJsonConverter<UnevaluatedItemsKeyword>))]
 public class UnevaluatedItemsKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IItemEvaluator
 {
+    public const string Keyword = "unevaluatedItems";
+
     private JsonSchema _schema = null!;
 
     public JsonSchema Schema
@@ -125,9 +127,11 @@ public class UnevaluatedItemsKeyword : ValidationKeywordBase, ISchemaContainerEl
     {
         throw new NotImplementedException($"Override {nameof(Validate)} method already");
     }
+
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 }
 
-public interface IItemEvaluator
+public interface IItemEvaluator : IInfoEvaluator<int>
 {
     IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options);
 }

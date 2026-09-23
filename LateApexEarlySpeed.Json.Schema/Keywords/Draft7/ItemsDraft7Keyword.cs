@@ -115,6 +115,8 @@ internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword, ISchemaContain
         return evaluatedItems;
     }
 
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
+
     public ISchemaContainerElement? GetSubElement(string name)
     {
         return ((ISubSchemaCollection)this).GetSubElement(name);
@@ -225,6 +227,8 @@ internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword, ISchemaContainerE
 
         return evaluatedItems;
     }
+
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 
     public ISchemaContainerElement? GetSubElement(string name)
     {

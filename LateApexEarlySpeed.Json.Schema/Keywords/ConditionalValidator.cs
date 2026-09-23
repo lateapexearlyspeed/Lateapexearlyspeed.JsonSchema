@@ -6,7 +6,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
+internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator, IItemEvaluator
 {
     public const string IfKeywordName = "if";
     public const string ThenKeywordName = "then";
@@ -125,49 +125,63 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
 
     public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
     {
+        return GetEvaluatedInfo<IPropertyEvaluator, string>(instance, options);
+    }
+
+    public IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return GetEvaluatedInfo<IItemEvaluator, int>(instance, options);
+    }
+
+    private IReadOnlyCollection<TValue> GetEvaluatedInfo<TEvaluator, TValue>(JsonInstanceElement instance, JsonSchemaOptions options) where TEvaluator : IInfoEvaluator<TValue>
+    {
         if (PredictEvaluator is null)
         {
-            return Array.Empty<string>();
+            return Array.Empty<TValue>();
         }
 
-        HashSet<string>? evaluatedProperties = null;
+        HashSet<TValue>? evaluatedProperties = null;
 
         ValidationResult predictResult = PredictEvaluator.Validate(instance, options);
         if (predictResult.IsValid)
         {
-            if (PredictEvaluator is IPropertyEvaluator predictEvaluator)
+            if (PredictEvaluator is TEvaluator predictEvaluator)
             {
-                IReadOnlyCollection<string> predictProperties = predictEvaluator.GetEvaluatedProperties(instance, options);
+                IReadOnlyCollection<TValue> predictProperties = predictEvaluator.GetEvaluatedInfos(instance, options);
                 if (predictProperties.Count != 0)
                 {
-                    evaluatedProperties ??= new HashSet<string>();
+                    evaluatedProperties ??= new HashSet<TValue>();
                     evaluatedProperties.AddRange(predictProperties);
                 }
             }
 
-            if (PositiveValidator is IPropertyEvaluator positiveEvaluator)
+            if (PositiveValidator is TEvaluator positiveEvaluator)
             {
-                IReadOnlyCollection<string> positiveProperties = positiveEvaluator.GetEvaluatedProperties(instance, options);
+                IReadOnlyCollection<TValue> positiveProperties = positiveEvaluator.GetEvaluatedInfos(instance, options);
                 if (positiveProperties.Count != 0)
                 {
-                    evaluatedProperties ??= new HashSet<string>();
+                    evaluatedProperties ??= new HashSet<TValue>();
                     evaluatedProperties.AddRange(positiveProperties);
                 }
             }
         }
         else
         {
-            if (NegativeValidator is IPropertyEvaluator negativeEvaluator)
+            if (NegativeValidator is TEvaluator negativeEvaluator)
             {
-                IReadOnlyCollection<string> negativeProperties = negativeEvaluator.GetEvaluatedProperties(instance, options);
+                IReadOnlyCollection<TValue> negativeProperties = negativeEvaluator.GetEvaluatedInfos(instance, options);
                 if (negativeProperties.Count != 0)
                 {
-                    evaluatedProperties ??= new HashSet<string>();
+                    evaluatedProperties ??= new HashSet<TValue>();
                     evaluatedProperties.AddRange(negativeProperties);
                 }
             }
         }
         
-        return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
+        return evaluatedProperties ?? (IReadOnlyCollection<TValue>)Array.Empty<TValue>();
     }
+
+    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedProperties(instance, options);
+
+    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 }

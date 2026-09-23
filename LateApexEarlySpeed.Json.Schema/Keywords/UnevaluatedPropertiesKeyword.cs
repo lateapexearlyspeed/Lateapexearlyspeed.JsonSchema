@@ -9,10 +9,12 @@ using System.Text.Json.Serialization;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-[Keyword("unevaluatedProperties")]
+[Keyword(Keyword)]
 [JsonConverter(typeof(SingleSchemaJsonConverter<UnevaluatedPropertiesKeyword>))]
 public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IPropertyEvaluator
 {
+    public const string Keyword = "unevaluatedProperties";
+
     public JsonSchema Schema { get; init; } = null!;
     public IEnumerable<IPropertyEvaluator> PropertyEvaluators { get; set; } = null!;
     
@@ -137,9 +139,11 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
     {
         yield return Schema;
     }
+
+    public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedProperties(instance, options);
 }
 
-public interface IPropertyEvaluator
+public interface IPropertyEvaluator : IInfoEvaluator<string>
 {
     IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options);
 }

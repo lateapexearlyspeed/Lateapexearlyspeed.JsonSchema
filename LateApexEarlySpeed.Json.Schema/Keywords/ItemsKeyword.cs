@@ -102,6 +102,8 @@ internal class ItemsKeyword : ValidationKeywordBase, ISchemaContainerElement, IS
         return evaluatedItems;
     }
 
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
+
     public ISchemaContainerElement? GetSubElement(string name)
     {
         return Schema.GetSubElement(name);

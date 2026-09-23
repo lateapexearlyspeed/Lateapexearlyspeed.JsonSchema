@@ -11,7 +11,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("anyOf")]
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<AnyOfKeyword>))]
-internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
+internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator, IItemEvaluator
 {
     private readonly JsonSchema[] _subSchemas = null!;
 
@@ -144,28 +144,7 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
 
         public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
         {
-            HashSet<string>? evaluatedProperties = null;
-
-            foreach (JsonSchema subSchema in _anyOfKeyword._subSchemas)
-            {
-                if (subSchema is not IPropertyEvaluator propertyEvaluator)
-                {
-                    continue;
-                }
-
-                ValidationResult result = subSchema.Validate(_instance, options);
-                if (result.IsValid)
-                {
-                    IReadOnlyCollection<string> subSchemaEvaluatedProperties = propertyEvaluator.GetEvaluatedProperties(_instance, options);
-                    if (subSchemaEvaluatedProperties.Count != 0)
-                    {
-                        evaluatedProperties ??= new HashSet<string>();
-                        evaluatedProperties.AddRange(subSchemaEvaluatedProperties);
-                    }
-                }
-            }
-
-            return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
+            return _anyOfKeyword.GetEvaluatedInfoInternal<IPropertyEvaluator, string>(_instance, options);
         }
     }
 
@@ -174,4 +153,59 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
         var propertyEvaluator = new PropertyEvaluator(this, instance);
         return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
     }
+
+    public IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        var itemEvaluator = new ItemEvaluator(this, instance);
+        return itemEvaluator.GetEvaluatedItemsWithLocation(options);
+    }
+
+    private readonly struct ItemEvaluator : IItemCoreEvaluator
+    {
+        private readonly AnyOfKeyword _anyOfKeyword;
+        private readonly JsonInstanceElement _instance;
+
+        public ItemEvaluator(AnyOfKeyword anyOfKeyword, JsonInstanceElement instance)
+        {
+            _anyOfKeyword = anyOfKeyword;
+            _instance = instance;
+        }
+
+        public string Name => _anyOfKeyword.Name;
+
+        public IReadOnlyCollection<int> GetEvaluatedItems(JsonSchemaOptions options)
+        {
+            return _anyOfKeyword.GetEvaluatedInfoInternal<IItemEvaluator, int>(_instance, options);
+        }
+    }
+
+    private IReadOnlyCollection<TValue> GetEvaluatedInfoInternal<TEvaluator, TValue>(JsonInstanceElement instance, JsonSchemaOptions options) where TEvaluator : IInfoEvaluator<TValue>
+    {
+        HashSet<TValue>? result = null;
+
+        foreach (JsonSchema subSchema in _subSchemas)
+        {
+            if (subSchema is not TEvaluator itemEvaluator)
+            {
+                continue;
+            }
+
+            ValidationResult validationResult = subSchema.Validate(instance, options);
+            if (validationResult.IsValid)
+            {
+                IReadOnlyCollection<TValue> evaluatedItems = itemEvaluator.GetEvaluatedInfos(instance, options);
+                if (evaluatedItems.Count != 0)
+                {
+                    result ??= new HashSet<TValue>();
+                    result.AddRange(evaluatedItems);
+                }
+            }
+        }
+
+        return result ?? (IReadOnlyCollection<TValue>)Array.Empty<TValue>();
+    }
+
+    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedProperties(instance, options);
+
+    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 }

@@ -65,6 +65,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
         AdditionalItemsKeyword? additionalItemsKeyword = null;
         ItemsWithMultiSchemasKeyword? itemsWithMultiSchemasKeyword = null;
+        UnevaluatedItemsKeyword? unevaluatedItemsKeyword = null;
 
         JsonSchema? predictSchema = null;
         JsonSchema? positiveSchema = null;
@@ -145,9 +146,6 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                             annotationKeywords ??= new();
                             annotationKeywords.Add(annotationKeyword);
                         }
-                        break;
-                    case UnevaluatedPropertiesKeyword unevaluatedProperties:
-                        unevaluatedPropertiesKeyword = unevaluatedProperties;
                         break;
                 }
             }
@@ -265,6 +263,14 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                     reader.HandleFinalBlockAndSkip();
                 }
             }
+            else if (keywordName.Equals(UnevaluatedPropertiesKeyword.Keyword, StringComparison.Ordinal))
+            {
+                unevaluatedPropertiesKeyword = JsonSerializer.Deserialize<UnevaluatedPropertiesKeyword>(ref reader, options)!;
+            }
+            else if (keywordName.Equals(UnevaluatedItemsKeyword.Keyword, StringComparison.Ordinal))
+            {
+                unevaluatedItemsKeyword = JsonSerializer.Deserialize<UnevaluatedItemsKeyword>(ref reader, options)!;
+            }
             else if (ValidationKeywordRegistry.IsIgnoredKeyword(keywordName))
             {
                 reader.HandleFinalBlockAndSkip();
@@ -285,6 +291,8 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         {
             validationKeywords.Clear();
             annotationKeywords = null;
+            unevaluatedPropertiesKeyword = null;
+            unevaluatedItemsKeyword = null;
 
             Debug.Assert(referenceKeywords is not null);
             referenceKeywords.Clear();
@@ -330,8 +338,6 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
             if (unevaluatedPropertiesKeyword is not null)
             {
-                validationKeywords.Remove(unevaluatedPropertiesKeyword);
-
                 IEnumerable<IPropertyEvaluator> propertyEvaluators = validationKeywords.OfType<IPropertyEvaluator>();
 
                 if (schemaContainerValidators is not null)
@@ -345,8 +351,23 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 }
 
                 unevaluatedPropertiesKeyword.PropertyEvaluators = propertyEvaluators.ToArray();
-                
-                validationKeywords.Add(unevaluatedPropertiesKeyword);
+            }
+
+            if (unevaluatedItemsKeyword is not null)
+            {
+                IEnumerable<IItemEvaluator> itemEvaluators = validationKeywords.OfType<IItemEvaluator>();
+
+                if (schemaContainerValidators is not null)
+                {
+                    itemEvaluators = itemEvaluators.Concat(schemaContainerValidators.OfType<IItemEvaluator>());
+                }
+
+                if (referenceKeywords is not null)
+                {
+                    itemEvaluators = itemEvaluators.Concat(referenceKeywords);
+                }
+
+                unevaluatedItemsKeyword.ItemEvaluators = itemEvaluators.ToArray();
             }
 
             RemoveIgnoredContentSchemaAnnotation(ref annotationKeywords);
@@ -361,7 +382,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         JsonSchema schema;
         if (typeToConvert == typeof(IJsonSchemaDocument))
         {
-            schema = new BodyJsonSchemaDocument(validationKeywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, recursiveAnchor, potentialSchemaContainerElements, schemaKeyword, id, defsKeywords);
+            schema = new BodyJsonSchemaDocument(validationKeywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, recursiveAnchor, unevaluatedPropertiesKeyword, unevaluatedItemsKeyword, potentialSchemaContainerElements, schemaKeyword, id, defsKeywords);
         }
         else if (id is not null)
         {
@@ -375,7 +396,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 plainNameIdentifier,
                 dynamicAnchor,
                 recursiveAnchor,
-                defsKeywords, potentialSchemaContainerElements);
+                defsKeywords, potentialSchemaContainerElements, unevaluatedPropertiesKeyword, unevaluatedItemsKeyword);
         }
         else if (schemaKeyword is not null)
         {
@@ -383,7 +404,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         }
         else
         {
-            schema = new BodyJsonSchema(validationKeywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, defsKeywords, potentialSchemaContainerElements);
+            schema = new BodyJsonSchema(validationKeywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, defsKeywords, potentialSchemaContainerElements, unevaluatedPropertiesKeyword, unevaluatedItemsKeyword);
         }
 
         return (T)(object)schema;
@@ -592,6 +613,19 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                         WriteConditionalValidator(writer, (ConditionalValidator)schemaContainerValidator, options);
                     }
                 }
+            }
+
+            // UnevaluatedProperties & UnevaluatedItems
+            if (schema.UnevaluatedPropertiesKeyword is not null)
+            {
+                writer.WritePropertyName(UnevaluatedPropertiesKeyword.Keyword);
+                JsonSerializer.Serialize(writer, schema.UnevaluatedPropertiesKeyword, options);
+            }
+
+            if (schema.UnevaluatedItemsKeyword is not null)
+            {
+                writer.WritePropertyName(UnevaluatedItemsKeyword.Keyword);
+                JsonSerializer.Serialize(writer, schema.UnevaluatedItemsKeyword, options);
             }
 
             // PotentialSchemaContainerElements part:
