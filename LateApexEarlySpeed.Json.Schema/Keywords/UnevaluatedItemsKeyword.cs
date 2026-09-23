@@ -46,23 +46,51 @@ public class UnevaluatedItemsKeyword : ValidationKeywordBase, ISchemaContainerEl
 
     private ValidationResult ValidateInternal(HashSet<int>? evaluatedItems, JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        int i = 0;
-        foreach (JsonInstanceElement element in instance.EnumerateArray())
+        var validator = new Validator(this, evaluatedItems, instance, options);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
+    }
+
+    private struct Validator : IValidator
+    {
+        private readonly UnevaluatedItemsKeyword _unevaluatedItemsKeyword;
+        private readonly HashSet<int>? _evaluatedItems;
+        private readonly JsonInstanceElement _instance;
+        private readonly JsonSchemaOptions _options;
+
+        private ValidationResult? _fastReturnResult;
+
+        public Validator(UnevaluatedItemsKeyword unevaluatedItemsKeyword, HashSet<int>? evaluatedItems, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            if (evaluatedItems is null || !evaluatedItems.Contains(i))
-            {
-                ValidationResult validationResult = _schema.Validate(element, options);
-
-                if (!validationResult.IsValid)
-                {
-                    return validationResult;
-                }
-            }
-
-            i++;
+            _unevaluatedItemsKeyword = unevaluatedItemsKeyword;
+            _evaluatedItems = evaluatedItems;
+            _instance = instance;
+            _options = options;
         }
-        
-        return ValidationResult.ValidResult;
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            int i = 0;
+            foreach (JsonInstanceElement element in _instance.EnumerateArray())
+            {
+                if (_evaluatedItems is null || !_evaluatedItems.Contains(i))
+                {
+                    ValidationResult validationResult = _unevaluatedItemsKeyword._schema.Validate(element, _options);
+                    if (!validationResult.IsValid)
+                    {
+                        _fastReturnResult = validationResult;
+                    }
+
+                    if (!context.ReportValidationResult(validationResult, _fastReturnResult))
+                    {
+                        break;
+                    }
+                }
+
+                i++;
+            }
+        }
+
+        public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
     private HashSet<int>? FindEvaluatedItemsByOtherEvaluators(JsonInstanceElement instance, JsonSchemaOptions options)

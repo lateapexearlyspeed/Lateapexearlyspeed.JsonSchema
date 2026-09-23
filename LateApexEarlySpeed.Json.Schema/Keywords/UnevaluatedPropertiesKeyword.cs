@@ -38,19 +38,48 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
 
     private ValidationResult ValidateInternal(HashSet<string>? evaluatedProperties, JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        foreach (JsonInstanceProperty instanceProperty in instance.EnumerateObject())
+        var validator = new Validator(this, evaluatedProperties, instance, options);
+        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
+    }
+
+    private struct Validator : IValidator
+    {
+        private readonly UnevaluatedPropertiesKeyword _unevaluatedPropertiesKeyword;
+        private readonly HashSet<string>? _evaluatedProperties;
+        private readonly JsonInstanceElement _instance;
+        private readonly JsonSchemaOptions _options;
+
+        private ValidationResult? _fastReturnResult;
+
+        public Validator(UnevaluatedPropertiesKeyword unevaluatedPropertiesKeyword, HashSet<string>? evaluatedProperties, JsonInstanceElement instance, JsonSchemaOptions options)
         {
-            if (evaluatedProperties is null || !evaluatedProperties.Contains(instanceProperty.Name))
+            _unevaluatedPropertiesKeyword = unevaluatedPropertiesKeyword;
+            _evaluatedProperties = evaluatedProperties;
+            _instance = instance;
+            _options = options;
+        }
+
+        public void CollectValidationResults(ref ValidationCompositionContext context)
+        {
+            foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
             {
-                ValidationResult result = Schema.Validate(instanceProperty.Value, options);
-                if (!result.IsValid)
+                if (_evaluatedProperties is null || !_evaluatedProperties.Contains(instanceProperty.Name))
                 {
-                    return result;
+                    ValidationResult result = _unevaluatedPropertiesKeyword.Schema.Validate(instanceProperty.Value, _options);
+                    if (!result.IsValid)
+                    {
+                        _fastReturnResult = result;
+                    }
+
+                    if (!context.ReportValidationResult(result, _fastReturnResult))
+                    {
+                        break;
+                    }
                 }
             }
         }
 
-        return ValidationResult.ValidResult;
+        public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
     public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
