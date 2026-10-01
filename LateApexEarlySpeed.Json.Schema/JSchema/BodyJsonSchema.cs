@@ -197,8 +197,39 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
+        Unsafe.SkipInit(out bool origPropState);
+        Unsafe.SkipInit(out bool origItemState);
+
+        if (_coldData is not null)
+        {
+            if (_coldData.UnevaluatedPropertiesKeyword is not null)
+            {
+                origPropState = options.EnterUnevaluatedPropertiesScope(true);
+            }
+
+            if (_coldData.UnevaluatedItemsKeyword is not null)
+            {
+                origItemState = options.EnterUnevaluatedItemsScope(true);
+            }
+        }
+
         var validator = new Validator(this, instance, options);
-        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
+        ValidationResult result = ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
+
+        if (_coldData is not null)
+        {
+            if (_coldData.UnevaluatedPropertiesKeyword is not null)
+            {
+                options.ExitUnevaluatedPropertiesScope(origPropState);
+            }
+
+            if (_coldData.UnevaluatedItemsKeyword is not null)
+            {
+                options.ExitUnevaluatedItemsScope(origItemState);
+            }
+        }
+
+        return result;
     }
 
     internal struct Validator
@@ -258,18 +289,18 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
                 }
             }
 
-            if (_bodyJsonSchema._coldData is not null)
+            ColdData? coldData = _bodyJsonSchema._coldData;
+
+            if (coldData is not null)
             {
-                if (_bodyJsonSchema._coldData.UnevaluatedPropertiesKeyword is not null)
+                if (coldData.UnevaluatedPropertiesKeyword is not null)
                 {
-                    ReportValidationAndCheckFastReturn(ref this, _bodyJsonSchema._coldData.UnevaluatedPropertiesKeyword, ref context);
+                    ReportValidationAndCheckFastReturn(ref this, coldData.UnevaluatedPropertiesKeyword, ref context);
                 }
 
-                Debug.Assert(_bodyJsonSchema._coldData is not null);
-                
-                if (_bodyJsonSchema._coldData.UnevaluatedItemsKeyword is not null)
+                if (coldData.UnevaluatedItemsKeyword is not null)
                 {
-                    ReportValidationAndCheckFastReturn(ref this, _bodyJsonSchema._coldData.UnevaluatedItemsKeyword, ref context);
+                    ReportValidationAndCheckFastReturn(ref this, coldData.UnevaluatedItemsKeyword, ref context);
                 }
             }
 

@@ -36,12 +36,18 @@ public class UnevaluatedItemsKeyword : ValidationKeywordBase, ISchemaContainerEl
 
         options.ValidationPathStack.PushRelativeLocation(Name);
 
+        // Sub schema of this keyword applies to array items, which start new unevaluated scopes.
+        bool origPropState = options.EnterUnevaluatedPropertiesScope(false);
+        bool origItemState = options.EnterUnevaluatedItemsScope(false);
+
         ValidationResult result = ValidateInternal(evaluatedItems, instance, options);
+
+        options.ExitUnevaluatedItemsScope(origItemState);
+        options.ExitUnevaluatedPropertiesScope(origPropState);
 
         options.ValidationPathStack.PopRelativeLocation();
 
         return result;
-        
     }
 
     private ValidationResult ValidateInternal(HashSet<int>? evaluatedItems, JsonInstanceElement instance, JsonSchemaOptions options)

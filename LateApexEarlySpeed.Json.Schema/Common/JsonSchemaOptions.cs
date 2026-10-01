@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Runtime.CompilerServices;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
@@ -7,6 +8,8 @@ public class JsonSchemaOptions
 {
     internal JsonValidator? JsonValidator { get; set; }
     internal SchemaRecursionRecorder SchemaRecursionRecorder { get; } = new();
+    internal bool InUnevaluatedPropertiesScope { get; private set; }
+    internal bool InUnevaluatedItemsScope { get; private set; }
     public ValidationPathStack ValidationPathStack { get; } = new();
 
     /// <summary>
@@ -69,6 +72,38 @@ public class JsonSchemaOptions
             JsonArrayEqualityComparer = options.JsonArrayEqualityComparer;
             JsonStringComparison = options.JsonStringComparison;
         }
+    }
+
+    /// <returns>Original <see cref="InUnevaluatedPropertiesScope"/> value, which should be passed back to <see cref="ExitUnevaluatedPropertiesScope"/> when leaving current scope.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool EnterUnevaluatedPropertiesScope(bool inUnevaluatedPropertiesScope)
+    {
+        bool origValue = InUnevaluatedPropertiesScope;
+        InUnevaluatedPropertiesScope = inUnevaluatedPropertiesScope;
+
+        return origValue;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void ExitUnevaluatedPropertiesScope(bool origValue)
+    {
+        InUnevaluatedPropertiesScope = origValue;
+    }
+
+    /// <returns>Original <see cref="InUnevaluatedItemsScope"/> value, which should be passed back to <see cref="ExitUnevaluatedItemsScope"/> when leaving current scope.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool EnterUnevaluatedItemsScope(bool inUnevaluatedItemsScope)
+    {
+        bool origValue = InUnevaluatedItemsScope;
+        InUnevaluatedItemsScope = inUnevaluatedItemsScope;
+
+        return origValue;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void ExitUnevaluatedItemsScope(bool origValue)
+    {
+        InUnevaluatedItemsScope = origValue;
     }
 }
 

@@ -36,6 +36,20 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
             return ValidationResult.ValidResult;
         }
 
+        // 'contains' sub schema applies to array items, which start new unevaluated scopes.
+        bool origPropState = options.EnterUnevaluatedPropertiesScope(false);
+        bool origItemState = options.EnterUnevaluatedItemsScope(false);
+
+        ValidationResult result = ValidateInternal(instance, options);
+
+        options.ExitUnevaluatedItemsScope(origItemState);
+        options.ExitUnevaluatedPropertiesScope(origPropState);
+
+        return result;
+    }
+
+    private ValidationResult ValidateInternal(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
         if (!MinContains.HasValue && !MaxContains.HasValue)
         {
             return ValidateWithoutMinContainsAndMaxContains(instance, options);

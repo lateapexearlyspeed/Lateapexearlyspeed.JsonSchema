@@ -29,7 +29,14 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
 
         options.ValidationPathStack.PushRelativeLocation(Name);
 
+        // Sub schema of this keyword applies to property values, which start new unevaluated scopes.
+        bool origPropState = options.EnterUnevaluatedPropertiesScope(false);
+        bool origItemState = options.EnterUnevaluatedItemsScope(false);
+
         ValidationResult result = ValidateInternal(evaluatedProperties, instance, options);
+
+        options.ExitUnevaluatedItemsScope(origItemState);
+        options.ExitUnevaluatedPropertiesScope(origPropState);
 
         options.ValidationPathStack.PopRelativeLocation();
 

@@ -13,7 +13,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords.Draft7;
 [Keyword("additionalItems")]
 [Dialect(DialectKind.Draft7, DialectKind.Draft201909)]
 [JsonConverter(typeof(SingleSchemaJsonConverter<AdditionalItemsKeyword>))]
-internal class AdditionalItemsKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable, IItemEvaluator
+internal class AdditionalItemsKeyword : ResetUnevaluatedScopeKeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable, IItemEvaluator
 {
     private JsonSchema _schema = null!;
 
@@ -33,6 +33,7 @@ internal class AdditionalItemsKeyword : ValidationKeywordBase, ISchemaContainerE
         }
 
         var validator = new Validator(this, instance, options);
+
         return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 

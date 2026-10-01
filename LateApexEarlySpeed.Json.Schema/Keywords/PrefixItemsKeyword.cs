@@ -13,7 +13,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [Keyword("prefixItems")]
 [Dialect(DialectKind.Draft202012)]
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<PrefixItemsKeyword>))]
-internal class PrefixItemsKeyword : ValidationKeywordBase, ISchemaContainerElement, ISubSchemaCollection, IJsonSchemaResourceNodesCleanable, IItemEvaluator
+internal class PrefixItemsKeyword : ResetUnevaluatedScopeKeywordBase, ISchemaContainerElement, ISubSchemaCollection, IJsonSchemaResourceNodesCleanable, IItemEvaluator
 {
     private readonly JsonSchema[] _subSchemas = null!;
 
