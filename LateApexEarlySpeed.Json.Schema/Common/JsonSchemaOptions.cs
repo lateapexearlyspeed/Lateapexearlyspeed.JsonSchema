@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Runtime.CompilerServices;
+using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
@@ -11,6 +12,8 @@ public class JsonSchemaOptions
     internal bool InUnevaluatedPropertiesScope { get; private set; }
     internal bool InUnevaluatedItemsScope { get; private set; }
     public ValidationPathStack ValidationPathStack { get; } = new();
+
+    internal ColdSchemaOptions? ColdOptions { get; set; }
 
     /// <summary>
     /// Gets or sets a value that defines whether JSON schema validates with 'format' keyword.
@@ -104,6 +107,15 @@ public class JsonSchemaOptions
     internal void ExitUnevaluatedItemsScope(bool origValue)
     {
         InUnevaluatedItemsScope = origValue;
+    }
+
+    internal class ColdSchemaOptions
+    {
+        /// <summary>
+        /// The value in this dictionary is a bitmap, each bit represents whether the corresponding sub-schema has been validated successfully.
+        /// </summary>
+        public Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]>? SubSchemaValidationStatusCache;
+        public Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), bool>? IfSubSchemaValidationStatusCache;
     }
 }
 

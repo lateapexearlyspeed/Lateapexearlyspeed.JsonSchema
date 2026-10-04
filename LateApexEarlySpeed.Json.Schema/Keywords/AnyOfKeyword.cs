@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -67,18 +68,44 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
-            foreach (JsonSchema subSchema in _anyOfKeyword._subSchemas)
+            if (_options.InUnevaluatedPropertiesScope || _options.InUnevaluatedItemsScope)
             {
-                ValidationResult result = subSchema.Validate(_instance, _options);
-                if (result.IsValid)
+                byte[] subSchemasStatus = BitmapHelper.CreateBitmap(_anyOfKeyword._subSchemas.Length);
+
+                for (var i = 0; i < _anyOfKeyword._subSchemas.Length; i++)
                 {
-                    _fastReturnResult = result;
+                    JsonSchema subSchema = _anyOfKeyword._subSchemas[i];
+                    ValidationResult result = subSchema.Validate(_instance, _options);
+                    if (result.IsValid)
+                    {
+                        _fastReturnResult = result;
+                        BitmapHelper.SetBit(subSchemasStatus, i);
+                    }
+
+                    bool reportValidationResult = context.ReportValidationResult(result, null);
+                    Debug.Assert(reportValidationResult);
                 }
 
-                if (!context.ReportValidationResult(result, _fastReturnResult))
+                _options.ColdOptions ??= new JsonSchemaOptions.ColdSchemaOptions();
+                _options.ColdOptions.SubSchemaValidationStatusCache ??= new Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]>();
+
+                _options.ColdOptions.SubSchemaValidationStatusCache[(_anyOfKeyword, _instance.Location)] = subSchemasStatus;
+            }
+            else
+            {
+                foreach (JsonSchema subSchema in _anyOfKeyword._subSchemas)
                 {
-                    break;
-                }
+                    ValidationResult result = subSchema.Validate(_instance, _options);
+                    if (result.IsValid)
+                    {
+                        _fastReturnResult = result;
+                    }
+
+                    if (!context.ReportValidationResult(result, _fastReturnResult))
+                    {
+                        break;
+                    }
+                }    
             }
         }
 
@@ -183,22 +210,24 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
     {
         HashSet<TValue>? result = null;
 
-        foreach (JsonSchema subSchema in _subSchemas)
+        Debug.Assert(options.ColdOptions?.SubSchemaValidationStatusCache is not null);
+        Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]> subSchemaStatusCache = options.ColdOptions.SubSchemaValidationStatusCache;
+
+        byte[] subSchemasValidationStatus = subSchemaStatusCache[(this, instance.Location)];
+
+        for (var i = 0; i < _subSchemas.Length; i++)
         {
-            if (subSchema is not TEvaluator itemEvaluator)
+            JsonSchema subSchema = _subSchemas[i];
+            if (!BitmapHelper.IsBitSet(subSchemasValidationStatus, i) || subSchema is not TEvaluator itemEvaluator)
             {
                 continue;
             }
 
-            ValidationResult validationResult = subSchema.Validate(instance, options);
-            if (validationResult.IsValid)
+            IReadOnlyCollection<TValue> evaluatedItems = itemEvaluator.GetEvaluatedInfos(instance, options);
+            if (evaluatedItems.Count != 0)
             {
-                IReadOnlyCollection<TValue> evaluatedItems = itemEvaluator.GetEvaluatedInfos(instance, options);
-                if (evaluatedItems.Count != 0)
-                {
-                    result ??= new HashSet<TValue>();
-                    result.AddRange(evaluatedItems);
-                }
+                result ??= new HashSet<TValue>();
+                result.AddRange(evaluatedItems);
             }
         }
 

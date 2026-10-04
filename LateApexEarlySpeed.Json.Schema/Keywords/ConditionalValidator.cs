@@ -3,6 +3,7 @@ using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
+using System.Diagnostics;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
@@ -42,11 +43,20 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
             return ValidationResult.ValidResult;
         }
 
+        bool isInUnevaluatedScope = options.InUnevaluatedPropertiesScope || options.InUnevaluatedItemsScope;
+
         if (options.OutputFormat == OutputFormat.FailFast)
         {
-            return PredictEvaluator.Validate(instance, options).IsValid
-                ? PositiveValidator.Validate(instance, options)
-                : NegativeValidator.Validate(instance, options);
+            bool isValid = PredictEvaluator.Validate(instance, options).IsValid;
+
+            if (isInUnevaluatedScope)
+            {
+                options.ColdOptions ??= new JsonSchemaOptions.ColdSchemaOptions();
+                options.ColdOptions.IfSubSchemaValidationStatusCache ??= new Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), bool>();
+                options.ColdOptions.IfSubSchemaValidationStatusCache[(this, instance.Location)] = isValid;
+            }
+
+            return isValid ? PositiveValidator.Validate(instance, options) : NegativeValidator.Validate(instance, options);
         }
 
         var errorsBuilder = new ImmutableValidationErrorCollection.Builder();
@@ -55,6 +65,13 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
         ValidationResult predictResult = PredictEvaluator.Validate(instance, options);
         errorsBuilder.AddChildCollection(predictResult.ValidationErrorsList);
         annotationBuilder.AddRange(predictResult.AnnotationList);
+
+        if (isInUnevaluatedScope)
+        {
+            options.ColdOptions ??= new JsonSchemaOptions.ColdSchemaOptions();
+            options.ColdOptions.IfSubSchemaValidationStatusCache ??= new Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), bool>();
+            options.ColdOptions.IfSubSchemaValidationStatusCache[(this, instance.Location)] = predictResult.IsValid;
+        }
 
         if (predictResult.IsValid)
         {
@@ -142,8 +159,11 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
 
         HashSet<TValue>? evaluatedProperties = null;
 
-        ValidationResult predictResult = PredictEvaluator.Validate(instance, options);
-        if (predictResult.IsValid)
+        Debug.Assert(options.ColdOptions?.IfSubSchemaValidationStatusCache is not null);
+        Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), bool> ifStatusCache = options.ColdOptions.IfSubSchemaValidationStatusCache;
+        bool ifStatus = ifStatusCache[(this, instance.Location)];
+
+        if (ifStatus)
         {
             if (PredictEvaluator is TEvaluator predictEvaluator)
             {

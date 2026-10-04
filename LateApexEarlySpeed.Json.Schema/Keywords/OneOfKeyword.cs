@@ -58,25 +58,50 @@ internal class OneOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
-            foreach (JsonSchema subSchema in _oneOfKeyword._subSchemas)
+            if (_options.InUnevaluatedPropertiesScope || _options.InUnevaluatedItemsScope)
             {
-                ValidationResult result = subSchema.Validate(_instance, _options);
-                if (result.IsValid)
+                byte[] subSchemaStatus = BitmapHelper.CreateBitmap(_oneOfKeyword._subSchemas.Length);
+                for (int i = 0; i < _oneOfKeyword._subSchemas.Length; i++)
                 {
-                    _validatedSchemaCount++;
+                    var subSchema = _oneOfKeyword._subSchemas[i];
+                    ValidationResult result = subSchema.Validate(_instance, _options);
+                    if (result.IsValid)
+                    {
+                        _validatedSchemaCount++;
+                        BitmapHelper.SetBit(subSchemaStatus, i);
+                    }
+
+                    bool reportValidationResult = context.ReportValidationResult(result, null);
+                    Debug.Assert(reportValidationResult);
                 }
 
-                ValidationResult? fastResult = null;
-                if (_validatedSchemaCount > 1)
-                {
-                    var error = new ValidationError(ResultCode.MoreThanOnePassedSchemaFound, _options.GenerateErrorMessages ? "More than one schema validate instance" : string.Empty, _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
-                    fastResult = ValidationResult.SingleErrorFailedResult(error);
-                }
+                _options.ColdOptions ??= new JsonSchemaOptions.ColdSchemaOptions();
+                _options.ColdOptions.SubSchemaValidationStatusCache ??= new Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]>();
 
-                if (!context.ReportValidationResult(result, fastResult))
+                _options.ColdOptions.SubSchemaValidationStatusCache[(_oneOfKeyword, _instance.Location)] = subSchemaStatus;
+            }
+            else
+            {
+                foreach (JsonSchema subSchema in _oneOfKeyword._subSchemas)
                 {
-                    break;
-                }
+                    ValidationResult result = subSchema.Validate(_instance, _options);
+                    if (result.IsValid)
+                    {
+                        _validatedSchemaCount++;
+                    }
+
+                    ValidationResult? fastResult = null;
+                    if (_validatedSchemaCount > 1)
+                    {
+                        var error = new ValidationError(ResultCode.MoreThanOnePassedSchemaFound, _options.GenerateErrorMessages ? "More than one schema validate instance" : string.Empty, _options.ValidationPathStack, _oneOfKeyword.Name, _instance.Location);
+                        fastResult = ValidationResult.SingleErrorFailedResult(error);
+                    }
+
+                    if (!context.ReportValidationResult(result, fastResult))
+                    {
+                        break;
+                    }
+                }    
             }
         }
 
@@ -187,9 +212,14 @@ internal class OneOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
     {
         HashSet<TValue>? result = null;
 
-        foreach (JsonSchema subSchema in _subSchemas)
+        Debug.Assert(options.ColdOptions?.SubSchemaValidationStatusCache is not null);
+        Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]> subSchemaStatusCache = options.ColdOptions.SubSchemaValidationStatusCache;
+        byte[] subSchemaStatus = subSchemaStatusCache[(this, instance.Location)];
+
+        for (int i = 0; i < _subSchemas.Length; i++)
         {
-            if (subSchema is not TEvaluator evaluator || !subSchema.Validate(instance, options).IsValid)
+            JsonSchema subSchema = _subSchemas[i];
+            if (!BitmapHelper.IsBitSet(subSchemaStatus, i) || subSchema is not TEvaluator evaluator)
             {
                 continue;
             }
