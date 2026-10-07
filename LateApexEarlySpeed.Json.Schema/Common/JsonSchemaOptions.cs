@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JSchema;
@@ -109,13 +110,76 @@ public class JsonSchemaOptions
         InUnevaluatedItemsScope = origValue;
     }
 
+    /// <remarks>This method assumes that the bitmap for the specified validation node and instance location already existed in the cache.</remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal byte[] GetSubSchemaStatusBitmap(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation)
+    {
+        Debug.Assert(ColdOptions is not null);
+        return ColdOptions.GetSubSchemaStatusBitmap(validationNode, instanceLocation);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void SetSubSchemaStatusBitmap(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation, byte[] bitmap)
+    {
+        (ColdOptions ??= new ColdSchemaOptions()).SetSubSchemaStatusBitmap(validationNode, instanceLocation, bitmap);
+    }
+
+    /// <remarks>This method assumes that the 'if' subschema status for 'if' node and instance location already existed in the cache.</remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool GetIfSubSchemaStatus(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation)
+    {
+        Debug.Assert(ColdOptions is not null);
+        return ColdOptions.GetIfSubSchemaStatus(validationNode, instanceLocation);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void SetIfSubSchemaStatus(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation, bool status)
+    {
+        (ColdOptions ??= new ColdSchemaOptions()).SetIfSubSchemaStatus(validationNode, instanceLocation, status);
+    }
+
     internal class ColdSchemaOptions
     {
         /// <summary>
         /// The value in this dictionary is a bitmap, each bit represents whether the corresponding sub-schema has been validated successfully.
         /// </summary>
-        public Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]>? SubSchemaValidationStatusCache;
-        public Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), bool>? IfSubSchemaValidationStatusCache;
+        private Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]>? _subSchemaValidationStatusCache;
+
+        /// <summary>
+        /// This dictionary is used to cache the validation status of "if" sub-schema and JSON instance location.
+        /// </summary>
+        private Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), bool>? _ifSubSchemaValidationStatusCache;
+
+        /// <remarks>This method assumes that the bitmap for the specified validation node and instance location already existed in the cache.</remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public byte[] GetSubSchemaStatusBitmap(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation)
+        {
+            Debug.Assert(_subSchemaValidationStatusCache is not null);
+            return _subSchemaValidationStatusCache[(validationNode, instanceLocation)];
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetSubSchemaStatusBitmap(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation, byte[] bitmap)
+        {
+            _subSchemaValidationStatusCache ??= new Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]>();
+
+            _subSchemaValidationStatusCache[(validationNode, instanceLocation)] = bitmap;
+        }
+
+        /// <remarks>This method assumes that the 'if' subschema status for 'if' node and instance location already existed in the cache.</remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool GetIfSubSchemaStatus(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation)
+        {
+            Debug.Assert(_ifSubSchemaValidationStatusCache is not null);
+            return _ifSubSchemaValidationStatusCache[(validationNode, instanceLocation)];
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetIfSubSchemaStatus(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation, bool status)
+        {
+            _ifSubSchemaValidationStatusCache ??= new Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), bool>();
+            _ifSubSchemaValidationStatusCache[(validationNode, instanceLocation)] = status;
+        }
     }
 }
 

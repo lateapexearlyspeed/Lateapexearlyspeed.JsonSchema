@@ -100,7 +100,7 @@ internal class PrefixItemsKeyword : ResetUnevaluatedScopeKeywordBase, ISchemaCon
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
-    public IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.Array)
         {
@@ -124,8 +124,6 @@ internal class PrefixItemsKeyword : ResetUnevaluatedScopeKeywordBase, ISchemaCon
 
         return evaluatedItems;
     }
-
-    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 
     public ISchemaContainerElement? GetSubElement(string name)
     {

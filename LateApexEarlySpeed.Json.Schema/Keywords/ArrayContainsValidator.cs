@@ -125,10 +125,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
                     i++;
                 }
 
-                _options.ColdOptions ??= new JsonSchemaOptions.ColdSchemaOptions();
-                _options.ColdOptions.SubSchemaValidationStatusCache ??= new Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]>();
-
-                _options.ColdOptions.SubSchemaValidationStatusCache[(_arrayContainsValidator, _instance.Location)] = evaluatedItemsStatus;
+                _options.SetSubSchemaStatusBitmap(_arrayContainsValidator, _instance.Location, evaluatedItemsStatus);
             }
             else
             {
@@ -215,10 +212,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
                     i++;
                 }
 
-                _options.ColdOptions ??= new JsonSchemaOptions.ColdSchemaOptions();
-                _options.ColdOptions.SubSchemaValidationStatusCache ??= new Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]>();
-
-                _options.ColdOptions.SubSchemaValidationStatusCache[(_arrayContainsValidator, _instance.Location)] = evaluatedItemsStatus;
+                _options.SetSubSchemaStatusBitmap(_arrayContainsValidator, _instance.Location, evaluatedItemsStatus);
             }
             else
             {
@@ -334,10 +328,7 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
                     i++;
                 }
 
-                _options.ColdOptions ??= new JsonSchemaOptions.ColdSchemaOptions();
-                _options.ColdOptions.SubSchemaValidationStatusCache ??= new Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]>();
-
-                _options.ColdOptions.SubSchemaValidationStatusCache[(_arrayContainsValidator, _instance.Location)] = evaluatedItemsStatus;
+                _options.SetSubSchemaStatusBitmap(_arrayContainsValidator, _instance.Location, evaluatedItemsStatus);
             }
             else
             {
@@ -409,16 +400,14 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
         }
     }
 
-    public IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.Array)
         {
             return Array.Empty<int>();
         }
 
-        Debug.Assert(options.ColdOptions?.SubSchemaValidationStatusCache is not null);
-        Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]> evaluatedItemsStatusCache = options.ColdOptions.SubSchemaValidationStatusCache;
-        byte[] evaluatedItemsStatus = evaluatedItemsStatusCache[(this, instance.Location)];
+        byte[] evaluatedItemsStatus = options.GetSubSchemaStatusBitmap(this, instance.Location);
 
         List<int>? evaluatedItems = null;
 
@@ -434,6 +423,4 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
 
         return evaluatedItems ?? (IReadOnlyCollection<int>)Array.Empty<int>();
     }
-
-    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 }

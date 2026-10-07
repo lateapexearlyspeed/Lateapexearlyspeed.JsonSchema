@@ -51,9 +51,7 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
 
             if (isInUnevaluatedScope)
             {
-                options.ColdOptions ??= new JsonSchemaOptions.ColdSchemaOptions();
-                options.ColdOptions.IfSubSchemaValidationStatusCache ??= new Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), bool>();
-                options.ColdOptions.IfSubSchemaValidationStatusCache[(this, instance.Location)] = isValid;
+                options.SetIfSubSchemaStatus(this, instance.Location, isValid);
             }
 
             return isValid ? PositiveValidator.Validate(instance, options) : NegativeValidator.Validate(instance, options);
@@ -68,9 +66,7 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
 
         if (isInUnevaluatedScope)
         {
-            options.ColdOptions ??= new JsonSchemaOptions.ColdSchemaOptions();
-            options.ColdOptions.IfSubSchemaValidationStatusCache ??= new Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), bool>();
-            options.ColdOptions.IfSubSchemaValidationStatusCache[(this, instance.Location)] = predictResult.IsValid;
+            options.SetIfSubSchemaStatus(this, instance.Location, predictResult.IsValid);
         }
 
         if (predictResult.IsValid)
@@ -140,12 +136,12 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
         }
     }
 
-    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         return GetEvaluatedInfo<IPropertyEvaluator, string>(instance, options);
     }
 
-    public IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         return GetEvaluatedInfo<IItemEvaluator, int>(instance, options);
     }
@@ -159,9 +155,7 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
 
         HashSet<TValue>? evaluatedProperties = null;
 
-        Debug.Assert(options.ColdOptions?.IfSubSchemaValidationStatusCache is not null);
-        Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), bool> ifStatusCache = options.ColdOptions.IfSubSchemaValidationStatusCache;
-        bool ifStatus = ifStatusCache[(this, instance.Location)];
+        bool ifStatus = options.GetIfSubSchemaStatus(this, instance.Location);
 
         if (ifStatus)
         {
@@ -201,7 +195,4 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
         return evaluatedProperties ?? (IReadOnlyCollection<TValue>)Array.Empty<TValue>();
     }
 
-    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedProperties(instance, options);
-
-    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 }

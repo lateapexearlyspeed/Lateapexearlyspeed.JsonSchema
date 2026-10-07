@@ -103,7 +103,7 @@ internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainer
         }
     }
 
-    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         var propertyEvaluator = new PropertyEvaluator(this, instance);
         return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
@@ -143,5 +143,4 @@ internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainer
         }
     }
 
-    public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedProperties(instance, options);
 }

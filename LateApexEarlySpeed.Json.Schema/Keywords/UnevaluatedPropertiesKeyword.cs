@@ -16,7 +16,7 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
     public const string Keyword = "unevaluatedProperties";
 
     public JsonSchema Schema { get; init; } = null!;
-    public IEnumerable<IPropertyEvaluator> PropertyEvaluators { get; set; } = null!;
+    public IPropertyEvaluator[] PropertyEvaluators { private get; set; } = null!;
     
     public override ValidationResult Validate(JsonInstanceElement instance, JsonSchemaOptions options)
     {
@@ -89,7 +89,13 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
-    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    /// <summary>
+    /// DEAD CODE (kept for interface completeness): this keyword's own <see cref="IPropertyEvaluator"/> implementation
+    /// (this method and the nested <see cref="PropertyEvaluator"/> struct) is never reached.
+    /// An outer 'unevaluatedProperties' never queries this keyword as an evaluator, because when a <see cref="BodyJsonSchema"/> owns an
+    /// 'unevaluatedProperties' keyword, its property evaluator short-circuits to "all instance properties are evaluated" before any evaluator scan.
+    /// </summary>
+    public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.Object)
         {
@@ -175,13 +181,14 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
     {
         yield return Schema;
     }
-
-    public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedProperties(instance, options);
 }
 
 public interface IPropertyEvaluator : IInfoEvaluator<string>
 {
-    IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options);
+    IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return GetEvaluatedInfos(instance, options);
+    }
 }
 
 internal interface IPropertyCoreEvaluator

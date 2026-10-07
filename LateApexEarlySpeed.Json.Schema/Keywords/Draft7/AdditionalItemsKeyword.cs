@@ -84,7 +84,7 @@ internal class AdditionalItemsKeyword : ResetUnevaluatedScopeKeywordBase, ISchem
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
-    public IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (ItemsWithMultiSchemasKeyword is null || instance.ValueKind != JsonValueKind.Array)
         {
@@ -108,8 +108,6 @@ internal class AdditionalItemsKeyword : ResetUnevaluatedScopeKeywordBase, ISchem
 
         return evaluatedItems;
     }
-
-    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 
     public ISchemaContainerElement? GetSubElement(string name) => _schema.GetSubElement(name);
 

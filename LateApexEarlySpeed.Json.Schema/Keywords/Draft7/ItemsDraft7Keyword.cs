@@ -90,7 +90,7 @@ internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword, ISchemaContain
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
-    public IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.Array)
         {
@@ -114,8 +114,6 @@ internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword, ISchemaContain
 
         return evaluatedItems;
     }
-
-    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 
     public ISchemaContainerElement? GetSubElement(string name)
     {
@@ -204,7 +202,7 @@ internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword, ISchemaContainerE
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
-    public IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.Array)
         {
@@ -227,8 +225,6 @@ internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword, ISchemaContainerE
 
         return evaluatedItems;
     }
-
-    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 
     public ISchemaContainerElement? GetSubElement(string name)
     {

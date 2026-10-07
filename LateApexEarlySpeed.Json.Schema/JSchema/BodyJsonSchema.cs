@@ -289,18 +289,18 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
                 }
             }
 
-            ColdData? coldData = _bodyJsonSchema._coldData;
-
-            if (coldData is not null)
+            if (_bodyJsonSchema._coldData is not null)
             {
-                if (coldData.UnevaluatedPropertiesKeyword is not null)
+                if (_bodyJsonSchema._coldData.UnevaluatedPropertiesKeyword is not null)
                 {
-                    ReportValidationAndCheckFastReturn(ref this, coldData.UnevaluatedPropertiesKeyword, ref context);
+                    ReportValidationAndCheckFastReturn(ref this, _bodyJsonSchema._coldData.UnevaluatedPropertiesKeyword, ref context);
                 }
 
-                if (coldData.UnevaluatedItemsKeyword is not null)
+                Debug.Assert(_bodyJsonSchema._coldData is not null);
+                
+                if (_bodyJsonSchema._coldData.UnevaluatedItemsKeyword is not null)
                 {
-                    ReportValidationAndCheckFastReturn(ref this, coldData.UnevaluatedItemsKeyword, ref context);
+                    ReportValidationAndCheckFastReturn(ref this, _bodyJsonSchema._coldData.UnevaluatedItemsKeyword, ref context);
                 }
             }
 
@@ -613,7 +613,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
         RemoveIdFromAllChildrenElementsOfPotentialSchemaElementTree();
     }
 
-    public virtual IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    protected IReadOnlyCollection<string> GetEvaluatedPropertiesInternal(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         var propertyEvaluator = new PropertyEvaluator(this, instance);
         return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
@@ -648,7 +648,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
         }
     }
 
-    public virtual IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    protected IReadOnlyCollection<int> GetEvaluatedItemsInternal(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         var itemEvaluator = new ItemEvaluator(this, instance);
         return itemEvaluator.GetEvaluatedItemsWithLocation(options);
@@ -731,7 +731,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
         }
     }
 
-    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedProperties(instance, options);
-
-    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
+    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedPropertiesInternal(instance, options);
+    
+    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItemsInternal(instance, options);
 }

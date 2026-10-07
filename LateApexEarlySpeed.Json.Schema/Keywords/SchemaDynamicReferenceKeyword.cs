@@ -146,7 +146,7 @@ internal class SchemaDynamicReferenceKeyword : ValidationKeywordBase, IReference
         }
     }
 
-    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         var propertyEvaluator = new PropertyEvaluator(this, instance);
         return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
@@ -171,7 +171,7 @@ internal class SchemaDynamicReferenceKeyword : ValidationKeywordBase, IReference
         }
     }
 
-    public IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         var itemEvaluator = new ItemEvaluator(this, instance);
         return itemEvaluator.GetEvaluatedItemsWithLocation(options);
@@ -208,7 +208,4 @@ internal class SchemaDynamicReferenceKeyword : ValidationKeywordBase, IReference
         return result;
     }
 
-    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedProperties(instance, options);
-
-    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 }

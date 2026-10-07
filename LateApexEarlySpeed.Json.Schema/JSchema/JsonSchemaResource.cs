@@ -6,7 +6,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
-internal class JsonSchemaResource : BodyJsonSchema
+internal class JsonSchemaResource : BodyJsonSchema, IInfoEvaluator<string>, IInfoEvaluator<int>
 {
     /// <summary>
     /// Should not contain fragment
@@ -126,22 +126,22 @@ internal class JsonSchemaResource : BodyJsonSchema
         return bodyJsonSchema;
     }
 
-    public override IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         options.ValidationPathStack.PushSchemaResource(this);
 
-        IReadOnlyCollection<string> result = base.GetEvaluatedProperties(instance, options);
+        IReadOnlyCollection<string> result = GetEvaluatedPropertiesInternal(instance, options);
 
         options.ValidationPathStack.PopSchemaResource();
 
         return result;
     }
 
-    public override IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         options.ValidationPathStack.PushSchemaResource(this);
 
-        IReadOnlyCollection<int> result = base.GetEvaluatedItems(instance, options);
+        IReadOnlyCollection<int> result = GetEvaluatedItemsInternal(instance, options);
 
         options.ValidationPathStack.PopSchemaResource();
 

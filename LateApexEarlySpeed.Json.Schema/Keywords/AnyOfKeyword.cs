@@ -86,10 +86,7 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
                     Debug.Assert(reportValidationResult);
                 }
 
-                _options.ColdOptions ??= new JsonSchemaOptions.ColdSchemaOptions();
-                _options.ColdOptions.SubSchemaValidationStatusCache ??= new Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]>();
-
-                _options.ColdOptions.SubSchemaValidationStatusCache[(_anyOfKeyword, _instance.Location)] = subSchemasStatus;
+                _options.SetSubSchemaStatusBitmap(_anyOfKeyword, _instance.Location, subSchemasStatus);
             }
             else
             {
@@ -175,13 +172,13 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
         }
     }
 
-    public IReadOnlyCollection<string> GetEvaluatedProperties(JsonInstanceElement instance, JsonSchemaOptions options)
+    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         var propertyEvaluator = new PropertyEvaluator(this, instance);
         return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
     }
 
-    public IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         var itemEvaluator = new ItemEvaluator(this, instance);
         return itemEvaluator.GetEvaluatedItemsWithLocation(options);
@@ -210,10 +207,7 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
     {
         HashSet<TValue>? result = null;
 
-        Debug.Assert(options.ColdOptions?.SubSchemaValidationStatusCache is not null);
-        Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]> subSchemaStatusCache = options.ColdOptions.SubSchemaValidationStatusCache;
-
-        byte[] subSchemasValidationStatus = subSchemaStatusCache[(this, instance.Location)];
+        byte[] subSchemasValidationStatus = options.GetSubSchemaStatusBitmap(this, instance.Location);
 
         for (var i = 0; i < _subSchemas.Length; i++)
         {
@@ -234,7 +228,4 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
         return result ?? (IReadOnlyCollection<TValue>)Array.Empty<TValue>();
     }
 
-    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedProperties(instance, options);
-
-    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 }

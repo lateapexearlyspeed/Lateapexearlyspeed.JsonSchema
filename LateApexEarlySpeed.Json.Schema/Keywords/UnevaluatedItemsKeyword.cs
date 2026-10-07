@@ -23,7 +23,7 @@ public class UnevaluatedItemsKeyword : ValidationKeywordBase, ISchemaContainerEl
         init => _schema = value;
     }
 
-    public IEnumerable<IItemEvaluator> ItemEvaluators { get; set; } = null!;
+    public IItemEvaluator[] ItemEvaluators { private get; set; } = null!;
     
     public override ValidationResult Validate(JsonInstanceElement instance, JsonSchemaOptions options)
     {
@@ -116,7 +116,13 @@ public class UnevaluatedItemsKeyword : ValidationKeywordBase, ISchemaContainerEl
         return items;
     }
 
-    public IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    /// <summary>
+    /// DEAD CODE (kept for interface completeness): this keyword's own <see cref="IItemEvaluator"/> implementation
+    /// (this method) is never reached. An outer 'unevaluatedItems'
+    /// never queries this keyword as an evaluator, because when a <see cref="BodyJsonSchema"/> owns an 'unevaluatedItems'
+    /// keyword, its item evaluator short-circuits to "all array items are evaluated" before any evaluator scan.
+    /// </summary>
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         if (instance.ValueKind != JsonValueKind.Array)
         {
@@ -161,13 +167,14 @@ public class UnevaluatedItemsKeyword : ValidationKeywordBase, ISchemaContainerEl
     {
         throw new NotImplementedException($"Override {nameof(Validate)} method already");
     }
-
-    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItems(instance, options);
 }
 
 public interface IItemEvaluator : IInfoEvaluator<int>
 {
-    IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options);
+    IReadOnlyCollection<int> GetEvaluatedItems(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return GetEvaluatedInfos(instance, options);
+    }
 }
 
 internal interface IItemCoreEvaluator
