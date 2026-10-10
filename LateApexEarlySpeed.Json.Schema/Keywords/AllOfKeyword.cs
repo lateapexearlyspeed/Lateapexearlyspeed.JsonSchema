@@ -131,7 +131,7 @@ internal class AllOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
             if (evaluated.Count != 0)
             {
                 result ??= new HashSet<TValue>();
-                result.AddRange(evaluated);
+                result.UnionWith(evaluated);
             }
         }
 

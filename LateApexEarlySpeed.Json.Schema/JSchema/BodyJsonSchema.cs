@@ -88,12 +88,12 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
 
     public string? DynamicAnchor { get; }
 
-    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords) : this(keywords, null, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null, null, null)
+    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords) : this(keywords, null, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null, default)
     {
 
     }
 
-    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords, IEnumerable<IAnnotationKeyword>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements, UnevaluatedPropertiesKeyword? unevaluatedPropertiesKeyword, UnevaluatedItemsKeyword? unevaluatedItemsKeyword)
+    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords, IEnumerable<IAnnotationKeyword>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements, UnevaluatedKeywords unevaluatedKeywords)
     {
         _validationKeywords = MergeKeywords(keywords.ToArray());
 
@@ -105,14 +105,14 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
             annotations = annotationKeywords.ToArray();
             hasColdData = true;
         }
-        else if (unevaluatedPropertiesKeyword is not null || unevaluatedItemsKeyword is not null)
+        else if (unevaluatedKeywords.UnevaluatedPropertiesKeyword is not null || unevaluatedKeywords.UnevaluatedItemsKeyword is not null)
         {
             hasColdData = true;
         }
 
         if (hasColdData)
         {
-            _coldData = new ColdData(annotations, unevaluatedPropertiesKeyword, unevaluatedItemsKeyword);
+            _coldData = new ColdData(annotations, unevaluatedKeywords.UnevaluatedPropertiesKeyword, unevaluatedKeywords.UnevaluatedItemsKeyword);
         }
 
         if (schemaContainerValidators is not null)
@@ -293,7 +293,10 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
             {
                 if (_bodyJsonSchema._coldData.UnevaluatedPropertiesKeyword is not null)
                 {
-                    ReportValidationAndCheckFastReturn(ref this, _bodyJsonSchema._coldData.UnevaluatedPropertiesKeyword, ref context);
+                    if (!ReportValidationAndCheckFastReturn(ref this, _bodyJsonSchema._coldData.UnevaluatedPropertiesKeyword, ref context))
+                    {
+                        return;
+                    }
                 }
 
                 Debug.Assert(_bodyJsonSchema._coldData is not null);
@@ -462,12 +465,12 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
 
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id, DefsKeyword defsKeyword)
     {
-        return new BodyJsonSchemaDocument(_validationKeywords, _coldData?.AnnotationKeywords, _schemaContainerValidators, _referenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, false, UnevaluatedPropertiesKeyword, UnevaluatedItemsKeyword, _potentialSchemaContainerElements, null, id, new[] { (DefsKeyword.Keyword, defsKeyword) });
+        return new BodyJsonSchemaDocument(_validationKeywords, _coldData?.AnnotationKeywords, _schemaContainerValidators, _referenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, false, new UnevaluatedKeywords{ UnevaluatedPropertiesKeyword = UnevaluatedPropertiesKeyword, UnevaluatedItemsKeyword = UnevaluatedItemsKeyword }, _potentialSchemaContainerElements, null, id, new[] { (DefsKeyword.Keyword, defsKeyword) });
     }
 
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id)
     {
-        return new BodyJsonSchemaDocument(_validationKeywords, _coldData?.AnnotationKeywords, _schemaContainerValidators, _referenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, false, UnevaluatedPropertiesKeyword, UnevaluatedItemsKeyword, _potentialSchemaContainerElements, null, id, _defsKeywords);
+        return new BodyJsonSchemaDocument(_validationKeywords, _coldData?.AnnotationKeywords, _schemaContainerValidators, _referenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, false, new UnevaluatedKeywords{ UnevaluatedPropertiesKeyword = UnevaluatedPropertiesKeyword, UnevaluatedItemsKeyword = UnevaluatedItemsKeyword }, _potentialSchemaContainerElements, null, id, _defsKeywords);
     }
 
     /// <summary>
@@ -613,7 +616,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
         RemoveIdFromAllChildrenElementsOfPotentialSchemaElementTree();
     }
 
-    protected IReadOnlyCollection<string> GetEvaluatedPropertiesInternal(JsonInstanceElement instance, JsonSchemaOptions options)
+    public IReadOnlyCollection<string> GetEvaluatedPropertiesInternal(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         var propertyEvaluator = new PropertyEvaluator(this, instance);
         return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
@@ -648,7 +651,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
         }
     }
 
-    protected IReadOnlyCollection<int> GetEvaluatedItemsInternal(JsonInstanceElement instance, JsonSchemaOptions options)
+    public IReadOnlyCollection<int> GetEvaluatedItemsInternal(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         var itemEvaluator = new ItemEvaluator(this, instance);
         return itemEvaluator.GetEvaluatedItemsWithLocation(options);
@@ -727,11 +730,17 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
         if (evaluated.Count != 0)
         {
             propertiesOrItems ??= new HashSet<TValue>();
-            propertiesOrItems.AddRange(evaluated);
+            propertiesOrItems.UnionWith(evaluated);
         }
     }
 
     IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedPropertiesInternal(instance, options);
     
     IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItemsInternal(instance, options);
+}
+
+internal ref struct UnevaluatedKeywords
+{
+    public UnevaluatedPropertiesKeyword? UnevaluatedPropertiesKeyword { get; set; }
+    public UnevaluatedItemsKeyword? UnevaluatedItemsKeyword { get; set; }
 }

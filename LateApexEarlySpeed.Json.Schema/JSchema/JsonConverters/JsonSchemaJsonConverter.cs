@@ -382,7 +382,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         JsonSchema schema;
         if (typeToConvert == typeof(IJsonSchemaDocument))
         {
-            schema = new BodyJsonSchemaDocument(validationKeywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, recursiveAnchor, unevaluatedPropertiesKeyword, unevaluatedItemsKeyword, potentialSchemaContainerElements, schemaKeyword, id, defsKeywords);
+            schema = new BodyJsonSchemaDocument(validationKeywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, recursiveAnchor, new UnevaluatedKeywords{ UnevaluatedPropertiesKeyword = unevaluatedPropertiesKeyword, UnevaluatedItemsKeyword = unevaluatedItemsKeyword }, potentialSchemaContainerElements, schemaKeyword, id, defsKeywords);
         }
         else if (id is not null)
         {
@@ -396,7 +396,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 plainNameIdentifier,
                 dynamicAnchor,
                 recursiveAnchor,
-                defsKeywords, potentialSchemaContainerElements, unevaluatedPropertiesKeyword, unevaluatedItemsKeyword);
+                defsKeywords, potentialSchemaContainerElements, new UnevaluatedKeywords{ UnevaluatedPropertiesKeyword = unevaluatedPropertiesKeyword, UnevaluatedItemsKeyword = unevaluatedItemsKeyword });
         }
         else if (schemaKeyword is not null)
         {
@@ -404,7 +404,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         }
         else
         {
-            schema = new BodyJsonSchema(validationKeywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, defsKeywords, potentialSchemaContainerElements, unevaluatedPropertiesKeyword, unevaluatedItemsKeyword);
+            schema = new BodyJsonSchema(validationKeywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, defsKeywords, potentialSchemaContainerElements, new UnevaluatedKeywords{ UnevaluatedPropertiesKeyword = unevaluatedPropertiesKeyword, UnevaluatedItemsKeyword = unevaluatedItemsKeyword });
         }
 
         return (T)(object)schema;

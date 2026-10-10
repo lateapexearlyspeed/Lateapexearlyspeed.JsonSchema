@@ -201,9 +201,31 @@ internal class SchemaReferenceKeyword : ValidationKeywordBase, IReferenceKeyword
         options.ValidationPathStack.PushSchemaResource(referencedSchemaResource);
         options.ValidationPathStack.PushReferencedSchema(referencedSchemaResource, FullUriRef);
 
-        IReadOnlyCollection<TValue> result = referencedSchema is TEvaluator evaluator
-            ? evaluator.GetEvaluatedInfos(instance, options)
-            : Array.Empty<TValue>();
+        IReadOnlyCollection<TValue> result;
+        if (referencedSchema is TEvaluator evaluator)
+        {
+            if (referencedSchema is JsonSchemaResource jsonSchemaResource)
+            {
+                if (typeof(TValue) == typeof(string))
+                {
+                    result = (IReadOnlyCollection<TValue>)jsonSchemaResource.GetEvaluatedPropertiesInternal(instance, options);
+                }
+                else
+                {
+                    Debug.Assert(typeof(TValue) == typeof(int));
+
+                    result = (IReadOnlyCollection<TValue>)jsonSchemaResource.GetEvaluatedItemsInternal(instance, options);
+                }
+            }
+            else
+            {
+                result = evaluator.GetEvaluatedInfos(instance, options);    
+            }
+        }
+        else
+        {
+            result = Array.Empty<TValue>();
+        }
 
         options.ValidationPathStack.PopReferencedSchema();
         options.ValidationPathStack.PopSchemaResource();

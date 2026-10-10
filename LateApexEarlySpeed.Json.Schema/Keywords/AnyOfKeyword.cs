@@ -221,7 +221,7 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
             if (evaluatedItems.Count != 0)
             {
                 result ??= new HashSet<TValue>();
-                result.AddRange(evaluatedItems);
+                result.UnionWith(evaluatedItems);
             }
         }
 

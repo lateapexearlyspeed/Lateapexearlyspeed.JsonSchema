@@ -3,7 +3,6 @@ using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
-using System.Diagnostics;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
@@ -165,7 +164,7 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
                 if (predictProperties.Count != 0)
                 {
                     evaluatedProperties ??= new HashSet<TValue>();
-                    evaluatedProperties.AddRange(predictProperties);
+                    evaluatedProperties.UnionWith(predictProperties);
                 }
             }
 
@@ -175,7 +174,7 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
                 if (positiveProperties.Count != 0)
                 {
                     evaluatedProperties ??= new HashSet<TValue>();
-                    evaluatedProperties.AddRange(positiveProperties);
+                    evaluatedProperties.UnionWith(positiveProperties);
                 }
             }
         }
@@ -187,7 +186,7 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
                 if (negativeProperties.Count != 0)
                 {
                     evaluatedProperties ??= new HashSet<TValue>();
-                    evaluatedProperties.AddRange(negativeProperties);
+                    evaluatedProperties.UnionWith(negativeProperties);
                 }
             }
         }

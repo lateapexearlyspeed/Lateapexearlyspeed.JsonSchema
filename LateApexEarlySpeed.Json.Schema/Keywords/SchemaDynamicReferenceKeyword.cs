@@ -197,9 +197,30 @@ internal class SchemaDynamicReferenceKeyword : ValidationKeywordBase, IReference
         options.ValidationPathStack.PushSchemaResource(referencedSchemaResource);
         options.ValidationPathStack.PushReferencedSchema(referencedSchemaResource, subSchemaFullUriRef);
 
-        IReadOnlyCollection<TValue> result = referencedSubSchema is TEvaluator evaluator
-            ? evaluator.GetEvaluatedInfos(instance, options)
-            : Array.Empty<TValue>();
+        IReadOnlyCollection<TValue> result;
+        if (referencedSubSchema is TEvaluator evaluator)
+        {
+            if (referencedSubSchema is JsonSchemaResource jsonSchemaResource)
+            {
+                if (typeof(TValue) == typeof(string))
+                {
+                    result = (IReadOnlyCollection<TValue>)jsonSchemaResource.GetEvaluatedPropertiesInternal(instance, options);
+                }
+                else
+                {
+                    Debug.Assert(typeof(TValue) == typeof(int));
+                    result = (IReadOnlyCollection<TValue>)jsonSchemaResource.GetEvaluatedItemsInternal(instance, options);
+                }
+            }
+            else
+            {
+                result = evaluator.GetEvaluatedInfos(instance, options);    
+            }
+        }
+        else
+        {
+            result = Array.Empty<TValue>();
+        }
 
         options.ValidationPathStack.PopReferencedSchema();
         options.ValidationPathStack.PopSchemaResource();

@@ -223,7 +223,7 @@ internal class OneOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
             if (subSchemaEvaluatedInfos.Count != 0)
             {
                 result ??= new HashSet<TValue>();
-                result.AddRange(subSchemaEvaluatedInfos);
+                result.UnionWith(subSchemaEvaluatedInfos);
             }
         }
 

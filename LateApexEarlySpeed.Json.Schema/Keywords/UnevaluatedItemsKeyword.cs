@@ -11,17 +11,11 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword(Keyword)]
 [JsonConverter(typeof(SingleSchemaJsonConverter<UnevaluatedItemsKeyword>))]
-public class UnevaluatedItemsKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IItemEvaluator
+internal class UnevaluatedItemsKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IItemEvaluator
 {
     public const string Keyword = "unevaluatedItems";
 
-    private JsonSchema _schema = null!;
-
-    public JsonSchema Schema
-    {
-        get => _schema;
-        init => _schema = value;
-    }
+    public JsonSchema Schema { get; init; } = null!;
 
     public IItemEvaluator[] ItemEvaluators { private get; set; } = null!;
     
@@ -80,7 +74,7 @@ public class UnevaluatedItemsKeyword : ValidationKeywordBase, ISchemaContainerEl
             {
                 if (_evaluatedItems is null || !_evaluatedItems.Contains(i))
                 {
-                    ValidationResult validationResult = _unevaluatedItemsKeyword._schema.Validate(element, _options);
+                    ValidationResult validationResult = _unevaluatedItemsKeyword.Schema.Validate(element, _options);
                     if (!validationResult.IsValid)
                     {
                         _fastReturnResult = validationResult;
@@ -109,7 +103,7 @@ public class UnevaluatedItemsKeyword : ValidationKeywordBase, ISchemaContainerEl
             if (evaluatedItems.Count > 0)
             {
                 items ??= new HashSet<int>();
-                items.AddRange(evaluatedItems);
+                items.UnionWith(evaluatedItems);
             }
         }
 

@@ -13,8 +13,8 @@ internal class JsonSchemaResource : BodyJsonSchema, IInfoEvaluator<string>, IInf
     /// </summary>
     private readonly Uri _id;
 
-    public JsonSchemaResource(SchemaKeyword? schemaKeyword, Uri id, IEnumerable<ValidationKeywordBase> keywords, IEnumerable<IAnnotationKeyword>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, bool recursiveAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements, UnevaluatedPropertiesKeyword? unevaluatedPropertiesKeyword, UnevaluatedItemsKeyword? unevaluatedItemsKeyword)
-        : base(keywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifierKeyword, dynamicAnchor, defsKeywords, potentialSchemaContainerElements, unevaluatedPropertiesKeyword, unevaluatedItemsKeyword)
+    public JsonSchemaResource(SchemaKeyword? schemaKeyword, Uri id, IEnumerable<ValidationKeywordBase> keywords, IEnumerable<IAnnotationKeyword>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, bool recursiveAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements, UnevaluatedKeywords unevaluatedKeywords)
+        : base(keywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifierKeyword, dynamicAnchor, defsKeywords, potentialSchemaContainerElements, unevaluatedKeywords)
     {
         SchemaKeyword = schemaKeyword;
         _id = id;
@@ -116,7 +116,7 @@ internal class JsonSchemaResource : BodyJsonSchema, IInfoEvaluator<string>, IInf
 
     public BodyJsonSchema TransformToBodyJsonSchema()
     {
-        var bodyJsonSchema = new BodyJsonSchema(ValidationKeywords, AnnotationKeywords, SchemaContainerValidators, ReferenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, DefsKeywords, PotentialSchemaContainerElements, UnevaluatedPropertiesKeyword, UnevaluatedItemsKeyword);
+        var bodyJsonSchema = new BodyJsonSchema(ValidationKeywords, AnnotationKeywords, SchemaContainerValidators, ReferenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, DefsKeywords, PotentialSchemaContainerElements, new UnevaluatedKeywords { UnevaluatedPropertiesKeyword = UnevaluatedPropertiesKeyword, UnevaluatedItemsKeyword = UnevaluatedItemsKeyword });
 
         if (Name is not null)
         {

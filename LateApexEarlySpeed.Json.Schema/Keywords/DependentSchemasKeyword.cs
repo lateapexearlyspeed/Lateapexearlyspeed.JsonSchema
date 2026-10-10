@@ -134,7 +134,7 @@ internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainer
                     if (subSchemaEvaluatedProperties.Count != 0)
                     {
                         evaluatedProperties ??= new HashSet<string>();
-                        evaluatedProperties.AddRange(subSchemaEvaluatedProperties);
+                        evaluatedProperties.UnionWith(subSchemaEvaluatedProperties);
                     }
                 }
             }

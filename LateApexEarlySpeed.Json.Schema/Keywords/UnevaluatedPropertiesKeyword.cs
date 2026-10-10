@@ -11,7 +11,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword(Keyword)]
 [JsonConverter(typeof(SingleSchemaJsonConverter<UnevaluatedPropertiesKeyword>))]
-public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IPropertyEvaluator
+internal class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IPropertyEvaluator
 {
     public const string Keyword = "unevaluatedProperties";
 
@@ -153,7 +153,7 @@ public class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaContai
             if (properties.Count != 0)
             {
                 evaluatedProperties ??= new HashSet<string>();
-                evaluatedProperties.AddRange(properties);
+                evaluatedProperties.UnionWith(properties);
             }
         }
 

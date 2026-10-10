@@ -133,7 +133,7 @@ internal class PropertiesKeyword : ResetUnevaluatedScopeKeywordBase, ISchemaCont
 
             foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
             {
-                if (_propertiesKeyword._propertiesSchemas.TryGetValue(instanceProperty.Name, out _))
+                if (_propertiesKeyword._propertiesSchemas.ContainsKey(instanceProperty.Name))
                 {
                     evaluatedProperties ??= new List<string>();
                     evaluatedProperties.Add(instanceProperty.Name);

@@ -80,7 +80,7 @@ internal class SchemaRecursiveReferenceKeyword : ValidationKeywordBase, IReferen
 
         public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
         {
-            return _schemaRecursiveReferenceKeyword.GetEvaluatedInfoInternal<IPropertyEvaluator, string>(_instance, options);
+            return _schemaRecursiveReferenceKeyword.GetEvaluatedInfoInternal<string>(_instance, options);
         }
     }
 
@@ -105,7 +105,7 @@ internal class SchemaRecursiveReferenceKeyword : ValidationKeywordBase, IReferen
 
         public IReadOnlyCollection<int> GetEvaluatedItems(JsonSchemaOptions options)
         {
-            return _schemaRecursiveReferenceKeyword.GetEvaluatedInfoInternal<IItemEvaluator, int>(_instance, options);
+            return _schemaRecursiveReferenceKeyword.GetEvaluatedInfoInternal<int>(_instance, options);
         }
     }
 
@@ -115,7 +115,7 @@ internal class SchemaRecursiveReferenceKeyword : ValidationKeywordBase, IReferen
         return itemEvaluator.GetEvaluatedItemsWithLocation(options);
     }
 
-    private IReadOnlyCollection<TValue> GetEvaluatedInfoInternal<TEvaluator, TValue>(JsonInstanceElement instance, JsonSchemaOptions options) where TEvaluator : IInfoEvaluator<TValue>
+    private IReadOnlyCollection<TValue> GetEvaluatedInfoInternal<TValue>(JsonInstanceElement instance, JsonSchemaOptions options)
     {
         JsonSchemaResource referencedSchemaResource = GetReferencedSchemaResource(options);
 
@@ -129,9 +129,17 @@ internal class SchemaRecursiveReferenceKeyword : ValidationKeywordBase, IReferen
         Debug.Assert(referencedSchemaResource.BaseUri is not null);
         options.ValidationPathStack.PushReferencedSchema(referencedSchemaResource, referencedSchemaResource.BaseUri);
 
-        IReadOnlyCollection<TValue> result = referencedSchemaResource is TEvaluator evaluator
-            ? evaluator.GetEvaluatedInfos(instance, options)
-            : Array.Empty<TValue>();
+        IReadOnlyCollection<TValue> result;
+
+        if (typeof(TValue) == typeof(string))
+        {
+            result = (IReadOnlyCollection<TValue>)referencedSchemaResource.GetEvaluatedPropertiesInternal(instance, options);
+        }
+        else
+        {
+            Debug.Assert(typeof(TValue) == typeof(int));
+            result = (IReadOnlyCollection<TValue>)referencedSchemaResource.GetEvaluatedItemsInternal(instance, options);
+        }
 
         options.ValidationPathStack.PopReferencedSchema();
         options.ValidationPathStack.PopSchemaResource();
