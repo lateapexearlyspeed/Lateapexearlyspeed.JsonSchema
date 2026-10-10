@@ -33,6 +33,7 @@ Primary APIs:
 - JsonValidator: validate JSON instances against a JSON Schema.
 - JsonValidatorOptions: configure schema parsing, default dialect, annotations, custom keywords, and custom formats.
 - JsonSchemaOptions: configure per-validation behavior such as output format, format validation, regex timeout, and error-message generation.
+- Draft 2019-09 and Draft 2020-12 unevaluatedProperties and unevaluatedItems validation are supported.
 - ValidationResult: inspect IsValid, ValidationErrors, and Annotations.
 - JsonSchemaBuilder: build a JsonValidator with fluent C# validation rules.
 - JsonSchemaGenerator: generate a JsonValidator from a .NET type.
@@ -51,8 +52,6 @@ Common rules:
 
 Important limitations:
 
-- unevaluatedProperties is not supported.
-- unevaluatedItems is not supported.
 - Automatic content-encoded string decoding and validation is not currently supported.
 - GetStandardJsonSchemaText() can throw NotSupportedException when the validator contains extended keywords from some fluent/custom/type-based construction paths.
 

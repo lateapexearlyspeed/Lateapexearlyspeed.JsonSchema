@@ -421,7 +421,6 @@ A format validator implementation is resolved per format name. The per-`JsonVali
 ## Limitation
 
 - Annotation collection is supported as an opt-in feature.
-- Not support following keywords currently: unevaluatedProperties, unevaluatedItems
 - Not support automatic content-encoded string decoding/validation currently
 
 ## Issue report

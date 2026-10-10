@@ -16,6 +16,7 @@ It deliberately excludes EF Core packages, JsonQuery.Net, benchmark projects, an
 | Validate many instances with one schema | `LateApexEarlySpeed.Json.Schema` | `JsonValidator` | Create one validator and reuse it |
 | Collect all validation errors | `LateApexEarlySpeed.Json.Schema` | `JsonSchemaOptions` | `OutputFormat = OutputFormat.List` |
 | Select Draft 7, 2019-09, or 2020-12 when `$schema` is missing | `LateApexEarlySpeed.Json.Schema` | `JsonValidatorOptions` | `DefaultDialect = DialectKind.Draft7` |
+| Validate unevaluated object properties or array items in Draft 2019-09/2020-12 schemas | `LateApexEarlySpeed.Json.Schema` | JSON Schema keywords | `unevaluatedProperties`, `unevaluatedItems` |
 | Build validation rules in C# | `LateApexEarlySpeed.Json.Schema` | `JsonSchemaBuilder` | Configure one builder, then call `BuildValidator()` |
 | Generate a validator from a .NET type | `LateApexEarlySpeed.Json.Schema` | `JsonSchemaGenerator` | `JsonSchemaGenerator.GenerateJsonValidator<T>()` |
 | Add custom string format validation | `LateApexEarlySpeed.Json.Schema` | `FormatRegistry` | `options.FormatRegistry.AddFormat(...)` |
@@ -242,5 +243,5 @@ The v2 and v3 packages intentionally use different namespaces. Pick the package 
 - Enable both `CollectAnnotations = true` and `OutputFormat.List` for annotations.
 - Register external schema documents before validating JSON that depends on external `$ref` values.
 - Do not use the xUnit v2 assertion package in an xUnit v3 test project, or the v3 assertion package in an xUnit v2 test project.
-- Remember that `unevaluatedProperties`, `unevaluatedItems`, and automatic content-encoded string decoding/validation are not currently supported.
+- Remember that automatic content-encoded string decoding/validation is not currently supported.
 - Do not assume `GetStandardJsonSchemaText()` works for every validator. Validators containing extended keywords can throw `NotSupportedException`.
