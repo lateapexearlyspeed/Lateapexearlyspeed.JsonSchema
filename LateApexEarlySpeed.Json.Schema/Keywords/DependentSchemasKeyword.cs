@@ -105,42 +105,22 @@ internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainer
 
     public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        var propertyEvaluator = new PropertyEvaluator(this, instance);
-        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
-    }
+        HashSet<string>? evaluatedProperties = null;
 
-    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
-    {
-        private readonly DependentSchemasKeyword _dependentSchemasKeyword;
-        private readonly JsonInstanceElement _instance;
-
-        public PropertyEvaluator(DependentSchemasKeyword dependentSchemasKeyword, JsonInstanceElement instance)
+        foreach (JsonInstanceProperty instanceProperty in instance.EnumerateObject())
         {
-            _dependentSchemasKeyword = dependentSchemasKeyword;
-            _instance = instance;
-        }
-
-        public string Name => _dependentSchemasKeyword.Name;
-
-        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
-        {
-            HashSet<string>? evaluatedProperties = null;
-
-            foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
+            if (_dependentSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? subSchema) && subSchema is IPropertyEvaluator propertyEvaluator)
             {
-                if (_dependentSchemasKeyword._dependentSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? subSchema) && subSchema is IPropertyEvaluator propertyEvaluator)
+                IReadOnlyCollection<string> subSchemaEvaluatedProperties = propertyEvaluator.GetEvaluatedProperties(instance, options);
+                if (subSchemaEvaluatedProperties.Count != 0)
                 {
-                    IReadOnlyCollection<string> subSchemaEvaluatedProperties = propertyEvaluator.GetEvaluatedProperties(_instance, options);
-                    if (subSchemaEvaluatedProperties.Count != 0)
-                    {
-                        evaluatedProperties ??= new HashSet<string>();
-                        evaluatedProperties.UnionWith(subSchemaEvaluatedProperties);
-                    }
+                    evaluatedProperties ??= new HashSet<string>();
+                    evaluatedProperties.UnionWith(subSchemaEvaluatedProperties);
                 }
             }
-
-            return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
         }
+
+        return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
     }
 
 }

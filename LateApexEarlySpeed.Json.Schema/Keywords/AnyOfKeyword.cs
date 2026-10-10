@@ -153,54 +153,14 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
 
     public static string ErrorMessage() => "Instance failed validation against all sub-schemas";
 
-    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
-    {
-        private readonly AnyOfKeyword _anyOfKeyword;
-        private readonly JsonInstanceElement _instance;
-
-        public PropertyEvaluator(AnyOfKeyword anyOfKeyword, JsonInstanceElement instance)
-        {
-            _anyOfKeyword = anyOfKeyword;
-            _instance = instance;
-        }
-
-        public string Name => _anyOfKeyword.Name;
-
-        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
-        {
-            return _anyOfKeyword.GetEvaluatedInfoInternal<IPropertyEvaluator, string>(_instance, options);
-        }
-    }
-
     IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        var propertyEvaluator = new PropertyEvaluator(this, instance);
-        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
+        return GetEvaluatedInfoInternal<IPropertyEvaluator, string>(instance, options);
     }
 
     IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        var itemEvaluator = new ItemEvaluator(this, instance);
-        return itemEvaluator.GetEvaluatedItemsWithLocation(options);
-    }
-
-    private readonly struct ItemEvaluator : IItemCoreEvaluator
-    {
-        private readonly AnyOfKeyword _anyOfKeyword;
-        private readonly JsonInstanceElement _instance;
-
-        public ItemEvaluator(AnyOfKeyword anyOfKeyword, JsonInstanceElement instance)
-        {
-            _anyOfKeyword = anyOfKeyword;
-            _instance = instance;
-        }
-
-        public string Name => _anyOfKeyword.Name;
-
-        public IReadOnlyCollection<int> GetEvaluatedItems(JsonSchemaOptions options)
-        {
-            return _anyOfKeyword.GetEvaluatedInfoInternal<IItemEvaluator, int>(_instance, options);
-        }
+        return GetEvaluatedInfoInternal<IItemEvaluator, int>(instance, options);
     }
 
     private IReadOnlyCollection<TValue> GetEvaluatedInfoInternal<TEvaluator, TValue>(JsonInstanceElement instance, JsonSchemaOptions options) where TEvaluator : IInfoEvaluator<TValue>

@@ -155,54 +155,14 @@ internal class OneOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
         }
     }
 
-    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
-    {
-        private readonly OneOfKeyword _oneOfKeyword;
-        private readonly JsonInstanceElement _instance;
-
-        public PropertyEvaluator(OneOfKeyword oneOfKeyword, JsonInstanceElement instance)
-        {
-            _oneOfKeyword = oneOfKeyword;
-            _instance = instance;
-        }
-
-        public string Name => _oneOfKeyword.Name;
-
-        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
-        {
-            return _oneOfKeyword.GetEvaluatedInfoInternal<IPropertyEvaluator, string>(_instance, options);
-        }
-    }
-
     IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        var propertyEvaluator = new PropertyEvaluator(this, instance);
-        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
-    }
-
-    private readonly struct ItemEvaluator : IItemCoreEvaluator
-    {
-        private readonly OneOfKeyword _oneOfKeyword;
-        private readonly JsonInstanceElement _instance;
-
-        public ItemEvaluator(OneOfKeyword oneOfKeyword, JsonInstanceElement instance)
-        {
-            _oneOfKeyword = oneOfKeyword;
-            _instance = instance;
-        }
-
-        public string Name => _oneOfKeyword.Name;
-
-        public IReadOnlyCollection<int> GetEvaluatedItems(JsonSchemaOptions options)
-        {
-            return _oneOfKeyword.GetEvaluatedInfoInternal<IItemEvaluator, int>(_instance, options);
-        }
+        return GetEvaluatedInfoInternal<IPropertyEvaluator, string>(instance, options);
     }
 
     IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        var itemEvaluator = new ItemEvaluator(this, instance);
-        return itemEvaluator.GetEvaluatedItemsWithLocation(options);
+        return GetEvaluatedInfoInternal<IItemEvaluator, int>(instance, options);
     }
 
     private IReadOnlyCollection<TValue> GetEvaluatedInfoInternal<TEvaluator, TValue>(JsonInstanceElement instance, JsonSchemaOptions options) where TEvaluator : IInfoEvaluator<TValue>

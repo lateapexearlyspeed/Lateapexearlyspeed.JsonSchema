@@ -111,51 +111,31 @@ internal class PatternPropertiesKeyword : ResetUnevaluatedScopeKeywordBase, ISch
         }
     }
 
-    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
-    {
-        private readonly PatternPropertiesKeyword _patternPropertiesKeyword;
-        private readonly JsonInstanceElement _instance;
-
-        public PropertyEvaluator(PatternPropertiesKeyword patternPropertiesKeyword, JsonInstanceElement instance)
-        {
-            _patternPropertiesKeyword = patternPropertiesKeyword;
-            _instance = instance;
-        }
-
-        public string Name => _patternPropertiesKeyword.Name;
-
-        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
-        {
-            if (_instance.ValueKind != JsonValueKind.Object)
-            {
-                return Array.Empty<string>();
-            }
-
-            List<string>? evaluatedProperties = null;
-
-            foreach (JsonInstanceProperty jsonProperty in _instance.EnumerateObject())
-            {
-                string propertyName = jsonProperty.Name;
-
-                foreach (KeyValuePair<string, JsonSchema> patternSchema in _patternPropertiesKeyword._patternSchemas)
-                {
-                    if (RegexMatcher.IsMatch(patternSchema.Key, propertyName, options.RegexMatchTimeout))
-                    {
-                        evaluatedProperties ??= new List<string>();
-                        evaluatedProperties.Add(propertyName);
-
-                        break;
-                    }
-                }
-            }
-
-            return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
-        }
-    }
-
     public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        var propertyEvaluator = new PropertyEvaluator(this, instance);
-        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
+        if (instance.ValueKind != JsonValueKind.Object)
+        {
+            return Array.Empty<string>();
+        }
+
+        List<string>? evaluatedProperties = null;
+
+        foreach (JsonInstanceProperty jsonProperty in instance.EnumerateObject())
+        {
+            string propertyName = jsonProperty.Name;
+
+            foreach (KeyValuePair<string, JsonSchema> patternSchema in _patternSchemas)
+            {
+                if (RegexMatcher.IsMatch(patternSchema.Key, propertyName, options.RegexMatchTimeout))
+                {
+                    evaluatedProperties ??= new List<string>();
+                    evaluatedProperties.Add(propertyName);
+
+                    break;
+                }
+            }
+        }
+
+        return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
     }
 }

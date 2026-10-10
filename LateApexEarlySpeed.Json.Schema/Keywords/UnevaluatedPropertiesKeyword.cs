@@ -91,7 +91,7 @@ internal class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaCont
 
     /// <summary>
     /// DEAD CODE (kept for interface completeness): this keyword's own <see cref="IPropertyEvaluator"/> implementation
-    /// (this method and the nested <see cref="PropertyEvaluator"/> struct) is never reached.
+    /// (this method) is never reached.
     /// An outer 'unevaluatedProperties' never queries this keyword as an evaluator, because when a <see cref="BodyJsonSchema"/> owns an
     /// 'unevaluatedProperties' keyword, its property evaluator short-circuits to "all instance properties are evaluated" before any evaluator scan.
     /// </summary>
@@ -103,43 +103,20 @@ internal class UnevaluatedPropertiesKeyword : ValidationKeywordBase, ISchemaCont
         }
 
         HashSet<string>? evaluatedProperties = FindEvaluatedPropertiesByOtherEvaluators(instance, options);
+        List<string>? result = null;
 
-        var propertyEvaluator = new PropertyEvaluator(this, evaluatedProperties, instance);
-        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
-    }
-
-    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
-    {
-        private readonly UnevaluatedPropertiesKeyword _unevaluatedPropertiesKeyword;
-        private readonly HashSet<string>? _evaluatedProperties;
-        private readonly JsonInstanceElement _instance;
-
-        public PropertyEvaluator(UnevaluatedPropertiesKeyword unevaluatedPropertiesKeyword, HashSet<string>? evaluatedProperties, JsonInstanceElement instance)
+        foreach (JsonInstanceProperty instanceProperty in instance.EnumerateObject())
         {
-            _unevaluatedPropertiesKeyword = unevaluatedPropertiesKeyword;
-            _evaluatedProperties = evaluatedProperties;
-            _instance = instance;
-        }
+            string propertyName = instanceProperty.Name;
 
-        public string Name => _unevaluatedPropertiesKeyword.Name;
-
-        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
-        {
-            List<string>? result = null;
-
-            foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
+            if (evaluatedProperties is null || !evaluatedProperties.Contains(propertyName))
             {
-                string propertyName = instanceProperty.Name;
-
-                if (_evaluatedProperties is null || !_evaluatedProperties.Contains(propertyName))
-                {
-                    result ??= new List<string>();
-                    result.Add(propertyName);
-                }
+                result ??= new List<string>();
+                result.Add(propertyName);
             }
-
-            return result ?? (IReadOnlyCollection<string>)Array.Empty<string>();
         }
+
+        return result ?? (IReadOnlyCollection<string>)Array.Empty<string>();
     }
 
     private HashSet<string>? FindEvaluatedPropertiesByOtherEvaluators(JsonInstanceElement instance, JsonSchemaOptions options)

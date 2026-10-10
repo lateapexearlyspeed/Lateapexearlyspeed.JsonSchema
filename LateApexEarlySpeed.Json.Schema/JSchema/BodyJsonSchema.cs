@@ -618,72 +618,32 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
 
     public IReadOnlyCollection<string> GetEvaluatedPropertiesInternal(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        var propertyEvaluator = new PropertyEvaluator(this, instance);
-        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
-    }
-
-    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
-    {
-        private readonly BodyJsonSchema _bodyJsonSchema;
-        private readonly JsonInstanceElement _instance;
-
-        public PropertyEvaluator(BodyJsonSchema bodyJsonSchema, JsonInstanceElement instance)
+        if (instance.ValueKind != JsonValueKind.Object)
         {
-            _bodyJsonSchema = bodyJsonSchema;
-            _instance = instance;
+            return Array.Empty<string>();
         }
 
-        public string? Name => _bodyJsonSchema.Name;
-
-        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
+        if (_coldData is not null && _coldData.UnevaluatedPropertiesKeyword is not null) // this means all instance properties are evaluated
         {
-            if (_instance.ValueKind != JsonValueKind.Object)
-            {
-                return Array.Empty<string>();
-            }
-
-            if (_bodyJsonSchema._coldData is not null && _bodyJsonSchema._coldData.UnevaluatedPropertiesKeyword is not null) // this means all instance properties are evaluated
-            {
-                return _instance.EnumerateObject().Select(p => p.Name).ToArray();
-            }
-
-            return _bodyJsonSchema.GetEvaluatedInfosInternal<IPropertyEvaluator, string>(_instance, options);
+            return instance.EnumerateObject().Select(p => p.Name).ToArray();
         }
+
+        return GetEvaluatedInfosInternal<IPropertyEvaluator, string>(instance, options);
     }
 
     public IReadOnlyCollection<int> GetEvaluatedItemsInternal(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        var itemEvaluator = new ItemEvaluator(this, instance);
-        return itemEvaluator.GetEvaluatedItemsWithLocation(options);
-    }
-
-    private readonly struct ItemEvaluator : IItemCoreEvaluator
-    {
-        private readonly BodyJsonSchema _bodyJsonSchema;
-        private readonly JsonInstanceElement _instance;
-
-        public ItemEvaluator(BodyJsonSchema bodyJsonSchema, JsonInstanceElement instance)
+        if (instance.ValueKind != JsonValueKind.Array)
         {
-            _bodyJsonSchema = bodyJsonSchema;
-            _instance = instance;
+            return Array.Empty<int>();
         }
 
-        public string? Name => _bodyJsonSchema.Name;
-
-        public IReadOnlyCollection<int> GetEvaluatedItems(JsonSchemaOptions options)
+        if (_coldData is not null && _coldData.UnevaluatedItemsKeyword is not null) // this means all array items are evaluated
         {
-            if (_instance.ValueKind != JsonValueKind.Array)
-            {
-                return Array.Empty<int>();
-            }
-
-            if (_bodyJsonSchema._coldData is not null && _bodyJsonSchema._coldData.UnevaluatedItemsKeyword is not null) // this means all array items are evaluated
-            {
-                return Enumerable.Range(0, _instance.GetArrayLength()).ToArray();
-            }
-
-            return _bodyJsonSchema.GetEvaluatedInfosInternal<IItemEvaluator, int>(_instance, options);
+            return Enumerable.Range(0, instance.GetArrayLength()).ToArray();
         }
+
+        return GetEvaluatedInfosInternal<IItemEvaluator, int>(instance, options);
     }
 
     private IReadOnlyCollection<TValue> GetEvaluatedInfosInternal<TEvaluator, TValue>(JsonInstanceElement instance, JsonSchemaOptions options) where TEvaluator : IInfoEvaluator<TValue>

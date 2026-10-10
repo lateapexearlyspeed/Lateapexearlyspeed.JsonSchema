@@ -111,55 +111,35 @@ internal class AdditionalPropertiesKeyword : ResetUnevaluatedScopeKeywordBase, I
         return _schema;
     }
 
-    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
-    {
-        private readonly AdditionalPropertiesKeyword _additionalPropertiesKeyword;
-        private readonly JsonInstanceElement _instance;
-
-        public PropertyEvaluator(AdditionalPropertiesKeyword additionalPropertiesKeyword, JsonInstanceElement instance)
-        {
-            _additionalPropertiesKeyword = additionalPropertiesKeyword;
-            _instance = instance;
-        }
-
-        public string Name => _additionalPropertiesKeyword.Name;
-
-        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
-        {
-            if (_instance.ValueKind != JsonValueKind.Object)
-            {
-                return Array.Empty<string>();
-            }
-            
-            List<string>? evaluatedProperties = null;
-
-            foreach (JsonInstanceProperty jsonProperty in _instance.EnumerateObject())
-            {
-                string propertyName = jsonProperty.Name;
-
-                bool containsInPropertiesKeyword = _additionalPropertiesKeyword.PropertiesKeyword is not null && _additionalPropertiesKeyword.PropertiesKeyword.ContainsPropertyName(propertyName);
-
-                if (containsInPropertiesKeyword)
-                {
-                    continue;
-                }
-
-                bool containsMatchedPattern = _additionalPropertiesKeyword.PatternPropertiesKeyword is not null && _additionalPropertiesKeyword.PatternPropertiesKeyword.ContainsMatchedPattern(propertyName, options.RegexMatchTimeout);
-
-                if (!containsMatchedPattern)
-                {
-                    evaluatedProperties ??= new List<string>();
-                    evaluatedProperties.Add(propertyName);
-                }
-            }
-
-            return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
-        }
-    }
-
     public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        var propertyEvaluator = new PropertyEvaluator(this, instance);
-        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
+        if (instance.ValueKind != JsonValueKind.Object)
+        {
+            return Array.Empty<string>();
+        }
+            
+        List<string>? evaluatedProperties = null;
+
+        foreach (JsonInstanceProperty jsonProperty in instance.EnumerateObject())
+        {
+            string propertyName = jsonProperty.Name;
+
+            bool containsInPropertiesKeyword = PropertiesKeyword is not null && PropertiesKeyword.ContainsPropertyName(propertyName);
+
+            if (containsInPropertiesKeyword)
+            {
+                continue;
+            }
+
+            bool containsMatchedPattern = PatternPropertiesKeyword is not null && PatternPropertiesKeyword.ContainsMatchedPattern(propertyName, options.RegexMatchTimeout);
+
+            if (!containsMatchedPattern)
+            {
+                evaluatedProperties ??= new List<string>();
+                evaluatedProperties.Add(propertyName);
+            }
+        }
+
+        return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
     }
 }

@@ -109,44 +109,24 @@ internal class PropertiesKeyword : ResetUnevaluatedScopeKeywordBase, ISchemaCont
         }
     }
 
-    private readonly struct PropertyEvaluator : IPropertyCoreEvaluator
-    {
-        private readonly PropertiesKeyword _propertiesKeyword;
-        private readonly JsonInstanceElement _instance;
-
-        public PropertyEvaluator(PropertiesKeyword propertiesKeyword, JsonInstanceElement instance)
-        {
-            _propertiesKeyword = propertiesKeyword;
-            _instance = instance;
-        }
-
-        public string Name => _propertiesKeyword.Name;
-
-        public IReadOnlyCollection<string> GetEvaluatedProperties(JsonSchemaOptions options)
-        {
-            if (_instance.ValueKind != JsonValueKind.Object)
-            {
-                return Array.Empty<string>();
-            }
-
-            List<string>? evaluatedProperties = null;
-
-            foreach (JsonInstanceProperty instanceProperty in _instance.EnumerateObject())
-            {
-                if (_propertiesKeyword._propertiesSchemas.ContainsKey(instanceProperty.Name))
-                {
-                    evaluatedProperties ??= new List<string>();
-                    evaluatedProperties.Add(instanceProperty.Name);
-                }
-            }
-
-            return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
-        }
-    }
-
     public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
     {
-        var propertyEvaluator = new PropertyEvaluator(this, instance);
-        return propertyEvaluator.GetEvaluatedPropertiesWithLocation(options);
+        if (instance.ValueKind != JsonValueKind.Object)
+        {
+            return Array.Empty<string>();
+        }
+
+        List<string>? evaluatedProperties = null;
+
+        foreach (JsonInstanceProperty instanceProperty in instance.EnumerateObject())
+        {
+            if (_propertiesSchemas.ContainsKey(instanceProperty.Name))
+            {
+                evaluatedProperties ??= new List<string>();
+                evaluatedProperties.Add(instanceProperty.Name);
+            }
+        }
+
+        return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
     }
 }
