@@ -9,7 +9,7 @@ namespace Json.Schema.Libraries.Benchmark;
 
 public class JsonSchemaValidationRunner
 {
-    private static readonly string[] UnsupportedTestFiles = new[] { "unevaluatedItems", "unevaluatedProperties", "vocabulary" };
+    private static readonly string[] UnsupportedTestFiles = new[] { "vocabulary" };
 
     private static readonly string[] UnsupportedTestCases = Array.Empty<string>();
 
