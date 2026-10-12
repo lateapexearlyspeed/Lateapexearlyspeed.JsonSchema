@@ -11,7 +11,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword(Keyword)]
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<AllOfKeyword>))]
-internal class AllOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class AllOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator, IItemEvaluator
 {
     public const string Keyword = "allOf";
 
@@ -114,6 +114,38 @@ internal class AllOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
                 BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _subSchemas[localIdx] = newSchema);
             }
         }
+    }
+
+    private IReadOnlyCollection<TValue> GetEvaluatedInfoInternal<TEvaluator, TValue>(JsonInstanceElement instance, JsonSchemaOptions options) where TEvaluator : IInfoEvaluator<TValue>
+    {
+        HashSet<TValue>? result = null;
+
+        foreach (JsonSchema subSchema in _subSchemas)
+        {
+            if (subSchema is not TEvaluator evaluator)
+            {
+                continue;
+            }
+
+            IReadOnlyCollection<TValue> evaluated = evaluator.GetEvaluatedInfos(instance, options);
+            if (evaluated.Count != 0)
+            {
+                result ??= new HashSet<TValue>();
+                result.UnionWith(evaluated);
+            }
+        }
+
+        return result ?? (IReadOnlyCollection<TValue>)Array.Empty<TValue>();
+    }
+
+    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return GetEvaluatedInfoInternal<IPropertyEvaluator, string>(instance, options);
+    }
+
+    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return GetEvaluatedInfoInternal<IItemEvaluator, int>(instance, options);
     }
 }
 

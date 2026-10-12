@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Text.Json.Serialization;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
@@ -11,7 +12,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("anyOf")]
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<AnyOfKeyword>))]
-internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator, IItemEvaluator
 {
     private readonly JsonSchema[] _subSchemas = null!;
 
@@ -67,18 +68,41 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
-            foreach (JsonSchema subSchema in _anyOfKeyword._subSchemas)
+            if (_options.InUnevaluatedPropertiesScope || _options.InUnevaluatedItemsScope)
             {
-                ValidationResult result = subSchema.Validate(_instance, _options);
-                if (result.IsValid)
+                byte[] subSchemasStatus = BitmapHelper.CreateBitmap(_anyOfKeyword._subSchemas.Length);
+
+                for (var i = 0; i < _anyOfKeyword._subSchemas.Length; i++)
                 {
-                    _fastReturnResult = result;
+                    JsonSchema subSchema = _anyOfKeyword._subSchemas[i];
+                    ValidationResult result = subSchema.Validate(_instance, _options);
+                    if (result.IsValid)
+                    {
+                        _fastReturnResult = result;
+                        BitmapHelper.SetBit(subSchemasStatus, i);
+                    }
+
+                    bool reportValidationResult = context.ReportValidationResult(result, null);
+                    Debug.Assert(reportValidationResult);
                 }
 
-                if (!context.ReportValidationResult(result, _fastReturnResult))
+                _options.SetSubSchemaStatusBitmap(_anyOfKeyword, _instance.Location, subSchemasStatus);
+            }
+            else
+            {
+                foreach (JsonSchema subSchema in _anyOfKeyword._subSchemas)
                 {
-                    break;
-                }
+                    ValidationResult result = subSchema.Validate(_instance, _options);
+                    if (result.IsValid)
+                    {
+                        _fastReturnResult = result;
+                    }
+
+                    if (!context.ReportValidationResult(result, _fastReturnResult))
+                    {
+                        break;
+                    }
+                }    
             }
         }
 
@@ -128,4 +152,40 @@ internal class AnyOfKeyword : ValidationKeywordBase, ISubSchemaCollection, ISche
     }
 
     public static string ErrorMessage() => "Instance failed validation against all sub-schemas";
+
+    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return GetEvaluatedInfoInternal<IPropertyEvaluator, string>(instance, options);
+    }
+
+    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return GetEvaluatedInfoInternal<IItemEvaluator, int>(instance, options);
+    }
+
+    private IReadOnlyCollection<TValue> GetEvaluatedInfoInternal<TEvaluator, TValue>(JsonInstanceElement instance, JsonSchemaOptions options) where TEvaluator : IInfoEvaluator<TValue>
+    {
+        HashSet<TValue>? result = null;
+
+        byte[] subSchemasValidationStatus = options.GetSubSchemaStatusBitmap(this, instance.Location);
+
+        for (var i = 0; i < _subSchemas.Length; i++)
+        {
+            JsonSchema subSchema = _subSchemas[i];
+            if (!BitmapHelper.IsBitSet(subSchemasValidationStatus, i) || subSchema is not TEvaluator itemEvaluator)
+            {
+                continue;
+            }
+
+            IReadOnlyCollection<TValue> evaluatedItems = itemEvaluator.GetEvaluatedInfos(instance, options);
+            if (evaluatedItems.Count != 0)
+            {
+                result ??= new HashSet<TValue>();
+                result.UnionWith(evaluatedItems);
+            }
+        }
+
+        return result ?? (IReadOnlyCollection<TValue>)Array.Empty<TValue>();
+    }
+
 }

@@ -10,7 +10,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("patternProperties")]
 [JsonConverter(typeof(PatternPropertiesKeywordJsonConverter))]
-internal class PatternPropertiesKeyword : ValidationKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class PatternPropertiesKeyword : ResetUnevaluatedScopeKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
 {
     private readonly Dictionary<string, JsonSchema> _patternSchemas;
 
@@ -109,5 +109,33 @@ internal class PatternPropertiesKeyword : ValidationKeywordBase, ISchemaContaine
                 BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _patternSchemas[pattern] = newSchema);
             }
         }
+    }
+
+    public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        if (instance.ValueKind != JsonValueKind.Object)
+        {
+            return Array.Empty<string>();
+        }
+
+        List<string>? evaluatedProperties = null;
+
+        foreach (JsonInstanceProperty jsonProperty in instance.EnumerateObject())
+        {
+            string propertyName = jsonProperty.Name;
+
+            foreach (KeyValuePair<string, JsonSchema> patternSchema in _patternSchemas)
+            {
+                if (RegexMatcher.IsMatch(patternSchema.Key, propertyName, options.RegexMatchTimeout))
+                {
+                    evaluatedProperties ??= new List<string>();
+                    evaluatedProperties.Add(propertyName);
+
+                    break;
+                }
+            }
+        }
+
+        return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
     }
 }

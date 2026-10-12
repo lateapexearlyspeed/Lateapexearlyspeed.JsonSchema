@@ -11,7 +11,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("additionalProperties")]
 [JsonConverter(typeof(SingleSchemaJsonConverter<AdditionalPropertiesKeyword>))]
-internal class AdditionalPropertiesKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
+internal class AdditionalPropertiesKeyword : ResetUnevaluatedScopeKeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
 {
     private JsonSchema _schema = null!;
 
@@ -109,5 +109,37 @@ internal class AdditionalPropertiesKeyword : ValidationKeywordBase, ISchemaConta
     public JsonSchema GetSchema()
     {
         return _schema;
+    }
+
+    public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        if (instance.ValueKind != JsonValueKind.Object)
+        {
+            return Array.Empty<string>();
+        }
+            
+        List<string>? evaluatedProperties = null;
+
+        foreach (JsonInstanceProperty jsonProperty in instance.EnumerateObject())
+        {
+            string propertyName = jsonProperty.Name;
+
+            bool containsInPropertiesKeyword = PropertiesKeyword is not null && PropertiesKeyword.ContainsPropertyName(propertyName);
+
+            if (containsInPropertiesKeyword)
+            {
+                continue;
+            }
+
+            bool containsMatchedPattern = PatternPropertiesKeyword is not null && PatternPropertiesKeyword.ContainsMatchedPattern(propertyName, options.RegexMatchTimeout);
+
+            if (!containsMatchedPattern)
+            {
+                evaluatedProperties ??= new List<string>();
+                evaluatedProperties.Add(propertyName);
+            }
+        }
+
+        return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
     }
 }

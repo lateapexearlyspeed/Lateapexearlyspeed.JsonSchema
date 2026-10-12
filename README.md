@@ -86,11 +86,12 @@ Choose this library when:
 
 - Supported JSON Schema dialects: Draft 7, Draft 2019-09, and Draft 2020-12.
 - Validation functionality is tested against the official JSON Schema Test Suite.
+- Draft 2019-09 and Draft 2020-12 `unevaluatedProperties` and `unevaluatedItems` validation are supported.
 - Annotation collection is supported as an opt-in feature through JsonValidatorOptions.CollectAnnotations.
 - Annotation collection is tested against the [official JSON Schema annotation test suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite/tree/main/annotations).
 - The test suite is included as a repository submodule and is run through the unit test project.
 - Format validation is supported for common formats including uri, uri-reference, date, time, date-time, email, uuid, hostname, ipv4, ipv6, json-pointer, and regex.
-- Current documented limitations: unevaluatedProperties and unevaluatedItems are not supported; automatic content-encoded string decoding/validation is not supported currently.
+- Current documented limitation: automatic content-encoded string decoding/validation is not supported currently.
 
 ### Basic Usage
 

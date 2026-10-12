@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
@@ -8,12 +9,27 @@ using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
-internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
+internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator, IItemEvaluator
 {
+    private class ColdData
+    {
+        public readonly IAnnotationKeyword[]? AnnotationKeywords;
+        public readonly UnevaluatedPropertiesKeyword? UnevaluatedPropertiesKeyword;
+        public readonly UnevaluatedItemsKeyword? UnevaluatedItemsKeyword;
+
+        public ColdData(IAnnotationKeyword[]? annotationKeywords, UnevaluatedPropertiesKeyword? unevaluatedPropertiesKeyword, UnevaluatedItemsKeyword? unevaluatedItemsKeyword)
+        {
+            AnnotationKeywords = annotationKeywords;
+            UnevaluatedPropertiesKeyword = unevaluatedPropertiesKeyword;
+            UnevaluatedItemsKeyword = unevaluatedItemsKeyword;
+        }
+    }
+
     private readonly ISchemaContainerValidationNode[]? _schemaContainerValidators;
+
     private readonly IReadOnlyList<ValidationKeywordBase> _validationKeywords;
-    private readonly IAnnotationKeyword[]? _annotationKeywords;
     private readonly IReferenceKeyword[]? _referenceKeywords;
+    private readonly ColdData? _coldData;
 
     /// <summary>
     /// <see cref="_potentialSchemaContainerElements"/> is used to represent all properties nodes which don't belong to any valid keywords.
@@ -60,26 +76,43 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public IReadOnlyList<ValidationKeywordBase> ValidationKeywords => _validationKeywords;
 
-    public IReadOnlyList<IAnnotationKeyword>? AnnotationKeywords => _annotationKeywords;
+    public IReadOnlyList<IAnnotationKeyword>? AnnotationKeywords => _coldData?.AnnotationKeywords;
 
     public IReadOnlyList<IReferenceKeyword>? ReferenceKeywords => _referenceKeywords;
+
+    public UnevaluatedPropertiesKeyword? UnevaluatedPropertiesKeyword => _coldData?.UnevaluatedPropertiesKeyword;
+
+    public UnevaluatedItemsKeyword? UnevaluatedItemsKeyword => _coldData?.UnevaluatedItemsKeyword;
 
     public IPlainNameIdentifierKeyword? PlainNameIdentifierKeyword { get; }
 
     public string? DynamicAnchor { get; }
 
-    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords) : this(keywords, null, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null)
+    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords) : this(keywords, null, Enumerable.Empty<ISchemaContainerValidationNode>(), null, null, null, null, null, default)
     {
 
     }
 
-    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords, IEnumerable<IAnnotationKeyword>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements)
+    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords, IEnumerable<IAnnotationKeyword>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements, UnevaluatedKeywords unevaluatedKeywords)
     {
         _validationKeywords = MergeKeywords(keywords.ToArray());
 
+        bool hasColdData = false;
+        IAnnotationKeyword[]? annotations = null;
+
         if (annotationKeywords is not null)
         {
-            _annotationKeywords = annotationKeywords.ToArray();
+            annotations = annotationKeywords.ToArray();
+            hasColdData = true;
+        }
+        else if (unevaluatedKeywords.UnevaluatedPropertiesKeyword is not null || unevaluatedKeywords.UnevaluatedItemsKeyword is not null)
+        {
+            hasColdData = true;
+        }
+
+        if (hasColdData)
+        {
+            _coldData = new ColdData(annotations, unevaluatedKeywords.UnevaluatedPropertiesKeyword, unevaluatedKeywords.UnevaluatedItemsKeyword);
         }
 
         if (schemaContainerValidators is not null)
@@ -164,8 +197,39 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)
     {
+        Unsafe.SkipInit(out bool origPropState);
+        Unsafe.SkipInit(out bool origItemState);
+
+        if (_coldData is not null)
+        {
+            if (_coldData.UnevaluatedPropertiesKeyword is not null)
+            {
+                origPropState = options.EnterUnevaluatedPropertiesScope(true);
+            }
+
+            if (_coldData.UnevaluatedItemsKeyword is not null)
+            {
+                origItemState = options.EnterUnevaluatedItemsScope(true);
+            }
+        }
+
         var validator = new Validator(this, instance, options);
-        return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
+        ValidationResult result = ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
+
+        if (_coldData is not null)
+        {
+            if (_coldData.UnevaluatedPropertiesKeyword is not null)
+            {
+                options.ExitUnevaluatedPropertiesScope(origPropState);
+            }
+
+            if (_coldData.UnevaluatedItemsKeyword is not null)
+            {
+                options.ExitUnevaluatedItemsScope(origItemState);
+            }
+        }
+
+        return result;
     }
 
     internal struct Validator
@@ -190,10 +254,12 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
         /// </remarks>
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
+            IReadOnlyList<ValidationKeywordBase> validationKeywords = _bodyJsonSchema._validationKeywords;
+
             // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
-            for (int i = 0; i < _bodyJsonSchema._validationKeywords.Count; i++)
+            for (int i = 0; i < validationKeywords.Count; i++)
             {
-                ValidationKeywordBase keyword = _bodyJsonSchema._validationKeywords[i];
+                ValidationKeywordBase keyword = validationKeywords[i];
 
                 if (!ReportValidationAndCheckFastReturn(ref this, keyword, ref context))
                 {
@@ -223,6 +289,24 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
                 }
             }
 
+            if (_bodyJsonSchema._coldData is not null)
+            {
+                if (_bodyJsonSchema._coldData.UnevaluatedPropertiesKeyword is not null)
+                {
+                    if (!ReportValidationAndCheckFastReturn(ref this, _bodyJsonSchema._coldData.UnevaluatedPropertiesKeyword, ref context))
+                    {
+                        return;
+                    }
+                }
+
+                Debug.Assert(_bodyJsonSchema._coldData is not null);
+                
+                if (_bodyJsonSchema._coldData.UnevaluatedItemsKeyword is not null)
+                {
+                    ReportValidationAndCheckFastReturn(ref this, _bodyJsonSchema._coldData.UnevaluatedItemsKeyword, ref context);
+                }
+            }
+
             static bool ReportValidationAndCheckFastReturn(ref Validator thisValidator, IValidationNode validationNode, ref ValidationCompositionContext context)
             {
                 ValidationResult result = validationNode.Validate(thisValidator._instance, thisValidator._options);
@@ -238,9 +322,9 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
         public void CollectAnnotations(ref ValidationCompositionContext context)
         {
-            if (_bodyJsonSchema._annotationKeywords is not null && context.ShouldAnnotate(IsValid()))
+            if (_bodyJsonSchema._coldData?.AnnotationKeywords is not null && context.ShouldAnnotate(IsValid()))
             {
-                foreach (IAnnotationKeyword annotationKeyword in _bodyJsonSchema._annotationKeywords)
+                foreach (IAnnotationKeyword annotationKeyword in _bodyJsonSchema._coldData.AnnotationKeywords)
                 {
                     if (annotationKeyword.ShouldAnnotate(_instance))
                     {
@@ -291,7 +375,27 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             }
         }
 
-        return _potentialSchemaContainerElements?.GetValueOrDefault(name);
+        if (_potentialSchemaContainerElements is not null && _potentialSchemaContainerElements.TryGetValue(name, out ISchemaContainerElement? value))
+        {
+            return value;
+        }
+
+        if (_coldData is null)
+        {
+            return null;
+        }
+
+        if (_coldData.UnevaluatedPropertiesKeyword is not null && _coldData.UnevaluatedPropertiesKeyword.Name == name)
+        {
+            return _coldData.UnevaluatedPropertiesKeyword;
+        }
+
+        if (_coldData.UnevaluatedItemsKeyword is not null && _coldData.UnevaluatedItemsKeyword.Name == name)
+        {
+            return _coldData.UnevaluatedItemsKeyword;
+        }
+
+        return null;
     }
 
     public override IEnumerable<ISchemaContainerElement> EnumerateElements()
@@ -323,6 +427,19 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
             schemaContainers = schemaContainers.Concat(_potentialSchemaContainerElements.Values);
         }
 
+        if (_coldData is not null)
+        {
+            if (_coldData.UnevaluatedPropertiesKeyword is not null)
+            {
+                schemaContainers = schemaContainers.Append(_coldData.UnevaluatedPropertiesKeyword);
+            }
+
+            if (_coldData.UnevaluatedItemsKeyword is not null)
+            {
+                schemaContainers = schemaContainers.Append(_coldData.UnevaluatedItemsKeyword);
+            }
+        }
+
         foreach (ISchemaContainerElement containerElement in schemaContainers)
         {
             yield return containerElement;
@@ -348,12 +465,12 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id, DefsKeyword defsKeyword)
     {
-        return new BodyJsonSchemaDocument(_validationKeywords, _annotationKeywords, _schemaContainerValidators, _referenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, false, _potentialSchemaContainerElements, null, id, new[] { (DefsKeyword.Keyword, defsKeyword) });
+        return new BodyJsonSchemaDocument(_validationKeywords, _coldData?.AnnotationKeywords, _schemaContainerValidators, _referenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, false, new UnevaluatedKeywords{ UnevaluatedPropertiesKeyword = UnevaluatedPropertiesKeyword, UnevaluatedItemsKeyword = UnevaluatedItemsKeyword }, _potentialSchemaContainerElements, null, id, new[] { (DefsKeyword.Keyword, defsKeyword) });
     }
 
     public BodyJsonSchemaDocument TransformToSchemaDocument(Uri id)
     {
-        return new BodyJsonSchemaDocument(_validationKeywords, _annotationKeywords, _schemaContainerValidators, _referenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, false, _potentialSchemaContainerElements, null, id, _defsKeywords);
+        return new BodyJsonSchemaDocument(_validationKeywords, _coldData?.AnnotationKeywords, _schemaContainerValidators, _referenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, false, new UnevaluatedKeywords{ UnevaluatedPropertiesKeyword = UnevaluatedPropertiesKeyword, UnevaluatedItemsKeyword = UnevaluatedItemsKeyword }, _potentialSchemaContainerElements, null, id, _defsKeywords);
     }
 
     /// <summary>
@@ -379,6 +496,19 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
         if (_defsKeywords is not null)
         {
             schemaElements = schemaElements.Concat(_defsKeywords.Select(def => def.keyword));
+        }
+
+        if (_coldData is not null)
+        {
+            if (_coldData.UnevaluatedPropertiesKeyword is not null)
+            {
+                schemaElements = schemaElements.Append(_coldData.UnevaluatedPropertiesKeyword);
+            }
+
+            if (_coldData.UnevaluatedItemsKeyword is not null)
+            {
+                schemaElements = schemaElements.Append(_coldData.UnevaluatedItemsKeyword);
+            }
         }
 
         foreach (ISchemaContainerElement schemaElement in schemaElements)
@@ -485,4 +615,92 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable
 
         RemoveIdFromAllChildrenElementsOfPotentialSchemaElementTree();
     }
+
+    public IReadOnlyCollection<string> GetEvaluatedPropertiesInternal(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        if (instance.ValueKind != JsonValueKind.Object)
+        {
+            return Array.Empty<string>();
+        }
+
+        if (_coldData is not null && _coldData.UnevaluatedPropertiesKeyword is not null) // this means all instance properties are evaluated
+        {
+            return instance.EnumerateObject().Select(p => p.Name).ToArray();
+        }
+
+        return GetEvaluatedInfosInternal<IPropertyEvaluator, string>(instance, options);
+    }
+
+    public IReadOnlyCollection<int> GetEvaluatedItemsInternal(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        if (instance.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<int>();
+        }
+
+        if (_coldData is not null && _coldData.UnevaluatedItemsKeyword is not null) // this means all array items are evaluated
+        {
+            return Enumerable.Range(0, instance.GetArrayLength()).ToArray();
+        }
+
+        return GetEvaluatedInfosInternal<IItemEvaluator, int>(instance, options);
+    }
+
+    private IReadOnlyCollection<TValue> GetEvaluatedInfosInternal<TEvaluator, TValue>(JsonInstanceElement instance, JsonSchemaOptions options) where TEvaluator : IInfoEvaluator<TValue>
+    {
+        HashSet<TValue>? result = null;
+            
+        // ReSharper disable once ForCanBeConvertedToForeach - avoid the cost of enumerator (class System.SZGenericArrayEnumerator<>) allocation of foreach loop for IList<T> from underlying array instance
+        for (int i = 0; i < _validationKeywords.Count; i++)
+        {
+            if (_validationKeywords[i] is TEvaluator propertyEvaluator)
+            {
+                AddPropertiesOrItems(propertyEvaluator, ref result, instance, options);
+            }
+        }
+
+        if (_schemaContainerValidators is not null)
+        {
+            foreach (ISchemaContainerValidationNode schemaContainerValidator in _schemaContainerValidators)
+            {
+                if (schemaContainerValidator is TEvaluator evaluator)
+                {
+                    AddPropertiesOrItems(evaluator, ref result, instance, options);
+                }
+            }
+        }
+
+        if (_referenceKeywords is not null)
+        {
+            foreach (IReferenceKeyword referenceKeyword in _referenceKeywords)
+            {
+                if (referenceKeyword is TEvaluator evaluator)
+                {
+                    AddPropertiesOrItems(evaluator, ref result, instance, options);
+                }
+            }
+        }
+
+        return result ?? (IReadOnlyCollection<TValue>)Array.Empty<TValue>();
+    }
+
+    private void AddPropertiesOrItems<TEvaluator, TValue>(TEvaluator propertyEvaluator, ref HashSet<TValue>? propertiesOrItems, JsonInstanceElement instance, JsonSchemaOptions options) where TEvaluator : IInfoEvaluator<TValue>
+    {
+        IReadOnlyCollection<TValue> evaluated = propertyEvaluator.GetEvaluatedInfos(instance, options);
+        if (evaluated.Count != 0)
+        {
+            propertiesOrItems ??= new HashSet<TValue>();
+            propertiesOrItems.UnionWith(evaluated);
+        }
+    }
+
+    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedPropertiesInternal(instance, options);
+    
+    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options) => GetEvaluatedItemsInternal(instance, options);
+}
+
+internal ref struct UnevaluatedKeywords
+{
+    public UnevaluatedPropertiesKeyword? UnevaluatedPropertiesKeyword { get; set; }
+    public UnevaluatedItemsKeyword? UnevaluatedItemsKeyword { get; set; }
 }

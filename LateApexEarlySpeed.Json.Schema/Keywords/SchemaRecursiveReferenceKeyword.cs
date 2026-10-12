@@ -1,4 +1,5 @@
 ﻿using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
@@ -63,4 +64,48 @@ internal class SchemaRecursiveReferenceKeyword : ValidationKeywordBase, IReferen
         return options.ValidationPathStack.SchemaResourceStack.LastOrDefault(resource => resource.RecursiveAnchorEnabled) 
                ?? staticReferencedSchemaResource;
     }
+
+    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return GetEvaluatedInfoInternal<string>(instance, options);
+    }
+
+    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return GetEvaluatedInfoInternal<int>(instance, options);
+    }
+
+    private IReadOnlyCollection<TValue> GetEvaluatedInfoInternal<TValue>(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        JsonSchemaResource referencedSchemaResource = GetReferencedSchemaResource(options);
+
+        if (!options.SchemaRecursionRecorder.TryPushRecord(referencedSchemaResource, instance.Location))
+        {
+            throw new InvalidOperationException($"Infinite recursion loop detected. Instance path: {instance.Location}");
+        }
+
+        options.ValidationPathStack.PushSchemaResource(referencedSchemaResource);
+
+        Debug.Assert(referencedSchemaResource.BaseUri is not null);
+        options.ValidationPathStack.PushReferencedSchema(referencedSchemaResource, referencedSchemaResource.BaseUri);
+
+        IReadOnlyCollection<TValue> result;
+
+        if (typeof(TValue) == typeof(string))
+        {
+            result = (IReadOnlyCollection<TValue>)referencedSchemaResource.GetEvaluatedPropertiesInternal(instance, options);
+        }
+        else
+        {
+            Debug.Assert(typeof(TValue) == typeof(int));
+            result = (IReadOnlyCollection<TValue>)referencedSchemaResource.GetEvaluatedItemsInternal(instance, options);
+        }
+
+        options.ValidationPathStack.PopReferencedSchema();
+        options.ValidationPathStack.PopSchemaResource();
+        options.SchemaRecursionRecorder.PopRecord();
+
+        return result;
+    }
+
 }

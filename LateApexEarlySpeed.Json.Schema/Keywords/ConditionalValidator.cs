@@ -6,7 +6,7 @@ using LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchemaResourceNodesCleanable
+internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator, IItemEvaluator
 {
     public const string IfKeywordName = "if";
     public const string ThenKeywordName = "then";
@@ -42,11 +42,18 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
             return ValidationResult.ValidResult;
         }
 
+        bool isInUnevaluatedScope = options.InUnevaluatedPropertiesScope || options.InUnevaluatedItemsScope;
+
         if (options.OutputFormat == OutputFormat.FailFast)
         {
-            return PredictEvaluator.Validate(instance, options).IsValid
-                ? PositiveValidator.Validate(instance, options)
-                : NegativeValidator.Validate(instance, options);
+            bool isValid = PredictEvaluator.Validate(instance, options).IsValid;
+
+            if (isInUnevaluatedScope)
+            {
+                options.SetIfSubSchemaStatus(this, instance.Location, isValid);
+            }
+
+            return isValid ? PositiveValidator.Validate(instance, options) : NegativeValidator.Validate(instance, options);
         }
 
         var errorsBuilder = new ImmutableValidationErrorCollection.Builder();
@@ -55,6 +62,11 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
         ValidationResult predictResult = PredictEvaluator.Validate(instance, options);
         errorsBuilder.AddChildCollection(predictResult.ValidationErrorsList);
         annotationBuilder.AddRange(predictResult.AnnotationList);
+
+        if (isInUnevaluatedScope)
+        {
+            options.SetIfSubSchemaStatus(this, instance.Location, predictResult.IsValid);
+        }
 
         if (predictResult.IsValid)
         {
@@ -122,4 +134,64 @@ internal class ConditionalValidator : ISchemaContainerValidationNode, IJsonSchem
             BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(negativeValidatorSchema, newSchema => _negativeValidator = newSchema);
         }
     }
+
+    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return GetEvaluatedInfo<IPropertyEvaluator, string>(instance, options);
+    }
+
+    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return GetEvaluatedInfo<IItemEvaluator, int>(instance, options);
+    }
+
+    private IReadOnlyCollection<TValue> GetEvaluatedInfo<TEvaluator, TValue>(JsonInstanceElement instance, JsonSchemaOptions options) where TEvaluator : IInfoEvaluator<TValue>
+    {
+        if (PredictEvaluator is null)
+        {
+            return Array.Empty<TValue>();
+        }
+
+        HashSet<TValue>? evaluatedProperties = null;
+
+        bool ifStatus = options.GetIfSubSchemaStatus(this, instance.Location);
+
+        if (ifStatus)
+        {
+            if (PredictEvaluator is TEvaluator predictEvaluator)
+            {
+                IReadOnlyCollection<TValue> predictProperties = predictEvaluator.GetEvaluatedInfos(instance, options);
+                if (predictProperties.Count != 0)
+                {
+                    evaluatedProperties ??= new HashSet<TValue>();
+                    evaluatedProperties.UnionWith(predictProperties);
+                }
+            }
+
+            if (PositiveValidator is TEvaluator positiveEvaluator)
+            {
+                IReadOnlyCollection<TValue> positiveProperties = positiveEvaluator.GetEvaluatedInfos(instance, options);
+                if (positiveProperties.Count != 0)
+                {
+                    evaluatedProperties ??= new HashSet<TValue>();
+                    evaluatedProperties.UnionWith(positiveProperties);
+                }
+            }
+        }
+        else
+        {
+            if (NegativeValidator is TEvaluator negativeEvaluator)
+            {
+                IReadOnlyCollection<TValue> negativeProperties = negativeEvaluator.GetEvaluatedInfos(instance, options);
+                if (negativeProperties.Count != 0)
+                {
+                    evaluatedProperties ??= new HashSet<TValue>();
+                    evaluatedProperties.UnionWith(negativeProperties);
+                }
+            }
+        }
+        
+        return evaluatedProperties ?? (IReadOnlyCollection<TValue>)Array.Empty<TValue>();
+    }
+
 }

@@ -13,12 +13,12 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords.Draft7;
 [Keyword("items")]
 [Dialect(DialectKind.Draft7, DialectKind.Draft201909)]
 [JsonConverter(typeof(ItemsDraft7KeywordJsonConverter))]
-internal abstract class ItemsDraft7Keyword : ValidationKeywordBase
+internal abstract class ItemsDraft7Keyword : ResetUnevaluatedScopeKeywordBase
 {
 }
 
 [JsonConverter(typeof(SubSchemaCollectionJsonConverter<ItemsWithMultiSchemasKeyword>))]
-internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword, ISchemaContainerElement, ISubSchemaCollection, IJsonSchemaResourceNodesCleanable
+internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword, ISchemaContainerElement, ISubSchemaCollection, IJsonSchemaResourceNodesCleanable, IItemEvaluator
 {
     private readonly JsonSchema[] _schemas = null!;
 
@@ -90,6 +90,31 @@ internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword, ISchemaContain
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
     }
 
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        if (instance.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<int>();
+        }
+
+        int arrayLength = instance.GetArrayLength();
+        int evaluatedItemsCount = Math.Min(arrayLength, SubSchemas.Count);
+
+        if (evaluatedItemsCount == 0)
+        {
+            return Array.Empty<int>();
+        }
+
+        var evaluatedItems = new int[evaluatedItemsCount];
+
+        for (int i = 0; i < evaluatedItems.Length; i++)
+        {
+            evaluatedItems[i] = i;
+        }
+
+        return evaluatedItems;
+    }
+
     public ISchemaContainerElement? GetSubElement(string name)
     {
         return ((ISubSchemaCollection)this).GetSubElement(name);
@@ -120,7 +145,7 @@ internal class ItemsWithMultiSchemasKeyword : ItemsDraft7Keyword, ISchemaContain
 }
 
 [JsonConverter(typeof(SingleSchemaJsonConverter<ItemsWithOneSchemaKeyword>))]
-internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
+internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable, IItemEvaluator
 {
     private JsonSchema _schema = null!;
 
@@ -175,6 +200,30 @@ internal class ItemsWithOneSchemaKeyword : ItemsDraft7Keyword, ISchemaContainerE
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
+    }
+
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        if (instance.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<int>();
+        }
+
+        int arrayLength = instance.GetArrayLength();
+
+        if (arrayLength == 0)
+        {
+            return Array.Empty<int>();
+        }
+
+        var evaluatedItems = new int[arrayLength];
+
+        for (int i = 0; i < evaluatedItems.Length; i++)
+        {
+            evaluatedItems[i] = i;
+        }
+
+        return evaluatedItems;
     }
 
     public ISchemaContainerElement? GetSubElement(string name)

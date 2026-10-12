@@ -176,7 +176,7 @@ public class ArrayKeywordBuilder : KeywordBuilder
         var arrayContainsValidator = new ArrayContainsValidator(jsonSchemaBuilder.Build(), null, null);
 
         _schemas.Add(new BodyJsonSchema(Enumerable.Empty<ValidationKeywordBase>(), null,
-            new ISchemaContainerValidationNode[] {arrayContainsValidator}, null, null, null, null, null));
+            new ISchemaContainerValidationNode[] {arrayContainsValidator}, null, null, null, null, null, default));
 
         return this;
     }
@@ -236,7 +236,7 @@ public class ArrayKeywordBuilder : KeywordBuilder
         var arrayContainsValidator = new ArrayContainsValidator(subSchema, 1, 1);
 
         _schemas.Add(new BodyJsonSchema(Enumerable.Empty<ValidationKeywordBase>(), null, new ISchemaContainerValidationNode[] {arrayContainsValidator}, 
-            null, null, null, null, null));
+            null, null, null, null, null, default));
 
         return this;
     }

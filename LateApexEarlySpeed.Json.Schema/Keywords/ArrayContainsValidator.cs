@@ -7,7 +7,7 @@ using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSchemaResourceNodesCleanable
+internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSchemaResourceNodesCleanable, IItemEvaluator
 {
     public const string ContainsKeywordName = "contains";
     public const string MaxContainsKeywordName = "maxContains";
@@ -36,32 +36,52 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
             return ValidationResult.ValidResult;
         }
 
+        // 'contains' evaluated items info is only consumed by 'unevaluatedItems', so only need to record when inside 'unevaluatedItems' scope.
+        // Note this must be read before resetting scope below.
+        bool shouldRecordEvaluatedItems = options.InUnevaluatedItemsScope;
+
+        // 'contains' sub schema applies to array items, which start new unevaluated scopes.
+        bool origPropState = options.EnterUnevaluatedPropertiesScope(false);
+        bool origItemState = options.EnterUnevaluatedItemsScope(false);
+
+        ValidationResult result = ValidateInternal(instance, options, shouldRecordEvaluatedItems);
+
+        options.ExitUnevaluatedItemsScope(origItemState);
+        options.ExitUnevaluatedPropertiesScope(origPropState);
+
+        return result;
+    }
+
+    private ValidationResult ValidateInternal(JsonInstanceElement instance, JsonSchemaOptions options, bool shouldRecordEvaluatedItems)
+    {
         if (!MinContains.HasValue && !MaxContains.HasValue)
         {
-            return ValidateWithoutMinContainsAndMaxContains(instance, options);
+            return ValidateWithoutMinContainsAndMaxContains(instance, options, shouldRecordEvaluatedItems);
         }
 
         if (MaxContains.HasValue)
         {
-            return ValidateWithMaxContains(instance, options);
+            return ValidateWithMaxContains(instance, options, shouldRecordEvaluatedItems);
         }
 
         Debug.Assert(!MaxContains.HasValue);
         Debug.Assert(MinContains.HasValue);
 
-        return ValidateWithoutMaxContains(instance, options);
+        return ValidateWithoutMaxContains(instance, options, shouldRecordEvaluatedItems);
     }
 
-    private ValidationResult ValidateWithoutMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
+    private ValidationResult ValidateWithoutMaxContains(JsonInstanceElement instance, JsonSchemaOptions options, bool shouldRecordEvaluatedItems)
     {
         Debug.Assert(MinContains.HasValue);
 
-        if (MinContains == 0)
+        // When not recording evaluated items, 'minContains == 0' makes this keyword trivially pass without validating any item.
+        // When recording, still need to iterate items to record matched evaluated items (result is always valid since minContains is 0).
+        if (MinContains == 0 && !shouldRecordEvaluatedItems)
         {
             return ValidationResult.ValidResult;
         }
 
-        var validator = new WithoutMaxContainsValidator(this, instance, options);
+        var validator = new WithoutMaxContainsValidator(this, instance, options, shouldRecordEvaluatedItems);
         return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
@@ -70,34 +90,61 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
         private readonly ArrayContainsValidator _arrayContainsValidator;
         private readonly JsonInstanceElement _instance;
         private readonly JsonSchemaOptions _options;
+        private readonly bool _shouldRecordEvaluatedItems;
         private int _validatedItemCount;
 
-        public WithoutMaxContainsValidator(ArrayContainsValidator arrayContainsValidator, JsonInstanceElement instance, JsonSchemaOptions options)
+        public WithoutMaxContainsValidator(ArrayContainsValidator arrayContainsValidator, JsonInstanceElement instance, JsonSchemaOptions options, bool shouldRecordEvaluatedItems)
         {
             _arrayContainsValidator = arrayContainsValidator;
             _instance = instance;
             _options = options;
+            _shouldRecordEvaluatedItems = shouldRecordEvaluatedItems;
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
             Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
 
-            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
+            if (_shouldRecordEvaluatedItems)
             {
-                ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
-                if (validationResult.IsValid)
+                byte[] evaluatedItemsStatus = BitmapHelper.CreateBitmap(_instance.GetArrayLength());
+
+                int i = 0;
+                foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
                 {
-                    _validatedItemCount++;
+                    ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
+                    if (validationResult.IsValid)
+                    {
+                        _validatedItemCount++;
+                        BitmapHelper.SetBit(evaluatedItemsStatus, i);
+                    }
+
+                    bool reportValidationResult = context.ReportValidationResult(validationResult, null);
+                    Debug.Assert(reportValidationResult);
+
+                    i++;
                 }
 
-                ValidationResult? fastResult = _validatedItemCount >= _arrayContainsValidator.MinContains
-                    ? ValidationResult.ValidResult
-                    : null;
-
-                if (!context.ReportValidationResult(validationResult, fastResult))
+                _options.SetSubSchemaStatusBitmap(_arrayContainsValidator, _instance.Location, evaluatedItemsStatus);
+            }
+            else
+            {
+                foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
                 {
-                    break;
+                    ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
+                    if (validationResult.IsValid)
+                    {
+                        _validatedItemCount++;
+                    }
+
+                    ValidationResult? fastResult = _validatedItemCount >= _arrayContainsValidator.MinContains
+                        ? ValidationResult.ValidResult
+                        : null;
+
+                    if (!context.ReportValidationResult(validationResult, fastResult))
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -119,9 +166,9 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
         }
     }
 
-    private ValidationResult ValidateWithMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
+    private ValidationResult ValidateWithMaxContains(JsonInstanceElement instance, JsonSchemaOptions options, bool shouldRecordEvaluatedItems)
     {
-        var validator = new WithMaxContainsValidator(this, instance, options);
+        var validator = new WithMaxContainsValidator(this, instance, options, shouldRecordEvaluatedItems);
         return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
@@ -130,37 +177,64 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
         private readonly ArrayContainsValidator _arrayContainsValidator;
         private readonly JsonInstanceElement _instance;
         private readonly JsonSchemaOptions _options;
+        private readonly bool _shouldRecordEvaluatedItems;
         private int _validatedItemCount;
 
-        public WithMaxContainsValidator(ArrayContainsValidator arrayContainsValidator, JsonInstanceElement instance, JsonSchemaOptions options)
+        public WithMaxContainsValidator(ArrayContainsValidator arrayContainsValidator, JsonInstanceElement instance, JsonSchemaOptions options, bool shouldRecordEvaluatedItems)
         {
             _arrayContainsValidator = arrayContainsValidator;
             _instance = instance;
             _options = options;
+            _shouldRecordEvaluatedItems = shouldRecordEvaluatedItems;
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
             Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
 
-            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
+            if (_shouldRecordEvaluatedItems)
             {
-                ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
-                if (validationResult.IsValid)
+                byte[] evaluatedItemsStatus = BitmapHelper.CreateBitmap(_instance.GetArrayLength());
+
+                int i = 0;
+                foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
                 {
-                    _validatedItemCount++;
+                    ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
+                    if (validationResult.IsValid)
+                    {
+                        _validatedItemCount++;
+                        BitmapHelper.SetBit(evaluatedItemsStatus, i);
+                    }
+
+                    bool reportValidationResult = context.ReportValidationResult(validationResult, null);
+                    Debug.Assert(reportValidationResult);
+
+                    i++;
                 }
 
-                ValidationResult? fastResult = null;
-                if (_validatedItemCount > _arrayContainsValidator.MaxContains)
+                _options.SetSubSchemaStatusBitmap(_arrayContainsValidator, _instance.Location, evaluatedItemsStatus);
+            }
+            else
+            {
+                foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
                 {
-                    ValidationError error = CreateValidationErrorWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, _options.GenerateErrorMessages ? GetFailedMaxContainsErrorMessage(_instance.ToString(), _arrayContainsValidator.MaxContains.Value) : string.Empty, MaxContainsKeywordName, _options.ValidationPathStack, _instance.Location);
-                    fastResult = ValidationResult.SingleErrorFailedResult(error);
-                }
+                    ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
+                    if (validationResult.IsValid)
+                    {
+                        _validatedItemCount++;
+                    }
 
-                if (!context.ReportValidationResult(validationResult, fastResult))
-                {
-                    break;
+                    ValidationResult? fastResult = null;
+                    if (_validatedItemCount > _arrayContainsValidator.MaxContains)
+                    {
+                        ValidationError error = CreateValidationErrorWithLocation(ResultCode.ValidatedArrayItemsCountOutOfRange, _options.GenerateErrorMessages ? GetFailedMaxContainsErrorMessage(_instance.ToString(), _arrayContainsValidator.MaxContains.Value) : string.Empty, MaxContainsKeywordName, _options.ValidationPathStack, _instance.Location);
+                        fastResult = ValidationResult.SingleErrorFailedResult(error);
+                    }
+
+                    if (!context.ReportValidationResult(validationResult, fastResult))
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -208,9 +282,9 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
     internal static string GetFailedContainsErrorMessage(string instanceJson)
         => $"No validated array items found, array instance: {instanceJson}";
 
-    private ValidationResult ValidateWithoutMinContainsAndMaxContains(JsonInstanceElement instance, JsonSchemaOptions options)
+    private ValidationResult ValidateWithoutMinContainsAndMaxContains(JsonInstanceElement instance, JsonSchemaOptions options, bool shouldRecordEvaluatedItems)
     {
-        var validator = new WithoutMinContainsAndMaxContainsValidator(this, instance, options);
+        var validator = new WithoutMinContainsAndMaxContainsValidator(this, instance, options, shouldRecordEvaluatedItems);
         return ValidationResultsComposer.Compose(ref validator, options.OutputFormat);
     }
 
@@ -219,30 +293,57 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
         private readonly ArrayContainsValidator _arrayContainsValidator;
         private readonly JsonInstanceElement _instance;
         private readonly JsonSchemaOptions _options;
+        private readonly bool _shouldRecordEvaluatedItems;
         private ValidationResult? _fastReturnResult;
 
-        public WithoutMinContainsAndMaxContainsValidator(ArrayContainsValidator arrayContainsValidator, JsonInstanceElement instance, JsonSchemaOptions options)
+        public WithoutMinContainsAndMaxContainsValidator(ArrayContainsValidator arrayContainsValidator, JsonInstanceElement instance, JsonSchemaOptions options, bool shouldRecordEvaluatedItems)
         {
             _arrayContainsValidator = arrayContainsValidator;
             _instance = instance;
             _options = options;
+            _shouldRecordEvaluatedItems = shouldRecordEvaluatedItems;
         }
 
         public void CollectValidationResults(ref ValidationCompositionContext context)
         {
             Debug.Assert(_arrayContainsValidator.ContainsSchema is not null);
 
-            foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
+            if (_shouldRecordEvaluatedItems)
             {
-                ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
-                if (validationResult.IsValid)
+                byte[] evaluatedItemsStatus = BitmapHelper.CreateBitmap(_instance.GetArrayLength());
+
+                int i = 0;
+                foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
                 {
-                    _fastReturnResult = ValidationResult.ValidResult;
+                    ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
+                    if (validationResult.IsValid)
+                    {
+                        _fastReturnResult = ValidationResult.ValidResult;
+                        BitmapHelper.SetBit(evaluatedItemsStatus, i);
+                    }
+
+                    bool reportValidationResult = context.ReportValidationResult(validationResult, null);
+                    Debug.Assert(reportValidationResult);
+
+                    i++;
                 }
 
-                if (!context.ReportValidationResult(validationResult, _fastReturnResult))
+                _options.SetSubSchemaStatusBitmap(_arrayContainsValidator, _instance.Location, evaluatedItemsStatus);
+            }
+            else
+            {
+                foreach (JsonInstanceElement instanceItem in _instance.EnumerateArray())
                 {
-                    break;
+                    ValidationResult validationResult = _arrayContainsValidator.ContainsSchema.Validate(instanceItem, _options);
+                    if (validationResult.IsValid)
+                    {
+                        _fastReturnResult = ValidationResult.ValidResult;
+                    }
+
+                    if (!context.ReportValidationResult(validationResult, _fastReturnResult))
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -297,5 +398,29 @@ internal class ArrayContainsValidator : ISchemaContainerValidationNode, IJsonSch
         {
             BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _containsSchema = newSchema);
         }
+    }
+
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        if (instance.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<int>();
+        }
+
+        byte[] evaluatedItemsStatus = options.GetSubSchemaStatusBitmap(this, instance.Location);
+
+        List<int>? evaluatedItems = null;
+
+        int arrayLength = instance.GetArrayLength();
+        for (int i = 0; i < arrayLength; i++)
+        {
+            if (BitmapHelper.IsBitSet(evaluatedItemsStatus, i))
+            {
+                evaluatedItems ??= new List<int>();
+                evaluatedItems.Add(i);
+            }
+        }
+
+        return evaluatedItems ?? (IReadOnlyCollection<int>)Array.Empty<int>();
     }
 }

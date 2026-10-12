@@ -8,7 +8,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests;
 
 public class AnnotationTests
 {
-    private static readonly string[] UnsupportedFileNames = new[] { "unevaluated", "unknown" };
+    private static readonly string[] UnsupportedFileNames = new[] { "unknown" };
 
     [Theory]
     [MemberData(nameof(AnnotationTestSuite))]

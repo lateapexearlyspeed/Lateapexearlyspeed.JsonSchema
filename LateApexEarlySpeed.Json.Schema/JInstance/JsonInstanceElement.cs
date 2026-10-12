@@ -291,6 +291,8 @@ public readonly struct JsonInstanceElement : IEquatable<JsonInstanceElement>
 
     public JsonValueKind ValueKind => InternalJsonElement.ValueKind;
 
+    public int GetArrayLength() => InternalJsonElement.GetArrayLength();
+
     public string? GetString() => InternalJsonElement.GetString();
 
     public double GetDouble() => InternalJsonElement.GetDouble();

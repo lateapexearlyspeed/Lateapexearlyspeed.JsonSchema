@@ -1,4 +1,7 @@
 ﻿using System.Collections;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
@@ -7,7 +10,11 @@ public class JsonSchemaOptions
 {
     internal JsonValidator? JsonValidator { get; set; }
     internal SchemaRecursionRecorder SchemaRecursionRecorder { get; } = new();
+    internal bool InUnevaluatedPropertiesScope { get; private set; }
+    internal bool InUnevaluatedItemsScope { get; private set; }
     public ValidationPathStack ValidationPathStack { get; } = new();
+
+    internal ColdSchemaOptions? ColdOptions { get; set; }
 
     /// <summary>
     /// Gets or sets a value that defines whether JSON schema validates with 'format' keyword.
@@ -68,6 +75,110 @@ public class JsonSchemaOptions
             GenerateErrorMessages = options.GenerateErrorMessages;
             JsonArrayEqualityComparer = options.JsonArrayEqualityComparer;
             JsonStringComparison = options.JsonStringComparison;
+        }
+    }
+
+    /// <returns>Original <see cref="InUnevaluatedPropertiesScope"/> value, which should be passed back to <see cref="ExitUnevaluatedPropertiesScope"/> when leaving current scope.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool EnterUnevaluatedPropertiesScope(bool inUnevaluatedPropertiesScope)
+    {
+        bool origValue = InUnevaluatedPropertiesScope;
+        InUnevaluatedPropertiesScope = inUnevaluatedPropertiesScope;
+
+        return origValue;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void ExitUnevaluatedPropertiesScope(bool origValue)
+    {
+        InUnevaluatedPropertiesScope = origValue;
+    }
+
+    /// <returns>Original <see cref="InUnevaluatedItemsScope"/> value, which should be passed back to <see cref="ExitUnevaluatedItemsScope"/> when leaving current scope.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool EnterUnevaluatedItemsScope(bool inUnevaluatedItemsScope)
+    {
+        bool origValue = InUnevaluatedItemsScope;
+        InUnevaluatedItemsScope = inUnevaluatedItemsScope;
+
+        return origValue;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void ExitUnevaluatedItemsScope(bool origValue)
+    {
+        InUnevaluatedItemsScope = origValue;
+    }
+
+    /// <remarks>This method assumes that the bitmap for the specified validation node and instance location already existed in the cache.</remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal byte[] GetSubSchemaStatusBitmap(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation)
+    {
+        Debug.Assert(ColdOptions is not null);
+        return ColdOptions.GetSubSchemaStatusBitmap(validationNode, instanceLocation);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void SetSubSchemaStatusBitmap(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation, byte[] bitmap)
+    {
+        (ColdOptions ??= new ColdSchemaOptions()).SetSubSchemaStatusBitmap(validationNode, instanceLocation, bitmap);
+    }
+
+    /// <remarks>This method assumes that the 'if' subschema status for 'if' node and instance location already existed in the cache.</remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool GetIfSubSchemaStatus(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation)
+    {
+        Debug.Assert(ColdOptions is not null);
+        return ColdOptions.GetIfSubSchemaStatus(validationNode, instanceLocation);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void SetIfSubSchemaStatus(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation, bool status)
+    {
+        (ColdOptions ??= new ColdSchemaOptions()).SetIfSubSchemaStatus(validationNode, instanceLocation, status);
+    }
+
+    internal class ColdSchemaOptions
+    {
+        /// <summary>
+        /// The value in this dictionary is a bitmap, each bit represents whether the corresponding sub-schema has been validated successfully.
+        /// </summary>
+        private Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]>? _subSchemaValidationStatusCache;
+
+        /// <summary>
+        /// This dictionary is used to cache the validation status of "if" sub-schema and JSON instance location.
+        /// </summary>
+        private Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), bool>? _ifSubSchemaValidationStatusCache;
+
+        /// <remarks>This method assumes that the bitmap for the specified validation node and instance location already existed in the cache.</remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public byte[] GetSubSchemaStatusBitmap(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation)
+        {
+            Debug.Assert(_subSchemaValidationStatusCache is not null);
+            return _subSchemaValidationStatusCache[(validationNode, instanceLocation)];
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetSubSchemaStatusBitmap(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation, byte[] bitmap)
+        {
+            _subSchemaValidationStatusCache ??= new Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), byte[]>();
+
+            _subSchemaValidationStatusCache[(validationNode, instanceLocation)] = bitmap;
+        }
+
+        /// <remarks>This method assumes that the 'if' subschema status for 'if' node and instance location already existed in the cache.</remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool GetIfSubSchemaStatus(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation)
+        {
+            Debug.Assert(_ifSubSchemaValidationStatusCache is not null);
+            return _ifSubSchemaValidationStatusCache[(validationNode, instanceLocation)];
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetIfSubSchemaStatus(IValidationNode validationNode, LinkedListBasedImmutableJsonPointer instanceLocation, bool status)
+        {
+            _ifSubSchemaValidationStatusCache ??= new Dictionary<(IValidationNode, LinkedListBasedImmutableJsonPointer), bool>();
+            _ifSubSchemaValidationStatusCache[(validationNode, instanceLocation)] = status;
         }
     }
 }

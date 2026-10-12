@@ -1,4 +1,5 @@
 ﻿using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.Common.interfaces;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
@@ -132,4 +133,65 @@ internal class SchemaReferenceKeyword : ValidationKeywordBase, IReferenceKeyword
 
         return validationResult;
     }
+
+    IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return GetEvaluatedInfoInternal<IPropertyEvaluator, string>(instance, options);
+    }
+
+    IReadOnlyCollection<int> IInfoEvaluator<int>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        return GetEvaluatedInfoInternal<IItemEvaluator, int>(instance, options);
+    }
+
+    private IReadOnlyCollection<TValue> GetEvaluatedInfoInternal<TEvaluator, TValue>(JsonInstanceElement instance, JsonSchemaOptions options) where TEvaluator : IInfoEvaluator<TValue>
+    {
+        Debug.Assert(FullUriRef is not null);
+
+        if (!TryGetReferencedSchema(options, out JsonSchema? referencedSchema, out JsonSchemaResource? referencedSchemaResource))
+        {
+            throw new InvalidOperationException($"Cannot find schema for {Keyword}: {FullUriRef}");
+        }
+
+        if (!options.SchemaRecursionRecorder.TryPushRecord(referencedSchema, instance.Location))
+        {
+            throw new InvalidOperationException($"Infinite recursion loop detected. Instance path: {instance.Location}");
+        }
+
+        options.ValidationPathStack.PushSchemaResource(referencedSchemaResource);
+        options.ValidationPathStack.PushReferencedSchema(referencedSchemaResource, FullUriRef);
+
+        IReadOnlyCollection<TValue> result;
+        if (referencedSchema is TEvaluator evaluator)
+        {
+            if (referencedSchema is JsonSchemaResource jsonSchemaResource)
+            {
+                if (typeof(TValue) == typeof(string))
+                {
+                    result = (IReadOnlyCollection<TValue>)jsonSchemaResource.GetEvaluatedPropertiesInternal(instance, options);
+                }
+                else
+                {
+                    Debug.Assert(typeof(TValue) == typeof(int));
+
+                    result = (IReadOnlyCollection<TValue>)jsonSchemaResource.GetEvaluatedItemsInternal(instance, options);
+                }
+            }
+            else
+            {
+                result = evaluator.GetEvaluatedInfos(instance, options);    
+            }
+        }
+        else
+        {
+            result = Array.Empty<TValue>();
+        }
+
+        options.ValidationPathStack.PopReferencedSchema();
+        options.ValidationPathStack.PopSchemaResource();
+        options.SchemaRecursionRecorder.PopRecord();
+
+        return result;
+    }
+
 }

@@ -10,7 +10,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("properties")]
 [JsonConverter(typeof(PropertiesKeywordJsonConverter))]
-internal class PropertiesKeyword : ValidationKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class PropertiesKeyword : ResetUnevaluatedScopeKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
 {
     private readonly Dictionary<string, JsonSchema> _propertiesSchemas;
 
@@ -107,5 +107,26 @@ internal class PropertiesKeyword : ValidationKeywordBase, ISchemaContainerElemen
                 BodyJsonSchema.RemoveIdForBodyJsonSchemaTree(bodyJsonSchema, newSchema => _propertiesSchemas[property] = newSchema);
             }
         }
+    }
+
+    public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        if (instance.ValueKind != JsonValueKind.Object)
+        {
+            return Array.Empty<string>();
+        }
+
+        List<string>? evaluatedProperties = null;
+
+        foreach (JsonInstanceProperty instanceProperty in instance.EnumerateObject())
+        {
+            if (_propertiesSchemas.ContainsKey(instanceProperty.Name))
+            {
+                evaluatedProperties ??= new List<string>();
+                evaluatedProperties.Add(instanceProperty.Name);
+            }
+        }
+
+        return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
     }
 }

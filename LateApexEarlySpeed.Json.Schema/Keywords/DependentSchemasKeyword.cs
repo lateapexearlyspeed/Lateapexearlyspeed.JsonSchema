@@ -10,7 +10,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
 [Keyword("dependentSchemas")]
 [JsonConverter(typeof(DependentSchemasKeywordJsonConverter))]
-internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable
+internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainerElement, IJsonSchemaResourceNodesCleanable, IPropertyEvaluator
 {
     private readonly Dictionary<string, JsonSchema> _dependentSchemas;
 
@@ -102,4 +102,25 @@ internal class DependentSchemasKeyword : ValidationKeywordBase, ISchemaContainer
             }
         }
     }
+
+    public IReadOnlyCollection<string> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        HashSet<string>? evaluatedProperties = null;
+
+        foreach (JsonInstanceProperty instanceProperty in instance.EnumerateObject())
+        {
+            if (_dependentSchemas.TryGetValue(instanceProperty.Name, out JsonSchema? subSchema) && subSchema is IPropertyEvaluator propertyEvaluator)
+            {
+                IReadOnlyCollection<string> subSchemaEvaluatedProperties = propertyEvaluator.GetEvaluatedProperties(instance, options);
+                if (subSchemaEvaluatedProperties.Count != 0)
+                {
+                    evaluatedProperties ??= new HashSet<string>();
+                    evaluatedProperties.UnionWith(subSchemaEvaluatedProperties);
+                }
+            }
+        }
+
+        return evaluatedProperties ?? (IReadOnlyCollection<string>)Array.Empty<string>();
+    }
+
 }

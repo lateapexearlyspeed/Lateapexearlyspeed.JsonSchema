@@ -12,7 +12,7 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [Keyword("items")]
 [Dialect(DialectKind.Draft202012)]
 [JsonConverter(typeof(SingleSchemaJsonConverter<ItemsKeyword>))]
-internal class ItemsKeyword : ValidationKeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable
+internal class ItemsKeyword : ResetUnevaluatedScopeKeywordBase, ISchemaContainerElement, ISingleSubSchema, IJsonSchemaResourceNodesCleanable, IItemEvaluator
 {
     private JsonSchema _schema = null!;
 
@@ -75,6 +75,31 @@ internal class ItemsKeyword : ValidationKeywordBase, ISchemaContainerElement, IS
         }
 
         public ResultTuple Result => _fastReturnResult is null ? ResultTuple.Valid() : ResultTuple.Invalid(null);
+    }
+
+    public IReadOnlyCollection<int> GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)
+    {
+        if (instance.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<int>();
+        }
+
+        int prefixItemsCount = PrefixItemsKeyword?.SubSchemas.Count ?? 0;
+        int arrayLength = instance.GetArrayLength();
+
+        if (arrayLength <= prefixItemsCount)
+        {
+            return Array.Empty<int>();
+        }
+
+        var evaluatedItems = new int[arrayLength - prefixItemsCount];
+
+        for (int i = 0; i < evaluatedItems.Length; i++)
+        {
+            evaluatedItems[i] = i + prefixItemsCount;
+        }
+
+        return evaluatedItems;
     }
 
     public ISchemaContainerElement? GetSubElement(string name)
