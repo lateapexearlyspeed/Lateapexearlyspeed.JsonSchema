@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <AssemblyName>dotnet-lateapexearlyspeed-jsonschema</AssemblyName>
+    <RootNamespace>LateApexEarlySpeedJsonSchemaHarness</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LateApexEarlySpeed.Json.Schema" Version="4.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="meta-schemas\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,8 @@
+{"cmd": "start", "version": 1}
+{"cmd": "dialect", "dialect": "https://json-schema.org/draft/2020-12/schema"}
+{"cmd": "run", "seq": 1, "case": {"description": "validate definition against metaschema", "schema": {"$schema": "https://json-schema.org/draft/2020-12/schema", "$ref": "https://json-schema.org/draft/2020-12/schema"}, "tests": [{"description": "valid definition schema", "instance": {"$defs": {"foo": {"type": "integer"}}}}, {"description": "invalid definition schema", "instance": {"$defs": {"foo": {"type": 1}}}}]}}
+{"cmd": "dialect", "dialect": "https://json-schema.org/draft/2019-09/schema"}
+{"cmd": "run", "seq": 2, "case": {"description": "validate definition against metaschema", "schema": {"$schema": "https://json-schema.org/draft/2019-09/schema", "$ref": "https://json-schema.org/draft/2019-09/schema"}, "tests": [{"description": "valid definition schema", "instance": {"$defs": {"foo": {"type": "integer"}}}}, {"description": "invalid definition schema", "instance": {"$defs": {"foo": {"type": 1}}}}]}}
+{"cmd": "dialect", "dialect": "http://json-schema.org/draft-07/schema#"}
+{"cmd": "run", "seq": 3, "case": {"description": "validate definition against metaschema", "schema": {"$ref": "http://json-schema.org/draft-07/schema#"}, "tests": [{"description": "valid definition schema", "instance": {"definitions": {"foo": {"type": "integer"}}}}, {"description": "invalid definition schema", "instance": {"definitions": {"foo": {"type": 1}}}}]}}
+{"cmd": "stop"}

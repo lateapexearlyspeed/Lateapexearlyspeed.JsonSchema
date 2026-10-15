@@ -1,0 +1,5 @@
+{"cmd": "start", "version": 1}
+{"cmd": "dialect", "dialect": "https://json-schema.org/draft/2020-12/schema"}
+{"cmd": "run", "seq": 1, "case": {"description": "schema that uses custom metaschema with no validation vocabulary", "schema": {"$id": "https://schema/using/no/validation", "$schema": "http://localhost:1234/draft2020-12/metaschema-no-validation.json", "properties": {"badProperty": false, "numberProperty": {"minimum": 10}}}, "tests": [{"description": "applicator vocabulary still works", "instance": {"badProperty": "this property should not exist"}}, {"description": "no validation: valid number", "instance": {"numberProperty": 20}}, {"description": "no validation: invalid number, but it still validates", "instance": {"numberProperty": 1}}]}}
+{"cmd": "run", "seq": 2, "case": {"description": "ignore unrecognized optional vocabulary", "schema": {"$schema": "http://localhost:1234/draft2020-12/metaschema-optional-vocabulary.json", "type": "number"}, "tests": [{"description": "string value", "instance": "foobar"}, {"description": "number value", "instance": 20}]}}
+{"cmd": "stop"}

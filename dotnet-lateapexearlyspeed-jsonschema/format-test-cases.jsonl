@@ -1,0 +1,5 @@
+{"cmd": "start", "version": 1}
+{"cmd": "dialect", "dialect": "https://json-schema.org/draft/2020-12/schema"}
+{"cmd": "run", "seq": 1, "case": {"description": "schema that uses custom metaschema with format-assertion: false", "schema": {"$id": "https://schema/using/format-assertion/false", "$schema": "http://localhost:1234/draft2020-12/format-assertion-false.json", "format": "ipv4"}, "tests": [{"description": "valid string", "instance": "127.0.0.1"}, {"description": "invalid string", "instance": "not-an-ipv4"}]}}
+{"cmd": "run", "seq": 2, "case": {"description": "plain format test, no custom metaschema", "schema": {"$schema": "https://json-schema.org/draft/2020-12/schema", "format": "ipv4"}, "tests": [{"description": "valid string", "instance": "127.0.0.1"}, {"description": "invalid string", "instance": "not-an-ipv4"}]}}
+{"cmd": "stop"}
