@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
@@ -1030,6 +1031,42 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             Assert.Equal(LinkedListBasedImmutableJsonPointer.Create("/properties/Blub/$ref/enum"), validationError.RelativeKeywordLocation);
             Assert.Equal(new Uri("http://lateapexearlyspeed/#/unknown/MyCrazyEnum"), validationError.SubSchemaRefFullUri);
             Assert.Equal(new Uri("http://lateapexearlyspeed"), validationError.SchemaResourceBaseUri);
+        }
+
+        [Fact]
+        public void Validate_KeepSchemaKeywordInPureBodyJsonSchema()
+        {
+            // The nested 'value' schema is a pure body schema because it has '$schema' but no '$id'.
+            // It intentionally relies on Draft 2020-12: 'prefixItems' validates the first item, while
+            // 'items: false' only rejects items after the prefix. If nested '$schema' is lost after standard
+            // schema text generation, the Draft 7 default treats 'items: false' as applying to every item.
+            string schema = """
+                {
+                  "properties": {
+                    "value": {
+                      "$schema": "https://json-schema.org/draft/2020-12/schema",
+                      "prefixItems": [
+                        { "type": "string" }
+                      ],
+                      "items": false
+                    }
+                  }
+                }
+                """;
+
+            string instance = """
+                { "value": ["value"] }
+                """;
+            var jsonValidatorOptions = new JsonValidatorOptions { DefaultDialect = DialectKind.Draft7 };
+
+            var jsonValidator = new JsonValidator(schema, jsonValidatorOptions);
+            ValidationResult validationResult = jsonValidator.Validate(instance);
+            Assert.True(validationResult.IsValid);
+
+            schema = jsonValidator.GetStandardJsonSchemaText();
+            jsonValidator = new JsonValidator(schema, jsonValidatorOptions);
+            validationResult = jsonValidator.Validate(instance);
+            Assert.True(validationResult.IsValid);
         }
 
         /// <summary>
