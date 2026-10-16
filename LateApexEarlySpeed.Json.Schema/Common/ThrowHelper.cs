@@ -43,12 +43,6 @@ internal class ThrowHelper
     }
 
     [Pure]
-    public static JsonException CreateJsonSchemaContainsSchemaKeywordJsonException()
-    {
-        return new JsonException($"Json schema (non-Json resource) contains '{SchemaKeyword.Keyword}'");
-    }
-
-    [Pure]
     public static JsonException CreateKeywordHasEmptyJsonArrayJsonException<TKeyword>() where TKeyword : ValidationKeywordBase
     {
         return new JsonException(CreateKeywordPrefixContent<TKeyword>() + " expects non-empty json array.");

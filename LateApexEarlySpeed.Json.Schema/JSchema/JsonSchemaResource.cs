@@ -21,7 +21,7 @@ internal class JsonSchemaResource : BodyJsonSchema, IInfoEvaluator<string>, IInf
         RecursiveAnchor = recursiveAnchor;
     }
 
-    public SchemaKeyword? SchemaKeyword { get; }
+    public override SchemaKeyword? SchemaKeyword { get; }
 
     public bool RecursiveAnchor { get; }
 

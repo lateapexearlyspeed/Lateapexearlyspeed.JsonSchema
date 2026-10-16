@@ -398,13 +398,9 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 recursiveAnchor,
                 defsKeywords, potentialSchemaContainerElements, new UnevaluatedKeywords{ UnevaluatedPropertiesKeyword = unevaluatedPropertiesKeyword, UnevaluatedItemsKeyword = unevaluatedItemsKeyword });
         }
-        else if (schemaKeyword is not null)
-        {
-            throw ThrowHelper.CreateJsonSchemaContainsSchemaKeywordJsonException();
-        }
         else
         {
-            schema = new BodyJsonSchema(validationKeywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, defsKeywords, potentialSchemaContainerElements, new UnevaluatedKeywords{ UnevaluatedPropertiesKeyword = unevaluatedPropertiesKeyword, UnevaluatedItemsKeyword = unevaluatedItemsKeyword });
+            schema = new BodyJsonSchema(validationKeywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifier, dynamicAnchor, defsKeywords, potentialSchemaContainerElements, new UnevaluatedKeywords{ UnevaluatedPropertiesKeyword = unevaluatedPropertiesKeyword, UnevaluatedItemsKeyword = unevaluatedItemsKeyword }, schemaKeyword);
         }
 
         return (T)(object)schema;
@@ -515,15 +511,16 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         {
             writer.WriteStartObject();
 
-            BodyJsonSchema schema;
+            BodyJsonSchema schema = (BodyJsonSchema)(object)value;
+
+            if (schema.SchemaKeyword is not null)
+            {
+                writer.WriteString(SchemaKeyword.Keyword, schema.SchemaKeyword.DraftIdentifier.ToString());
+            }
+
             if (value is JsonSchemaResource schemaResource)
             {
                 Debug.Assert(value.GetType() == typeof(JsonSchemaResource) || value.GetType() == typeof(BodyJsonSchemaDocument));
-
-                if (schemaResource.SchemaKeyword is not null)
-                {
-                    writer.WriteString(SchemaKeyword.Keyword, schemaResource.SchemaKeyword.DraftIdentifier.ToString());
-                }
 
                 writer.WriteString(IdKeyword.Keyword, schemaResource.BaseUri!.ToString());
 
@@ -532,14 +529,6 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
                 {
                     writer.WriteBoolean(RecursiveAnchorKeyword.Keyword, RecursiveAnchorKeyword.EnabledValue);
                 }
-
-                schema = schemaResource;
-            }
-            else
-            {
-                Debug.Assert(value.GetType() == typeof(BodyJsonSchema));
-
-                schema = (BodyJsonSchema)(object)value;
             }
 
             // Validation keyword part:

@@ -17,11 +17,18 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
         public readonly UnevaluatedPropertiesKeyword? UnevaluatedPropertiesKeyword;
         public readonly UnevaluatedItemsKeyword? UnevaluatedItemsKeyword;
 
-        public ColdData(IAnnotationKeyword[]? annotationKeywords, UnevaluatedPropertiesKeyword? unevaluatedPropertiesKeyword, UnevaluatedItemsKeyword? unevaluatedItemsKeyword)
+        /// <remarks>
+        /// Although pure body json schema (no $id) cannot contain '$schema' keyword based on spec,
+        /// the bowtie smoke test needs pure body json schema to allow taking '$schema'.
+        /// </remarks>
+        public readonly SchemaKeyword? SchemaKeywordInNonJsonSchemaResource;
+
+        public ColdData(IAnnotationKeyword[]? annotationKeywords, UnevaluatedPropertiesKeyword? unevaluatedPropertiesKeyword, UnevaluatedItemsKeyword? unevaluatedItemsKeyword, SchemaKeyword? schemaKeywordInNonJsonSchemaResource)
         {
             AnnotationKeywords = annotationKeywords;
             UnevaluatedPropertiesKeyword = unevaluatedPropertiesKeyword;
             UnevaluatedItemsKeyword = unevaluatedItemsKeyword;
+            SchemaKeywordInNonJsonSchemaResource = schemaKeywordInNonJsonSchemaResource;
         }
     }
 
@@ -84,6 +91,12 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
 
     public UnevaluatedItemsKeyword? UnevaluatedItemsKeyword => _coldData?.UnevaluatedItemsKeyword;
 
+    /// <remarks>
+    /// Although pure body json schema (no $id) cannot contain '$schema' keyword based on spec,
+    /// the bowtie smoke test needs pure body json schema to allow taking '$schema'.
+    /// </remarks>
+    public virtual SchemaKeyword? SchemaKeyword => _coldData?.SchemaKeywordInNonJsonSchemaResource;
+
     public IPlainNameIdentifierKeyword? PlainNameIdentifierKeyword { get; }
 
     public string? DynamicAnchor { get; }
@@ -93,26 +106,18 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
 
     }
 
-    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords, IEnumerable<IAnnotationKeyword>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements, UnevaluatedKeywords unevaluatedKeywords)
+    public BodyJsonSchema(IEnumerable<ValidationKeywordBase> keywords, IEnumerable<IAnnotationKeyword>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements, UnevaluatedKeywords unevaluatedKeywords, SchemaKeyword? schemaKeyword = null)
     {
         _validationKeywords = MergeKeywords(keywords.ToArray());
 
-        bool hasColdData = false;
-        IAnnotationKeyword[]? annotations = null;
+        IAnnotationKeyword[]? annotations = annotationKeywords?.ToArray();
 
-        if (annotationKeywords is not null)
+        if (annotationKeywords is not null
+            || unevaluatedKeywords.UnevaluatedPropertiesKeyword is not null 
+            || unevaluatedKeywords.UnevaluatedItemsKeyword is not null
+            || schemaKeyword is not null)
         {
-            annotations = annotationKeywords.ToArray();
-            hasColdData = true;
-        }
-        else if (unevaluatedKeywords.UnevaluatedPropertiesKeyword is not null || unevaluatedKeywords.UnevaluatedItemsKeyword is not null)
-        {
-            hasColdData = true;
-        }
-
-        if (hasColdData)
-        {
-            _coldData = new ColdData(annotations, unevaluatedKeywords.UnevaluatedPropertiesKeyword, unevaluatedKeywords.UnevaluatedItemsKeyword);
+            _coldData = new ColdData(annotations, unevaluatedKeywords.UnevaluatedPropertiesKeyword, unevaluatedKeywords.UnevaluatedItemsKeyword, schemaKeyword);
         }
 
         if (schemaContainerValidators is not null)
