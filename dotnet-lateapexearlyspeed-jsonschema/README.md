@@ -81,8 +81,8 @@ upstream bug ([`_smoke.py`](../.venv/Lib/site-packages/bowtie/_smoke.py)) that c
 Bowtie bug, not a harness bug — `-f json` bypasses the broken rich-console path entirely and gives clean
 output.
 
-Expected: `"success": false` with exactly one documented gap under each dialect (the nested-`$schema`
-smoke-test case — see "Known, documented gaps" below). No other entries should appear.
+Expected: `"success": true` for all 3 dialects — there are no remaining documented smoke-test gaps (see
+"Known, documented gaps" below).
 
 ## 5. Bowtie suite (official compliance scope, all 3 dialects)
 
@@ -134,22 +134,21 @@ c:/Users/PengHe/source/repos/Lateapexearlyspeed.JsonSchema/.venv/Scripts/python.
 
 ## Known, documented gaps
 
-Both are genuine upstream library limitations (not harness bugs), reported to Bowtie as `skipped` with an
+A genuine upstream library limitation (not a harness bug), reported to Bowtie as `skipped` with an
 `issue_url` pointing at the library's issue tracker:
 
-1. **Nested `$schema` in a non-resource-root subschema** (`bowtie smoke` only, not the official suite) — the
-   library throws `JsonException: "...(non-Json resource) contains '$schema'"` instead of ignoring it, as
-   conformant implementations are expected to. Triggered by Bowtie's own hardcoded
-   `{"$schema": <uri>, "not": {"$schema": <uri>}}` "bottom schema" construct used internally by
-   `bowtie smoke` (see [`_core.py`](../.venv/Lib/site-packages/bowtie/_core.py)'s `bottom_schema`) — this
-   pattern never appears in the real JSON-Schema-Test-Suite.
-2. **Custom `$vocabulary` declarations** (official suite's root-level `vocabulary.json`, 2019-09/2020-12
+1. **Custom `$vocabulary` declarations** (official suite's root-level `vocabulary.json`, 2019-09/2020-12
    only — 2 cases / 5 tests each) — the library has no mechanism to read a schema's own custom `$schema`
    and adjust keyword semantics accordingly (e.g. disabling the validation vocabulary entirely). Detected
    structurally (schema's `$schema` points outside the 3 known dialect URIs) rather than by filename, since
    the IHOP protocol never tells the harness which file a case came from — this keeps the skip correct
    automatically even if the suite's `vocabulary.json` content changes in the future.
 
-Both skip responses are applied to **every test in the affected case** (Bowtie's `TestCase.without_expected_results()`
+This skip response is applied to **every test in the affected case** (Bowtie's `TestCase.without_expected_results()`
 strips the expected `"valid"` field before sending cases to any harness, so the decision must be made purely
 from the schema itself, up front — never by comparing against an expected result the harness is never given).
+
+> `$schema` nested in a non-resource-root subschema (no accompanying `$id`) used to be an additional
+> documented gap here (triggered by Bowtie's own hardcoded `bottom_schema` construct used internally by
+> `bowtie smoke`, see [`_core.py`](../.venv/Lib/site-packages/bowtie/_core.py)) — fixed upstream in
+> `LateApexEarlySpeed.Json.Schema` 4.2.2, which now accepts and ignores it instead of throwing.

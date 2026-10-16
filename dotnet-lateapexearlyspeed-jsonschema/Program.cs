@@ -147,20 +147,6 @@ while (cmdSource.GetNextCommand() is { } line && line != "")
 
                 Console.WriteLine(new JsonObject { ["seq"] = seq, ["results"] = results }.ToJsonString());
             }
-            // LateApexEarlySpeed.Json.Schema throws when a subschema that is not a schema-resource root
-            // (i.e. has no accompanying "$id") contains "$schema". This is a documented library limitation,
-            // not a harness bug, so it is reported as skipped rather than errored.
-            catch (JsonException e) when (e.Message.Contains("(non-Json resource) contains '$schema'"))
-            {
-                var skipResult = new JsonObject
-                {
-                    ["seq"] = seq,
-                    ["skipped"] = true,
-                    ["message"] = "LateApexEarlySpeed.Json.Schema throws when a non-resource-root subschema (no accompanying \"$id\") contains \"$schema\", instead of ignoring it.",
-                    ["issue_url"] = "https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/issues",
-                };
-                Console.WriteLine(skipResult.ToJsonString());
-            }
             catch (Exception e)
             {
                 var errorResult = new JsonObject
