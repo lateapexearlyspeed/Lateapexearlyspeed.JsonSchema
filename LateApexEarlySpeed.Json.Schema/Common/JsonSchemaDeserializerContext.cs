@@ -41,6 +41,7 @@ internal ref struct JsonSchemaDeserializerContext
     public DialectKind Dialect;
     public readonly bool PropertyNameCaseInsensitive => _jsonValidatorOptions.PropertyNameCaseInsensitive;
     public readonly bool CollectAnnotations => _jsonValidatorOptions.CollectAnnotations;
+    public bool IsCustomMetaSchema { get; set; }
 
     static JsonSchemaDeserializerContext()
     {

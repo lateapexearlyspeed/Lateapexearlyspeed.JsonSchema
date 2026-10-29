@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
+using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
 
 namespace LateApexEarlySpeed.Json.Schema;
@@ -67,6 +68,8 @@ public class JsonValidatorOptions
     /// See doc of <see cref="FormatRegistry"/> property for details.
     /// </summary>
     internal FormatRegistry? InternalFormatRegistry { get; private set; }
+
+    internal MetaSchemaRegistry? InternalMetaSchemaRegistry { get; private set; }
 
     /// <summary>
     /// Non-null when this options instance must be carried by schema-deserialization JsonSerializerOptions,
@@ -142,6 +145,8 @@ public class JsonValidatorOptions
             return InternalFormatRegistry;
         }
     }
+
+    public MetaSchemaRegistry MetaSchemaRegistry => InternalMetaSchemaRegistry ??= new MetaSchemaRegistry();
 
     internal static JsonValidatorOptions Default { get; } = new();
 
