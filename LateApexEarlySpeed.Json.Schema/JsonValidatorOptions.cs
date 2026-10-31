@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Concurrent;
+using System.Text.Json;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JSchema;
 using LateApexEarlySpeed.Json.Schema.Keywords;
@@ -69,7 +70,7 @@ public class JsonValidatorOptions
     /// </summary>
     internal FormatRegistry? InternalFormatRegistry { get; private set; }
 
-    internal MetaSchemaRegistry? InternalMetaSchemaRegistry { get; private set; }
+    internal MetaSchemaRegistry? InternalCustomMetaSchemaRegistry { get; private set; }
 
     /// <summary>
     /// Non-null when this options instance must be carried by schema-deserialization JsonSerializerOptions,
@@ -146,7 +147,20 @@ public class JsonValidatorOptions
         }
     }
 
-    public MetaSchemaRegistry MetaSchemaRegistry => InternalMetaSchemaRegistry ??= new MetaSchemaRegistry();
+    public MetaSchemaRegistry CustomMetaSchemaRegistry
+    {
+        get
+        {
+            if (InternalCustomMetaSchemaRegistry is null)
+            {
+                InternalCustomMetaSchemaRegistry = new MetaSchemaRegistry();
+
+                JsonSerializerOptionsCache ??= new JsonSerializerOptionsCache(this);
+            }
+
+            return InternalCustomMetaSchemaRegistry;
+        }
+    }
 
     internal static JsonValidatorOptions Default { get; } = new();
 
@@ -164,7 +178,8 @@ public class JsonValidatorOptions
                && ReferenceEquals(InternalKeywordRegistry, other.InternalKeywordRegistry)
                && ReferenceEquals(GlobalKeywordRegistry, other.GlobalKeywordRegistry)
                && ReferenceEquals(InternalFormatRegistry, other.InternalFormatRegistry)
-               && ReferenceEquals(GlobalFormatRegistry, other.GlobalFormatRegistry);
+               && ReferenceEquals(GlobalFormatRegistry, other.GlobalFormatRegistry)
+               && ReferenceEquals(InternalCustomMetaSchemaRegistry, other.InternalCustomMetaSchemaRegistry);
     }
 }
 
@@ -179,18 +194,19 @@ internal class JsonSerializerOptionsCache
     /// </summary>
     private readonly JsonValidatorOptions _parent;
 
-    private readonly JsonSerializerOptions?[] _jsonSerializerOptionsCache = new JsonSerializerOptions[ValidationKeywordRegistry.SupportedDialectsCount];
+    // private readonly JsonSerializerOptions?[] _jsonSerializerOptionsCache = new JsonSerializerOptions[ValidationKeywordRegistry.SupportedDialectsCount];
+    private readonly ConcurrentDictionary<Uri, JsonSerializerOptions> _jsonSerializerOptionsCache = new();
 
     public JsonSerializerOptionsCache(JsonValidatorOptions parent)
     {
         _parent = parent;
     }
 
-    public JsonSerializerOptions GetJsonSerializerOptions(DialectKind dialect)
+    public JsonSerializerOptions GetJsonSerializerOptions(Uri metaSchemaId)
     {
-        return _jsonSerializerOptionsCache[(int)dialect] ??= new JsonSerializerOptions
+        return _jsonSerializerOptionsCache.GetOrAdd(metaSchemaId, static (schemaId, parent) => new JsonSerializerOptions
         {
-            Converters = { new JsonSchemaDeserializerContextMarkerConverter(_parent, dialect) }
-        };
+            Converters = { new JsonSchemaDeserializerContextMarkerConverter(parent, schemaId) }
+        }, _parent);
     }
 }

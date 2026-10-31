@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using LateApexEarlySpeed.Json.Schema.Common;
 using LateApexEarlySpeed.Json.Schema.JInstance;
 using LateApexEarlySpeed.Json.Schema.JSchema;
@@ -19,7 +18,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 {
     public class JsonValidatorTest : IClassFixture<JsonValidatorTestFixture>
     {
-        private static readonly string[] UnsupportedTestFiles = new[] { "vocabulary" };
+        private static readonly string[] UnsupportedTestFiles = new string[] {  };
 
         private static readonly string[] UnsupportedTestCases = new string[]
         {
@@ -34,6 +33,12 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             "Unnormalized $ids are allowed but discouraged",
             "remote ref, containing refs itself",
             "URN base URI with f-component"
+        };
+
+        private static readonly string[] TestCasesDependOnCustomMetaSchema = new []
+        {
+            "schema that uses custom metaschema with with no validation vocabulary",
+            "ignore unrecognized optional vocabulary"
         };
 
         private readonly IEnumerable<string> _externalSchemaDocuments;
@@ -98,7 +103,17 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
         private async Task<JsonValidator> CreateJsonValidatorWithExternalDocumentSupportAsync(DialectKind dialect, string schema, bool collectAnnotation, string testCaseDescription, bool ignoreResourceIdInUnknownKeyword)
         {
-            var jsonValidator = new JsonValidator(schema, new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdInUnknownKeyword, CollectAnnotations = collectAnnotation });
+            var jsonValidatorOptions = new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdInUnknownKeyword, CollectAnnotations = collectAnnotation };
+
+            if (TestCasesDependOnCustomMetaSchema.Contains(testCaseDescription))
+            {
+                foreach (string externalDocumentContent in _externalSchemaDocuments)
+                {
+                    jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(externalDocumentContent);
+                }
+            }
+
+            var jsonValidator = new JsonValidator(schema, jsonValidatorOptions);
             foreach (string externalDocumentContent in _externalSchemaDocuments)
             {
                 jsonValidator.AddExternalDocument(externalDocumentContent, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdInUnknownKeyword, CollectAnnotations = collectAnnotation });
@@ -122,7 +137,17 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
             _testOutputHelper.WriteLine($"Test description: {testDescription}");
 
-            var jsonValidator = new JsonValidator(schema.AsSpan(), new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword, CollectAnnotations = collectAnnotation });
+            var jsonValidatorOptions = new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword, CollectAnnotations = collectAnnotation };
+
+            if (TestCasesDependOnCustomMetaSchema.Contains(testCaseDescription))
+            {
+                foreach (string externalDocumentContent in _externalSchemaDocuments)
+                {
+                    jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(externalDocumentContent);
+                }
+            }
+            
+            var jsonValidator = new JsonValidator(schema.AsSpan(), jsonValidatorOptions);
             foreach (string content in _externalSchemaDocuments)
             {
                 jsonValidator.AddExternalDocument(content.AsSpan(), new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
@@ -148,7 +173,17 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
             await using (var utf8JsonSchema = new MemoryStream(Encoding.UTF8.GetBytes(schema)))
             {
-                var jsonValidator = new JsonValidator(utf8JsonSchema, new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword, CollectAnnotations = collectAnnotation });
+                var jsonValidatorOptions = new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword, CollectAnnotations = collectAnnotation };
+
+                if (TestCasesDependOnCustomMetaSchema.Contains(testCaseDescription))
+                {
+                    foreach (string externalDocumentContent in _externalSchemaDocuments)
+                    {
+                        jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(externalDocumentContent);
+                    }
+                }
+
+                var jsonValidator = new JsonValidator(utf8JsonSchema, jsonValidatorOptions);
                 foreach (string content in _externalSchemaDocuments)
                 {
                     await using (var externalUtf8JsonSchema = new MemoryStream(Encoding.UTF8.GetBytes(content)))
@@ -181,7 +216,17 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
             using (JsonDocument jsonSchema = JsonDocument.Parse(schema))
             {
-                var jsonValidator = new JsonValidator(jsonSchema.RootElement, new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword, CollectAnnotations = collectAnnotation });
+                var jsonValidatorOptions = new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword, CollectAnnotations = collectAnnotation };
+
+                if (TestCasesDependOnCustomMetaSchema.Contains(testCaseDescription))
+                {
+                    foreach (string externalDocumentContent in _externalSchemaDocuments)
+                    {
+                        jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(externalDocumentContent);
+                    }
+                }
+
+                var jsonValidator = new JsonValidator(jsonSchema.RootElement, jsonValidatorOptions);
                 foreach (string content in _externalSchemaDocuments)
                 {
                     using (JsonDocument externalJsonSchema = JsonDocument.Parse(content))
@@ -209,7 +254,17 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             _testOutputHelper.WriteLine($"Test case description: {testCaseDescription}");
             _testOutputHelper.WriteLine($"Test description: {testDescription}");
 
-            var jsonValidator = new JsonValidator(schema, new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword, CollectAnnotations = collectAnnotation })
+            var jsonValidatorOptions = new JsonValidatorOptions { DefaultDialect = dialect, IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword, CollectAnnotations = collectAnnotation };
+
+            if (TestCasesDependOnCustomMetaSchema.Contains(testCaseDescription))
+            {
+                foreach (string externalDocumentContent in _externalSchemaDocuments)
+                {
+                    jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(externalDocumentContent);
+                }
+            }
+            
+            var jsonValidator = new JsonValidator(schema, jsonValidatorOptions)
             {
                 ExternalSchemaDocumentPopulator = new TestExternalSchemaDocumentPopulator(_externalSchemaDocuments, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword })
             };

@@ -10,17 +10,17 @@ namespace LateApexEarlySpeed.Json.Schema.JSchema;
 public class MetaSchema
 {
     public Uri Id { get; }
-    public Vocabulary[] Vocabularies { get; }
+    private readonly Vocabulary[] _vocabularies;
 
     public MetaSchema(Uri id, Vocabulary[] vocabularies)
     {
         Id = id;
-        Vocabularies = vocabularies;
+        _vocabularies = vocabularies;
     }
 
     public bool ContainsKeyword(ReadOnlySpan<char> keyword)
     {
-        foreach (Vocabulary vocabulary in Vocabularies)
+        foreach (Vocabulary vocabulary in _vocabularies)
         {
             if (vocabulary.ContainsKeyword(keyword))
             {
@@ -33,7 +33,7 @@ public class MetaSchema
 
     public Type? GetKeyword(ReadOnlySpan<char> keyword)
     {
-        foreach (Vocabulary vocabulary in Vocabularies)
+        foreach (Vocabulary vocabulary in _vocabularies)
         {
             Type? type = vocabulary.GetKeyword(keyword);
             if (type is not null)
@@ -124,13 +124,13 @@ internal class MetaSchemaJsonConverter : JsonConverter<MetaSchema>
     public override bool HandleNull => true;
 }
 
-internal class Vocabulary
+public class Vocabulary
 {
     private static readonly Dictionary<Uri, Vocabulary> Vocabularies;
 
     static Vocabulary()
     {
-        var vocabularies = new Vocabulary[]
+        Vocabulary[] vocabularies = new[]
         {
             CreateCore2020(),
             CreateApplicator2020(),
@@ -203,7 +203,15 @@ internal class Vocabulary
     public Vocabulary(Uri id, Type[] validationKeywordTypes, string[] keywordNames)
     {
         Id = id;
-        _validationKeywordTypes = validationKeywordTypes;
+
+        int bucketCount = validationKeywordTypes.Length == 0 ? 1 : validationKeywordTypes.Length;
+        _validationKeywordTypes = new StringKeyedDictionary<Type>(bucketCount);
+
+        foreach (Type keywordType in validationKeywordTypes)
+        {
+            _validationKeywordTypes[KeywordHelper.GetKeywordName(keywordType)] = keywordType;
+        }
+
         _keywordNames = new StringKeyedHashSet(keywordNames);
     }
 

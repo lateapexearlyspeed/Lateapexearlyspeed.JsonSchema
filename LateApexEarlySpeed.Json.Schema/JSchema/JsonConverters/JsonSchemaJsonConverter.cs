@@ -238,9 +238,10 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         }
         else if (keywordName.Equals(SchemaKeyword.Keyword, StringComparison.Ordinal))
         {
-            bodyJsonSchemaReadContext.SchemaKeyword = GetSchemaKeyword(ref reader);
+            bodyJsonSchemaReadContext.SchemaKeyword = GetSchemaKeyword(ref reader, bodyJsonSchemaReadContext.DeserializerContext.InternalMetaSchemaRegistry);
 
             bodyJsonSchemaReadContext.DeserializerContext.Dialect = bodyJsonSchemaReadContext.SchemaKeyword.Dialect;
+            bodyJsonSchemaReadContext.DeserializerContext.MetaSchemaId = bodyJsonSchemaReadContext.SchemaKeyword.Identifier;
             options = bodyJsonSchemaReadContext.DeserializerContext.ToJsonSerializerOptions();
 
             if (tryTurnReadPart(ref bodyJsonSchemaReadContext, ref reader, keywordNameBuffer, ref bigKeywordNameBuffer, options))
@@ -574,7 +575,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         annotationKeywords.RemoveAt(contentSchemaIdx.Value);
     }
 
-    private static SchemaKeyword GetSchemaKeyword(ref Utf8JsonReader reader)
+    private static SchemaKeyword GetSchemaKeyword(ref Utf8JsonReader reader, MetaSchemaRegistry? metaSchemaRegistry)
     { 
         long bytes = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
 
@@ -594,7 +595,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
         ReadOnlySpan<char> schemaIdentifier = schemaIdentifierBuffer.Slice(0, schemaIdentifierLength);
 
-        return SchemaKeyword.Create(schemaIdentifier);
+        return SchemaKeyword.Create(schemaIdentifier, metaSchemaRegistry);
     }
 
     private static int CopyKeywordName(ref Utf8JsonReader reader, ref Span<char> keywordNameBuffer)
@@ -638,7 +639,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
             if (schema.SchemaKeyword is not null)
             {
-                writer.WriteString(SchemaKeyword.Keyword, schema.SchemaKeyword.DraftIdentifier.ToString());
+                writer.WriteString(SchemaKeyword.Keyword, schema.SchemaKeyword.Identifier.ToString());
             }
 
             if (value is JsonSchemaResource schemaResource)
