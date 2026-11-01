@@ -21,7 +21,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
     private const int KeywordNameCharBufferSizeOnStack = 21;
 
     /// <summary>
-    /// The longest schema identifier is <see cref="SchemaKeyword.Draft202012IdentifierString"/> - 44 characters
+    /// The longest standard schema identifier is <see cref="SchemaKeyword.Draft202012IdentifierString"/> - 44 characters
     /// </summary>
     private const int MaxSchemaIdentifierCharBufferSizeOnStack = 50;
 

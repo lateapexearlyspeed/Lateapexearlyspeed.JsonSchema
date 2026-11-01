@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -40,7 +41,9 @@ internal ref struct JsonSchemaDeserializerContext
     private readonly JsonValidatorOptions _jsonValidatorOptions;
 
     public DialectKind? Dialect;
-    public Uri MetaSchemaId;
+    private Uri _metaSchemaId;
+    private MetaSchema? _currentCustomMetaSchema;
+
     public readonly bool PropertyNameCaseInsensitive => _jsonValidatorOptions.PropertyNameCaseInsensitive;
     public readonly bool CollectAnnotations => _jsonValidatorOptions.CollectAnnotations;
     public readonly MetaSchemaRegistry? InternalMetaSchemaRegistry => _jsonValidatorOptions.InternalCustomMetaSchemaRegistry;
@@ -76,16 +79,28 @@ internal ref struct JsonSchemaDeserializerContext
         MetaSchemaId = SchemaKeyword.GetDraftIdentifier(dialect);
     }
 
-    public bool IsCustomMetaSchema
-    {
-        get
-        {
-            if (_jsonValidatorOptions.InternalCustomMetaSchemaRegistry is null || SchemaKeyword.TryGetStandardMetaSchema(MetaSchemaId, out _))
-            {
-                return false;
-            }
+    public bool IsCustomMetaSchema => _currentCustomMetaSchema is not null;
 
-            return _jsonValidatorOptions.InternalCustomMetaSchemaRegistry.GetMetaSchema(MetaSchemaId) is not null;
+    public Uri MetaSchemaId
+    {
+        get => _metaSchemaId;
+
+        [MemberNotNull(nameof(_metaSchemaId))]
+        set
+        {
+            _metaSchemaId = value;
+
+            _currentCustomMetaSchema = GetCurrentCustomMetaSchema(_jsonValidatorOptions.InternalCustomMetaSchemaRegistry, _metaSchemaId);
+
+            static MetaSchema? GetCurrentCustomMetaSchema(MetaSchemaRegistry? customMetaSchemaRegistry, Uri metaSchemaId)
+            {
+                if (customMetaSchemaRegistry is null || SchemaKeyword.TryGetStandardMetaSchema(metaSchemaId, out _))
+                {
+                    return null;
+                }
+
+                return customMetaSchemaRegistry.GetMetaSchema(metaSchemaId);
+            }
         }
     }
 
@@ -97,7 +112,7 @@ internal ref struct JsonSchemaDeserializerContext
             return JsonSerializerOptionsCache[(int)Dialect.Value * 4 + (PropertyNameCaseInsensitive ? 2 : 0) + (CollectAnnotations ? 1 : 0)];
         }
 
-        return _jsonValidatorOptions.JsonSerializerOptionsCache.GetJsonSerializerOptions(MetaSchemaId);
+        return _jsonValidatorOptions.JsonSerializerOptionsCache.GetJsonSerializerOptions(_metaSchemaId);
     }
 
     public Type? GetValidationKeyword(scoped ReadOnlySpan<char> keywordName)
@@ -114,23 +129,14 @@ internal ref struct JsonSchemaDeserializerContext
 
     public Type? GetValidationKeywordFromVocabulary(scoped ReadOnlySpan<char> keywordName)
     {
-        return GetCurrentCustomMetaSchema().GetKeyword(keywordName);
+        Debug.Assert(_currentCustomMetaSchema is not null);
+        return _currentCustomMetaSchema.GetKeyword(keywordName);
     }
 
     public bool ContainsKeywordInVocabulary(scoped ReadOnlySpan<char> keywordName)
     {
-        return GetCurrentCustomMetaSchema().ContainsKeyword(keywordName);
-    }
-
-    private MetaSchema GetCurrentCustomMetaSchema()
-    {
-        Debug.Assert(IsCustomMetaSchema);
-        Debug.Assert(_jsonValidatorOptions.InternalCustomMetaSchemaRegistry is not null);
-
-        MetaSchema? metaSchema = _jsonValidatorOptions.InternalCustomMetaSchemaRegistry.GetMetaSchema(MetaSchemaId);
-        Debug.Assert(metaSchema is not null);
-
-        return metaSchema;
+        Debug.Assert(_currentCustomMetaSchema is not null);
+        return _currentCustomMetaSchema.ContainsKeyword(keywordName);
     }
 }
 
