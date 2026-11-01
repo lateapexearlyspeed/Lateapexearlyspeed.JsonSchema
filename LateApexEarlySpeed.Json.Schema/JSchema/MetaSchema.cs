@@ -136,9 +136,16 @@ public class Vocabulary
             CreateApplicator2020(),
             CreateUnevaluated2020(),
             CreateValidation2020(),
+            CreateMetaData2020(),
+            CreateContent2020(),
+            CreateFormatAnnotation2020(),
+            CreateFormatAssertion2020(),
             CreateCore2019(),
             CreateApplicator2019(),
-            CreateValidation2019()
+            CreateValidation2019(),
+            CreateMetaData2019(),
+            CreateContent2019(),
+            CreateFormat2019()
         };
 
         Vocabularies = vocabularies.ToDictionary(v => v.Id);
@@ -172,6 +179,35 @@ public class Vocabulary
             new[]{"maxContains", "minContains"});
     }
 
+    private static Vocabulary CreateMetaData2020()
+    {
+        return new(new Uri("https://json-schema.org/draft/2020-12/vocab/meta-data"),
+            Array.Empty<Type>(),
+            new[]{"title", "description", "default", "deprecated", "readOnly", "writeOnly", "examples" });
+    }
+
+    private static Vocabulary CreateContent2020()
+    {
+        return new(new Uri("https://json-schema.org/draft/2020-12/vocab/content"),
+            Array.Empty<Type>(),
+            new[]{"contentEncoding", "contentMediaType", "contentSchema" });
+    }
+
+    // Keeping 'format' out of validationKeywordTypes means it can never reach ValidationKeywords, so it is structurally annotation-only here.
+    private static Vocabulary CreateFormatAnnotation2020()
+    {
+        return new(new Uri("https://json-schema.org/draft/2020-12/vocab/format-annotation"),
+            Array.Empty<Type>(),
+            new[]{"format" });
+    }
+
+    private static Vocabulary CreateFormatAssertion2020()
+    {
+        return new(new Uri("https://json-schema.org/draft/2020-12/vocab/format-assertion"),
+            new[]{typeof(FormatKeyword)},
+            Array.Empty<string>());
+    }
+
     private static Vocabulary CreateCore2019()
     {
         return new(new Uri("https://json-schema.org/draft/2019-09/vocab/core"), 
@@ -191,6 +227,28 @@ public class Vocabulary
         return new(new Uri("https://json-schema.org/draft/2019-09/vocab/validation"), 
             new[]{typeof(TypeKeyword), typeof(ConstKeyword), typeof(EnumKeyword), typeof(MultipleOfKeyword), typeof(MaximumKeyword), typeof(ExclusiveMaximumKeyword), typeof(MinimumKeyword), typeof(ExclusiveMinimumKeyword), typeof(MaxLengthKeyword), typeof(MinLengthKeyword), typeof(PatternKeyword), typeof(MaxItemsKeyword), typeof(MinItemsKeyword), typeof(UniqueItemsKeyword), typeof(MaxPropertiesKeyword), typeof(MinPropertiesKeyword), typeof(RequiredKeyword), typeof(DependentRequiredKeyword)},
             new[]{"maxContains", "minContains"});
+    }
+
+    private static Vocabulary CreateMetaData2019()
+    {
+        return new(new Uri("https://json-schema.org/draft/2019-09/vocab/meta-data"),
+            Array.Empty<Type>(),
+            new[]{"title", "description", "default", "deprecated", "readOnly", "writeOnly", "examples" });
+    }
+
+    private static Vocabulary CreateContent2019()
+    {
+        return new(new Uri("https://json-schema.org/draft/2019-09/vocab/content"),
+            Array.Empty<Type>(),
+            new[]{"contentEncoding", "contentMediaType", "contentSchema" });
+    }
+
+    // Single 2019-09 format vocabulary always requires annotation collection; ReadValidationKeyword already does this for FormatKeyword via IAnnotationKeyword.
+    private static Vocabulary CreateFormat2019()
+    {
+        return new(new Uri("https://json-schema.org/draft/2019-09/vocab/format"),
+            new[]{typeof(FormatKeyword)},
+            Array.Empty<string>());
     }
 
     public static Vocabulary? GetVocabulary(Uri id) => Vocabularies.GetValueOrDefault(id);
