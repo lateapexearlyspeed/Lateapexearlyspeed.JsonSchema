@@ -147,6 +147,9 @@ public class JsonValidatorOptions
         }
     }
 
+    /// <summary>
+    /// Gets the <see cref="MetaSchemaRegistry"/> instance that registers custom meta schemas.
+    /// </summary>
     public MetaSchemaRegistry CustomMetaSchemaRegistry
     {
         get
@@ -194,7 +197,6 @@ internal class JsonSerializerOptionsCache
     /// </summary>
     private readonly JsonValidatorOptions _parent;
 
-    // private readonly JsonSerializerOptions?[] _jsonSerializerOptionsCache = new JsonSerializerOptions[ValidationKeywordRegistry.SupportedDialectsCount];
     private readonly ConcurrentDictionary<Uri, JsonSerializerOptions> _jsonSerializerOptionsCache = new();
 
     public JsonSerializerOptionsCache(JsonValidatorOptions parent)

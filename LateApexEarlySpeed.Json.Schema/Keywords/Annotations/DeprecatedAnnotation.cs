@@ -3,8 +3,9 @@ using LateApexEarlySpeed.Json.Schema.Keywords.Annotations.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
-[Keyword("deprecated")]
+[Keyword(Keyword)]
 [JsonConverter(typeof(BooleanAnnotationJsonConverter<DeprecatedAnnotation>))]
 public class DeprecatedAnnotation : AnnotationKeywordBase
 {
+    public const string Keyword = "deprecated";
 }

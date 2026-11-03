@@ -40,8 +40,15 @@ internal ref struct JsonSchemaDeserializerContext
     /// </summary>
     private readonly JsonValidatorOptions _jsonValidatorOptions;
 
+    /// <summary>
+    /// If current schema identifier ($schema) is a registered custom metaschema, it will be null; otherwise not null
+    /// </summary>
     public DialectKind? Dialect;
     private Uri _metaSchemaId;
+
+    /// <summary>
+    /// If current schema identifier ($schema) is a registered custom metaschema, it will be not null; otherwise be null
+    /// </summary>
     private MetaSchema? _currentCustomMetaSchema;
 
     public readonly bool PropertyNameCaseInsensitive => _jsonValidatorOptions.PropertyNameCaseInsensitive;
@@ -142,6 +149,9 @@ internal ref struct JsonSchemaDeserializerContext
 
 internal class JsonSchemaDeserializerContextMarkerConverter : JsonConverter<JsonSchemaDeserializerContextMarkerConverter.Marker>
 {
+    /// <summary>
+    /// If schema dialect is standard ones (recognized standard metaschema URI), it is not null; otherwise (current metaschema is not standard so may or not be custom metaschema depending on <see cref="JsonValidatorOptions.CustomMetaSchemaRegistry"/>) null
+    /// </summary>
     private readonly DialectKind? _dialect;
 
     public JsonValidatorOptions Options { get; }

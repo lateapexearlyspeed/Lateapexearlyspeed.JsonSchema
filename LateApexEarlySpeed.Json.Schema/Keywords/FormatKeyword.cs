@@ -8,10 +8,12 @@ using System.Text.Json.Serialization;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
-[Keyword("format")]
+[Keyword(Keyword)]
 [JsonConverter(typeof(FormatKeywordJsonConverter))]
 public class FormatKeyword : ValidationKeywordBase, IAnnotationKeyword
 {
+    public const string Keyword = "format";
+
     /// <summary>
     /// The original format value from the JSON schema. It may be invalid (or unsupported) format value and can be used to serialize back to JSON schema.
     /// </summary>

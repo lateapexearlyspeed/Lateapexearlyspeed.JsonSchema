@@ -43,6 +43,12 @@ internal class ThrowHelper
     }
 
     [Pure]
+    public static JsonException CreateMetaSchemaMissingIdJsonException()
+    {
+        return new JsonException($"Meta schema {IdKeyword.Keyword} is missing.");
+    }
+
+    [Pure]
     public static JsonException CreateVocabularyHasInvalidJsonValueKindJsonException()
     {
         return new JsonException($"Meta schema $vocabulary expects json kinds: \"{JsonValueKind.Object}\"");

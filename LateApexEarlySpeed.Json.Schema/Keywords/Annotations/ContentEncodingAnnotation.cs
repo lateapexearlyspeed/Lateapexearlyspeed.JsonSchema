@@ -5,10 +5,12 @@ using LateApexEarlySpeed.Json.Schema.Keywords.Annotations.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
-[Keyword("contentEncoding")]
+[Keyword(Keyword)]
 [JsonConverter(typeof(StringAnnotationJsonConverter<ContentEncodingAnnotation>))]
 public class ContentEncodingAnnotation : AnnotationKeywordBase
 {
+    public const string Keyword = "contentEncoding";
+
     public override bool ShouldAnnotate(JsonInstanceElement instance)
     {
         return instance.ValueKind == JsonValueKind.String;
