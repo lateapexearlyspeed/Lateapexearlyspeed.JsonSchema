@@ -3,8 +3,9 @@ using LateApexEarlySpeed.Json.Schema.Keywords.Annotations.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
-[Keyword("title")]
+[Keyword(Keyword)]
 [JsonConverter(typeof(StringAnnotationJsonConverter<TitleAnnotation>))]
 public class TitleAnnotation : AnnotationKeywordBase
 {
+    public const string Keyword = "title";
 }

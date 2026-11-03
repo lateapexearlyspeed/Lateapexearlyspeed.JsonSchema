@@ -3,8 +3,9 @@ using LateApexEarlySpeed.Json.Schema.Keywords.Annotations.JsonConverters;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords.Annotations;
 
-[Keyword("readOnly")]
+[Keyword(Keyword)]
 [JsonConverter(typeof(BooleanAnnotationJsonConverter<ReadOnlyAnnotation>))]
 public class ReadOnlyAnnotation : AnnotationKeywordBase
 {
+    public const string Keyword = "readOnly";
 }

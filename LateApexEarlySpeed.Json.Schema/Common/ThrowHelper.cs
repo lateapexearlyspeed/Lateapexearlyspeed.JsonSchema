@@ -37,6 +37,24 @@ internal class ThrowHelper
     }
 
     [Pure]
+    public static JsonException CreateMetaSchemaHasInvalidJsonValueKindJsonException()
+    {
+        return new JsonException($"Meta schema expects json kinds: \"{JsonValueKind.Object}\"");
+    }
+
+    [Pure]
+    public static JsonException CreateMetaSchemaMissingIdJsonException()
+    {
+        return new JsonException($"Meta schema {IdKeyword.Keyword} is missing.");
+    }
+
+    [Pure]
+    public static JsonException CreateVocabularyHasInvalidJsonValueKindJsonException()
+    {
+        return new JsonException($"Meta schema $vocabulary expects json kinds: \"{JsonValueKind.Object}\"");
+    }
+
+    [Pure]
     public static JsonException CreateJsonSchemaHasDuplicatedKeywordsJsonException(string duplicatedKeywordName)
     {
         return new JsonException($"Json schema contains more than one keyword with name: '{duplicatedKeywordName}'");

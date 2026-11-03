@@ -94,6 +94,18 @@ internal class StringKeyedHashSet : IEnumerable<string>
 
     private readonly string[]?[] _buckets = new string[BucketCount][];
 
+    public StringKeyedHashSet()
+    {
+    }
+
+    public StringKeyedHashSet(IEnumerable<string> collection)
+    {
+        foreach (string item in collection)
+        {
+            Add(item);
+        }
+    }
+
     public bool Contains(ReadOnlySpan<char> item)
     {
         int hashCode = Marvin.GetHashCode(item);
