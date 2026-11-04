@@ -9,13 +9,13 @@ namespace LateApexEarlySpeed.Json.Schema.Keywords;
 [JsonConverter(typeof(EnumKeywordJsonConverter))]
 internal class EnumKeyword : ValidationKeywordBase
 {
-    private readonly List<JsonInstanceElement> _enumList;
+    private readonly JsonInstanceElement[] _enumList;
 
     public IReadOnlyList<JsonInstanceElement> EnumList => _enumList;
 
     public EnumKeyword(IEnumerable<JsonInstanceElement> enumList)
     {
-        _enumList = enumList.ToList();
+        _enumList = enumList.ToArray();
     }
 
     protected internal override ValidationResult ValidateCore(JsonInstanceElement instance, JsonSchemaOptions options)

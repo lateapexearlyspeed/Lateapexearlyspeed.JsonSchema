@@ -89,7 +89,8 @@ public class AnnotationTests
             { "6", 0 },
             { "7", 0 },
             { "2019", 1 },
-            { "2020", 2 }
+            { "2020", 2 },
+            { "9999", 3 }
         };
 
         private static readonly DialectKind[] AvailableDialectKinds = new[] {
@@ -107,15 +108,7 @@ public class AnnotationTests
         [JsonPropertyName("tests")]
         public Test[] Tests { get; set; } = null!;
 
-        public IEnumerable<DialectKind> Dialects
-        {
-            get
-            {
-                int compatibilityLevel = CompatibilityLevelTable[Compatibility];
-
-                return AvailableDialectKinds.Skip(compatibilityLevel);
-            }
-        }
+        public IEnumerable<DialectKind> Dialects => CompatibilityLevelTable.TryGetValue(Compatibility, out int compatibilityLevel) ? AvailableDialectKinds.Skip(compatibilityLevel) : Enumerable.Empty<DialectKind>();
     }
 
     /// <summary>

@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Keywords;
 
@@ -22,63 +24,132 @@ internal class SchemaKeyword
     private SchemaKeyword(DialectKind dialect)
     {
         Dialect = dialect;
+        Identifier = GetDraftIdentifier(dialect);
     }
 
-    public static SchemaKeyword Create(ReadOnlySpan<char> schemaUri)
+    private SchemaKeyword(Uri metaSchemaId)
     {
-        // fast path
-        if (schemaUri.Equals(Draft7IdentifierString, StringComparison.Ordinal))
+        Identifier = metaSchemaId;
+    }
+
+    public static SchemaKeyword Create(ReadOnlySpan<char> schemaUri, MetaSchemaRegistry? metaSchemaRegistry)
+    {
+        if (TryGetStandardMetaSchema(schemaUri, out SchemaKeyword? schemaKeyword))
         {
-            return Draft7Keyword;
+            return schemaKeyword;
         }
 
-        if (schemaUri.Equals(Draft202012IdentifierString, StringComparison.Ordinal))
+        if (metaSchemaRegistry is null)
         {
             return Draft202012Keyword;
         }
 
+        var metaSchemaId = new Uri(schemaUri.ToString());
+        if (metaSchemaRegistry.GetMetaSchema(metaSchemaId) is null)
+        {
+            return Draft202012Keyword;
+        }
+
+        return new SchemaKeyword(metaSchemaId);
+    }
+
+    private static bool TryGetStandardMetaSchema(ReadOnlySpan<char> schemaUri, [NotNullWhen(true)] out SchemaKeyword? schemaKeyword)
+    {
+        // fast path
+        if (schemaUri.Equals(Draft7IdentifierString, StringComparison.Ordinal))
+        {
+            schemaKeyword = Draft7Keyword;
+            return true;
+        }
+
+        if (schemaUri.Equals(Draft202012IdentifierString, StringComparison.Ordinal))
+        {
+            schemaKeyword = Draft202012Keyword;
+            return true;
+        }
+
         if (schemaUri.Equals(Draft201909IdentifierString, StringComparison.Ordinal))
         {
-            return Draft201909Keyword;
+            schemaKeyword = Draft201909Keyword;
+            return true;
         }
 
         if (schemaUri.Equals(Draft7IdentifierString2, StringComparison.Ordinal))
         {
-            return Draft7Keyword;
+            schemaKeyword = Draft7Keyword;
+            return true;
         }
 
         // slow path
         var currentSchemaUri = new Uri(schemaUri.ToString());
 
-        if (currentSchemaUri == Draft7Identifier)
-        {
-            return Draft7Keyword;
-        }
-
-        if (currentSchemaUri == Draft201909Identifier)
-        {
-            return Draft201909Keyword;
-        }
-
-        return Draft202012Keyword;
+        return TryGetStandardMetaSchema(currentSchemaUri, out schemaKeyword);
     }
 
-    public DialectKind Dialect { get; }
-
-    public Uri DraftIdentifier
+    public static bool TryGetStandardMetaSchema(Uri metaSchemaId, [NotNullWhen(true)] out SchemaKeyword? schemaKeyword)
     {
-        get
+        if (metaSchemaId == Draft7Identifier)
         {
-            switch (Dialect)
-            {
-                case DialectKind.Draft7:
-                    return Draft7Identifier;
-                case DialectKind.Draft201909:
-                    return Draft201909Identifier;
-                default:
-                    Debug.Assert(Dialect == DialectKind.Draft202012);
-                    return Draft202012Identifier;
-            }
+            schemaKeyword = Draft7Keyword;
+            return true;
+        }
+
+        if (metaSchemaId == Draft202012Identifier)
+        {
+            schemaKeyword = Draft202012Keyword;
+            return true;
+        }
+
+        if (metaSchemaId == Draft201909Identifier)
+        {
+            schemaKeyword = Draft201909Keyword;
+            return true;
+        }
+
+        schemaKeyword = null;
+        return false;
+    }
+
+    public static bool TryGetDialectKind(Uri metaSchemaId, MetaSchemaRegistry? metaSchemaRegistry, out DialectKind dialect)
+    {
+        if (TryGetStandardMetaSchema(metaSchemaId, out SchemaKeyword? schemaKeyword))
+        {
+            Debug.Assert(schemaKeyword.Dialect.HasValue);
+
+            dialect = schemaKeyword.Dialect.Value;
+            return true;
+        }
+
+        if (metaSchemaRegistry is null)
+        {
+            dialect = DialectKind.Draft202012;
+            return true;
+        }
+
+        if (metaSchemaRegistry.GetMetaSchema(metaSchemaId) is null)
+        {
+            dialect = DialectKind.Draft202012;
+            return true;
+        }
+
+        dialect = default;
+        return false;
+    }
+
+    public DialectKind? Dialect { get; }
+    public Uri Identifier { get; }
+
+    public static Uri GetDraftIdentifier(DialectKind dialect)
+    {
+        switch (dialect)
+        {
+            case DialectKind.Draft7:
+                return Draft7Identifier;
+            case DialectKind.Draft201909:
+                return Draft201909Identifier;
+            default:
+                Debug.Assert(dialect == DialectKind.Draft202012);
+                return Draft202012Identifier;
         }
     }
 }
