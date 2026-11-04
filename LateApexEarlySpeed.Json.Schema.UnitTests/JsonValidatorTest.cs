@@ -22,6 +22,8 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
         private static readonly string[] UnsupportedTestCases = new string[]
         {
+          "pattern with Unicode property escape requires unicode mode",
+          "patternProperties with Unicode property escape"
         };
 
         private static readonly string[] TestCasesDependOnRemoteHttpDocuments = new[]

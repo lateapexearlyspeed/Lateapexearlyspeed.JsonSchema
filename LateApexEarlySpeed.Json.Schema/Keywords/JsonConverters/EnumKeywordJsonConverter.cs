@@ -32,11 +32,6 @@ internal class EnumKeywordJsonConverter : JsonConverter<EnumKeyword>
             reader.Read();
         }
 
-        if (enums.Count == 0)
-        {
-            throw ThrowHelper.CreateKeywordHasEmptyJsonArrayJsonException<EnumKeyword>();
-        }
-
         return new EnumKeyword(enums);
     }
 
