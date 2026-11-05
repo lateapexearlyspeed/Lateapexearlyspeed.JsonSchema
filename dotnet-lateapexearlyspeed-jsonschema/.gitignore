@@ -1,0 +1,12 @@
+bin/
+obj/
+.vs/
+.vscode/
+.venv/
+JSON-Schema-Test-Suite/
+*.user
+*.suo
+smoke-check.log
+suite-*.json
+suite-*.err
+summary-*.txt

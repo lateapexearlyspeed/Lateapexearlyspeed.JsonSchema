@@ -1,0 +1,20 @@
+name: Report
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "20 */6 * * *"
+
+concurrency:
+  group: report
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  report:
+    if: github.repository == 'bowtie-json-schema/dotnet-lateapexearlyspeed-jsonschema'
+    permissions:
+      contents: write
+      packages: read
+    uses: bowtie-json-schema/bowtie/.github/workflows/harness-report.yml@94e106ed72e2f75700ec19b7927c46cf8417fb8a

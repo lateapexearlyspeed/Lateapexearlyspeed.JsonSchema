@@ -1,0 +1,6 @@
+root = true
+
+[*.cs]
+indent_style = space
+indent_size = 4
+csharp_indent_case_contents_when_block = false

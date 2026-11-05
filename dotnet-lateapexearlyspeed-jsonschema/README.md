@@ -2,44 +2,127 @@
 
 A standalone [Bowtie](https://github.com/bowtie-json-schema/bowtie) test harness for the
 [`LateApexEarlySpeed.Json.Schema`](https://www.nuget.org/packages/LateApexEarlySpeed.Json.Schema) NuGet
-package. This folder is self-contained (own `.slnx`, not part of the repo's root `.sln`) and consumes the
-library exactly as an external user would — via `PackageReference`, not a project reference.
-The harness currently targets NuGet package version **4.2.3**.
+package. The harness consumes the library exactly as an external user would — via `PackageReference`,
+not a project reference. Its source, meta-schemas and repository configuration are self-contained.
+The package version under test is pinned in the
+[project file](dotnet-lateapexearlyspeed-jsonschema.csproj); the verified results below record the
+specific version used for that historical run.
+
+## Standalone repository and official Bowtie onboarding
+
+Copy this directory's tracked files, including hidden configuration files, directly into the new
+repository's root. Do not copy `bin/`, `obj/`, IDE caches, virtual environments or generated reports.
+While this directory is nested inside the library repository, its `.github/` configuration is inactive;
+GitHub only discovers it after it becomes the standalone repository's root `.github/`.
+
+The workflows target **`bowtie-json-schema/dotnet-lateapexearlyspeed-jsonschema`**, with **`main`** as
+the default branch. They deliberately do not publish images or reports from another repository.
+Builds and fixture checks can still run in a staging repository after copying these files to its root.
+
+The following external steps require Bowtie maintainers or repository administrators:
+
+1. Create or transfer the public repository into the `bowtie-json-schema` organization, using the exact
+   name above, and set its default branch to `main`.
+2. Enable GitHub Actions and allow the pinned external actions and Bowtie reusable workflows referenced
+   below. Organization policies must allow their declared permissions: image publishing needs
+   `packages: write`, `id-token: write`, `attestations: write` and `artifact-metadata: write`; reporting
+   needs `contents: write` to publish release assets.
+3. Push to `main` and wait for **Rebuild Bowtie Image** to succeed. Make the resulting GHCR package
+   public and grant this repository write access if a package with the same name already exists.
+4. Run **Report** manually once after the first image is available; later reports run every six hours.
+5. Add the repository topic **`bowtie-harness`** and coordinate its inclusion with Bowtie maintainers.
+   Bowtie discovers harness repositories with this topic in its own organization when building a
+   distribution. Already-installed CLI versions do not automatically acquire new implementation lists;
+   maintainers may need to publish a new Bowtie release before central report collection discovers it.
+6. Confirm the official site's central collection includes this harness's `report` release. A local
+   test or a published GHCR image alone does not register an implementation on [bowtie.report](https://bowtie.report).
+
+For Dependabot auto-merge, administrators must enable **Allow auto-merge**, allow merge commits and
+permit the workflow's `contents: write` and `pull-requests: write` permissions. Configure the harness
+checks as required branch checks. Auto-merge does not bypass required reviews or other branch rules.
+
+The image address is:
+
+```text
+ghcr.io/bowtie-json-schema/dotnet-lateapexearlyspeed-jsonschema
+```
+
+### CI, publishing and updates
+
+- [build.yml](.github/workflows/build.yml) builds the .NET project and runs all 19 fixture checks.
+  It then calls Bowtie's pinned
+  [Harness CI](https://github.com/bowtie-json-schema/bowtie/blob/94e106ed72e2f75700ec19b7927c46cf8417fb8a/.github/workflows/harness-ci.yml)
+  to build `amd64` and `arm64` images and run smoke tests. Only a successful **push to `main` in the
+  official repository** publishes the image, tagged with the commit SHA, reported library version and
+  `latest`. PRs, other branches and manual build runs do not publish. No smoke-test failures are ignored.
+  After `check` and `ci` succeed, same-repository Dependabot PRs targeting `main` are eligible for
+  `gh pr merge --auto --merge`, except PRs labelled `github_actions`. Ordinary contributor PRs and forks
+  are not auto-merged.
+- [report.yml](.github/workflows/report.yml) calls Bowtie's pinned
+  [Harness Report](https://github.com/bowtie-json-schema/bowtie/blob/94e106ed72e2f75700ec19b7927c46cf8417fb8a/.github/workflows/harness-report.yml)
+  at `00:20`, `06:20`, `12:20` and `18:20` UTC, or manually. It tests the published image and updates the
+  rolling `report` release. Bowtie's central workflow collects these reports separately. Maintainers
+  can stagger the scheduled minute to match their rollout.
+- [dependabot.yml](.github/dependabot.yml) checks Docker images daily and Actions weekly, with a
+  three-day cooldown. NuGet update automation is intentionally disabled. Update the library's
+  PackageReference in [the project file](dotnet-lateapexearlyspeed-jsonschema.csproj) manually through
+  a reviewed PR; publishing a new NuGet library version alone does not update the harness.
+
+Image publication remains restricted to `main` pushes; there is no separate publishing workflow for
+unmerged Dependabot branches. A merge performed using `GITHUB_TOKEN` does not trigger the normal
+push workflow. After such a merge, an authorized maintainer must make a normal human-authenticated
+push to `main` (for example, a follow-up commit) to build and publish the updated image. Re-running a
+previous workflow builds its original commit, not the newly updated `main`.
+
+These workflows use GitHub-hosted runners, NuGet, Microsoft's public container registry, PyPI and GHCR.
+They use the repository's `GITHUB_TOKEN`; no custom PAT, NuGet API key, Docker Hub account, self-hosted
+runner or checked-in Bowtie/test-suite source is required. Keep the reusable workflow SHA pins updated
+through reviewed Dependabot PRs. Historical-version rebuild/release automation is not configured.
 
 ## Prerequisites
 
-- .NET 8 SDK
+- .NET 8 SDK (the commands use the `.csproj`, so `.slnx` support is not required)
 - Docker (or Podman) for the container build
-- Bowtie CLI, installed into this repo's Python venv:
+- Python 3.13+ for Bowtie CLI and the optional report analysis script
+- Bowtie CLI, installed into a local Python venv:
 
   ```powershell
-  # from repo root
+  # from the harness directory / standalone repository root
+  python -m venv .venv
   .venv\Scripts\python.exe -m pip install bowtie-json-schema
   ```
 
-  All commands below assume `$bowtie` points at the venv's executable:
+  All commands below run from the harness directory / standalone repository root and assume `$bowtie`
+  and `$python` point at the venv's executables:
 
   ```powershell
   $bowtie = (Resolve-Path .venv\Scripts\bowtie.exe).Path
+  $python = (Resolve-Path .venv\Scripts\python.exe).Path
   ```
+
+  While working inside the original library repository, you can instead point both variables at its
+  existing parent `.venv`; no new virtual environment is necessary.
 
 ## 1. Build
 
 ```powershell
-cd dotnet-lateapexearlyspeed-jsonschema
-dotnet build dotnet-lateapexearlyspeed-jsonschema.slnx
+dotnet build dotnet-lateapexearlyspeed-jsonschema.csproj --configuration Release
 ```
 
 ## 2. Fast local iteration (no Docker)
 
 Use these whenever `Program.cs` changes, to catch obvious regressions in seconds before paying for a
-Docker rebuild + full `bowtie suite` run. Each pipes a small hand-crafted IHOP (start/dialect/run/stop)
-transcript directly into the console app:
+Docker rebuild + full `bowtie suite` run. The shared local/CI check verifies response counts, sequence
+IDs, exact result shapes and all expected Boolean validity values; errors and skips fail the check:
 
 ```powershell
-Get-Content metaschema-test-cases.jsonl | dotnet run --project dotnet-lateapexearlyspeed-jsonschema.csproj --no-build -c Debug
-Get-Content vocabulary-test-cases.jsonl  | dotnet run --project dotnet-lateapexearlyspeed-jsonschema.csproj --no-build -c Debug
-Get-Content format-test-cases.jsonl      | dotnet run --project dotnet-lateapexearlyspeed-jsonschema.csproj --no-build -c Debug
+.\test-fixtures.ps1
+```
+
+For raw IHOP (start/dialect/run/stop) responses from an individual transcript:
+
+```powershell
+dotnet run --project dotnet-lateapexearlyspeed-jsonschema.csproj --no-build -c Release -- format-test-cases.jsonl
 ```
 
 | Fixture | Exercises | Run after touching |
@@ -84,8 +167,8 @@ docker build -t local/lateapexearlyspeed-jsonschema .
 & $bowtie smoke -i image:local/lateapexearlyspeed-jsonschema -f json | Out-File -FilePath smoke-check.log -Encoding utf8
 ```
 
-`-f json` is required — Bowtie's own `pretty` renderer (the default when attached to a terminal) has an
-upstream bug ([`_smoke.py`](../.venv/Lib/site-packages/bowtie/_smoke.py)) that crashes with
+`-f json` is required for the locally verified Bowtie version — its own `pretty` renderer (the default
+when attached to a terminal) has an upstream bug (`bowtie/_smoke.py`) that crashes with
 `AttributeError: 'SkippedTest' object has no attribute 'valid'` whenever any result is `skipped`. This is a
 Bowtie bug, not a harness bug — `-f json` bypasses the broken rich-console path entirely and gives clean
 output.
@@ -98,32 +181,33 @@ Expected: `"success": true` for all 3 dialects.
 stderr, and merging streams interleaves non-JSON lines into the JSONL result file, corrupting it. Always
 redirect them separately:
 
+For local suite runs only, clone the official test suite into the ignored directory below (once), or
+point `$suite` at an existing checkout. CI reporting obtains the suite itself; it does not need this clone.
+
 ```powershell
-cd ..  # repo root - JSON-Schema-Test-Suite/ path below is relative to here
+git clone https://github.com/json-schema-org/JSON-Schema-Test-Suite.git JSON-Schema-Test-Suite
+$suite = (Resolve-Path JSON-Schema-Test-Suite\tests).Path
+# Original library repository checkout, if already available:
+# $suite = (Resolve-Path ..\JSON-Schema-Test-Suite\tests).Path
 
-& $bowtie suite -V -i image:local/lateapexearlyspeed-jsonschema JSON-Schema-Test-Suite\tests\draft7 `
-    2>dotnet-lateapexearlyspeed-jsonschema\suite-draft7.err `
-    | Out-File -FilePath dotnet-lateapexearlyspeed-jsonschema\suite-draft7.json -Encoding utf8
+& $bowtie suite -V -i image:local/lateapexearlyspeed-jsonschema "$suite\draft7" `
+    2>suite-draft7.err | Out-File -FilePath suite-draft7.json -Encoding utf8
 
-& $bowtie suite -V -i image:local/lateapexearlyspeed-jsonschema JSON-Schema-Test-Suite\tests\draft2019-09 `
-    2>dotnet-lateapexearlyspeed-jsonschema\suite-draft2019-09.err `
-    | Out-File -FilePath dotnet-lateapexearlyspeed-jsonschema\suite-draft2019-09.json -Encoding utf8
+& $bowtie suite -V -i image:local/lateapexearlyspeed-jsonschema "$suite\draft2019-09" `
+    2>suite-draft2019-09.err | Out-File -FilePath suite-draft2019-09.json -Encoding utf8
 
-& $bowtie suite -V -i image:local/lateapexearlyspeed-jsonschema JSON-Schema-Test-Suite\tests\draft2020-12 `
-    2>dotnet-lateapexearlyspeed-jsonschema\suite-draft2020-12.err `
-    | Out-File -FilePath dotnet-lateapexearlyspeed-jsonschema\suite-draft2020-12.json -Encoding utf8
+& $bowtie suite -V -i image:local/lateapexearlyspeed-jsonschema "$suite\draft2020-12" `
+    2>suite-draft2020-12.err | Out-File -FilePath suite-draft2020-12.json -Encoding utf8
 ```
 
 > Note: `bowtie suite`/`bowtie site collect` only scan each dialect's **top-level** `.json` files
-> (`Path.iterdir()`, non-recursive — confirmed in
-> [`_suite.py`](../.venv/Lib/site-packages/bowtie/_suite.py)). The `optional/` subfolder is excluded from
+> (`Path.iterdir()`, non-recursive — confirmed in `bowtie/_suite.py`). The `optional/` subfolder is excluded from
 > this scope by design across the whole Bowtie ecosystem (including the published bowtie.report compliance
 > site), not something specific to this invocation.
 
 Then summarize:
 
 ```powershell
-cd dotnet-lateapexearlyspeed-jsonschema
 Get-Content suite-draft7.json       | & $bowtie summary --show failures | Out-File summary-draft7.txt -Encoding utf8
 Get-Content suite-draft2019-09.json | & $bowtie summary --show failures | Out-File summary-draft2019-09.txt -Encoding utf8
 Get-Content suite-draft2020-12.json | & $bowtie summary --show failures | Out-File summary-draft2020-12.txt -Encoding utf8
@@ -133,7 +217,7 @@ Or use the bundled `analyze.py` script for a more detailed per-case/per-test bre
 whole-case and per-test `skipped`/`errored` entries, which `bowtie summary` only totals):
 
 ```powershell
-..\.venv\Scripts\python.exe analyze.py `
+& $python analyze.py `
     suite-draft7.json suite-draft2019-09.json suite-draft2020-12.json
 ```
 
