@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LateApexEarlySpeed.Json.Schema" Version="4.2.2" />
+    <PackageReference Include="LateApexEarlySpeed.Json.Schema" Version="4.2.3" />
   </ItemGroup>
 
   <ItemGroup>

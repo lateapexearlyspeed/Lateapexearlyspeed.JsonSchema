@@ -91,6 +91,17 @@ while (cmdSource.GetNextCommand() is { } line && line != "")
             try
             {
                 var options = new JsonValidatorOptions { DefaultDialect = currentDialect };
+                if (testCase["registry"] is JsonObject registrySchemas)
+                {
+                    // Vocabulary selection happens while the schema is deserialized, before $ref population.
+                    foreach (JsonNode? document in registrySchemas.Select(entry => entry.Value))
+                    {
+                        if (document is JsonObject metaSchema && metaSchema.ContainsKey("$vocabulary"))
+                        {
+                            options.CustomMetaSchemaRegistry.AddMetaSchema(metaSchema.ToJsonString());
+                        }
+                    }
+                }
 
                 JsonElement schemaElement = JsonSerializer.SerializeToElement(testCase["schema"]);
                 var validator = new JsonValidator(schemaElement, options);
@@ -104,42 +115,17 @@ while (cmdSource.GetNextCommand() is { } line && line != "")
                 // on first $ref to an unresolved base URI.
                 validator.ExternalSchemaDocumentPopulator = new MetaSchemaPopulator(registryPopulator);
 
-                // LateApexEarlySpeed.Json.Schema does not support reading a schema's own "$schema"/"$vocabulary"
-                // declaration to decide per-dialect keyword semantics (e.g. whether the validation vocabulary is
-                // disabled entirely, as in the official suite's root-level "vocabulary.json" cases for 2019-09/
-                // 2020-12 - the only cases, in Bowtie's official (non-"optional/") test scope, that use a custom
-                // meta-schema outside our 3 known dialects). Ordinary schemas already get correct default behavior
-                // (JsonSchemaOptions.ValidateFormat defaults to true, matching each known dialect's default keyword
-                // semantics). Bowtie's protocol never tells the harness the expected result for a test (see
-                // bowtie's TestCase.without_expected_results()), so this must be decided purely from the schema
-                // itself, up front, and applied to every test in the case uniformly - not by comparing against an
-                // expected value we never receive.
-                bool usesCustomMetaschema =
-                    testCase["schema"] is JsonObject schemaObj
-                    && schemaObj["$schema"] is JsonValue schemaRef
-                    && schemaRef.GetValue<string>() is string schemaRefValue
-                    && !dialects.ContainsKey(schemaRefValue);
-
                 var results = new JsonArray();
-                // "format" defaults to assertion (validated) only under draft7, which predates the
-                // $vocabulary mechanism. 2019-09/2020-12 default to annotation-only (format-assertion vocab
-                // not enabled), confirmed by the official suite's root-level "format.json" ("invalid X string
-                // is only an annotation by default" cases). A schema can opt back into assertion via a custom
-                // meta-schema's $vocabulary, but that's the same unsupported gap as usesCustomMetaschema above.
-                var validateOptions = new JsonSchemaOptions { ValidateFormat = currentDialect == DialectKind.Draft7 };
+                // Standard newer dialects default to annotation-only; custom vocabularies select their own semantics.
+                bool usesCustomMetaschema = testCase["schema"] is JsonObject schemaObject
+                    && schemaObject["$schema"] is JsonValue schemaRef
+                    && !dialects.ContainsKey(schemaRef.GetValue<string>());
+                var validateOptions = new JsonSchemaOptions
+                {
+                    ValidateFormat = currentDialect == DialectKind.Draft7 || usesCustomMetaschema,
+                };
                 foreach (JsonNode? test in testCase["tests"]!.AsArray())
                 {
-                    if (usesCustomMetaschema)
-                    {
-                        results.Add(new JsonObject
-                        {
-                            ["skipped"] = true,
-                            ["message"] = "LateApexEarlySpeed.Json.Schema does not support reading a schema's custom \"$schema\"/\"$vocabulary\" declaration to override per-dialect keyword semantics (e.g. a disabled validation vocabulary).",
-                            ["issue_url"] = "https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/issues",
-                        });
-                        continue;
-                    }
-
                     JsonElement instance = JsonSerializer.SerializeToElement(test!["instance"]);
                     ValidationResult validationResult = validator.Validate(instance, validateOptions);
                     results.Add(new JsonObject { ["valid"] = validationResult.IsValid });

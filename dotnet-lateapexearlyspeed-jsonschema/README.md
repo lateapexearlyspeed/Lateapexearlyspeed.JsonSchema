@@ -4,6 +4,7 @@ A standalone [Bowtie](https://github.com/bowtie-json-schema/bowtie) test harness
 [`LateApexEarlySpeed.Json.Schema`](https://www.nuget.org/packages/LateApexEarlySpeed.Json.Schema) NuGet
 package. This folder is self-contained (own `.slnx`, not part of the repo's root `.sln`) and consumes the
 library exactly as an external user would — via `PackageReference`, not a project reference.
+The harness currently targets NuGet package version **4.2.3**.
 
 ## Prerequisites
 
@@ -19,7 +20,7 @@ library exactly as an external user would — via `PackageReference`, not a proj
   All commands below assume `$bowtie` points at the venv's executable:
 
   ```powershell
-  $bowtie = "c:/Users/PengHe/source/repos/Lateapexearlyspeed.JsonSchema/.venv/Scripts/bowtie.exe"
+  $bowtie = (Resolve-Path .venv\Scripts\bowtie.exe).Path
   ```
 
 ## 1. Build
@@ -44,11 +45,19 @@ Get-Content format-test-cases.jsonl      | dotnet run --project dotnet-lateapexe
 | Fixture | Exercises | Run after touching |
 |---|---|---|
 | `metaschema-test-cases.jsonl` | `MetaSchemaPopulator` / `$ref` resolution to a dialect's own canonical meta-schema (all 3 dialects) | `MetaSchemaPopulator`, `meta-schemas/*.json`, csproj `CopyToOutputDirectory` wiring |
-| `vocabulary-test-cases.jsonl` | The `usesCustomMetaschema` skip path (custom `$vocabulary` overrides) | The `usesCustomMetaschema` condition / skip message |
-| `format-test-cases.jsonl` | Per-dialect `ValidateFormat` default (draft7 vs 2019-09/2020-12) + custom-metaschema format-assertion skip | `validateOptions` / `ValidateFormat` logic |
+| `vocabulary-test-cases.jsonl` | Custom `$vocabulary` overrides from the case's registry: disabled validation vocabulary and an unknown optional vocabulary | Custom meta-schema registration |
+| `format-test-cases.jsonl` | Per-dialect format defaults (draft7 vs 2019-09/2020-12) and custom format-assertion vocabulary | Custom meta-schema registration / `ValidateFormat` logic |
 
-**Expected output** (manually eyeball `"valid"`/`"skipped"` values against each fixture's comments/intent —
-there's no automated assertion here, this is just a quick sanity signal).
+**Expected output** (the `valid` values in each `run` response, in order):
+
+| Fixture | Expected results by `seq` |
+|---|---|
+| `metaschema-test-cases.jsonl` | 1, 2, 3: `[true, false]` each |
+| `vocabulary-test-cases.jsonl` | 1: `[false, true, true]`; 2: `[false, true]` |
+| `format-test-cases.jsonl` | 1: `[true, false]`; 2, 3: `[true, true]`; 4: `[true, false]` |
+
+No fixture should return `skipped` or `errored`. These transcripts include the custom meta-schemas in
+`registry`, just as real Bowtie input does; expected validity is not sent to the harness.
 
 ### PowerShell output-encoding gotcha
 
@@ -81,8 +90,7 @@ upstream bug ([`_smoke.py`](../.venv/Lib/site-packages/bowtie/_smoke.py)) that c
 Bowtie bug, not a harness bug — `-f json` bypasses the broken rich-console path entirely and gives clean
 output.
 
-Expected: `"success": true` for all 3 dialects — there are no remaining documented smoke-test gaps (see
-"Known, documented gaps" below).
+Expected: `"success": true` for all 3 dialects.
 
 ## 5. Bowtie suite (official compliance scope, all 3 dialects)
 
@@ -93,17 +101,17 @@ redirect them separately:
 ```powershell
 cd ..  # repo root - JSON-Schema-Test-Suite/ path below is relative to here
 
-& $bowtie suite -i image:local/lateapexearlyspeed-jsonschema JSON-Schema-Test-Suite/tests/draft7 `
-    2>dotnet-lateapexearlyspeed-jsonschema/suite-draft7.err `
-    | Out-File -FilePath dotnet-lateapexearlyspeed-jsonschema/suite-draft7.json -Encoding utf8
+& $bowtie suite -V -i image:local/lateapexearlyspeed-jsonschema JSON-Schema-Test-Suite\tests\draft7 `
+    2>dotnet-lateapexearlyspeed-jsonschema\suite-draft7.err `
+    | Out-File -FilePath dotnet-lateapexearlyspeed-jsonschema\suite-draft7.json -Encoding utf8
 
-& $bowtie suite -i image:local/lateapexearlyspeed-jsonschema JSON-Schema-Test-Suite/tests/draft2019-09 `
-    2>dotnet-lateapexearlyspeed-jsonschema/suite-draft2019-09.err `
-    | Out-File -FilePath dotnet-lateapexearlyspeed-jsonschema/suite-draft2019-09.json -Encoding utf8
+& $bowtie suite -V -i image:local/lateapexearlyspeed-jsonschema JSON-Schema-Test-Suite\tests\draft2019-09 `
+    2>dotnet-lateapexearlyspeed-jsonschema\suite-draft2019-09.err `
+    | Out-File -FilePath dotnet-lateapexearlyspeed-jsonschema\suite-draft2019-09.json -Encoding utf8
 
-& $bowtie suite -i image:local/lateapexearlyspeed-jsonschema JSON-Schema-Test-Suite/tests/draft2020-12 `
-    2>dotnet-lateapexearlyspeed-jsonschema/suite-draft2020-12.err `
-    | Out-File -FilePath dotnet-lateapexearlyspeed-jsonschema/suite-draft2020-12.json -Encoding utf8
+& $bowtie suite -V -i image:local/lateapexearlyspeed-jsonschema JSON-Schema-Test-Suite\tests\draft2020-12 `
+    2>dotnet-lateapexearlyspeed-jsonschema\suite-draft2020-12.err `
+    | Out-File -FilePath dotnet-lateapexearlyspeed-jsonschema\suite-draft2020-12.json -Encoding utf8
 ```
 
 > Note: `bowtie suite`/`bowtie site collect` only scan each dialect's **top-level** `.json` files
@@ -125,30 +133,56 @@ Or use the bundled `analyze.py` script for a more detailed per-case/per-test bre
 whole-case and per-test `skipped`/`errored` entries, which `bowtie summary` only totals):
 
 ```powershell
-c:/Users/PengHe/source/repos/Lateapexearlyspeed.JsonSchema/.venv/Scripts/python.exe analyze.py `
+..\.venv\Scripts\python.exe analyze.py `
     suite-draft7.json suite-draft2019-09.json suite-draft2020-12.json
 ```
 
-**Expected result**: 0 errors, 0 failures for all 3 dialects; only the documented `vocabulary.json` skips
-(5 tests each, 2019-09 and 2020-12 — see below; none for draft7, which predates `$vocabulary`).
+**Expected result**: no skipped cases or tests. The `vocabulary.json` cases for 2019-09 and 2020-12
+must validate normally, not be skipped. Unsupported Unicode regex syntax is executed and reported
+honestly as errors or validity mismatches, not filtered out.
 
-## Known, documented gaps
+## Vocabulary and format configuration
 
-A genuine upstream library limitation (not a harness bug), reported to Bowtie as `skipped` with an
-`issue_url` pointing at the library's issue tracker:
+Custom meta-schemas containing `$vocabulary` are registered from the case's `registry` in
+`JsonValidatorOptions.CustomMetaSchemaRegistry` **before** constructing the validator. Ordinary
+external `$ref` resolution still uses `MetaSchemaPopulator` and the case's registry.
 
-1. **Custom `$vocabulary` declarations** (official suite's root-level `vocabulary.json`, 2019-09/2020-12
-   only — 2 cases / 5 tests each) — the library has no mechanism to read a schema's own custom `$schema`
-   and adjust keyword semantics accordingly (e.g. disabling the validation vocabulary entirely). Detected
-   structurally (schema's `$schema` points outside the 3 known dialect URIs) rather than by filename, since
-   the IHOP protocol never tells the harness which file a case came from — this keeps the skip correct
-   automatically even if the suite's `vocabulary.json` content changes in the future.
+For standard dialects, `format` remains an assertion in draft7 and annotation-only in 2019-09/2020-12.
+For custom meta-schemas, format validation is enabled so the library can honor the selected vocabulary:
+`format-annotation` remains annotation-only, while `format-assertion` validates even when its
+`$vocabulary` value is `false` (that value controls whether support is required, not assertion behavior).
 
-This skip response is applied to **every test in the affected case** (Bowtie's `TestCase.without_expected_results()`
-strips the expected `"valid"` field before sending cases to any harness, so the decision must be made purely
-from the schema itself, up front — never by comparing against an expected result the harness is never given).
+## Known regex limitation
 
-> `$schema` nested in a non-resource-root subschema (no accompanying `$id`) used to be an additional
-> documented gap here (triggered by Bowtie's own hardcoded `bottom_schema` construct used internally by
-> `bowtie smoke`, see [`_core.py`](../.venv/Lib/site-packages/bowtie/_core.py)) — fixed upstream in
-> `LateApexEarlySpeed.Json.Schema` 4.2.2, which now accepts and ignores it instead of throwing.
+The current suite includes ECMAScript Unicode property escapes such as `\p{Letter}` in 2020-12
+`pattern.json` and `patternProperties.json`. .NET's regex engine does not recognize this property name.
+The harness does not translate these patterns or skip their tests: exceptions are returned through
+the normal IHOP `errored` response, with the original exception in `context.message`.
+
+## Verified results
+
+Verified on 2026-11-04 with NuGet **4.2.3**, Bowtie **2026.7.4**, and test-suite revision
+`245a45abc90190c0bff04d97e6d2b541b4bb9f12` (top-level official compliance scope).
+The Docker image was built using cached official .NET 8 SDK/runtime image digests; its runtime was
+8.0.32. All suite runs used `-V` to validate the harness's IHOP requests and responses.
+
+| Dialect | Cases | Tests | Passed | Errored cases (affected tests) | Skipped | Validity mismatches |
+|---|---:|---:|---:|---:|---:|---:|
+| draft7 | 259 | 927 | 927 | 0 | 0 | 0 |
+| draft2019-09 | 374 | 1259 | 1259 | 0 | 0 | 0 |
+| draft2020-12 | 385 | 1300 | 1294 | 2 (6) | 0 | 0 |
+
+The only errored cases were:
+
+- `pattern with Unicode property escape requires unicode mode`
+- `patternProperties with Unicode property escape`
+
+Both use `^\p{Letter}+$` and report `RegexParseException: Unknown property 'Letter'`.
+They are case-level errors, not `valid: false` responses or skips.
+
+All 10 tests from the two dialects' `vocabulary.json` files passed. Report completeness and exact
+per-case result lengths were checked against the local suite, including confirmation that execution
+did not stop early. Bowtie smoke passed for all three dialects, and all 19 local fixture checks passed.
+As a focused supplemental check outside the table's compliance scope, all four tests in the official
+optional `format-assertion.json` passed via `bowtie run -D draft2020-12 -V` with their remote meta-schemas
+in the registry.
