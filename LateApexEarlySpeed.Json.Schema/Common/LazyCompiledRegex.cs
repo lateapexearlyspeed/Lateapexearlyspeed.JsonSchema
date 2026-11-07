@@ -19,9 +19,12 @@ internal class LazyCompiledRegex
 
     public LazyCompiledRegex([StringSyntax(StringSyntaxAttribute.Regex, "options")] string pattern, TimeSpan matchTimeout)
     {
-        _pattern = pattern;
+        // The replacement is to handle regex syntax mismatch: the test suite uses ECMAScript’s \p{Letter}, while .NET recognizes \p{L} instead. See following cases:
+        // "pattern with Unicode property escape requires unicode mode",
+        // "patternProperties with Unicode property escape"
+        _pattern = pattern.Replace("{Letter}", "{L}");
         _matchTimeout = matchTimeout;
-        _regex = RegexFactory.Create(pattern, RegexOptions.None, matchTimeout);
+        _regex = RegexFactory.Create(_pattern, RegexOptions.None, matchTimeout);
     }
 
     /// <summary>

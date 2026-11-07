@@ -18,13 +18,9 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 {
     public class JsonValidatorTest : IClassFixture<JsonValidatorTestFixture>
     {
-        private static readonly string[] UnsupportedTestFiles = new string[] {  };
+        private static readonly string[] UnsupportedTestFiles = new string[] { };
 
-        private static readonly string[] UnsupportedTestCases = new string[]
-        {
-          "pattern with Unicode property escape requires unicode mode",
-          "patternProperties with Unicode property escape"
-        };
+        private static readonly string[] UnsupportedTestCases = new string[] { };
 
         private static readonly string[] TestCasesDependOnRemoteHttpDocuments = new[]
         {
