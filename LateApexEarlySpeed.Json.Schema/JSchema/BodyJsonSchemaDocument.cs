@@ -8,33 +8,44 @@ using System.Diagnostics;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
-internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
+internal sealed class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
 {
     public static Uri DefaultDocumentBaseUri { get; } = new("http://lateapexearlyspeed");
 
+    private readonly Uri? _id;
+
     /// <summary>
-    /// All schema resources inside current document (including current document itself)
+    /// All schema resources inside current document (including current document itself and valid retrievalUri-keyed document itself)
     /// </summary>
     public SchemaResourceRegistry LocalSchemaResourceRegistry { get; } = new(1);
 
     public SchemaResourceRegistry? GlobalSchemaResourceRegistry { get; set; }
 
     internal BodyJsonSchemaDocument(IEnumerable<ValidationKeywordBase> keywords, IEnumerable<IAnnotationKeyword>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, bool recursiveAnchor, UnevaluatedKeywords unevaluatedKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements = null, SchemaKeyword? schemaKeyword = null, Uri? id = null, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords = null)
-        : base(schemaKeyword, GetBaseUri(id), keywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifierKeyword, dynamicAnchor, recursiveAnchor, defsKeywords, potentialSchemaContainerElements, unevaluatedKeywords)
+        : base(schemaKeyword, keywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifierKeyword, dynamicAnchor, recursiveAnchor, defsKeywords, potentialSchemaContainerElements, unevaluatedKeywords)
     {
+        _id = id;
     }
 
-    private static Uri GetBaseUri(Uri? id)
+    public override Uri ParentResourceBaseUri
     {
-        return id is null || !id.IsAbsoluteUri
-            ? DefaultDocumentBaseUri
-            : id;
+        set
+        {
+            BaseUri = _id is null ? value : new Uri(value, _id);
+
+            string fragment = BaseUri.Fragment;
+            if ((!string.IsNullOrEmpty(fragment)) && fragment != "#")
+            {
+                throw new BadSchemaException("Id of json schema resource should not contain non-empty fragment.");
+            }
+
+            base.ParentResourceBaseUri = BaseUri;
+        }
     }
 
-    public void MakeAllIdentifierAndReferenceBeFullUri()
+    public void MakeAllIdentifierAndReferenceBeFullUri(Uri initDocumentBaseUri)
     {
-        // here input of 'parentResourceBaseUri' is an arbitrary uri because first schema is schema document which already has real absolute uri
-        MakeAllIdentifierAndReferenceBeFullUri(this, DefaultDocumentBaseUri);
+        MakeAllIdentifierAndReferenceBeFullUri(this, initDocumentBaseUri);
     }
 
     private void MakeAllIdentifierAndReferenceBeFullUri(ISchemaContainerElement containerElement, Uri parentResourceBaseUri)

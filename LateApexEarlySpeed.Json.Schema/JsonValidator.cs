@@ -38,7 +38,7 @@ public class JsonValidator
     {
         ValidatorOptions = InitializeJsonValidatorOptions(options);
 
-        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, GlobalSchemaResourceRegistry, ValidatorOptions);
+        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, GlobalSchemaResourceRegistry, ValidatorOptions, null);
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public class JsonValidator
     {
         ValidatorOptions = InitializeJsonValidatorOptions(options);
 
-        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, GlobalSchemaResourceRegistry, ValidatorOptions);
+        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(jsonSchema, GlobalSchemaResourceRegistry, ValidatorOptions, null);
     }
 
     /// <summary>
@@ -63,14 +63,14 @@ public class JsonValidator
     {
         ValidatorOptions = InitializeJsonValidatorOptions(options);
 
-        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(utf8JsonSchema, GlobalSchemaResourceRegistry, ValidatorOptions);
+        _mainSchemaDoc = JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(utf8JsonSchema, GlobalSchemaResourceRegistry, ValidatorOptions, null);
     }
 
     internal JsonValidator(BodyJsonSchemaDocument mainSchemaDoc, JsonValidatorOptions? options = null)
     {
         ValidatorOptions = InitializeJsonValidatorOptions(options);
 
-        JsonSchemaDocument.UpdateDocWithGlobalResourceRegistry(mainSchemaDoc, GlobalSchemaResourceRegistry);
+        JsonSchemaDocument.UpdateDocWithGlobalResourceRegistry(mainSchemaDoc, GlobalSchemaResourceRegistry, null);
         _mainSchemaDoc = mainSchemaDoc;
     }
 
@@ -86,53 +86,77 @@ public class JsonValidator
     /// Add external json schema document
     /// </summary>
     /// <param name="externalJsonSchema">The content of external json schema document</param>
+    /// <param name="retrievalUri">
+    /// The URI from which <paramref name="externalJsonSchema"/> is retrieved. It must be an absolute URI without fragment.
+    /// It is used as the initial base URI of the document: when the document has no $id, it is the base URI of the document; when the document has a relative $id, the $id is resolved against it.
+    /// The document can also be referenced (e.g. by $ref) through this URI.
+    /// When it is null, the document can only be referenced through its absolute $id.
+    /// </param>
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
-    public void AddExternalDocument(string externalJsonSchema, JsonValidatorOptions? options = null) => AddExternalDocument(externalJsonSchema.AsSpan(), options);
+    public void AddExternalDocument(string externalJsonSchema, Uri? retrievalUri = null, JsonValidatorOptions? options = null) => AddExternalDocument(externalJsonSchema.AsSpan(), retrievalUri, options);
 
     /// <summary>
     /// Add external json schema document
     /// </summary>
     /// <param name="externalJsonSchema">The content of external json schema document</param>
+    /// <param name="retrievalUri">
+    /// The URI from which <paramref name="externalJsonSchema"/> is retrieved. It must be an absolute URI without fragment.
+    /// It is used as the initial base URI of the document: when the document has no $id, it is the base URI of the document; when the document has a relative $id, the $id is resolved against it.
+    /// The document can also be referenced (e.g. by $ref) through this URI.
+    /// When it is null, the document can only be referenced through its absolute $id.
+    /// </param>
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
-    public void AddExternalDocument(ReadOnlySpan<char> externalJsonSchema, JsonValidatorOptions? options = null)
+    public void AddExternalDocument(ReadOnlySpan<char> externalJsonSchema, Uri? retrievalUri = null, JsonValidatorOptions? options = null)
     {
-        new ExternalSchemaRegistry(GlobalSchemaResourceRegistry, ValidatorOptions).Register(externalJsonSchema, options);
+        new ExternalSchemaRegistry(GlobalSchemaResourceRegistry, ValidatorOptions).Register(externalJsonSchema, retrievalUri, options);
     }
 
     /// <summary>
     /// Add external json schema document
     /// </summary>
     /// <param name="externalUtf8JsonSchema">The content of external json schema document</param>
+    /// <param name="retrievalUri">
+    /// The URI from which <paramref name="externalUtf8JsonSchema"/> is retrieved. It must be an absolute URI without fragment.
+    /// It is used as the initial base URI of the document: when the document has no $id, it is the base URI of the document; when the document has a relative $id, the $id is resolved against it.
+    /// The document can also be referenced (e.g. by $ref) through this URI.
+    /// When it is null, the document can only be referenced through its absolute $id.
+    /// </param>
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
-    public void AddExternalDocument(Stream externalUtf8JsonSchema, JsonValidatorOptions? options = null)
+    public void AddExternalDocument(Stream externalUtf8JsonSchema, Uri? retrievalUri = null, JsonValidatorOptions? options = null)
     {
-        new ExternalSchemaRegistry(GlobalSchemaResourceRegistry, ValidatorOptions).Register(externalUtf8JsonSchema, options);
+        new ExternalSchemaRegistry(GlobalSchemaResourceRegistry, ValidatorOptions).Register(externalUtf8JsonSchema, retrievalUri, options);
     }
 
     /// <summary>
     /// Add external json schema document
     /// </summary>
     /// <param name="externalJsonSchema">The content of external json schema document</param>
+    /// <param name="retrievalUri">
+    /// The URI from which <paramref name="externalJsonSchema"/> is retrieved. It must be an absolute URI without fragment.
+    /// It is used as the initial base URI of the document: when the document has no $id, it is the base URI of the document; when the document has a relative $id, the $id is resolved against it.
+    /// The document can also be referenced (e.g. by $ref) through this URI.
+    /// When it is null, the document can only be referenced through its absolute $id.
+    /// </param>
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
-    public void AddExternalDocument(JsonElement externalJsonSchema, JsonValidatorOptions? options = null)
+    public void AddExternalDocument(JsonElement externalJsonSchema, Uri? retrievalUri = null, JsonValidatorOptions? options = null)
     {
-        new ExternalSchemaRegistry(GlobalSchemaResourceRegistry, ValidatorOptions).Register(externalJsonSchema, options);
+        new ExternalSchemaRegistry(GlobalSchemaResourceRegistry, ValidatorOptions).Register(externalJsonSchema, retrievalUri, options);
     }
 
     /// <summary>
     /// Add external json schema document which needs to be accessed by sending HTTP request
     /// </summary>
-    /// <param name="remoteUri">The <see cref="Uri"/> of document the HTTP request is sent to access</param>
+    /// <param name="remoteUri">The <see cref="Uri"/> of document the HTTP request is sent to access. It is also used as the retrieval URI of the retrieved document (see retrievalUri parameter of <see cref="AddExternalDocument(string, Uri?, JsonValidatorOptions?)"/>).</param>
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
     /// <returns></returns>
     public async Task AddHttpDocumentAsync(Uri remoteUri, JsonValidatorOptions? options = null)
     {
         string jsonSchemaText = await HttpJsonDocumentClient.GetDocumentAsync(remoteUri);
-        AddExternalDocument(jsonSchemaText, options);
+        AddExternalDocument(jsonSchemaText, remoteUri, options);
     }
 
     /// <summary>
-    /// Gets or sets an <see cref="IExternalSchemaDocumentPopulator"/> instance for current <see cref="JsonValidator"/>, used to populate required external json schema document during validation (on-fly), compared with pre-registered external json schema document before validation by <see cref="AddExternalDocument(string, JsonValidatorOptions?)"/>
+    /// Gets or sets an <see cref="IExternalSchemaDocumentPopulator"/> instance for current <see cref="JsonValidator"/>, used to populate required external json schema document during validation (on-fly), compared with pre-registered external json schema document before validation by <see cref="AddExternalDocument(string, Uri?, JsonValidatorOptions?)"/>
     /// </summary>
     /// <remarks>
     /// This <see cref="ExternalSchemaDocumentPopulator"/> will only populate external json schema document when there was no matched pre-registered external json schema document.

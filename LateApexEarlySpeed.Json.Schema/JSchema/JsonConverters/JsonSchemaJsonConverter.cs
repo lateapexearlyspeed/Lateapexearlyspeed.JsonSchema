@@ -424,7 +424,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
         }
         else if (bodyJsonSchemaReadContext.Id is not null)
         {
-            schema = new JsonSchemaResource(
+            schema = new EmbeddedJsonSchemaResource(
                 bodyJsonSchemaReadContext.SchemaKeyword,
                 bodyJsonSchemaReadContext.Id,
                 bodyJsonSchemaReadContext.ValidationKeywords,
@@ -644,7 +644,7 @@ internal class JsonSchemaJsonConverter<T> : JsonConverter<T>
 
             if (value is JsonSchemaResource schemaResource)
             {
-                Debug.Assert(value.GetType() == typeof(JsonSchemaResource) || value.GetType() == typeof(BodyJsonSchemaDocument));
+                Debug.Assert(value.GetType() == typeof(EmbeddedJsonSchemaResource) || value.GetType() == typeof(BodyJsonSchemaDocument));
 
                 writer.WriteString(IdKeyword.Keyword, schemaResource.BaseUri!.ToString());
 

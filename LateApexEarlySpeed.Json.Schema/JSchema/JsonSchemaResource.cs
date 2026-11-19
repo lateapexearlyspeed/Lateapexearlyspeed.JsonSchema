@@ -6,44 +6,25 @@ using LateApexEarlySpeed.Json.Schema.Keywords.interfaces;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
-internal class JsonSchemaResource : BodyJsonSchema, IInfoEvaluator<string>, IInfoEvaluator<int>
+/// <summary>
+/// This represents base class of <see cref="BodyJsonSchemaDocument"/> and <see cref="EmbeddedJsonSchemaResource"/>. It has common features of json schema resource.
+/// </summary>
+/// <remarks>It does not have to have an $id because <see cref="BodyJsonSchemaDocument"/> does not have to have it</remarks>
+internal abstract class JsonSchemaResource : BodyJsonSchema, IInfoEvaluator<string>, IInfoEvaluator<int>
 {
-    /// <summary>
-    /// Should not contain fragment
-    /// </summary>
-    private readonly Uri _id;
-
-    public JsonSchemaResource(SchemaKeyword? schemaKeyword, Uri id, IEnumerable<ValidationKeywordBase> keywords, IEnumerable<IAnnotationKeyword>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, bool recursiveAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements, UnevaluatedKeywords unevaluatedKeywords)
+    protected JsonSchemaResource(SchemaKeyword? schemaKeyword, IEnumerable<ValidationKeywordBase> keywords, IEnumerable<IAnnotationKeyword>? annotationKeywords, IEnumerable<ISchemaContainerValidationNode>? schemaContainerValidators, IEnumerable<IReferenceKeyword>? referenceKeywords, IPlainNameIdentifierKeyword? plainNameIdentifierKeyword, string? dynamicAnchor, bool recursiveAnchor, IEnumerable<(string name, DefsKeyword keyword)>? defsKeywords, IReadOnlyDictionary<string, ISchemaContainerElement>? potentialSchemaContainerElements, UnevaluatedKeywords unevaluatedKeywords)
         : base(keywords, annotationKeywords, schemaContainerValidators, referenceKeywords, plainNameIdentifierKeyword, dynamicAnchor, defsKeywords, potentialSchemaContainerElements, unevaluatedKeywords)
     {
         SchemaKeyword = schemaKeyword;
-        _id = id;
         RecursiveAnchor = recursiveAnchor;
     }
 
     public override SchemaKeyword? SchemaKeyword { get; }
-
     public bool RecursiveAnchor { get; }
 
     // Base uri of current schema resource, must be absolute uri
-    public Uri? BaseUri { get; private set; }
-
-    public override Uri ParentResourceBaseUri
-    {
-        set
-        {
-            BaseUri = new Uri(value, _id);
-
-            string fragment = BaseUri.Fragment;
-            if ((!string.IsNullOrEmpty(fragment)) && fragment != "#")
-            {
-                throw new BadSchemaException("Id of json schema resource should not contain non-empty fragment.");
-            }
-
-            base.ParentResourceBaseUri = BaseUri;
-        }
-    }
-
+    public Uri? BaseUri { get; protected set; }
+    
     public JsonSchema? FindSubSchemaByJsonPointer(string jsonPointerPath)
     {
         LinkedListBasedImmutableJsonPointer? jsonPointer = LinkedListBasedImmutableJsonPointer.Create(jsonPointerPath);
@@ -86,7 +67,7 @@ internal class JsonSchemaResource : BodyJsonSchema, IInfoEvaluator<string>, IInf
         foreach (ISchemaContainerElement childElement in schemaContainer.EnumerateElements())
         {
             // Based on json schema test suite, we should not find subschema from another sub schema resource (with $id), so skip schema resource type.
-            if (childElement is JsonSchemaResource)
+            if (childElement is EmbeddedJsonSchemaResource)
             {
                 continue;
             }
@@ -112,18 +93,6 @@ internal class JsonSchemaResource : BodyJsonSchema, IInfoEvaluator<string>, IInf
         options.ValidationPathStack.PopSchemaResource();
 
         return validationResult;
-    }
-
-    public BodyJsonSchema TransformToBodyJsonSchema()
-    {
-        var bodyJsonSchema = new BodyJsonSchema(ValidationKeywords, AnnotationKeywords, SchemaContainerValidators, ReferenceKeywords, PlainNameIdentifierKeyword, DynamicAnchor, DefsKeywords, PotentialSchemaContainerElements, new UnevaluatedKeywords { UnevaluatedPropertiesKeyword = UnevaluatedPropertiesKeyword, UnevaluatedItemsKeyword = UnevaluatedItemsKeyword });
-
-        if (Name is not null)
-        {
-            bodyJsonSchema.Name = Name;
-        }
-
-        return bodyJsonSchema;
     }
 
     IReadOnlyCollection<string> IInfoEvaluator<string>.GetEvaluatedInfos(JsonInstanceElement instance, JsonSchemaOptions options)

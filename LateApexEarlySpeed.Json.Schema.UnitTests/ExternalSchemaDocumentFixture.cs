@@ -1,7 +1,4 @@
-﻿using LateApexEarlySpeed.Json.Schema.Keywords;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using Xunit;
+﻿using System.Text.Json.Nodes;
 
 namespace LateApexEarlySpeed.Json.Schema.UnitTests;
 
@@ -9,13 +6,17 @@ public class JsonValidatorTestFixture
 {
     private readonly HashSet<string> _ignoredRemoteFiles = new HashSet<string> { "locationIndependentIdentifierDraft4.json" };
     private readonly HashSet<string> _ignoredRemoteFolders = new HashSet<string> { "draft6" };
+    
+    private readonly Dictionary<Uri, string> _externalSchemaDocuments;
+    private readonly string[] _customMetaSchemaDocuments;
 
     public JsonValidatorTestFixture()
     {
-        ExternalSchemaDocuments = PrepareRefRemoteDocuments();
+        PrepareRefRemoteDocuments(out _externalSchemaDocuments, out _customMetaSchemaDocuments);
     }
 
-    public IEnumerable<string> ExternalSchemaDocuments { get; }
+    public Dictionary<Uri, string> ExternalSchemaDocuments => _externalSchemaDocuments;
+    public string[] CustomMetaSchemaDocuments => _customMetaSchemaDocuments;
 
     public Uri[] HttpBasedDocumentUris { get; } = new[]
     {
@@ -42,18 +43,19 @@ public class JsonValidatorTestFixture
         new Uri("http://json-schema.org/draft-07/schema")
     };
 
-    private IEnumerable<string> PrepareRefRemoteDocuments()
+    private void PrepareRefRemoteDocuments(out Dictionary<Uri, string> externalSchemaDocuments, out string[] customMetaSchemaDocuments)
     {
         string path = Path.Combine("JSON-Schema-Test-Suite", "remotes");
 
-        List<JsonNode> schemaDocuments = ExtractAllSchemaDocumentsFrom(path, new Uri("http://localhost:1234"));
+        Dictionary<Uri, JsonNode> schemaDocuments = ExtractAllSchemaDocumentsFrom(path, new Uri("http://localhost:1234"));
 
-        return schemaDocuments.Select(doc => doc.ToJsonString());
+        externalSchemaDocuments = schemaDocuments.ToDictionary(doc => doc.Key, doc => doc.Value.ToJsonString());
+        customMetaSchemaDocuments = schemaDocuments.Select(doc => doc.Value).Where(doc => doc["$id"] is not null).Select(doc => doc.ToJsonString()).ToArray();
     }
 
-    private List<JsonNode> ExtractAllSchemaDocumentsFrom(string path, Uri uri)
+    private Dictionary<Uri, JsonNode> ExtractAllSchemaDocumentsFrom(string path, Uri uri)
     {
-        var schemaDocs = new List<JsonNode>();
+        var schemaDocs = new Dictionary<Uri, JsonNode>();
         var curDirectory = new DirectoryInfo(path);
 
         foreach (FileInfo fileInfo in curDirectory.EnumerateFiles())
@@ -63,12 +65,11 @@ public class JsonValidatorTestFixture
                 continue;
             }
 
-            var id = new Uri(uri, fileInfo.Name);
+            var retrievalUri = new Uri(uri, fileInfo.Name);
             using (FileStream fs = fileInfo.OpenRead())
             {
                 JsonNode jsonNode = JsonNode.Parse(fs)!;
-                jsonNode.AsObject()["$id"] = JsonSerializer.SerializeToNode(id);
-                schemaDocs.Add(jsonNode);
+                schemaDocs.Add(retrievalUri, jsonNode);
             }
         }
 
@@ -79,7 +80,10 @@ public class JsonValidatorTestFixture
                 continue;
             }
 
-            schemaDocs.AddRange(ExtractAllSchemaDocumentsFrom(Path.Combine(path, subDirectory.Name), new Uri(uri, subDirectory.Name + "/")));
+            foreach ((Uri retrievalUri, JsonNode schema) in ExtractAllSchemaDocumentsFrom(Path.Combine(path, subDirectory.Name), new Uri(uri, subDirectory.Name + "/")))
+            {
+                schemaDocs.Add(retrievalUri, schema);
+            }
         }
 
         return schemaDocs;

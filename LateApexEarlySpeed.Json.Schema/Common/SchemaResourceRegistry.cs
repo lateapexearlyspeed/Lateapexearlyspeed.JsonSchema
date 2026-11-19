@@ -1,4 +1,5 @@
-﻿using LateApexEarlySpeed.Json.Schema.JSchema;
+﻿using System.Diagnostics;
+using LateApexEarlySpeed.Json.Schema.JSchema;
 
 namespace LateApexEarlySpeed.Json.Schema.Common;
 
@@ -6,11 +7,11 @@ internal class SchemaResourceRegistry
 {
     private object? _lock;
 
-    private readonly List<JsonSchemaResource> _schemaResources;
+    private readonly List<(Uri baseOrRetrievalUri, JsonSchemaResource schemaResource)> _schemaResources;
 
     public SchemaResourceRegistry(int capacity)
     {
-        _schemaResources = new List<JsonSchemaResource>(capacity);
+        _schemaResources = new List<(Uri baseOrRetrievalUri, JsonSchemaResource schemaResource)>(capacity);
     }
 
     public JsonSchemaResource? GetSchemaResource(Uri baseUri)
@@ -22,9 +23,9 @@ internal class SchemaResourceRegistry
 
         try
         {
-            foreach (JsonSchemaResource schemaResource in _schemaResources)
+            foreach ((Uri baseOrRetrievalUri, JsonSchemaResource schemaResource) in _schemaResources)
             {
-                if (schemaResource.BaseUri == baseUri)
+                if (baseOrRetrievalUri == baseUri)
                 {
                     return schemaResource;
                 }
@@ -43,6 +44,13 @@ internal class SchemaResourceRegistry
 
     public void AddSchemaResource(JsonSchemaResource schemaResource)
     {
+        Debug.Assert(schemaResource.BaseUri is not null);
+
+        AddSchemaResource(schemaResource.BaseUri, schemaResource);
+    }
+
+    public void AddSchemaResource(Uri baseOrRetrievalUri, JsonSchemaResource schemaResource)
+    {
         if (EnableConcurrency)
         {
             Monitor.Enter(_lock);
@@ -50,15 +58,15 @@ internal class SchemaResourceRegistry
 
         try
         {
-            foreach (JsonSchemaResource resource in _schemaResources)
+            foreach ((Uri baseOrRetrievalUri, JsonSchemaResource) resourceKv in _schemaResources)
             {
-                if (resource.BaseUri == schemaResource.BaseUri)
+                if (resourceKv.baseOrRetrievalUri == baseOrRetrievalUri)
                 {
-                    throw new ArgumentException($"a schema resource with same base uri: {schemaResource.BaseUri} already exists.", nameof(schemaResource));
+                    throw new ArgumentException($"a schema resource with same uri: {baseOrRetrievalUri} already exists.", nameof(baseOrRetrievalUri));
                 }
             }
 
-            _schemaResources.Add(schemaResource);
+            _schemaResources.Add((baseOrRetrievalUri, schemaResource));
         }
         finally
         {
@@ -78,13 +86,13 @@ internal class SchemaResourceRegistry
 
         try
         {
-            foreach (JsonSchemaResource otherResource in otherSchemaResourceRegistry._schemaResources)
+            foreach ((Uri otherBaseOrRetrievalUri, _) in otherSchemaResourceRegistry._schemaResources)
             {
-                foreach (JsonSchemaResource resource in _schemaResources)
+                foreach ((Uri baseOrRetrievalUri, _) in _schemaResources)
                 {
-                    if (resource.BaseUri == otherResource.BaseUri)
+                    if (baseOrRetrievalUri == otherBaseOrRetrievalUri)
                     {
-                        throw new ArgumentException($"a schema resource with same base uri: {otherResource.BaseUri} already exists.", nameof(otherSchemaResourceRegistry));
+                        throw new ArgumentException($"a schema resource with same base uri (or retrievalUri): {otherBaseOrRetrievalUri} already exists.", nameof(otherSchemaResourceRegistry));
                     }
                 }
             }

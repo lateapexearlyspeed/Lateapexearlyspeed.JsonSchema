@@ -43,7 +43,7 @@ internal class JsonArrayPotentialSchemaContainerElement : ISchemaContainerElemen
             {
                 jsonSchemaResourceNodesCleanable.RemoveIdFromAllChildrenSchemaElements();
 
-                if (_potentialSchemaElements[i] is JsonSchemaResource jsonSchemaResource)
+                if (_potentialSchemaElements[i] is EmbeddedJsonSchemaResource jsonSchemaResource)
                 {
                     BodyJsonSchema newSchema = jsonSchemaResource.TransformToBodyJsonSchema();
                     _potentialSchemaElements[i] = newSchema;

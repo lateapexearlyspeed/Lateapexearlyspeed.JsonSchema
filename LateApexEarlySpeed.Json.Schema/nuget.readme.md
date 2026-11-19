@@ -261,7 +261,9 @@ Besides of internal sub schema resource reference (inside current json schema do
 ```csharp
 var jsonValidator = new JsonValidator(jsonSchema);
 string externalJsonSchema = File.ReadAllText("schema2.json");
-jsonValidator.AddExternalDocument(externalJsonSchema);
+// The second argument is the retrieval URI of the external document. It is used as the document's base URI when it has no "$id" (or to resolve a relative "$id"),
+// and the document can be referenced by "$ref" through it. It can be omitted only when the external document has an absolute "$id".
+jsonValidator.AddExternalDocument(externalJsonSchema, new Uri("http://example.com/schema2.json"));
 ValidationResult validationResult = jsonValidator.Validate(instance);
 ```
 
@@ -289,7 +291,7 @@ public class FileSystemSchemaPopulator : IExternalSchemaDocumentPopulator
         string filePath = baseUri.LocalPath;
         if (File.Exists(filePath))
         {
-            externalSchemaRegistry.Register(File.ReadAllText(filePath));
+            externalSchemaRegistry.Register(File.ReadAllText(filePath), baseUri);
         }
     }
 }
