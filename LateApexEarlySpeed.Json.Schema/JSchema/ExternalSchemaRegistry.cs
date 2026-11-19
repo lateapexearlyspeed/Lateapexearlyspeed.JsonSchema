@@ -19,30 +19,33 @@ public readonly struct ExternalSchemaRegistry
     /// Register external json schema document
     /// </summary>
     /// <param name="schema">The content of external json schema document</param>
+    /// <param name="retrievalUri">The retrievalUri of the <paramref name="schema"/></param>
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
-    public void Register(ReadOnlySpan<char> schema, JsonValidatorOptions? options = null)
+    public void Register(ReadOnlySpan<char> schema, Uri? retrievalUri = null, JsonValidatorOptions? options = null)
     {
-        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(schema, _globalSchemaResourceRegistry, CreateOverriddenJsonValidatorOptions(options));
+        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(schema, _globalSchemaResourceRegistry, CreateOverriddenJsonValidatorOptions(options), retrievalUri);
     }
 
     /// <summary>
     /// Register external json schema document
     /// </summary>
     /// <param name="schema">The content of external json schema document</param>
+    /// <param name="retrievalUri">The retrievalUri of the <paramref name="schema"/></param>
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
-    public void Register(JsonElement schema, JsonValidatorOptions? options = null)
+    public void Register(JsonElement schema, Uri? retrievalUri = null, JsonValidatorOptions? options = null)
     {
-        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(schema, _globalSchemaResourceRegistry, CreateOverriddenJsonValidatorOptions(options));
+        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(schema, _globalSchemaResourceRegistry, CreateOverriddenJsonValidatorOptions(options), retrievalUri);
     }
 
     /// <summary>
     /// Register external json schema document
     /// </summary>
     /// <param name="utf8Schema">The content of external json schema document</param>
+    /// <param name="retrievalUri">The retrievalUri of the <paramref name="utf8Schema"/></param>
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
-    public void Register(Stream utf8Schema, JsonValidatorOptions? options = null)
+    public void Register(Stream utf8Schema, Uri? retrievalUri = null, JsonValidatorOptions? options = null)
     {
-        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(utf8Schema, _globalSchemaResourceRegistry, CreateOverriddenJsonValidatorOptions(options));
+        JsonSchemaDocument.CreateDocAndUpdateGlobalResourceRegistry(utf8Schema, _globalSchemaResourceRegistry, CreateOverriddenJsonValidatorOptions(options), retrievalUri);
     }
 
     [Pure]

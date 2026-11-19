@@ -43,7 +43,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
     /// It is used to enable reference to any sub nodes as schema. See issue to understand: https://github.com/lateapexearlyspeed/Lateapexearlyspeed.JsonSchema/issues/71
     /// </summary>
     /// <remarks>
-    /// Note: Types of nodes inside this tree are: <see cref="BodyJsonSchema"/>, <see cref="JsonSchemaResource"/>, <see cref="BooleanJsonSchema"/> and <see cref="JsonArrayPotentialSchemaContainerElement"/>
+    /// Note: Types of nodes inside this tree are: <see cref="BodyJsonSchema"/>, <see cref="EmbeddedJsonSchemaResource"/>, <see cref="BooleanJsonSchema"/> and <see cref="JsonArrayPotentialSchemaContainerElement"/>
     /// </remarks>
     private readonly Dictionary<string, ISchemaContainerElement>? _potentialSchemaContainerElements;
 
@@ -479,7 +479,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
     }
 
     /// <summary>
-    /// Remove all ids in <see cref="JsonSchemaResource"/> (replace <see cref="JsonSchemaResource"/> with <see cref="BodyJsonSchema"/>) from <see cref="_potentialSchemaContainerElements"/> trees of current node and all (both valid and invalid keywords) children nodes, recursively.
+    /// Remove all ids in <see cref="EmbeddedJsonSchemaResource"/> (replace <see cref="EmbeddedJsonSchemaResource"/> with <see cref="BodyJsonSchema"/>) from <see cref="_potentialSchemaContainerElements"/> trees of current node and all (both valid and invalid keywords) children nodes, recursively.
     /// </summary>
     public void RemoveIdFromAllInvalidKeywordPropertiesRecursively()
     {
@@ -545,7 +545,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
     }
 
     /// <summary>
-    /// Remove all ids in <see cref="JsonSchemaResource"/> (replace <see cref="JsonSchemaResource"/> with <see cref="BodyJsonSchema"/>) from <see cref="_potentialSchemaContainerElements"/> trees of current node recursively, but not including valid keywords trees on current node.
+    /// Remove all ids in <see cref="EmbeddedJsonSchemaResource"/> (replace <see cref="EmbeddedJsonSchemaResource"/> with <see cref="BodyJsonSchema"/>) from <see cref="_potentialSchemaContainerElements"/> trees of current node recursively, but not including valid keywords trees on current node.
     /// </summary>
     private void RemoveIdFromAllChildrenElementsOfPotentialSchemaElementTree()
     {
@@ -560,7 +560,7 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
             {
                 jsonSchemaResourceNodesCleanable.RemoveIdFromAllChildrenSchemaElements();
 
-                if (schemaElement is JsonSchemaResource jsonSchemaResource)
+                if (schemaElement is EmbeddedJsonSchemaResource jsonSchemaResource)
                 {
                     BodyJsonSchema newSchema = jsonSchemaResource.TransformToBodyJsonSchema();
                     _potentialSchemaContainerElements[propertyName] = newSchema;
@@ -571,15 +571,15 @@ internal class BodyJsonSchema : JsonSchema, IJsonSchemaResourceNodesCleanable, I
 
     /// <summary>
     /// Remove all id for all children nodes in <paramref name="rootNode"/> tree.
-    /// Also remove id of current <paramref name="rootNode"/> itself (which means it will be transformed to <see cref="BodyJsonSchema"/> if it currently is <see cref="JsonSchemaResource"/>)
+    /// Also remove id of current <paramref name="rootNode"/> itself (which means it will be transformed to <see cref="BodyJsonSchema"/> if it currently is <see cref="EmbeddedJsonSchemaResource"/>)
     /// </summary>
     /// <param name="rootNode"></param>
-    /// <param name="saveNewSchema">If <paramref name="rootNode"/> is <see cref="JsonSchemaResource"/>, transform happens and <paramref name="saveNewSchema"/> is called.</param>
+    /// <param name="saveNewSchema">If <paramref name="rootNode"/> is <see cref="EmbeddedJsonSchemaResource"/>, transform happens and <paramref name="saveNewSchema"/> is called.</param>
     internal static void RemoveIdForBodyJsonSchemaTree(BodyJsonSchema rootNode, Action<BodyJsonSchema> saveNewSchema)
     {
         BodyJsonSchema bodyJsonSchema = rootNode;
 
-        if (rootNode is JsonSchemaResource jsonSchemaResource)
+        if (rootNode is EmbeddedJsonSchemaResource jsonSchemaResource)
         {
             bodyJsonSchema = jsonSchemaResource.TransformToBodyJsonSchema();
 

@@ -39,7 +39,8 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
             "ignore unrecognized optional vocabulary"
         };
 
-        private readonly IEnumerable<string> _externalSchemaDocuments;
+        private readonly Dictionary<Uri, string> _externalSchemaDocuments;
+        private readonly string[] _customMetaSchemaDocuments;
         private readonly Uri[] _httpBasedDocumentUris;
         private readonly ITestOutputHelper _testOutputHelper;
 
@@ -47,6 +48,7 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
         {
             _testOutputHelper = testOutputHelper;
             _externalSchemaDocuments = jsonValidatorTestFixture.ExternalSchemaDocuments;
+            _customMetaSchemaDocuments = jsonValidatorTestFixture.CustomMetaSchemaDocuments;
             _httpBasedDocumentUris = jsonValidatorTestFixture.HttpBasedDocumentUris;
         }
 
@@ -105,16 +107,16 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
             if (TestCasesDependOnCustomMetaSchema.Contains(testCaseDescription))
             {
-                foreach (string externalDocumentContent in _externalSchemaDocuments)
+                foreach (string customMetaSchema in _customMetaSchemaDocuments)
                 {
-                    jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(externalDocumentContent);
+                    jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(customMetaSchema);
                 }
             }
 
             var jsonValidator = new JsonValidator(schema, jsonValidatorOptions);
-            foreach (string externalDocumentContent in _externalSchemaDocuments)
+            foreach ((Uri retrievalUri, string externalDocumentContent) in _externalSchemaDocuments)
             {
-                jsonValidator.AddExternalDocument(externalDocumentContent, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdInUnknownKeyword, CollectAnnotations = collectAnnotation });
+                jsonValidator.AddExternalDocument(externalDocumentContent, retrievalUri, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdInUnknownKeyword, CollectAnnotations = collectAnnotation });
             }
 
             if (TestCasesDependOnRemoteHttpDocuments.Contains(testCaseDescription))
@@ -139,16 +141,16 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
             if (TestCasesDependOnCustomMetaSchema.Contains(testCaseDescription))
             {
-                foreach (string externalDocumentContent in _externalSchemaDocuments)
+                foreach (string customMetaSchema in _customMetaSchemaDocuments)
                 {
-                    jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(externalDocumentContent);
+                    jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(customMetaSchema);
                 }
             }
             
             var jsonValidator = new JsonValidator(schema.AsSpan(), jsonValidatorOptions);
-            foreach (string content in _externalSchemaDocuments)
+            foreach ((Uri retrievalUri, string content) in _externalSchemaDocuments)
             {
-                jsonValidator.AddExternalDocument(content.AsSpan(), new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
+                jsonValidator.AddExternalDocument(content.AsSpan(), retrievalUri, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
             }
 
             if (TestCasesDependOnRemoteHttpDocuments.Contains(testCaseDescription))
@@ -175,18 +177,18 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
                 if (TestCasesDependOnCustomMetaSchema.Contains(testCaseDescription))
                 {
-                    foreach (string externalDocumentContent in _externalSchemaDocuments)
+                    foreach (string customMetaSchema in _customMetaSchemaDocuments)
                     {
-                        jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(externalDocumentContent);
+                        jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(customMetaSchema);
                     }
                 }
 
                 var jsonValidator = new JsonValidator(utf8JsonSchema, jsonValidatorOptions);
-                foreach (string content in _externalSchemaDocuments)
+                foreach ((Uri retrievalUri, string content) in _externalSchemaDocuments)
                 {
                     await using (var externalUtf8JsonSchema = new MemoryStream(Encoding.UTF8.GetBytes(content)))
                     {
-                        jsonValidator.AddExternalDocument(externalUtf8JsonSchema, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
+                        jsonValidator.AddExternalDocument(externalUtf8JsonSchema, retrievalUri, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
                     }
                 }
 
@@ -218,18 +220,18 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
                 if (TestCasesDependOnCustomMetaSchema.Contains(testCaseDescription))
                 {
-                    foreach (string externalDocumentContent in _externalSchemaDocuments)
+                    foreach (string customMetaSchema in _customMetaSchemaDocuments)
                     {
-                        jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(externalDocumentContent);
+                        jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(customMetaSchema);
                     }
                 }
 
                 var jsonValidator = new JsonValidator(jsonSchema.RootElement, jsonValidatorOptions);
-                foreach (string content in _externalSchemaDocuments)
+                foreach ((Uri retrievalUri, string content) in _externalSchemaDocuments)
                 {
                     using (JsonDocument externalJsonSchema = JsonDocument.Parse(content))
                     {
-                        jsonValidator.AddExternalDocument(externalJsonSchema.RootElement, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
+                        jsonValidator.AddExternalDocument(externalJsonSchema.RootElement, retrievalUri, new JsonValidatorOptions { IgnoreResourceIdInUnknownKeyword = ignoreResourceIdFromUnknownKeyword });
                     }
                 }
 
@@ -256,9 +258,9 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
             if (TestCasesDependOnCustomMetaSchema.Contains(testCaseDescription))
             {
-                foreach (string externalDocumentContent in _externalSchemaDocuments)
+                foreach (string customMetaSchema in _customMetaSchemaDocuments)
                 {
-                    jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(externalDocumentContent);
+                    jsonValidatorOptions.CustomMetaSchemaRegistry.AddMetaSchema(customMetaSchema);
                 }
             }
             
@@ -280,24 +282,22 @@ namespace LateApexEarlySpeed.Json.Schema.UnitTests
 
         private class TestExternalSchemaDocumentPopulator : IExternalSchemaDocumentPopulator
         {
-            private readonly JsonElement[] _externalJsonSchemaDocuments;
+            private readonly Dictionary<Uri, JsonElement> _externalJsonSchemaDocuments;
             private readonly JsonValidatorOptions _jsonValidatorOptions;
 
-            public TestExternalSchemaDocumentPopulator(IEnumerable<string> externalSchemaDocuments, JsonValidatorOptions jsonValidatorOptions)
+            public TestExternalSchemaDocumentPopulator(Dictionary<Uri, string> externalSchemaDocuments, JsonValidatorOptions jsonValidatorOptions)
             {
-                _externalJsonSchemaDocuments = externalSchemaDocuments.Select(doc => JsonSerializer.Deserialize<JsonElement>(doc)).ToArray();
+                _externalJsonSchemaDocuments = externalSchemaDocuments.ToDictionary(doc => doc.Key, doc => JsonSerializer.Deserialize<JsonElement>(doc.Value));
                 _jsonValidatorOptions = jsonValidatorOptions;
             }
 
             public void Populate(Uri baseUri, ExternalSchemaRegistry externalSchemaRegistry)
             {    
-                foreach (JsonElement schemaDocument in _externalJsonSchemaDocuments)
+                foreach ((Uri retrievalUri, JsonElement schemaDocument) in _externalJsonSchemaDocuments)
                 {
-                    Uri currentId = new Uri(schemaDocument.GetProperty(IdKeyword.Keyword).GetString()!);
-
-                    if (currentId == baseUri)
+                    if (retrievalUri == baseUri)
                     {
-                        externalSchemaRegistry.Register(schemaDocument, _jsonValidatorOptions);
+                        externalSchemaRegistry.Register(schemaDocument, retrievalUri, _jsonValidatorOptions);
                     }
                 }
             }
