@@ -86,7 +86,12 @@ public class JsonValidator
     /// Add external json schema document
     /// </summary>
     /// <param name="externalJsonSchema">The content of external json schema document</param>
-    /// <param name="retrievalUri">The retrievalUri of <paramref name="externalJsonSchema"/></param>
+    /// <param name="retrievalUri">
+    /// The URI from which <paramref name="externalJsonSchema"/> is retrieved. It must be an absolute URI without fragment.
+    /// It is used as the initial base URI of the document: when the document has no $id, it is the base URI of the document; when the document has a relative $id, the $id is resolved against it.
+    /// The document can also be referenced (e.g. by $ref) through this URI.
+    /// When it is null, the document can only be referenced through its absolute $id.
+    /// </param>
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
     public void AddExternalDocument(string externalJsonSchema, Uri? retrievalUri = null, JsonValidatorOptions? options = null) => AddExternalDocument(externalJsonSchema.AsSpan(), retrievalUri, options);
 
@@ -94,7 +99,12 @@ public class JsonValidator
     /// Add external json schema document
     /// </summary>
     /// <param name="externalJsonSchema">The content of external json schema document</param>
-    /// <param name="retrievalUri">The retrievalUri of <paramref name="externalJsonSchema"/></param>
+    /// <param name="retrievalUri">
+    /// The URI from which <paramref name="externalJsonSchema"/> is retrieved. It must be an absolute URI without fragment.
+    /// It is used as the initial base URI of the document: when the document has no $id, it is the base URI of the document; when the document has a relative $id, the $id is resolved against it.
+    /// The document can also be referenced (e.g. by $ref) through this URI.
+    /// When it is null, the document can only be referenced through its absolute $id.
+    /// </param>
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
     public void AddExternalDocument(ReadOnlySpan<char> externalJsonSchema, Uri? retrievalUri = null, JsonValidatorOptions? options = null)
     {
@@ -105,7 +115,12 @@ public class JsonValidator
     /// Add external json schema document
     /// </summary>
     /// <param name="externalUtf8JsonSchema">The content of external json schema document</param>
-    /// <param name="retrievalUri">The retrievalUri of <paramref name="externalUtf8JsonSchema"/></param>
+    /// <param name="retrievalUri">
+    /// The URI from which <paramref name="externalUtf8JsonSchema"/> is retrieved. It must be an absolute URI without fragment.
+    /// It is used as the initial base URI of the document: when the document has no $id, it is the base URI of the document; when the document has a relative $id, the $id is resolved against it.
+    /// The document can also be referenced (e.g. by $ref) through this URI.
+    /// When it is null, the document can only be referenced through its absolute $id.
+    /// </param>
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
     public void AddExternalDocument(Stream externalUtf8JsonSchema, Uri? retrievalUri = null, JsonValidatorOptions? options = null)
     {
@@ -116,7 +131,12 @@ public class JsonValidator
     /// Add external json schema document
     /// </summary>
     /// <param name="externalJsonSchema">The content of external json schema document</param>
-    /// <param name="retrievalUri">The retrievalUri of <paramref name="externalJsonSchema"/></param>
+    /// <param name="retrievalUri">
+    /// The URI from which <paramref name="externalJsonSchema"/> is retrieved. It must be an absolute URI without fragment.
+    /// It is used as the initial base URI of the document: when the document has no $id, it is the base URI of the document; when the document has a relative $id, the $id is resolved against it.
+    /// The document can also be referenced (e.g. by $ref) through this URI.
+    /// When it is null, the document can only be referenced through its absolute $id.
+    /// </param>
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
     public void AddExternalDocument(JsonElement externalJsonSchema, Uri? retrievalUri = null, JsonValidatorOptions? options = null)
     {
@@ -126,7 +146,7 @@ public class JsonValidator
     /// <summary>
     /// Add external json schema document which needs to be accessed by sending HTTP request
     /// </summary>
-    /// <param name="remoteUri">The <see cref="Uri"/> of document the HTTP request is sent to access</param>
+    /// <param name="remoteUri">The <see cref="Uri"/> of document the HTTP request is sent to access. It is also used as the retrieval URI of the retrieved document (see retrievalUri parameter of <see cref="AddExternalDocument(string, Uri?, JsonValidatorOptions?)"/>).</param>
     /// <param name="options">Options to control validation behavior for external schema document. Use option value for creating <see cref="JsonValidator"/> instance when it is null.</param>
     /// <returns></returns>
     public async Task AddHttpDocumentAsync(Uri remoteUri, JsonValidatorOptions? options = null)

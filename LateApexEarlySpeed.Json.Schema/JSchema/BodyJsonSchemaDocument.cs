@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace LateApexEarlySpeed.Json.Schema.JSchema;
 
-internal class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
+internal sealed class BodyJsonSchemaDocument : JsonSchemaResource, IJsonSchemaDocument
 {
     public static Uri DefaultDocumentBaseUri { get; } = new("http://lateapexearlyspeed");
 

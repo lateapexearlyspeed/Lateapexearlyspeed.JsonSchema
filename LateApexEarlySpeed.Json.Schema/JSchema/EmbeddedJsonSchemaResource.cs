@@ -7,7 +7,7 @@ namespace LateApexEarlySpeed.Json.Schema.JSchema;
 /// <summary>
 /// This represents a standard json schema resource that is embedded inside json schema. It must have an $id.
 /// </summary>
-internal class EmbeddedJsonSchemaResource : JsonSchemaResource
+internal sealed class EmbeddedJsonSchemaResource : JsonSchemaResource
 {
     /// <summary>
     /// Should not contain fragment

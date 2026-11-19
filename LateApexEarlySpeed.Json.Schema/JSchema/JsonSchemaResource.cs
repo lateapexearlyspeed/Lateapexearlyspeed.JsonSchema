@@ -67,7 +67,7 @@ internal abstract class JsonSchemaResource : BodyJsonSchema, IInfoEvaluator<stri
         foreach (ISchemaContainerElement childElement in schemaContainer.EnumerateElements())
         {
             // Based on json schema test suite, we should not find subschema from another sub schema resource (with $id), so skip schema resource type.
-            if (childElement is JsonSchemaResource)
+            if (childElement is EmbeddedJsonSchemaResource)
             {
                 continue;
             }
